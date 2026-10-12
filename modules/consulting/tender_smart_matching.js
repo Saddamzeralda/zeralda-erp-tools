@@ -71,9 +71,6 @@
     async function callAIChat(messages, systemContext) {
         var headers = getAuthHeaders();
         var fullMessages = [];
-        if (systemContext) {
-            fullMessages.push({ role: 'system', content: systemContext });
-        }
         if (Array.isArray(messages)) {
             fullMessages = fullMessages.concat(messages);
         } else if (typeof messages === 'string') {
@@ -81,21 +78,31 @@
         }
 
         try {
+            var bodyPayload = {
+                messages: fullMessages,
+                type: 'general'
+            };
+            if (systemContext) {
+                bodyPayload.system_prompt = systemContext;
+            }
+
             var res = await fetch('/api/ai/chat', {
                 method: 'POST',
                 headers: headers,
-                body: JSON.stringify({
-                    messages: fullMessages,
-                    type: 'general'
-                })
+                body: JSON.stringify(bodyPayload)
             });
 
             if (!res.ok) {
-                throw new Error('AI request failed with status ' + res.status);
+                var errDetail = '';
+                try {
+                    var errData = await res.json();
+                    errDetail = (errData && (errData.detail && errData.detail.error || errData.error)) || '';
+                } catch(e) {}
+                throw new Error('AI request failed with status ' + res.status + (errDetail ? ': ' + errDetail : ''));
             }
 
             var data = await res.json();
-            var text = String((data && (data.text || data.content || data.response || data.result)) || '').trim();
+            var text = String((data && (data.text || data.reply || data.content || data.response || data.result)) || '').trim();
             return { ok: true, text: text, data: data };
         } catch (e) {
             console.error('[TenderAI] Error calling AI chat:', e);

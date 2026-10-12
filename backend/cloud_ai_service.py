@@ -813,12 +813,18 @@ def _openai_compatible_chat(base_url: str, api_key: str, model: str, messages: L
 
 def _gemini_chat(api_key: str, model: str, messages: List[Dict], system_prompt: Optional[str], max_tokens: int = 8192, temperature: float = 0.7, json_mode: bool = False) -> Dict[str, Any]:
     contents = []
+    system_parts = []
+    if system_prompt:
+        system_parts.append(system_prompt)
     for msg in messages or []:
         role = msg.get('role', 'user')
-        content = msg.get('content', '').strip()
+        content = str(msg.get('content') or msg.get('text') or '').strip()
         if not content:
             continue
-        gemini_role = 'user' if role == 'user' else 'model'
+        if role in ('system', 'developer'):
+            system_parts.append(content)
+            continue
+        gemini_role = 'user' if role in ('user',) else 'model'
         # Merge consecutive messages with the same role (Gemini requires alternating roles)
         if contents and contents[-1]['role'] == gemini_role:
             contents[-1]['parts'][0]['text'] += '\n' + content
@@ -841,8 +847,8 @@ def _gemini_chat(api_key: str, model: str, messages: List[Dict], system_prompt: 
         'contents': contents,
         'generationConfig': gen_cfg
     }
-    if system_prompt:
-        payload_dict['systemInstruction'] = {'parts': [{'text': system_prompt}]}
+    if system_parts:
+        payload_dict['systemInstruction'] = {'parts': [{'text': '\n\n'.join(system_parts)}]}
 
     payload = json.dumps(payload_dict, ensure_ascii=False).encode('utf-8')
 
@@ -1253,12 +1259,18 @@ def get_cloud_status() -> Dict[str, Any]:
 def _gemini_chat_stream(api_key: str, model: str, messages: List[Dict], system_prompt: Optional[str]) -> Dict[str, Any]:
     """Streaming generator for Google Gemini via SSE."""
     contents = []
+    system_parts = []
+    if system_prompt:
+        system_parts.append(system_prompt)
     for msg in messages or []:
         role = msg.get('role', 'user')
         content = str(msg.get('content') or msg.get('text') or '').strip()
         if not content:
             continue
-        gemini_role = 'user' if role == 'user' else 'model'
+        if role in ('system', 'developer'):
+            system_parts.append(content)
+            continue
+        gemini_role = 'user' if role in ('user',) else 'model'
         if contents and contents[-1]['role'] == gemini_role:
             contents[-1]['parts'][0]['text'] += '\n' + content
         else:
@@ -1275,8 +1287,8 @@ def _gemini_chat_stream(api_key: str, model: str, messages: List[Dict], system_p
             'topP': 0.9
         }
     }
-    if system_prompt:
-        payload_dict['systemInstruction'] = {'parts': [{'text': system_prompt}]}
+    if system_parts:
+        payload_dict['systemInstruction'] = {'parts': [{'text': '\n\n'.join(system_parts)}]}
 
     payload = json.dumps(payload_dict, ensure_ascii=False).encode('utf-8')
     active_model = model or 'gemini-3.5-flash'

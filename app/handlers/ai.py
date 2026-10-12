@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import json
 import re
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import JSONResponse
@@ -270,6 +270,56 @@ async def my_permissions(request: Request):
     return {"ok": True, "role": user.get("role"), "permissions": perms}
 
 
+def _normalize_chat_messages(
+    messages: List[ChatMessage],
+    base_system_prompt: Optional[str] = None
+) -> Tuple[List[Dict[str, str]], str, str]:
+    """Validate message roles and lengths, extract system messages into system prompt,
+    and return:
+        (cleaned_messages_dicts, effective_system_prompt, latest_user_query)
+    """
+    ALLOWED_ROLES = ("user", "model", "assistant", "system", "developer", "bot", "ai")
+    system_parts: List[str] = []
+    chat_turns: List[Dict[str, str]] = []
+
+    for m in messages:
+        role = (m.role or "").strip().lower()
+        if role not in ALLOWED_ROLES:
+            raise HTTPException(400, detail={"ok": False, "error": f"Invalid message role '{m.role}'"})
+        content = str(m.content or m.text or "")
+        if len(content) > 16000:
+            raise HTTPException(400, detail={"ok": False, "error": "Message content too long (max 16000 chars)"})
+
+        if role in ("system", "developer"):
+            if content.strip():
+                system_parts.append(content.strip())
+        else:
+            norm_role = "assistant" if role in ("model", "bot", "ai") else "user"
+            chat_turns.append({"role": norm_role, "content": content})
+
+    if not chat_turns and system_parts:
+        chat_turns.append({"role": "user", "content": system_parts.pop()})
+
+    effective_sys = base_system_prompt or ""
+    if system_parts:
+        extra_sys = "\n\n".join(system_parts)
+        if effective_sys:
+            effective_sys = f"{extra_sys}\n\n{effective_sys}"
+        else:
+            effective_sys = extra_sys
+
+    latest_user_query = ""
+    for turn in reversed(chat_turns):
+        if turn["role"] == "user":
+            latest_user_query = turn["content"].strip()
+            if latest_user_query:
+                break
+    if not latest_user_query and chat_turns:
+        latest_user_query = chat_turns[-1]["content"].strip()
+
+    return chat_turns, effective_sys, latest_user_query
+
+
 # ── Chat ───────────────────────────────────────────────────────────────────
 @router.post("/chat")
 async def chat(request: Request):
@@ -301,34 +351,23 @@ async def chat(request: Request):
         raise HTTPException(400, detail={"ok": False, "error": "messages array is required"})
     if len(req.messages) > 100:
         raise HTTPException(400, detail={"ok": False, "error": "Too many messages (max 100)"})
-    for m in req.messages:
-        if m.role not in ("user", "model", "assistant"):
-            raise HTTPException(400, detail={"ok": False, "error": "Each message must have role (user/model) and content"})
-        content = str(m.content or m.text or "")
-        if len(content) > 16000:
-            raise HTTPException(400, detail={"ok": False, "error": "Message content too long (max 16000 chars)"})
+    # Normalize and validate messages
+    cleaned_messages, effective_system_prompt, latest_user_query = _normalize_chat_messages(
+        req.messages, base_system_prompt=req.system_prompt
+    )
 
     # FIX P0: sanitize user-supplied system_prompt to prevent prompt injection.
     # The system_prompt is prepended to the AI's instructions — if a user
     # can inject arbitrary text, they can override safety rules or extract
     # store data. We strip known injection patterns and cap the length.
     MAX_SYSTEM_PROMPT_LEN = 64000
-    if req.system_prompt and len(req.system_prompt) > MAX_SYSTEM_PROMPT_LEN:
+    if effective_system_prompt and len(effective_system_prompt) > MAX_SYSTEM_PROMPT_LEN:
         raise HTTPException(400, detail={"ok": False,
                                          "error": f"system_prompt too long (max {MAX_SYSTEM_PROMPT_LEN} chars)"})
     if req.max_tokens and req.max_tokens > 8192:
         raise HTTPException(400, detail={"ok": False, "error": "max_tokens too large (max 8192)"})
 
     try:
-        latest_user_query = ""
-        for msg in reversed(req.messages):
-            if msg.role == "user":
-                latest_user_query = str(msg.content or msg.text or "").strip()
-                if latest_user_query:
-                    break
-
-        effective_system_prompt = req.system_prompt or ""
-
         # Inject sanitized store counts + AI memory (FIX #26)
         # FIX AI-P1-001: use lightweight accessors instead of a full
         # read_store() deepcopy on every chat message. Only the counts and
@@ -382,7 +421,7 @@ async def chat(request: Request):
                         url = '[URL_REDACTED]'
                     snippet = _sanitize_for_prompt(str(item.get("snippet", "")), max_len=500)
                     web_context.append(f"[{idx}] {title}\nURL: {url}\nSnippet: {snippet}")
-                base_prompt = req.system_prompt or (
+                base_prompt = effective_system_prompt or (
                     "You are an intelligent ERP assistant for Zeralda ERP system. "
                     "Use web search results when they are relevant and mention the source URL when you rely on them."
                 )
@@ -394,10 +433,8 @@ async def chat(request: Request):
                     f"--- Web results ---\n{web_context_text}\n--- End web results ---"
                 )
 
-        # FIX AI-P2-002: ChatRequest does not define messages_as_dicts, so
-        # the hasattr branch was dead code. Build the dicts directly.
         result = chat_with_assistant_ai(
-            [{"role": m.role, "content": str(m.content or m.text or "")} for m in req.messages],
+            cleaned_messages,
             system_prompt=effective_system_prompt,
             max_tokens=req.max_tokens,
             temperature=req.temperature,
@@ -439,47 +476,40 @@ async def chat_stream(request: Request):
 
     if not req.messages or len(req.messages) > 100:
         raise HTTPException(400, detail={"ok": False, "error": "messages array (1-100) required"})
-    # FIX P1: add content length validation (was missing in streaming endpoint).
-    for m in req.messages:
-        content = str(m.content or m.text or "")
-        if len(content) > 16000:
-            raise HTTPException(400, detail={"ok": False, "error": "Message content too long (max 16000 chars)"})
+
+    # Normalize and validate messages
+    messages_dicts, effective_system_prompt, latest_user_query = _normalize_chat_messages(
+        req.messages, base_system_prompt=req.system_prompt
+    )
+
     # FIX P0: sanitize system_prompt and cap max_tokens (same as non-streaming).
     # Client system_prompt includes action guides + data summary (~14k+ chars).
     # Allow up to 64000 chars to accommodate full context.
-    if req.system_prompt and len(req.system_prompt) > 64000:
+    if effective_system_prompt and len(effective_system_prompt) > 64000:
         raise HTTPException(400, detail={"ok": False, "error": "system_prompt too long (max 64000 chars)"})
     if req.max_tokens and req.max_tokens > 8192:
         raise HTTPException(400, detail={"ok": False, "error": "max_tokens too large (max 8192)"})
 
-    effective_system_prompt = req.system_prompt or ""
     use_web = req.use_web and ai_perms.get("websearch", False)
-    latest_user_query = ""
-    if use_web:
-        for msg in reversed(req.messages):
-            if msg.role == "user":
-                latest_user_query = str(msg.content or msg.text or "").strip()
-                if latest_user_query:
-                    break
-        if latest_user_query:
-            try:
-                # FIX AI-P1-002: run sync search_web in a thread pool.
-                import asyncio
-                loop = asyncio.get_event_loop()
-                web_results = await loop.run_in_executor(
-                    None, search_web, latest_user_query, 5) or []
-            except Exception:
-                web_results = []
-            if web_results:
-                web_context_text = "\n\n".join(
-                    f"[{i+1}] {_sanitize_for_prompt(str(item.get('title','')), 200)}\n"
-                    f"URL: {item.get('url','')}\n"
-                    f"Snippet: {_sanitize_for_prompt(str(item.get('snippet','')), 500)}"
-                    for i, item in enumerate(web_results[:5])
-                )
-                effective_system_prompt = (
-                    f"{effective_system_prompt}\n\n--- Web results ---\n{web_context_text}\n--- End ---"
-                )
+    if use_web and latest_user_query:
+        try:
+            # FIX AI-P1-002: run sync search_web in a thread pool.
+            import asyncio
+            loop = asyncio.get_event_loop()
+            web_results = await loop.run_in_executor(
+                None, search_web, latest_user_query, 5) or []
+        except Exception:
+            web_results = []
+        if web_results:
+            web_context_text = "\n\n".join(
+                f"[{i+1}] {_sanitize_for_prompt(str(item.get('title','')), 200)}\n"
+                f"URL: {item.get('url','')}\n"
+                f"Snippet: {_sanitize_for_prompt(str(item.get('snippet','')), 500)}"
+                for i, item in enumerate(web_results[:5])
+            )
+            effective_system_prompt = (
+                f"{effective_system_prompt}\n\n--- Web results ---\n{web_context_text}\n--- End ---"
+            )
 
     # Sanitized store counts + memory (FIX #26)
     # FIX AI-P1-001: lightweight accessors instead of full read_store deepcopy.
@@ -501,8 +531,6 @@ async def chat_stream(request: Request):
     mem_list = storage.read_store_value(mem_key, []) or []
     mem_insert = _format_ai_memory_from_list(mem_list, limit=10)
     effective_system_prompt = _inject_into_prompt(effective_system_prompt, mem_insert)
-
-    messages_dicts = [{"role": m.role, "content": str(m.content or m.text or "")} for m in req.messages]
 
     # FIX AI-P1-004: previously ``event_stream`` was a *synchronous* generator
     # that called ``chat_with_assistant_ai_stream`` (which uses blocking

@@ -2237,23 +2237,43 @@ class EnhancedHandler(http.server.SimpleHTTPRequestHandler):
                 return self._json(400, {'ok': False, 'error': 'messages array is required'})
             if len(messages) > 100:
                 return self._json(400, {'ok': False, 'error': 'Too many messages (max 100)'})
+            ALLOWED_ROLES = ('user', 'model', 'assistant', 'system', 'developer', 'bot', 'ai')
+            sys_msgs = []
+            cleaned_msgs = []
             for m in messages:
-                if not isinstance(m, dict) or m.get('role') not in ('user', 'model', 'assistant'):
-                    return self._json(400, {'ok': False, 'error': 'Each message must have role (user/model) and content'})
+                if not isinstance(m, dict):
+                    return self._json(400, {'ok': False, 'error': 'Each message must be an object'})
+                role = str(m.get('role', '') or '').strip().lower()
+                if role not in ALLOWED_ROLES:
+                    return self._json(400, {'ok': False, 'error': f"Invalid message role '{role}'"})
                 content = str(m.get('content') or m.get('text') or '')
                 if len(content) > 16000:
                     return self._json(400, {'ok': False, 'error': 'Message content too long (max 16000 chars)'})
+                if role in ('system', 'developer'):
+                    if content.strip():
+                        sys_msgs.append(content.strip())
+                else:
+                    norm_role = 'assistant' if role in ('model', 'bot', 'ai') else 'user'
+                    cleaned_msgs.append({'role': norm_role, 'content': content})
+
+            if not cleaned_msgs and sys_msgs:
+                cleaned_msgs.append({'role': 'user', 'content': sys_msgs.pop()})
+
+            effective_system_prompt = system_prompt or ''
+            if sys_msgs:
+                extra_sys = '\n\n'.join(sys_msgs)
+                if effective_system_prompt:
+                    effective_system_prompt = f"{extra_sys}\n\n{effective_system_prompt}"
+                else:
+                    effective_system_prompt = extra_sys
 
             try:
                 latest_user_query = ''
-                for msg in reversed(messages):
-                    if isinstance(msg, dict) and msg.get('role') == 'user':
-                        latest_user_query = str(msg.get('content') or msg.get('text') or '').strip()
+                for msg in reversed(cleaned_msgs):
+                    if msg.get('role') == 'user':
+                        latest_user_query = str(msg.get('content') or '').strip()
                         if latest_user_query:
                             break
-
-                web_results = []
-                effective_system_prompt = system_prompt
 
                 try:
                     with _lock:
@@ -2321,7 +2341,7 @@ class EnhancedHandler(http.server.SimpleHTTPRequestHandler):
                         )
 
                 from backend.ai_chat_service import chat_with_assistant_ai
-                result = chat_with_assistant_ai(messages, system_prompt=effective_system_prompt, max_tokens=max_tokens, temperature=temperature)
+                result = chat_with_assistant_ai(cleaned_msgs, system_prompt=effective_system_prompt, max_tokens=max_tokens, temperature=temperature)
 
                 if web_results:
                     result['web_results'] = web_results
