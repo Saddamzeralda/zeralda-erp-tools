@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Zeralda ERP — نظام إدارة الموارد المؤسسية المتكامل">
+    <meta name="author" content="Zeralda Industries">
+    <meta name="theme-color" content="#E96A1B">
+    <title>Zeralda ERP — جارٍ التحميل…</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="stylesheet" href="styles/dark_theme.css">
+    <script src="shared/theme_manager.js"></script>
+    <script src="shared/unified_i18n.js?v=20260802a" defer></script>
+    <script src="shared/data_guard.js?v=20260802a" defer></script>
+    <style>
+        .splash {
+            position: fixed; inset: 0;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #fff; font-family: 'Segoe UI', Tahoma, sans-serif;
+            z-index: 99999;
+        }
+        .splash img { width: 120px; height: 120px; margin-bottom: 24px; border-radius: 16px; }
+        .splash h1 { font-size: 1.8rem; margin: 0 0 8px; font-weight: 600; }
+        .splash p { font-size: 1rem; opacity: 0.7; margin: 0; }
+        .splash .spinner {
+            margin-top: 32px; width: 36px; height: 36px;
+            border: 3px solid rgba(255,255,255,0.2);
+            border-top-color: #E96A1B; border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="splash" id="splash">
+        <img src="logo.png" alt="Zeralda ERP" onerror="this.style.display='none'">
+        <h1>Zeralda ERP</h1>
+        <p>نظام إدارة الموارد المؤسسية</p>
+        <div class="spinner"></div>
+    </div>
+    <noscript>
+        <meta http-equiv="refresh" content="0;url=zeralda_erp_dashboard.html">
+        <a href="zeralda_erp_dashboard.html">فتح لوحة التحكم</a>
+    </noscript>
+    <script>
+        // Redirect to dashboard once page is interactive
+        (function() {
+            var target = 'zeralda_erp_dashboard.html';
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function() {
+                    setTimeout(redirect, 600);
+                });
+            } else {
+                setTimeout(redirect, 600);
+            }
+            function redirect() {
+                window.location.replace(target);
+            }
+        })();
+    </script>
+</body>
+</html>

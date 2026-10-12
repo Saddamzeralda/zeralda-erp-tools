@@ -1,0 +1,2 @@
+Set objShell = CreateObject("Shell.Application")
+objShell.ShellExecute "cmd.exe", "/c copy /Y ""C:\Users\User\Desktop\zeralda-erp-employees-main\zeralda-erp-employees-main\login.html"" ""C:\Program Files\Zeralda ERP\login.html"" & copy /Y ""C:\Users\User\Desktop\zeralda-erp-employees-main\zeralda-erp-employees-main\connect.html"" ""C:\Program Files\Zeralda ERP\connect.html"" & copy /Y ""C:\Users\User\Desktop\zeralda-erp-employees-main\zeralda-erp-employees-main\START_CONNECTION_HUB.cmd"" ""C:\Program Files\Zeralda ERP\START_CONNECTION_HUB.cmd""", "", "runas", 1

@@ -1,0 +1,30 @@
+:root {
+    --font-family-base: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    --font-size-base: 14.4px;
+    --line-height-base: 1.5;
+
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+
+    --erp-print-page-margin: 10mm;
+    --erp-print-body-padding: 20px;
+}
+
+body {
+    font-family: var(--font-family-base);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-base);
+}
+
+body {
+    font-feature-settings: "lnum" 1;
+    font-variant-numeric: lining-nums tabular-nums;
+}

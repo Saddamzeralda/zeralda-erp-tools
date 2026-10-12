@@ -1,0 +1,2583 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <base href="../../" />
+  <script src="shared/theme_manager.js"></script>
+  <title>Consulting & Tenders - Zeralda ERP</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="styles/common_header_layout.css?v=20261012a">
+  <link rel="stylesheet" href="styles/common_header_brand.css">
+  <link rel="stylesheet" href="styles/design_tokens.css">
+  <link rel="stylesheet" href="styles/responsive_global.css">
+  <link rel="stylesheet" href="styles/animated_icons.css">
+  <script src="shared/print_engine.js" defer></script>
+  <script src="shared/zeralda_db.js?v=20260731a"></script>
+  <script src="shared/layout_shell.js?v=20261011d" defer></script>
+  <script src="shared/ai_chat_widget.js?v=20260806b" defer></script>
+  <script src="shared/storage_adapter.js?v=20260721c" defer></script>
+  <script src="shared/session_timeout.js" defer></script>
+  <script src="shared/company_storage.js?v=20260807b"></script>
+  <script src="shared/unified_i18n.js?v=20260802a" defer></script>
+  <script src="shared/app_sync.js?v=20260807b" defer></script>
+  <script src="shared/role_access_control.js" defer></script>
+  <script src="shared/header_company_switcher.js?v=20261012a" defer></script>
+  <script src="shared/header_language_switcher.js" defer></script>
+  <script src="shared/ocr.js?v=20261012c"></script>
+  <script src="shared/professional_display_mode.js?v=20260327a" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+  <script src="shared/print_engine.js" defer></script>
+  <script src="shared/unified_document_printer.js" defer></script>
+  <script src="modules/consulting/tender_smart_matching.js?v=20261009a" defer></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --primary-color: #2563eb;
+      --secondary-color: #1e40af;
+      --success-color: #10b981;
+      --warning-color: #f59e0b;
+      --danger-color: #ef4444;
+      --info-color: #06b6d4;
+      --dark-color: #1f2937;
+      --light-color: #f3f4f6;
+      --white-color: #ffffff;
+      --sidebar-width: 280px;
+      --header-height: 143px;
+      --card-shadow: 0 4px 14px rgba(0,0,0,0.06);
+      --card-shadow-hover: 0 10px 25px rgba(0,0,0,0.1);
+    }
+    body {
+      font-family: var(--font-family-base, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif);
+      font-size: var(--font-size-base, 14.4px);
+      line-height: var(--line-height-base, 1.5);
+      background-color: var(--light-color);
+      color: var(--dark-color);
+    }
+    body.rtl { direction: rtl; }
+    .header { position: fixed; top: 0; left: 0; right: 0; height: var(--header-height);
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: white; display: flex; align-items: center; justify-content: space-between;
+      padding: 0 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 1000;
+    }
+    .developer-credit { font-size: 10px; line-height: 1.05; }
+    .main-content { margin-top: var(--header-height); margin-left: var(--sidebar-width); padding: 30px; }
+    body.rtl .main-content { margin-left: 0; margin-right: var(--sidebar-width); }
+    @media (max-width: 992px) { .main-content { margin-left: 0 !important; margin-right: 0 !important; padding: 16px; } }
+
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 15px; }
+    .page-title { font-size: 28px; font-weight: 800; color: var(--dark-color); letter-spacing: -0.5px; }
+    .breadcrumb { display: flex; align-items: center; gap: 10px; font-size: 14px; color: #6b7280; }
+
+    /* Stats Grid */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 18px; margin-bottom: 24px; }
+    .stat-card {
+      background: white; padding: 18px 20px; border-radius: 16px; box-shadow: var(--card-shadow);
+      display: flex; align-items: center; gap: 16px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid rgba(0,0,0,0.04); position: relative; overflow: hidden;
+    }
+    .stat-card:hover { transform: translateY(-3px); box-shadow: var(--card-shadow-hover); border-color: rgba(37, 99, 235, 0.2); }
+    .stat-icon {
+      width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center;
+      justify-content: center; font-size: 22px; color: white; flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+    }
+    .stat-icon.blue { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+    .stat-icon.green { background: linear-gradient(135deg, #10b981, #047857); }
+    .stat-icon.orange { background: linear-gradient(135deg, #f59e0b, #b45309); }
+    .stat-icon.red { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+    .stat-icon.purple { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+    .stat-icon.cyan { background: linear-gradient(135deg, #06b6d4, #0e7490); }
+    .stat-details { min-width: 0; flex: 1; }
+    .stat-details h3 { font-size: clamp(18px, 2vw, 24px); font-weight: 800; margin-bottom: 2px; line-height: 1.15; word-break: break-word; color: #111827; }
+    .stat-details p { color: #6b7280; font-size: 13px; font-weight: 500; }
+    .stat-sub { font-size: 11px; color: #10b981; font-weight: 700; margin-top: 2px; }
+
+    /* Tabs */
+    .tabs-container { background: white; border-radius: 16px; box-shadow: var(--card-shadow); margin-bottom: 24px; overflow: hidden; border: 1px solid rgba(0,0,0,0.04); }
+    .tabs { display: flex; border-bottom: 2px solid var(--light-color); overflow-x: auto; background: #fafafa; }
+    .tab {
+      padding: 16px 26px; cursor: pointer; transition: all 0.25s; white-space: nowrap;
+      display: flex; align-items: center; gap: 10px; border-bottom: 3px solid transparent;
+      font-weight: 600; color: #64748b; font-size: 14.5px;
+    }
+    .tab:hover { background: #f1f5f9; color: var(--dark-color); }
+    .tab.active { color: var(--primary-color); border-bottom-color: var(--primary-color); background: white; }
+    .tab-badge { font-size: 11px; padding: 2px 8px; border-radius: 12px; background: #e2e8f0; color: #475569; }
+    .tab.active .tab-badge { background: #dbeafe; color: #1e40af; }
+    .tab-content { display: none; padding: 24px; }
+    .tab-content.active { display: block; animation: fadeIn 0.25s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Action bar & Tools */
+    .action-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 12px; }
+    .action-bar-left { display: flex; align-items: center; gap: 10px; flex: 1; flex-wrap: wrap; max-width: 100%; }
+    .action-bar-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .search-box {
+      display: flex; align-items: center; background: #f8fafc; padding: 9px 16px;
+      border-radius: 25px; gap: 10px; flex: 1; min-width: 220px; max-width: 360px;
+      border: 1px solid #e2e8f0; transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .search-box:focus-within { border-color: var(--primary-color); background: white; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+    .search-box input { border: none; background: transparent; outline: none; width: 100%; font-size: 13.5px; color: var(--dark-color); }
+
+    /* Filter Chips */
+    .filter-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+    .chip {
+      padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer;
+      background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; transition: all 0.2s;
+      display: inline-flex; align-items: center; gap: 6px; user-select: none;
+    }
+    .chip:hover { background: #e2e8f0; }
+    .chip.active { background: #2563eb; color: white; border-color: #2563eb; }
+    .chip.urgent.active { background: #dc2626; border-color: #dc2626; color: white; }
+    .chip.won.active { background: #059669; border-color: #059669; color: white; }
+
+    /* Segmented View Switcher (Table / Kanban) */
+    .view-switcher {
+      display: inline-flex; background: #f1f5f9; padding: 3px; border-radius: 10px;
+      border: 1px solid #e2e8f0; gap: 2px;
+    }
+    .view-btn {
+      padding: 6px 12px; border-radius: 8px; font-size: 12.5px; font-weight: 600;
+      border: none; background: transparent; color: #64748b; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;
+    }
+    .view-btn:hover { color: #1e293b; }
+    .view-btn.active { background: white; color: var(--primary-color); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+    /* Buttons */
+    .btn {
+      padding: 10px 18px; border-radius: 10px; border: none; cursor: pointer; font-size: 13.5px;
+      font-weight: 600; display: inline-flex; align-items: center; gap: 8px; transition: all 0.25s;
+      text-decoration: none;
+    }
+    .btn-primary { background: var(--primary-color); color: white; }
+    .btn-primary:hover { background: var(--secondary-color); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37,99,235,0.3); }
+    .btn-success { background: var(--success-color); color: white; }
+    .btn-success:hover { background: #059669; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(16,185,129,0.3); }
+    .btn-secondary { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; }
+    .btn-secondary:hover { background: #e2e8f0; color: #0f172a; }
+    .btn-danger { background: var(--danger-color); color: white; }
+    .btn-danger:hover { background: #dc2626; }
+    .btn-info { background: var(--info-color); color: white; }
+    .btn-info:hover { background: #0891b2; }
+    .btn-warning { background: var(--warning-color); color: white; }
+    .btn-purple { background: #8b5cf6; color: white; }
+    .btn-purple:hover { background: #7c3aed; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 8px; }
+    .btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    /* Table */
+    .table-container { background: white; border-radius: 12px; overflow-x: auto; box-shadow: 0 1px 4px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    body.rtl table { text-align: right; }
+    thead { background: #f8fafc; border-bottom: 2px solid #e2e8f0; }
+    th { padding: 13px 16px; font-weight: 700; color: #475569; white-space: nowrap; font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.3px; }
+    td { padding: 13px 16px; border-bottom: 1px solid #f1f5f9; font-size: 13.5px; vertical-align: middle; }
+    tbody tr { transition: background 0.15s; }
+    tbody tr:hover { background: #f8fafc; }
+    tbody tr:last-child td { border-bottom: none; }
+
+    /* Badges */
+    .badge { padding: 4px 11px; border-radius: 20px; font-size: 11.5px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+    .badge-open { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+    .badge-submitted { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+    .badge-won { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+    .badge-lost { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+    .badge-closed { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
+    .badge-category { background: #e0f2fe; color: #0369a1; }
+    .badge-checklist { background: #ede9fe; color: #6d28d9; }
+
+    .deadline-urgent { color: var(--danger-color); font-weight: 800; animation: pulse 2s infinite; }
+    .deadline-soon { color: var(--warning-color); font-weight: 700; }
+    .deadline-ok { color: var(--success-color); font-weight: 600; }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+
+    .text-muted { color: #64748b; }
+    .text-danger { color: var(--danger-color); }
+    .text-success { color: var(--success-color); }
+    .text-primary { color: var(--primary-color); }
+    .font-bold { font-weight: 700; }
+    .nowrap { white-space: nowrap; }
+
+    /* Kanban Pipeline Board */
+    .kanban-board {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 10px;
+    }
+    @media (max-width: 1100px) { .kanban-board { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 650px) { .kanban-board { grid-template-columns: 1fr; } }
+    .kanban-col {
+      background: #f8fafc; border-radius: 14px; border: 1px solid #e2e8f0;
+      display: flex; flex-direction: column; max-height: calc(100vh - 280px);
+    }
+    .kanban-header {
+      padding: 14px 16px; border-bottom: 2px solid; display: flex; justify-content: space-between;
+      align-items: center; border-radius: 14px 14px 0 0; background: white;
+    }
+    .kanban-col.open .kanban-header { border-bottom-color: #3b82f6; }
+    .kanban-col.submitted .kanban-header { border-bottom-color: #f59e0b; }
+    .kanban-col.won .kanban-header { border-bottom-color: #10b981; }
+    .kanban-col.lost .kanban-header { border-bottom-color: #ef4444; }
+
+    .kanban-title { font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 8px; color: #1e293b; }
+    .kanban-amount-badge { font-size: 11px; padding: 3px 8px; border-radius: 10px; font-weight: 700; background: #f1f5f9; color: #475569; }
+    .kanban-cards {
+      padding: 12px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 12px; min-height: 180px;
+    }
+    .kanban-cards.dragover { background: #eff6ff; outline: 2px dashed #3b82f6; border-radius: 0 0 14px 14px; }
+    .kanban-card {
+      background: white; border-radius: 12px; padding: 14px; border: 1px solid #e2e8f0;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04); cursor: grab; transition: all 0.2s ease;
+      position: relative;
+    }
+    .kanban-card:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.08); border-color: #cbd5e1; }
+    .kanban-card-ref { font-weight: 800; font-size: 13px; color: #1e40af; display: flex; justify-content: space-between; align-items: center; }
+    .kanban-card-title { font-size: 13.5px; font-weight: 600; color: #0f172a; margin: 6px 0 8px; line-height: 1.35; }
+    .kanban-card-authority { font-size: 12px; color: #64748b; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .kanban-card-amount { font-size: 15px; font-weight: 800; color: #059669; }
+    .kanban-card-footer {
+      display: flex; justify-content: space-between; align-items: center; margin-top: 10px;
+      padding-top: 10px; border-top: 1px dashed #e2e8f0; flex-wrap: wrap; gap: 6px;
+    }
+    .kanban-card-actions { display: flex; gap: 4px; }
+    .kanban-empty { text-align: center; padding: 30px 10px; color: #94a3b8; font-size: 13px; }
+
+    /* Modals */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; padding: 16px; z-index: 1200; }
+    .modal-overlay.active { display: flex; animation: modalFadeIn 0.2s ease-out; }
+    @keyframes modalFadeIn { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: scale(1); } }
+    .modal-card { width: min(680px, 100%); max-height: 90vh; overflow-y: auto; background: white; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.2); }
+    .modal-header { padding: 18px 24px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: #fafafa; border-radius: 16px 16px 0 0; }
+    .modal-header h3 { margin: 0; display: flex; gap: 10px; align-items: center; font-size: 17px; font-weight: 700; color: var(--dark-color); }
+    .close-modal { width: 32px; height: 32px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; border: none; font-size: 14px; color: #64748b; }
+    .close-modal:hover { background: var(--danger-color); color: white; }
+    .modal-body { padding: 22px 24px; }
+    .modal-footer { padding: 16px 24px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 10px; background: #fafafa; border-radius: 0 0 16px 16px; }
+
+    /* Form Styles */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group.full { grid-column: 1 / -1; }
+    .form-group label { font-weight: 600; font-size: 13px; color: #334155; }
+    .form-group input, .form-group select, .form-group textarea {
+      padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 10px; font-size: 13.5px;
+      transition: all 0.2s; font-family: inherit; background: white; color: var(--dark-color);
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+    .form-group textarea { min-height: 80px; resize: vertical; }
+    @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+
+    /* Checklist */
+    .checklist-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    @media (max-width: 600px) { .checklist-grid { grid-template-columns: 1fr; } }
+    .check-item {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px; border: 1.5px solid #e2e8f0;
+      background: white; padding: 12px 14px; border-radius: 10px; font-size: 13.5px; cursor: pointer; transition: all 0.2s;
+    }
+    .check-item:hover { border-color: var(--primary-color); background: #f8fafc; }
+    .check-item input[type="checkbox"] { transform: scale(1.2); cursor: pointer; }
+    .check-item.done { background: #f0fdf4; border-color: #86efac; }
+    .check-meta { font-size: 13px; color: #475569; margin-bottom: 14px; padding: 12px 16px; background: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0; }
+
+    .empty-state { text-align: center; padding: 48px 20px; color: #64748b; }
+    .empty-state i { font-size: 48px; color: #cbd5e1; margin-bottom: 12px; }
+    .empty-state p { font-size: 15px; font-weight: 500; }
+
+    .ocr-box { margin-top: 16px; padding: 16px; background: #f8fafc; border-radius: 12px; border: 2px dashed #3b82f6; }
+    .ocr-box-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-weight: 600; color: var(--primary-color); }
+    .ocr-status { margin-top: 10px; padding: 12px 16px; border-radius: 10px; font-size: 13px; display: none; line-height: 1.5; white-space: pre-wrap; }
+
+    .progress-bar { width: 100%; height: 6px; background: #e2e8f0; border-radius: 4px; overflow: hidden; margin-top: 4px; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #10b981); border-radius: 4px; transition: width 0.3s; }
+
+    /* Risk section styles */
+    .risk-section { margin-top: 16px; padding: 14px; border-radius: 10px; }
+    .risk-section.high { background: #fef2f2; border: 1px solid #fecaca; }
+    .risk-section.medium { background: #fffbeb; border: 1px solid #fde68a; }
+    .risk-section.low { background: #f0fdf4; border: 1px solid #bbf7d0; }
+    .risk-section.none { background: #f0f9ff; border: 1px solid #bae6fd; }
+    .risk-title { font-weight: 700; font-size: 14px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+    .risk-title.high { color: #991b1b; }
+    .risk-title.medium { color: #92400e; }
+    .risk-title.low { color: #166534; }
+    .risk-title.none { color: #075985; }
+    .risk-item { padding: 10px 12px; background: white; border-radius: 8px; margin-bottom: 8px; font-size: 13px; line-height: 1.6; border: 1px solid #f1f5f9; }
+    .risk-item:last-child { margin-bottom: 0; }
+    .risk-item-head { font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+    .risk-badge { padding: 2px 8px; border-radius: 10px; font-size: 10.5px; font-weight: 700; white-space: nowrap; }
+    .risk-badge.high { background: #fee2e2; color: #991b1b; }
+    .risk-badge.medium { background: #fef3c7; color: #92400e; }
+    .risk-badge.low { background: #dcfce7; color: #166534; }
+    .risk-badge.info { background: #dbeafe; color: #1e40af; }
+    .risk-desc { color: #4b5563; }
+    .risk-suggestion { margin-top: 6px; padding: 6px 10px; background: #f0f9ff; border-radius: 6px; font-size: 12px; color: #075985; border-left: 3px solid #0ea5e9; }
+
+    /* Dossier Quick View Modal */
+    .dossier-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+    @media (max-width: 768px) { .dossier-grid { grid-template-columns: 1fr; } }
+    .dossier-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+    .dossier-label { font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 4px; }
+    .dossier-value { font-size: 15px; font-weight: 600; color: #0f172a; }
+
+    /* Toast Notification */
+    .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+    body.rtl .toast-container { right: auto; left: 24px; }
+    .toast {
+      background: #1e293b; color: white; padding: 12px 20px; border-radius: 12px; font-size: 13.5px;
+      font-weight: 500; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: flex; align-items: center;
+      gap: 10px; pointer-events: auto; animation: toastSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .toast.success { background: #059669; }
+    .toast.error { background: #dc2626; }
+    .toast.info { background: #2563eb; }
+    @keyframes toastSlideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    /* Print styling */
+    @media print {
+      .header, .tabs, .action-bar, .filter-chips, .view-switcher, .btn, .close-modal, #sharedLayoutMount { display: none !important; }
+      .main-content { margin: 0 !important; padding: 0 !important; }
+      .tab-content { display: block !important; padding: 0 !important; }
+      .table-container { box-shadow: none !important; border: 1px solid #000 !important; }
+      th, td { border: 1px solid #ccc !important; font-size: 11pt !important; }
+    }
+  </style>
+  <link rel="stylesheet" href="styles/dark_theme.css">
+</head>
+<body>
+  <div id="sharedLayoutMount" data-active-page="consulting_tenders_management.html"></div>
+
+  <main class="main-content">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title" data-en="Consulting & Tenders" data-ar="الاستشارات والمناقصات" data-fr="Conseil & Appels d'offres">Consulting & Tenders</h1>
+        <div class="breadcrumb"><i class="fas fa-briefcase"></i> <span data-en="Track consulting engagements, public tenders pipeline & requisitions" data-ar="متابعة ملفات الاستشارات، مسار المناقصات وطلبات الاقتناء" data-fr="Suivre les missions de conseil, appels d'offres et réquisitions">Track consulting engagements, public tenders pipeline & requisitions</span></div>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-secondary btn-sm" onclick="printPage()" title="Print Current View"><i class="fas fa-print"></i> <span data-en="Print" data-ar="طباعة" data-fr="Imprimer">Print</span></button>
+        <button class="btn btn-primary" onclick="openConsultModal()"><i class="fas fa-plus"></i> <span data-en="New Consultation" data-ar="استشارة جديدة" data-fr="Nouvelle consultation">New Consultation</span></button>
+        <button class="btn btn-success" onclick="openTenderModal()"><i class="fas fa-plus"></i> <span data-en="New Tender" data-ar="مناقصة جديدة" data-fr="Nouvel AO">New Tender</span></button>
+        <button class="btn btn-info" onclick="openRequisitionModal()"><i class="fas fa-plus"></i> <span data-en="New Requisition" data-ar="طلب اقتناء جديد" data-fr="Nouvelle réquisition">New Requisition</span></button>
+      </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon blue"><i class="fas fa-user-tie"></i></div>
+        <div class="stat-details">
+          <h3 id="consultCount">0</h3>
+          <p data-en="Consultations" data-ar="الاستشارات" data-fr="Consultations">Consultations</p>
+          <div class="stat-sub" id="consultOpenSub">-</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon orange"><i class="fas fa-folder-open"></i></div>
+        <div class="stat-details">
+          <h3 id="openTenderCount">0</h3>
+          <p data-en="Open Tenders" data-ar="مناقصات مفتوحة" data-fr="AO ouverts">Open Tenders</p>
+          <div class="stat-sub" id="urgentTenderSub" style="color:var(--danger-color);">-</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon purple"><i class="fas fa-paper-plane"></i></div>
+        <div class="stat-details">
+          <h3 id="submittedTenderCount">0</h3>
+          <p data-en="Submitted Bids" data-ar="عروض مقدمة" data-fr="Soumises">Submitted Bids</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon green"><i class="fas fa-trophy"></i></div>
+        <div class="stat-details">
+          <h3 id="wonTenderCount">0</h3>
+          <p data-en="Won Marchés" data-ar="مناقصات فائزة" data-fr="Marchés gagnés">Won Marchés</p>
+          <div class="stat-sub" id="winRateStat">-</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon cyan"><i class="fas fa-coins"></i></div>
+        <div class="stat-details">
+          <h3 id="openAmountStat" style="font-size:18px;">0</h3>
+          <p data-en="Active Pipeline Value" data-ar="قيمة العروض الجارية" data-fr="Volume en cours">Active Pipeline Value</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon green"><i class="fas fa-hand-holding-usd"></i></div>
+        <div class="stat-details">
+          <h3 id="wonAmountStat" style="font-size:18px;color:var(--success-color);">0</h3>
+          <p data-en="Won Volume" data-ar="قيمة الصفقات الرابحة" data-fr="Volume gagné">Won Volume</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs Container -->
+    <div class="tabs-container">
+      <div class="tabs">
+        <div class="tab active" data-tab="tenders" onclick="switchTab('tenders')">
+          <i class="fas fa-file-contract"></i> <span data-en="Tenders Pipeline" data-ar="مسار المناقصات" data-fr="Appels d'offres">Tenders Pipeline</span>
+          <span class="tab-badge" id="tendersBadge">0</span>
+        </div>
+        <div class="tab" data-tab="consult" onclick="switchTab('consult')">
+          <i class="fas fa-user-tie"></i> <span data-en="Consulting Missions" data-ar="ملفات الاستشارات" data-fr="Consultations">Consulting Missions</span>
+          <span class="tab-badge" id="consultBadge">0</span>
+        </div>
+        <div class="tab" data-tab="requisitions" onclick="switchTab('requisitions')">
+          <i class="fas fa-shopping-cart"></i> <span data-en="Purchase Requisitions" data-ar="طلبات الاقتناء" data-fr="Réquisitions">Purchase Requisitions</span>
+          <span class="tab-badge" id="reqBadge">0</span>
+        </div>
+      </div>
+
+      <!-- ════════ TENDERS TAB ════════ -->
+      <div id="tab-tenders" class="tab-content active">
+        <div class="action-bar">
+          <div class="action-bar-left">
+            <div class="search-box">
+              <i class="fas fa-search text-muted"></i>
+              <input id="tenderFilterText" type="text" data-en-placeholder="Search reference / title / authority..." data-ar-placeholder="ابحث مرجع / عنوان / جهة..." data-fr-placeholder="Rechercher réf / titre / autorité..." placeholder="Search reference / title / authority..." oninput="renderTenders()">
+            </div>
+            <select id="tenderFilterStatus" class="btn btn-secondary btn-sm" style="padding:8px 12px;" onchange="renderTenders()">
+              <option value="" data-en="All Status" data-ar="كل الحالات" data-fr="Tous les statuts">All Status</option>
+              <option value="Open" data-en="Open" data-ar="مفتوح" data-fr="Ouvert">Open</option>
+              <option value="Submitted" data-en="Submitted" data-ar="مُقدَّم" data-fr="Soumis">Submitted</option>
+              <option value="Won" data-en="Won" data-ar="فائز" data-fr="Gagné">Won</option>
+              <option value="Lost" data-en="Lost" data-ar="خاسر" data-fr="Perdu">Lost</option>
+            </select>
+          </div>
+          <div class="action-bar-right">
+            <!-- View Switcher -->
+            <div class="view-switcher">
+              <button id="viewBtnTable" class="view-btn active" onclick="setTenderViewMode('table')"><i class="fas fa-table"></i> <span data-en="Table" data-ar="جدول" data-fr="Tableau">Table</span></button>
+              <button id="viewBtnKanban" class="view-btn" onclick="setTenderViewMode('kanban')"><i class="fas fa-columns"></i> <span data-en="Kanban" data-ar="كانبان" data-fr="Kanban">Kanban</span></button>
+            </div>
+            <button class="btn btn-purple btn-sm" onclick="openSmartPricingForTender(null, 'copilot')" title="AI Tender Copilot" style="background: linear-gradient(135deg, #7c3aed, #4f46e5); color: white; border: none; font-weight: 600;"><i class="fas fa-brain"></i> <span data-en="AI Copilot" data-ar="المساعد الذكي" data-fr="Copilote IA">المساعد الذكي</span></button>
+            <button class="btn btn-info btn-sm" onclick="openTenderOcrModal()" title="AI Scan & OCR via Copilote IA"><i class="fas fa-robot"></i> <span data-en="AI Scan" data-ar="مسح ذكي (Scan IA)" data-fr="Scan IA">مسح ذكي (Scan IA)</span></button>
+            <button class="btn btn-secondary btn-sm" onclick="exportTendersCSV()" title="Export CSV"><i class="fas fa-file-csv"></i> <span data-en="CSV" data-ar="تصدير CSV" data-fr="CSV">CSV</span></button>
+            <button class="btn btn-success btn-sm" onclick="openTenderModal()"><i class="fas fa-plus"></i> <span data-en="New Tender" data-ar="مناقصة جديدة" data-fr="Nouvel AO">New</span></button>
+          </div>
+        </div>
+
+        <!-- Quick filter chips -->
+        <div class="filter-chips">
+          <span class="chip active" data-filter="all" onclick="setTenderQuickFilter('all')"><i class="fas fa-layer-group"></i> <span data-en="All Tenders" data-ar="الكل" data-fr="Tous">All Tenders</span></span>
+          <span class="chip urgent" data-filter="urgent" onclick="setTenderQuickFilter('urgent')"><i class="fas fa-bolt"></i> <span data-en="Urgent (< 7 Days)" data-ar="أجل عاجل (< 7 أيام)" data-fr="Urgent (< 7 j)">Urgent (< 7 Days)</span></span>
+          <span class="chip" data-filter="open" onclick="setTenderQuickFilter('open')"><i class="fas fa-clock"></i> <span data-en="Open Only" data-ar="المفتوحة فقط" data-fr="Ouverts">Open Only</span></span>
+          <span class="chip won" data-filter="won" onclick="setTenderQuickFilter('won')"><i class="fas fa-trophy"></i> <span data-en="Won Marchés" data-ar="المكسبة فقط" data-fr="Gagnés">Won Marchés</span></span>
+          <span class="chip" data-filter="high_val" onclick="setTenderQuickFilter('high_val')"><i class="fas fa-gem"></i> <span data-en="High Value (> 1M DZD)" data-ar="قيمة كبرى (> 1M دج)" data-fr="Haute valeur">High Value (> 1M DZD)</span></span>
+        </div>
+
+        <!-- Table View -->
+        <div id="tenderTableView" class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th onclick="setTenderSort('reference')" style="cursor:pointer;"><span data-en="Reference" data-ar="المرجع" data-fr="Référence">Reference</span> <i id="tender-sort-reference" class="fas fa-sort" style="font-size:10px;"></i></th>
+                <th onclick="setTenderSort('title')" style="cursor:pointer;"><span data-en="Title" data-ar="العنوان" data-fr="Titre">Title</span> <i id="tender-sort-title" class="fas fa-sort" style="font-size:10px;"></i></th>
+                <th><span data-en="Authority" data-ar="الجهة المتعاقدة" data-fr="Autorité">Authority</span></th>
+                <th onclick="setTenderSort('deadline')" style="cursor:pointer;"><span data-en="Deadline" data-ar="الأجل" data-fr="Date limite">Deadline</span> <i id="tender-sort-deadline" class="fas fa-sort-up" style="font-size:10px;"></i></th>
+                <th onclick="setTenderSort('amount')" style="cursor:pointer;text-align:right;"><span data-en="Amount" data-ar="المبلغ" data-fr="Montant">Amount</span> <i id="tender-sort-amount" class="fas fa-sort" style="font-size:10px;"></i></th>
+                <th onclick="setTenderSort('status')" style="cursor:pointer;"><span data-en="Status" data-ar="الحالة" data-fr="Statut">Status</span> <i id="tender-sort-status" class="fas fa-sort" style="font-size:10px;"></i></th>
+                <th><span data-en="Checklist" data-ar="جاهزية الملف" data-fr="Checklist">Checklist</span></th>
+                <th style="text-align:right;"><span data-en="Actions" data-ar="إجراءات" data-fr="Actions">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody id="tenderTableBody"></tbody>
+          </table>
+        </div>
+
+        <!-- Kanban View -->
+        <div id="tenderKanbanView" class="kanban-board" style="display:none;">
+          <div class="kanban-col open" ondragover="handleDragOver(event)" ondrop="handleDrop(event, 'Open')">
+            <div class="kanban-header">
+              <div class="kanban-title"><i class="fas fa-folder-open text-primary"></i> <span data-en="Open / Draft" data-ar="مفتوحة / تحضير" data-fr="Ouvert / Élaboration">Open / Draft</span></div>
+              <span class="kanban-amount-badge" id="kanbanOpenTotal">0</span>
+            </div>
+            <div class="kanban-cards" id="kanbanCardsOpen"></div>
+          </div>
+          <div class="kanban-col submitted" ondragover="handleDragOver(event)" ondrop="handleDrop(event, 'Submitted')">
+            <div class="kanban-header">
+              <div class="kanban-title"><i class="fas fa-paper-plane" style="color:#f59e0b;"></i> <span data-en="Submitted" data-ar="عروض مقدمة" data-fr="Soumises">Submitted</span></div>
+              <span class="kanban-amount-badge" id="kanbanSubmittedTotal">0</span>
+            </div>
+            <div class="kanban-cards" id="kanbanCardsSubmitted"></div>
+          </div>
+          <div class="kanban-col won" ondragover="handleDragOver(event)" ondrop="handleDrop(event, 'Won')">
+            <div class="kanban-header">
+              <div class="kanban-title"><i class="fas fa-trophy text-success"></i> <span data-en="Won Marchés" data-ar="فائز / تم الترسية" data-fr="Gagnés / Retenus">Won Marchés</span></div>
+              <span class="kanban-amount-badge" id="kanbanWonTotal">0</span>
+            </div>
+            <div class="kanban-cards" id="kanbanCardsWon"></div>
+          </div>
+          <div class="kanban-col lost" ondragover="handleDragOver(event)" ondrop="handleDrop(event, 'Lost')">
+            <div class="kanban-header">
+              <div class="kanban-title"><i class="fas fa-times-circle text-danger"></i> <span data-en="Lost / Closed" data-ar="خاسرة / مستبعدة" data-fr="Perdus / Rejetés">Lost / Closed</span></div>
+              <span class="kanban-amount-badge" id="kanbanLostTotal">0</span>
+            </div>
+            <div class="kanban-cards" id="kanbanCardsLost"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════ CONSULTATIONS TAB ════════ -->
+      <div id="tab-consult" class="tab-content">
+        <div class="action-bar">
+          <div class="action-bar-left">
+            <div class="search-box">
+              <i class="fas fa-search text-muted"></i>
+              <input id="consultFilterText" type="text" data-en-placeholder="Search client / consultant / subject..." data-ar-placeholder="ابحث عميل / مستشار / موضوع..." data-fr-placeholder="Rechercher client / consultant / sujet..." placeholder="Search client / consultant / subject..." oninput="renderConsultations()">
+            </div>
+            <select id="consultFilterStatus" class="btn btn-secondary btn-sm" style="padding:8px 12px;" onchange="renderConsultations()">
+              <option value="" data-en="All Status" data-ar="كل الحالات" data-fr="Tous les statuts">All Status</option>
+              <option value="Open" data-en="Open" data-ar="مفتوح" data-fr="Ouvert">Open</option>
+              <option value="Closed" data-en="Closed" data-ar="مغلق" data-fr="Fermé">Closed</option>
+            </select>
+            <select id="consultFilterCategory" class="btn btn-secondary btn-sm" style="padding:8px 12px;" onchange="renderConsultations()">
+              <option value="" data-en="All Categories" data-ar="كل الفئات" data-fr="Toutes catégories">All Categories</option>
+              <option value="Legal" data-en="Legal" data-ar="قانوني" data-fr="Juridique">Legal</option>
+              <option value="Financial" data-en="Financial" data-ar="مالي" data-fr="Financier">Financial</option>
+              <option value="Technical" data-en="Technical" data-ar="تقني" data-fr="Technique">Technical</option>
+              <option value="HR" data-en="HR" data-ar="موارد بشرية" data-fr="RH">HR</option>
+              <option value="Strategic" data-en="Strategic" data-ar="استراتيجي" data-fr="Stratégique">Strategic</option>
+              <option value="Other" data-en="Other" data-ar="أخرى" data-fr="Autre">Other</option>
+            </select>
+          </div>
+          <div class="action-bar-right">
+            <button class="btn btn-info btn-sm" onclick="openConsultOcrModal()"><i class="fas fa-robot"></i> <span data-en="AI Scan" data-ar="مسح ذكي" data-fr="Scan IA">AI Scan</span></button>
+            <button class="btn btn-secondary btn-sm" onclick="exportConsultationsCSV()" title="Export CSV"><i class="fas fa-file-csv"></i> <span data-en="CSV" data-ar="تصدير CSV" data-fr="CSV">CSV</span></button>
+            <button class="btn btn-primary btn-sm" onclick="openConsultModal()"><i class="fas fa-plus"></i> <span data-en="New Consultation" data-ar="استشارة جديدة" data-fr="Nouvelle">New</span></button>
+          </div>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th onclick="setConsultSort('client')" style="cursor:pointer;"><span data-en="Client" data-ar="العميل" data-fr="Client">Client</span> <i id="consult-sort-client" class="fas fa-sort" style="font-size:10px;"></i></th>
+                <th onclick="setConsultSort('consultant')" style="cursor:pointer;"><span data-en="Consultant" data-ar="المستشار" data-fr="Consultant">Consultant</span> <i id="consult-sort-consultant" class="fas fa-sort" style="font-size:10px;"></i></th>
+                <th onclick="setConsultSort('date')" style="cursor:pointer;"><span data-en="Date" data-ar="التاريخ" data-fr="Date">Date</span> <i id="consult-sort-date" class="fas fa-sort-down" style="font-size:10px;"></i></th>
+                <th><span data-en="Subject" data-ar="الموضوع" data-fr="Sujet">Subject</span></th>
+                <th><span data-en="Category" data-ar="الفئة" data-fr="Catégorie">Category</span></th>
+                <th onclick="setConsultSort('status')" style="cursor:pointer;"><span data-en="Status" data-ar="الحالة" data-fr="Statut">Status</span> <i id="consult-sort-status" class="fas fa-sort" style="font-size:10px;"></i></th>
+                <th style="text-align:right;"><span data-en="Actions" data-ar="إجراءات" data-fr="Actions">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody id="consultTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ════════ REQUISITIONS TAB ════════ -->
+      <div id="tab-requisitions" class="tab-content">
+        <div class="action-bar">
+          <div class="action-bar-left">
+            <div class="search-box">
+              <i class="fas fa-search text-muted"></i>
+              <input id="reqFilterText" type="text" data-en-placeholder="Search reference / department / item..." data-ar-placeholder="ابحث مرجع / قسم / صنف..." data-fr-placeholder="Rechercher réf / département / article..." placeholder="Search reference / department / item..." oninput="renderRequisitions()">
+            </div>
+            <select id="reqFilterStatus" class="btn btn-secondary btn-sm" style="padding:8px 12px;" onchange="renderRequisitions()">
+              <option value="" data-en="All Status" data-ar="كل الحالات" data-fr="Tous les statuts">All Status</option>
+              <option value="Draft" data-en="Draft" data-ar="مسودة" data-fr="Brouillon">Draft</option>
+              <option value="Pending" data-en="Pending" data-ar="قيد الانتظار" data-fr="En attente">Pending</option>
+              <option value="Approved" data-en="Approved" data-ar="موافق عليه" data-fr="Approuvé">Approved</option>
+              <option value="Rejected" data-en="Rejected" data-ar="مرفوض" data-fr="Rejeté">Rejected</option>
+              <option value="Fulfilled" data-en="Fulfilled" data-ar="منجز" data-fr="Livré">Fulfilled</option>
+            </select>
+            <select id="reqFilterPriority" class="btn btn-secondary btn-sm" style="padding:8px 12px;" onchange="renderRequisitions()">
+              <option value="" data-en="All Priorities" data-ar="كل الأولويات" data-fr="Toutes priorités">All Priorities</option>
+              <option value="Urgent" data-en="Urgent" data-ar="عاجل" data-fr="Urgent">Urgent</option>
+              <option value="High" data-en="High" data-ar="مرتفع" data-fr="Haute">High</option>
+              <option value="Normal" data-en="Normal" data-ar="عادي" data-fr="Normale">Normal</option>
+              <option value="Low" data-en="Low" data-ar="منخفض" data-fr="Basse">Low</option>
+            </select>
+          </div>
+          <div class="action-bar-right">
+            <button class="btn btn-secondary btn-sm" onclick="exportRequisitionsCSV()" title="Export CSV"><i class="fas fa-file-csv"></i> <span data-en="CSV" data-ar="تصدير CSV" data-fr="CSV">CSV</span></button>
+            <button class="btn btn-info btn-sm" onclick="openRequisitionModal()"><i class="fas fa-plus"></i> <span data-en="New Requisition" data-ar="طلب اقتناء جديد" data-fr="Nouvelle réquisition">New Requisition</span></button>
+          </div>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th onclick="setReqSort('reference')" style="cursor:pointer;"><span data-en="Reference" data-ar="المرجع" data-fr="Référence">Reference</span> <i id="req-sort-reference" class="fas fa-sort" style="font-size:10px;"></i></th>
+                <th><span data-en="Department" data-ar="القسم" data-fr="Département">Department</span></th>
+                <th><span data-en="Items" data-ar="الأصناف" data-fr="Articles">Items</span></th>
+                <th onclick="setReqSort('date')" style="cursor:pointer;"><span data-en="Date" data-ar="التاريخ" data-fr="Date">Date</span> <i id="req-sort-date" class="fas fa-sort-down" style="font-size:10px;"></i></th>
+                <th onclick="setReqSort('amount')" style="cursor:pointer;text-align:right;"><span data-en="Est. Amount" data-ar="المبلغ التقديري" data-fr="Montant est.">Est. Amount</span> <i id="req-sort-amount" class="fas fa-sort" style="font-size:10px;"></i></th>
+                <th><span data-en="Priority" data-ar="الأولوية" data-fr="Priorité">Priority</span></th>
+                <th onclick="setReqSort('status')" style="cursor:pointer;"><span data-en="Status" data-ar="الحالة" data-fr="Statut">Status</span> <i id="req-sort-status" class="fas fa-sort" style="font-size:10px;"></i></th>
+                <th style="text-align:right;"><span data-en="Actions" data-ar="إجراءات" data-fr="Actions">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody id="reqTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ── Consultation Modal (Add/Edit) ── -->
+  <div id="consultModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true">
+      <div class="modal-header">
+        <h3><i class="fas fa-user-tie"></i> <span id="consultModalTitle" data-en="New Consultation" data-ar="استشارة جديدة" data-fr="Nouvelle consultation">New Consultation</span></h3>
+        <button class="close-modal" onclick="closeConsultModal()"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="consultEditIdx" value="-1">
+        <div class="form-grid">
+          <div class="form-group full"><label data-en="Client" data-ar="العميل" data-fr="Client">Client</label><input id="consultClient" class="form-input" type="text" placeholder="Entreprise / Client..."></div>
+          <div class="form-group"><label data-en="Consultant" data-ar="المستشار" data-fr="Consultant">Consultant</label><input id="consultConsultant" class="form-input" type="text" placeholder="Nom du consultant..."></div>
+          <div class="form-group"><label data-en="Date" data-ar="التاريخ" data-fr="Date">Date</label><input id="consultDate" class="form-input" type="date"></div>
+          <div class="form-group full"><label data-en="Subject" data-ar="الموضوع" data-fr="Sujet">Subject</label><textarea id="consultSubject" class="form-input" style="min-height:80px;resize:vertical;" placeholder="Objet de la consultation..."></textarea></div>
+          <div class="form-group"><label data-en="Category" data-ar="الفئة" data-fr="Catégorie">Category</label><select id="consultCategory" class="form-input"><option value="Legal" data-en="Legal" data-ar="قانوني" data-fr="Juridique">Legal</option><option value="Financial" data-en="Financial" data-ar="مالي" data-fr="Financier">Financial</option><option value="Technical" data-en="Technical" data-ar="تقني" data-fr="Technique">Technical</option><option value="HR" data-en="HR" data-ar="موارد بشرية" data-fr="RH">HR</option><option value="Strategic" data-en="Strategic" data-ar="استراتيجي" data-fr="Stratégique">Strategic</option><option value="Other" data-en="Other" data-ar="أخرى" data-fr="Autre">Other</option></select></div>
+          <div class="form-group"><label data-en="Status" data-ar="الحالة" data-fr="Statut">Status</label><select id="consultStatus" class="form-input"><option value="Open" data-en="Open" data-ar="مفتوح" data-fr="Ouvert">Open</option><option value="Closed" data-en="Closed" data-ar="مغلق" data-fr="Fermé">Closed</option></select></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeConsultModal()"><i class="fas fa-times"></i> <span data-en="Cancel" data-ar="إلغاء" data-fr="Annuler">Cancel</span></button>
+        <button class="btn btn-primary" onclick="saveConsult()"><i class="fas fa-save"></i> <span data-en="Save" data-ar="حفظ" data-fr="Enregistrer">Save</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Tender Modal (Add/Edit) ── -->
+  <div id="tenderModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true">
+      <div class="modal-header">
+        <h3><i class="fas fa-file-contract"></i> <span id="tenderModalTitle" data-en="New Tender" data-ar="مناقصة جديدة" data-fr="Nouvel AO">New Tender</span></h3>
+        <button class="close-modal" onclick="closeTenderModal()"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="tenderEditIdx" value="-1">
+        <div class="form-grid">
+          <div class="form-group"><label data-en="Reference" data-ar="المرجع" data-fr="Référence">Reference</label><input id="tenderRef" class="form-input" type="text" placeholder="AO/2026/001"></div>
+          <div class="form-group"><label data-en="Title" data-ar="العنوان" data-fr="Titre">Title</label><input id="tenderTitle" class="form-input" type="text" placeholder="Titre du projet / marché..."></div>
+          <div class="form-group"><label data-en="Authority" data-ar="الجهة المتعاقدة" data-fr="Autorité">Authority</label><input id="tenderAuthority" class="form-input" type="text" placeholder="Ministère / Direction / Wilaya..."></div>
+          <div class="form-group"><label data-en="Deadline" data-ar="الأجل النهائي" data-fr="Date limite">Deadline</label><input id="tenderDeadline" class="form-input" type="date"></div>
+          <div class="form-group">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <label data-en="Estimated Amount (DZD)" data-ar="القيمة التقديرية (دج)" data-fr="Montant estimé (DZD)">Estimated Amount (DZD)</label>
+              <button type="button" class="btn btn-secondary btn-sm" style="padding:2px 8px; font-size:11px;" onclick="triggerSmartPricingFromModal()"><i class="fas fa-brain"></i> <span data-en="Smart Price" data-ar="تسعير ذكي" data-fr="Prix IA">Smart Price</span></button>
+            </div>
+            <input id="tenderAmount" class="form-input" type="number" min="0" step="0.01" placeholder="0.00">
+          </div>
+          <div class="form-group"><label data-en="Status" data-ar="الحالة" data-fr="Statut">Status</label><select id="tenderStatus" class="form-input"><option value="Open" data-en="Open" data-ar="مفتوح" data-fr="Ouvert">Open</option><option value="Submitted" data-en="Submitted" data-ar="مُقدَّم" data-fr="Soumis">Submitted</option><option value="Won" data-en="Won" data-ar="فائز" data-fr="Gagné">Won</option><option value="Lost" data-en="Lost" data-ar="خاسر" data-fr="Perdu">Lost</option></select></div>
+          <div class="form-group full"><label data-en="Notes / Description" data-ar="ملاحظات / بنود ودفتر الشروط" data-fr="Notes / Cahier des charges">Notes / Description</label><textarea id="tenderNotes" class="form-input" style="min-height:90px;resize:vertical;" placeholder="Détails du cahier des charges, lots, spécifications..."></textarea></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeTenderModal()"><i class="fas fa-times"></i> <span data-en="Cancel" data-ar="إلغاء" data-fr="Annuler">Cancel</span></button>
+        <button class="btn btn-success" onclick="saveTender()"><i class="fas fa-save"></i> <span data-en="Save" data-ar="حفظ" data-fr="Enregistrer">Save</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Tender Dossier Overview Modal ── -->
+  <div id="tenderDossierModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" style="width:min(860px, 96vw);">
+      <div class="modal-header" style="background: linear-gradient(135deg, #1e40af, #2563eb); color: white;">
+        <h3 style="color:white;"><i class="fas fa-folder-open"></i> <span id="dossierModalTitle" data-en="Tender Dossier Overview" data-ar="ملف تفاصيل المناقصة" data-fr="Dossier d'appel d'offres">Tender Dossier</span></h3>
+        <button class="close-modal" onclick="closeTenderDossierModal()" style="color:white; background:rgba(255,255,255,0.2);"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body" id="dossierModalBody">
+        <!-- Injected dynamically -->
+      </div>
+      <div class="modal-footer" id="dossierModalFooter">
+        <button class="btn btn-secondary" onclick="closeTenderDossierModal()"><i class="fas fa-times"></i> <span data-en="Close" data-ar="إغلاق" data-fr="Fermer">Close</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Checklist Modal ── -->
+  <div id="checklistModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="checklistTitle">
+      <div class="modal-header">
+        <h3 id="checklistTitle"><i class="fas fa-tasks"></i> <span data-en="Tender Documentation Checklist" data-ar="قائمة التحقق ووثائق المناقصة" data-fr="Checklist pièces administratives">Tender Checklist</span></h3>
+        <button class="close-modal" onclick="closeChecklistModal()"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <div id="checklistMeta" class="check-meta">-</div>
+        <div id="checklistGrid" class="checklist-grid"></div>
+        <div id="checklistProgress" style="margin-top:14px;font-size:13px;color:#6b7280;"></div>
+
+        <!-- Add custom requirement item -->
+        <div style="margin-top:20px; padding:14px; background:#f8fafc; border-radius:10px; border:1px solid #e2e8f0;">
+          <label style="font-size:12px; font-weight:700; color:#475569; display:block; margin-bottom:6px;"><i class="fas fa-plus-circle"></i> <span data-en="Add Custom Required Document" data-ar="إضافة وثيقة أو متطلب إضافي" data-fr="Ajouter une pièce requise">Add Custom Required Document</span>:</label>
+          <div style="display:flex; gap:8px;">
+            <input type="text" id="newChecklistInput" class="form-input" style="flex:1;" placeholder="Ex: Attestation de bonne exécution, Caution...">
+            <button class="btn btn-primary btn-sm" onclick="addNewChecklistItem()"><i class="fas fa-plus"></i> <span data-en="Add" data-ar="إضافة" data-fr="Ajouter">Add</span></button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeChecklistModal()"><i class="fas fa-times"></i> <span data-en="Cancel" data-ar="إلغاء" data-fr="Annuler">Cancel</span></button>
+        <button class="btn btn-primary" onclick="saveChecklistFromModal()"><i class="fas fa-save"></i> <span data-en="Save Checklist" data-ar="حفظ القائمة" data-fr="Enregistrer">Save Checklist</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Requisition Modal (Add/Edit) ── -->
+  <div id="requisitionModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true">
+      <div class="modal-header">
+        <h3><i class="fas fa-shopping-cart"></i> <span id="reqModalTitle" data-en="New Requisition" data-ar="طلب اقتناء جديد" data-fr="Nouvelle réquisition">New Requisition</span></h3>
+        <button class="close-modal" onclick="closeRequisitionModal()"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="reqEditIdx" value="-1">
+        <div class="form-grid">
+          <div class="form-group"><label data-en="Reference" data-ar="المرجع" data-fr="Référence">Reference</label><input id="reqRef" class="form-input" type="text" placeholder="REQ/2026/0001"></div>
+          <div class="form-group"><label data-en="Department" data-ar="القسم" data-fr="Département">Department</label><input id="reqDepartment" class="form-input" type="text" placeholder="IT / Finance / RH..."></div>
+          <div class="form-group"><label data-en="Date" data-ar="التاريخ" data-fr="Date">Date</label><input id="reqDate" class="form-input" type="date"></div>
+          <div class="form-group"><label data-en="Required by" data-ar="مطلوب بحلول" data-fr="Requis par">Required by</label><input id="reqRequiredDate" class="form-input" type="date"></div>
+          <div class="form-group"><label data-en="Priority" data-ar="الأولوية" data-fr="Priorité">Priority</label><select id="reqPriority" class="form-input"><option value="Urgent" data-en="Urgent" data-ar="عاجل" data-fr="Urgent">Urgent</option><option value="High" data-en="High" data-ar="مرتفع" data-fr="Haute">High</option><option value="Normal" data-en="Normal" data-ar="عادي" data-fr="Normale" selected>Normal</option><option value="Low" data-en="Low" data-ar="منخفض" data-fr="Basse">Low</option></select></div>
+          <div class="form-group"><label data-en="Status" data-ar="الحالة" data-fr="Statut">Status</label><select id="reqStatus" class="form-input"><option value="Draft" data-en="Draft" data-ar="مسودة" data-fr="Brouillon">Draft</option><option value="Pending" data-en="Pending" data-ar="قيد الانتظار" data-fr="En attente" selected>Pending</option><option value="Approved" data-en="Approved" data-ar="موافق عليه" data-fr="Approuvé">Approved</option><option value="Rejected" data-en="Rejected" data-ar="مرفوض" data-fr="Rejeté">Rejected</option><option value="Fulfilled" data-en="Fulfilled" data-ar="منجز" data-fr="Livré">Fulfilled</option></select></div>
+          <div class="form-group"><label data-en="Est. Amount (DZD)" data-ar="المبلغ التقديري (دج)" data-fr="Montant est. (DZD)">Est. Amount (DZD)</label><input id="reqAmount" class="form-input" type="number" step="0.01" min="0" placeholder="0.00"></div>
+          <div class="form-group"><label data-en="Requested by" data-ar="طلب بواسطة" data-fr="Demandé par">Requested by</label><input id="reqRequestedBy" class="form-input" type="text" placeholder="Nom de l'employé..."></div>
+          <div class="form-group full"><label data-en="Items / Description" data-ar="الأصناف / الوصف" data-fr="Articles / Description">Items / Description</label><textarea id="reqItems" class="form-input" style="min-height:90px;resize:vertical;" placeholder="Item 1: ... qty ... prix&#10;Item 2: ... qty ... prix"></textarea></div>
+          <div class="form-group full"><label data-en="Notes" data-ar="ملاحظات" data-fr="Notes">Notes</label><textarea id="reqNotes" class="form-input" style="min-height:60px;resize:vertical;"></textarea></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeRequisitionModal()"><i class="fas fa-times"></i> <span data-en="Cancel" data-ar="إلغاء" data-fr="Annuler">Cancel</span></button>
+        <button class="btn btn-primary" onclick="saveRequisition()"><i class="fas fa-save"></i> <span data-en="Save" data-ar="حفظ" data-fr="Enregistrer">Save</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Tender OCR Modal ── -->
+  <div id="tenderOcrModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true">
+      <div class="modal-header">
+        <h3><i class="fas fa-robot"></i> <span data-en="AI Scan Tender Document" data-ar="مسح وثيقة المناقصة بالذكاء الاصطناعي" data-fr="Scan IA Document AO">AI Scan Tender Document</span></h3>
+        <button class="close-modal" onclick="closeTenderOcrModal()"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label data-en="Upload tender document (PDF, image, Excel, Word, TXT)" data-ar="ارفع وثيقة المناقصة (PDF، صورة، Excel، Word، TXT)" data-fr="Télécharger le document (PDF, image, Excel, Word, TXT)">Upload tender document (PDF, image, Excel, Word, TXT)</label>
+          <input id="tenderOcrFile" type="file" accept="image/*,application/pdf,.xlsx,.xls,.csv,.doc,.docx,.txt" class="form-input" style="padding:10px;border:2px dashed var(--primary-color);border-radius:10px;cursor:pointer;">
+        </div>
+        <div id="tenderOcrStatus" class="ocr-status"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeTenderOcrModal()"><i class="fas fa-times"></i> <span data-en="Close" data-ar="إغلاق" data-fr="Fermer">Close</span></button>
+        <button class="btn btn-info" id="tenderOcrBtn" onclick="runTenderOcrExtraction()"><i class="fas fa-magic"></i> <span data-en="Extract" data-ar="استخراج" data-fr="Extraire">Extract</span></button>
+        <button class="btn btn-success" id="tenderOcrCreateBtn" onclick="createTenderFromOcrData()" style="display:none;"><i class="fas fa-check"></i> <span data-en="Create Tender" data-ar="إنشاء مناقصة" data-fr="Créer AO">Create Tender</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Consultation OCR Modal ── -->
+  <div id="consultOcrModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true">
+      <div class="modal-header">
+        <h3><i class="fas fa-robot"></i> <span data-en="AI Scan Consultation Document" data-ar="مسح وثيقة الاستشارة بالذكاء الاصطناعي" data-fr="Scan IA Document Consultation">AI Scan Consultation Document</span></h3>
+        <button class="close-modal" onclick="closeConsultOcrModal()"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label data-en="Upload consultation document (PDF, image, Excel, Word, TXT)" data-ar="ارفع وثيقة الاستشارة (PDF، صورة، Excel، Word، TXT)" data-fr="Télécharger le document (PDF, image, Excel, Word, TXT)">Upload consultation document (PDF, image, Excel, Word, TXT)</label>
+          <input id="consultOcrFile" type="file" accept="image/*,application/pdf,.xlsx,.xls,.csv,.doc,.docx,.txt" class="form-input" style="padding:10px;border:2px dashed var(--primary-color);border-radius:10px;cursor:pointer;">
+        </div>
+        <div id="consultOcrStatus" class="ocr-status"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeConsultOcrModal()"><i class="fas fa-times"></i> <span data-en="Close" data-ar="إغلاق" data-fr="Fermer">Close</span></button>
+        <button class="btn btn-info" id="consultOcrBtn" onclick="runConsultOcrExtraction()"><i class="fas fa-magic"></i> <span data-en="Extract" data-ar="استخراج" data-fr="Extraire">Extract</span></button>
+        <button class="btn btn-success" id="consultOcrCreateBtn" onclick="createConsultFromOcrData()" style="display:none;"><i class="fas fa-check"></i> <span data-en="Create Consultation" data-ar="إنشاء استشارة" data-fr="Créer consultation">Create Consultation</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Risk Analysis Modal ── -->
+  <div id="riskModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" style="width:min(800px,96vw);">
+      <div class="modal-header">
+        <h3><i class="fas fa-shield-alt"></i> <span id="riskModalTitle" data-en="AI Risk Analysis" data-ar="تحليل المخاطر بالذكاء الاصطناعي" data-fr="Analyse des risques IA">AI Risk Analysis</span></h3>
+        <button class="close-modal" onclick="closeRiskModal()"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <div id="riskModalStatus" class="ocr-status"></div>
+        <div id="riskModalContent"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeRiskModal()"><i class="fas fa-times"></i> <span data-en="Close" data-ar="إغلاق" data-fr="Fermer">Close</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script>
+    // Storage check & fallback
+    if (typeof ZS === 'undefined') {
+      var _zsFallback = {};
+      window.ZS = {
+        getItem: function(k) { return _zsFallback[k] || null; },
+        setItem: function(k, v) { _zsFallback[k] = String(v); },
+        removeItem: function(k) { delete _zsFallback[k]; },
+        clear: function() { _zsFallback = {}; },
+        key: function(i) { return Object.keys(_zsFallback)[i] || null; }
+      };
+      console.warn('[consulting] ZS storage fallback initialized');
+    }
+
+    const SETTINGS_KEY = 'zeralda-settings';
+    const CONSULT_KEY = 'consultations-data';
+    const TENDER_KEY = 'tenders-data';
+    const REQ_KEY = 'requisitions-data';
+
+    function getSettings(){
+      try { return JSON.parse(ZS.getItem(SETTINGS_KEY) || '{}'); } catch(e){ return {}; }
+    }
+
+    function getActiveCompanyId(){
+      if (window.CompanyStorage && window.CompanyStorage.getActiveCompanyId) {
+        var cid = window.CompanyStorage.getActiveCompanyId();
+        if (cid) return String(cid);
+      }
+      const s = getSettings();
+      return String((s && s.activeCompanyId) || 'default-company');
+    }
+    window.getActiveCompanyId = getActiveCompanyId;
+
+    function scopedKey(baseKey){ return `${baseKey}::${getActiveCompanyId()}`; }
+
+    let consultations = [];
+    let tenders = [];
+    let requisitions = [];
+    window.consultations = consultations;
+    window.tenders = tenders;
+    window.requisitions = requisitions;
+
+    let activeChecklistTenderIndex = null;
+    let tenderOcrExtractedData = null;
+    let consultOcrExtractedData = null;
+    let tenderViewMode = 'table';
+    let tenderQuickFilter = 'all';
+
+    let _consultSortCol = 'date';
+    let _consultSortDir = 'desc';
+    let _tenderSortCol = 'deadline';
+    let _tenderSortDir = 'asc';
+    let reqSortField = 'date';
+    let reqSortDir = 'desc';
+
+    function getLang(){ return ZS.getItem('preferred-language') || 'en'; }
+
+    function formatMoney(value){
+      const amount = Number(value || 0);
+      const lang = getLang();
+      try {
+        return new Intl.NumberFormat(lang === 'ar' ? 'ar-DZ' : (lang === 'fr' ? 'fr-FR' : 'en-US'), {
+          style: 'currency', currency: 'DZD', maximumFractionDigits: 2
+        }).format(Number.isFinite(amount) ? amount : 0);
+      } catch(e){
+        return (Number.isFinite(amount) ? amount : 0).toFixed(2) + ' DZD';
+      }
+    }
+
+    function normalizeTextValue(s){ return String(s || '').trim().toLowerCase().replace(/\s+/g, ' '); }
+
+    function getTenderByIndex(idx){
+      if(!Number.isInteger(idx) || idx < 0 || idx >= tenders.length) return null;
+      return tenders[idx] || null;
+    }
+    window.getTenderByIndex = getTenderByIndex;
+
+    // Toast Notification helper
+    function showToast(msg, type = 'info'){
+      var container = document.getElementById('toastContainer');
+      if(!container) return;
+      var el = document.createElement('div');
+      el.className = 'toast ' + type;
+      var icon = type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle';
+      el.innerHTML = '<i class="fas ' + icon + '"></i> <span>' + escapeHtml(msg) + '</span>';
+      container.appendChild(el);
+      setTimeout(() => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(10px)';
+        el.style.transition = 'all 0.3s ease';
+        setTimeout(() => el.remove(), 300);
+      }, 3500);
+    }
+    window.showToast = showToast;
+
+    // ── Translation Dictionary ──
+    var CONSULTING_DICT = {
+      no_consultations_yet: { en: 'No consultations found.', ar: 'لا توجد ملفات استشارات.', fr: 'Aucune consultation trouvée.' },
+      no_tenders_yet: { en: 'No tenders found.', ar: 'لا توجد مناقصات مطابقة.', fr: 'Aucun appel d\'offres trouvé.' },
+      no_requisitions_yet: { en: 'No requisitions found.', ar: 'لا توجد طلبات اقتناء.', fr: 'Aucune réquisition trouvée.' },
+      risk_analysis: { en: 'Risk Analysis', ar: 'تحليل المخاطر', fr: 'Analyse des risques' },
+      new_requisition: { en: 'New Requisition', ar: 'طلب اقتناء جديد', fr: 'Nouvelle réquisition' },
+      edit_requisition: { en: 'Edit Requisition', ar: 'تعديل طلب الاقتناء', fr: 'Modifier réquisition' },
+      confirm_delete_req: { en: 'Delete this requisition?', ar: 'حذف طلب الاقتناء هذا؟', fr: 'Supprimer cette réquisition ?' },
+      req_need_ref_or_items: { en: 'Please enter at least a reference or items description.', ar: 'الرجاء إدخال مرجع أو وصف الأصناف على الأقل.', fr: 'Veuillez saisir au moins une référence ou une description.' },
+      pdf_lib_not_loaded: { en: 'PDF library not loaded.', ar: 'مكتبة PDF غير محمّلة.', fr: 'Bibliothèque PDF non chargée.' },
+      expired: { en: 'Expired', ar: 'منتهية', fr: 'Expiré' },
+      days_left: { en: 'days left', ar: 'يوم متبقٍ', fr: 'jours restants' },
+      checklist_for: { en: 'Checklist for', ar: 'قائمة التحقق لـ', fr: 'Checklist pour' },
+      doc_admin_folder: { en: 'Admin Folder', ar: 'الملف الإداري', fr: 'Dossier administratif' },
+      doc_technical_offer: { en: 'Technical Offer', ar: 'العرض التقني', fr: 'Offre technique' },
+      doc_financial_offer: { en: 'Financial Offer', ar: 'العرض المالي', fr: 'Offre financière' },
+      doc_bid_bond: { en: 'Bid Bond / Guarantee', ar: 'كفالة التعهد / الضمان', fr: 'Caution de soumission' },
+      doc_tax_clearance: { en: 'Tax Clearance', ar: 'شهادة الوضعية الجبائية', fr: 'Attestation fiscale' },
+      doc_commercial_register: { en: 'Commercial Register', ar: 'السجل التجاري', fr: 'Registre de commerce' },
+      export_analysis: { en: 'Export Summary', ar: 'تصدير التقرير', fr: 'Exporter l\'analyse' },
+      convert_to_po: { en: 'Convert to Purchase Order', ar: 'تحويل إلى أمر شراء', fr: 'Convertir en bon de commande' },
+      convert_to_quote: { en: 'Convert to Sales Quote', ar: 'تحويل إلى عرض سعر / مشروع', fr: 'Convertir en devis de vente' },
+      checklist: { en: 'Checklist', ar: 'قائمة التحقق', fr: 'Checklist' },
+      invalid_tender: { en: 'The selected tender is no longer available.', ar: 'المناقصة المحددة لم تعد متاحة.', fr: 'L\'AO sélectionné n\'est plus disponible.' },
+      tender_already_converted: { en: 'This tender was already converted to a Purchase Order.', ar: 'تم تحويل هذه المناقصة مسبقًا إلى أمر شراء.', fr: 'Cet AO a déjà été converti en bon de commande.' },
+      unknown_authority: { en: 'Unknown Authority', ar: 'جهة غير محددة', fr: 'Autorité non définie' },
+      confirm_delete_consultation: { en: 'Delete this consultation record?', ar: 'حذف سجل الاستشارة هذا؟', fr: 'Supprimer ce dossier de consultation ?' },
+      confirm_delete_tender: { en: 'Delete this tender record?', ar: 'حذف سجل هذه المناقصة؟', fr: 'Supprimer cet appel d\'offres ?' },
+      tender_to_po_success: { en: 'Success! Tender {ref} converted to Purchase Order in Purchasing.', ar: 'تم بنجاح! تم تحويل المناقصة {ref} إلى أمر شراء في المشتريات.', fr: 'Succès ! L\'AO {ref} a été converti en bon de commande.' },
+      tender_to_quote_success: { en: 'Success! Tender {ref} converted to Sales Quotation.', ar: 'تم بنجاح! تم تحويل المناقصة {ref} إلى عرض أسعار في المبيعات.', fr: 'Succès ! L\'AO {ref} a été converti en devis de vente.' },
+      req_to_po_success: { en: 'Requisition converted to Purchase Order successfully!', ar: 'تم تحويل طلب الاقتناء إلى أمر شراء بنجاح!', fr: 'Réquisition convertie en bon de commande !' },
+      tender_analysis_report: { en: 'Tender Analysis & Dossier Report', ar: 'تقرير تحليل وملف المناقصة', fr: 'Dossier d\'analyse de l\'appel d\'offres' },
+      label_reference: { en: 'Reference', ar: 'المرجع', fr: 'Référence' },
+      label_title: { en: 'Title', ar: 'العنوان', fr: 'Titre' },
+      label_authority: { en: 'Authority', ar: 'الجهة المتعاقدة', fr: 'Autorité' },
+      label_amount: { en: 'Amount', ar: 'المبلغ', fr: 'Montant' },
+      label_deadline: { en: 'Deadline', ar: 'الأجل', fr: 'Date limite' },
+      label_status: { en: 'Status', ar: 'الحالة', fr: 'Statut' },
+      label_notes: { en: 'Notes', ar: 'ملاحظات', fr: 'Notes' },
+      ocr_select_file: { en: 'Please select a file first.', ar: 'الرجاء اختيار ملف أولاً.', fr: 'Veuillez sélectionner un fichier.' },
+      ocr_extracting: { en: 'Extracting document text...', ar: 'جاري استخراج النص...', fr: 'Extraction du texte...' },
+      ocr_analyzing: { en: 'AI analyzing document structure...', ar: 'الذكاء الاصطناعي يحلل الوثيقة...', fr: 'L\'IA analyse le document...' },
+      ocr_no_text: { en: 'No text extracted. Try a clearer scan.', ar: 'لم يتمكن من استخراج النص. جرب مسحاً أوضح.', fr: 'Aucun texte extrait.' },
+      ocr_unsupported: { en: 'Unsupported file type. Use PDF, image, Excel, Word, or TXT.', ar: 'نوع الملف غير مدعوم. استخدم PDF أو صورة أو Excel أو Word أو TXT.', fr: 'Type de fichier non supporté.' },
+      ocr_done: { en: 'Done! Review extracted fields and create record.', ar: 'تم! راجع البيانات المستخرجة وأنشئ السجل.', fr: 'Terminé ! Vérifiez et créez.' },
+      ocr_no_fields: { en: 'No fields detected. Check the document.', ar: 'لم يتم اكتشاف حقول. راجع الملف.', fr: 'Aucun champ détecté.' },
+      ocr_error: { en: 'Error', ar: 'خطأ', fr: 'Erreur' }
+    };
+
+    var tr = function (k, fb) {
+      var lang = getLang();
+      if (CONSULTING_DICT[k] && CONSULTING_DICT[k][lang]) return CONSULTING_DICT[k][lang];
+      if (CONSULTING_DICT[k] && CONSULTING_DICT[k].en) return CONSULTING_DICT[k].en;
+      return fb || k;
+    };
+
+    function escapeHtml(value){
+      if(value == null) return '';
+      return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    // ── Load & Save Data ──
+    function loadData(){
+      try { consultations = JSON.parse(ZS.getItem(scopedKey(CONSULT_KEY)) || '[]'); } catch(e){ consultations = []; }
+      try { tenders = JSON.parse(ZS.getItem(scopedKey(TENDER_KEY)) || '[]'); } catch(e){ tenders = []; }
+      try { requisitions = JSON.parse(ZS.getItem(scopedKey(REQ_KEY)) || '[]'); } catch(e){ requisitions = []; }
+      if(!Array.isArray(consultations)) consultations = [];
+      if(!Array.isArray(tenders)) tenders = [];
+      if(!Array.isArray(requisitions)) requisitions = [];
+
+      // Ensure default checklist structure for tenders
+      tenders.forEach(function(t){
+        if(!Array.isArray(t.checklist) || !t.checklist.length){
+          t.checklist = [
+            { text: tr('doc_admin_folder', 'Admin Folder'), done: false },
+            { text: tr('doc_technical_offer', 'Technical Offer'), done: false },
+            { text: tr('doc_financial_offer', 'Financial Offer'), done: false },
+            { text: tr('doc_bid_bond', 'Bid Bond / Guarantee'), done: false },
+            { text: tr('doc_tax_clearance', 'Tax Clearance'), done: false },
+            { text: tr('doc_commercial_register', 'Commercial Register'), done: false }
+          ];
+        }
+      });
+
+      window.consultations = consultations;
+      window.tenders = tenders;
+      window.requisitions = requisitions;
+    }
+    window.loadData = loadData;
+
+    function saveData(){
+      ZS.setItem(scopedKey(CONSULT_KEY), JSON.stringify(consultations));
+      ZS.setItem(scopedKey(TENDER_KEY), JSON.stringify(tenders));
+      ZS.setItem(scopedKey(REQ_KEY), JSON.stringify(requisitions));
+    }
+    window.saveData = saveData;
+
+    // ── Language Setup ──
+    function loadLanguage(){
+      const lang = getLang();
+      const html = document.documentElement;
+      const body = document.body;
+      if(lang === 'ar'){ body.classList.add('rtl'); html.setAttribute('dir','rtl'); html.setAttribute('lang','ar'); }
+      else { body.classList.remove('rtl'); html.setAttribute('dir','ltr'); html.setAttribute('lang',lang); }
+      document.querySelectorAll('[data-' + lang + ']').forEach(el => { el.textContent = el.getAttribute('data-' + lang); });
+      document.querySelectorAll('[data-' + lang + '-placeholder]').forEach(el => { el.placeholder = el.getAttribute('data-' + lang + '-placeholder'); });
+    }
+
+    // ── Tabs ──
+    function switchTab(tabName){
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      const tab = document.querySelector('.tab[data-tab="' + tabName + '"]');
+      const content = document.getElementById('tab-' + tabName);
+      if(tab) tab.classList.add('active');
+      if(content) content.classList.add('active');
+    }
+    window.switchTab = switchTab;
+
+    // ── Stats Calculation ──
+    function renderStats(){
+      const now = new Date();
+      const openTenders = tenders.filter(t => t.status === 'Open');
+      const submittedTenders = tenders.filter(t => t.status === 'Submitted');
+      const wonTenders = tenders.filter(t => t.status === 'Won');
+      const lostTenders = tenders.filter(t => t.status === 'Lost');
+      const openAmount = openTenders.reduce((s, t) => s + Number(t.amount || 0), 0);
+      const wonAmount = wonTenders.reduce((s, t) => s + Number(t.amount || 0), 0);
+
+      const urgentCount = openTenders.filter(t => {
+        if (!t.deadline) return false;
+        const diff = Math.ceil((new Date(t.deadline) - now) / (1000*60*60*24));
+        return diff >= 0 && diff <= 7;
+      }).length;
+
+      const totalResolved = wonTenders.length + lostTenders.length;
+      const winRate = totalResolved > 0 ? Math.round((wonTenders.length / totalResolved) * 100) : 0;
+
+      const el = id => document.getElementById(id);
+      if(el('consultCount')) el('consultCount').textContent = consultations.length;
+      if(el('consultOpenSub')) el('consultOpenSub').textContent = consultations.filter(c => c.status === 'Open').length + ' open missions';
+      if(el('openTenderCount')) el('openTenderCount').textContent = openTenders.length;
+      if(el('urgentTenderSub')) el('urgentTenderSub').textContent = urgentCount > 0 ? ('⚠ ' + urgentCount + ' urgent (<7d)') : 'All on track';
+      if(el('submittedTenderCount')) el('submittedTenderCount').textContent = submittedTenders.length;
+      if(el('wonTenderCount')) el('wonTenderCount').textContent = wonTenders.length;
+      if(el('winRateStat')) el('winRateStat').textContent = totalResolved > 0 ? ('Win Rate: ' + winRate + '%') : 'New pipeline';
+      if(el('openAmountStat')) el('openAmountStat').textContent = formatMoney(openAmount);
+      if(el('wonAmountStat')) el('wonAmountStat').textContent = formatMoney(wonAmount);
+
+      // Badges on tabs
+      if(el('tendersBadge')) el('tendersBadge').textContent = tenders.length;
+      if(el('consultBadge')) el('consultBadge').textContent = consultations.length;
+      if(el('reqBadge')) el('reqBadge').textContent = requisitions.length;
+    }
+
+    // ── Sorting ──
+    function setConsultSort(col) {
+      if (_consultSortCol === col) { _consultSortDir = _consultSortDir === 'asc' ? 'desc' : 'asc'; }
+      else { _consultSortCol = col; _consultSortDir = (col === 'date') ? 'desc' : 'asc'; }
+      ['client','consultant','date','status'].forEach(function(c) {
+        var icon = document.getElementById('consult-sort-' + c);
+        if (!icon) return;
+        icon.className = (c === _consultSortCol) ? (_consultSortDir === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down') : 'fas fa-sort';
+      });
+      renderConsultations();
+    }
+    window.setConsultSort = setConsultSort;
+
+    function setTenderSort(col) {
+      if (_tenderSortCol === col) { _tenderSortDir = _tenderSortDir === 'asc' ? 'desc' : 'asc'; }
+      else { _tenderSortCol = col; _tenderSortDir = (col === 'amount') ? 'desc' : 'asc'; }
+      ['reference','title','deadline','amount','status'].forEach(function(c) {
+        var icon = document.getElementById('tender-sort-' + c);
+        if (!icon) return;
+        icon.className = (c === _tenderSortCol) ? (_tenderSortDir === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down') : 'fas fa-sort';
+      });
+      renderTenders();
+    }
+    window.setTenderSort = setTenderSort;
+
+    function sortArray(arr, col, dir, valueExtractor) {
+      return arr.slice().sort(function(a, b) {
+        var valA = valueExtractor(a, col);
+        var valB = valueExtractor(b, col);
+        if (typeof valA === 'string') valA = valA.toLowerCase();
+        if (typeof valB === 'string') valB = valB.toLowerCase();
+        if (valA < valB) return dir === 'asc' ? -1 : 1;
+        if (valA > valB) return dir === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+
+    // ── Consultations Rendering ──
+    function renderConsultations(){
+      const tbody = document.getElementById('consultTableBody');
+      if(!tbody) return;
+      const filterText = String((document.getElementById('consultFilterText')||{}).value||'').toLowerCase().trim();
+      const filterStatus = String((document.getElementById('consultFilterStatus')||{}).value||'');
+      const filterCategory = String((document.getElementById('consultFilterCategory')||{}).value||'');
+      let filtered = consultations.map(function(c, i){ return Object.assign({}, c, {_idx: i}); });
+      if(filterText) filtered = filtered.filter(function(c){ return [c.client,c.consultant,c.subject,c.category].some(function(v){ return String(v||'').toLowerCase().includes(filterText); }); });
+      if(filterStatus) filtered = filtered.filter(function(c){ return c.status === filterStatus; });
+      if(filterCategory) filtered = filtered.filter(function(c){ return c.category === filterCategory; });
+      filtered = sortArray(filtered, _consultSortCol, _consultSortDir, function(item, col) {
+        switch(col) {
+          case 'client': return String(item.client || '');
+          case 'consultant': return String(item.consultant || '');
+          case 'date': return new Date(item.date || 0).getTime();
+          case 'status': return String(item.status || '');
+          default: return '';
+        }
+      });
+      tbody.innerHTML = '';
+      if(!filtered.length){
+        tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><i class="fas fa-user-tie"></i><p>' + escapeHtml(tr('no_consultations_yet', 'No consultations found.')) + '</p></div></td></tr>';
+        return;
+      }
+      filtered.forEach(function(c){
+        const realIndex = c._idx;
+        const statusClass = c.status === 'Open' ? 'badge-open' : 'badge-closed';
+        const catBadge = c.category ? '<span class="badge badge-category">' + escapeHtml(c.category) + '</span>' : '';
+        const tr_el = document.createElement('tr');
+        tr_el.innerHTML =
+          '<td><strong>' + escapeHtml(c.client || '-') + '</strong></td>' +
+          '<td>' + escapeHtml(c.consultant || '-') + '</td>' +
+          '<td class="nowrap">' + escapeHtml(c.date || '-') + '</td>' +
+          '<td style="max-width:280px;color:#334155;">' + escapeHtml(c.subject || '-') + '</td>' +
+          '<td>' + catBadge + '</td>' +
+          '<td><span class="badge ' + statusClass + '">' + escapeHtml(c.status) + '</span></td>' +
+          '<td style="text-align:right;white-space:nowrap;">' +
+            '<button class="btn btn-purple btn-sm" onclick="runRiskAnalysis(\'consult\',' + realIndex + ')" title="' + escapeHtml(tr('risk_analysis','Risk Analysis')) + '"><i class="fas fa-shield-alt"></i></button> ' +
+            '<button class="btn btn-warning btn-sm" onclick="editConsultation(' + realIndex + ')" title="Edit"><i class="fas fa-pen"></i></button> ' +
+            '<button class="btn btn-danger btn-sm" onclick="deleteConsultation(' + realIndex + ')" title="Delete"><i class="fas fa-trash"></i></button>' +
+          '</td>';
+        tbody.appendChild(tr_el);
+      });
+    }
+    window.renderConsultations = renderConsultations;
+
+    // ── Tenders Rendering (Table & Kanban) ──
+    function setTenderViewMode(mode){
+      tenderViewMode = mode;
+      document.getElementById('viewBtnTable')?.classList.toggle('active', mode === 'table');
+      document.getElementById('viewBtnKanban')?.classList.toggle('active', mode === 'kanban');
+      document.getElementById('tenderTableView').style.display = mode === 'table' ? 'block' : 'none';
+      document.getElementById('tenderKanbanView').style.display = mode === 'kanban' ? 'grid' : 'none';
+      renderTenders();
+    }
+    window.setTenderViewMode = setTenderViewMode;
+
+    function setTenderQuickFilter(filter){
+      tenderQuickFilter = filter;
+      document.querySelectorAll('.filter-chips .chip').forEach(el => {
+        el.classList.toggle('active', el.getAttribute('data-filter') === filter);
+      });
+      renderTenders();
+    }
+    window.setTenderQuickFilter = setTenderQuickFilter;
+
+    function renderTenders(){
+      const filterText = String((document.getElementById('tenderFilterText')||{}).value||'').toLowerCase().trim();
+      const filterStatus = String((document.getElementById('tenderFilterStatus')||{}).value||'');
+      const now = new Date();
+
+      let filtered = tenders.map(function(t, i){ return Object.assign({}, t, {_idx: i}); });
+      if(filterText) filtered = filtered.filter(function(t){ return [t.reference,t.title,t.authority,t.notes].some(function(v){ return String(v||'').toLowerCase().includes(filterText); }); });
+      if(filterStatus) filtered = filtered.filter(function(t){ return t.status === filterStatus; });
+
+      // Apply quick chips
+      if(tenderQuickFilter === 'urgent'){
+        filtered = filtered.filter(t => {
+          if(!t.deadline || t.status !== 'Open') return false;
+          const diff = Math.ceil((new Date(t.deadline) - now) / (1000*60*60*24));
+          return diff >= 0 && diff <= 7;
+        });
+      } else if(tenderQuickFilter === 'open'){
+        filtered = filtered.filter(t => t.status === 'Open');
+      } else if(tenderQuickFilter === 'won'){
+        filtered = filtered.filter(t => t.status === 'Won');
+      } else if(tenderQuickFilter === 'high_val'){
+        filtered = filtered.filter(t => Number(t.amount || 0) >= 1000000);
+      }
+
+      if (tenderViewMode === 'kanban') {
+        renderKanbanTenders(filtered);
+      } else {
+        renderTableTenders(filtered);
+      }
+    }
+    window.renderTenders = renderTenders;
+
+    function renderTableTenders(filtered){
+      const tbody = document.getElementById('tenderTableBody');
+      if(!tbody) return;
+      const now = new Date();
+      filtered = sortArray(filtered, _tenderSortCol, _tenderSortDir, function(item, col) {
+        switch(col) {
+          case 'reference': return String(item.reference || '');
+          case 'title': return String(item.title || '');
+          case 'deadline': return new Date(item.deadline || 0).getTime();
+          case 'amount': return Number(item.amount || 0);
+          case 'status': return String(item.status || '');
+          default: return '';
+        }
+      });
+      tbody.innerHTML = '';
+      if(!filtered.length){
+        tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><i class="fas fa-file-contract"></i><p>' + escapeHtml(tr('no_tenders_yet', 'No tenders found.')) + '</p></div></td></tr>';
+        return;
+      }
+      const statusClasses = {Open:'badge-open',Submitted:'badge-submitted',Won:'badge-won',Lost:'badge-lost'};
+      filtered.forEach(function(t){
+        const realIndex = t._idx;
+        let deadlineInfo = escapeHtml(t.deadline || '-');
+        if(t.deadline && t.status === 'Open'){
+          const d = new Date(t.deadline);
+          const diff = Math.ceil((d - now) / (1000 * 60 * 60 * 24));
+          if(diff >= 0){
+            const cls = diff <= 3 ? 'deadline-urgent' : (diff <= 7 ? 'deadline-soon' : 'deadline-ok');
+            deadlineInfo += '<br><span class="' + cls + '" style="font-size:11px;"><i class="fas fa-clock"></i> ' + diff + ' ' + escapeHtml(tr('days_left','days left')) + '</span>';
+          } else {
+            deadlineInfo += '<br><span class="text-danger" style="font-size:11px;">(' + escapeHtml(tr('expired','Expired')) + ')</span>';
+          }
+        }
+        const statusBadge = '<span class="badge ' + (statusClasses[t.status]||'badge-closed') + '">' + escapeHtml(t.status) + '</span>';
+        const checklistItems = Array.isArray(t.checklist) ? t.checklist : [];
+        const checklistDone = checklistItems.filter(function(i){ return i && i.done; }).length;
+        const checklistTotal = checklistItems.length;
+        const checklistInfo = checklistTotal
+          ? '<span class="badge badge-checklist">' + checklistDone + '/' + checklistTotal + '</span><div class="progress-bar" style="width:70px;"><div class="progress-fill" style="width:' + Math.round(checklistDone/checklistTotal*100) + '%;"></div></div>'
+          : '<span class="text-muted" style="font-size:12px;">—</span>';
+
+        const tr_el = document.createElement('tr');
+        tr_el.innerHTML =
+          '<td><a href="javascript:void(0)" onclick="openTenderDossier(' + realIndex + ')" style="font-weight:700; color:var(--primary-color); text-decoration:none;">' + escapeHtml(t.reference||'-') + '</a></td>' +
+          '<td style="max-width:240px;"><div style="font-weight:600;">' + escapeHtml(t.title||'-') + '</div>' + (t.notes ? '<span class="text-muted" style="font-size:11.5px;">' + escapeHtml(t.notes.slice(0,50)) + (t.notes.length>50?'…':'') + '</span>' : '') + '</td>' +
+          '<td>' + escapeHtml(t.authority||'-') + '</td>' +
+          '<td class="nowrap">' + deadlineInfo + '</td>' +
+          '<td style="text-align:right;" class="nowrap font-bold text-primary">' + formatMoney(t.amount||0) + '</td>' +
+          '<td>' + statusBadge + '</td>' +
+          '<td>' + checklistInfo + '</td>' +
+          '<td style="text-align:right;white-space:nowrap;">' +
+            '<button class="btn btn-secondary btn-sm" onclick="openTenderDossier(' + realIndex + ')" title="View Dossier"><i class="fas fa-eye"></i></button> ' +
+            '<button class="btn btn-info btn-sm" onclick="openSmartPricingForTender(' + realIndex + ')" title="Smart Pricing AI"><i class="fas fa-brain"></i></button> ' +
+            '<button class="btn btn-purple btn-sm" onclick="runRiskAnalysis(\'tender\',' + realIndex + ')" title="' + escapeHtml(tr('risk_analysis','Risk Analysis')) + '"><i class="fas fa-shield-alt"></i></button> ' +
+            '<button class="btn btn-warning btn-sm" onclick="toggleChecklist(' + realIndex + ')" title="' + escapeHtml(tr('checklist','Checklist')) + '"><i class="fas fa-tasks"></i></button> ' +
+            '<button class="btn btn-secondary btn-sm" onclick="editTender(' + realIndex + ')" title="Edit"><i class="fas fa-pen"></i></button> ' +
+            '<button class="btn btn-danger btn-sm" onclick="deleteTender(' + realIndex + ')" title="Delete"><i class="fas fa-trash"></i></button>' +
+          '</td>';
+        tbody.appendChild(tr_el);
+      });
+    }
+
+    function renderKanbanTenders(filtered){
+      const stages = ['Open', 'Submitted', 'Won', 'Lost'];
+      const now = new Date();
+      const statusClasses = {Open:'badge-open',Submitted:'badge-submitted',Won:'badge-won',Lost:'badge-lost'};
+
+      stages.forEach(function(stage){
+        const container = document.getElementById('kanbanCards' + stage);
+        const totalBadge = document.getElementById('kanban' + stage + 'Total');
+        if(!container) return;
+        container.innerHTML = '';
+
+        const stageItems = filtered.filter(t => t.status === stage);
+        const sumAmount = stageItems.reduce((acc, t) => acc + Number(t.amount || 0), 0);
+        if(totalBadge) totalBadge.textContent = stageItems.length + ' (' + formatMoney(sumAmount) + ')';
+
+        if(!stageItems.length){
+          container.innerHTML = '<div class="kanban-empty"><i class="fas fa-inbox"></i><br>No tenders here</div>';
+          return;
+        }
+
+        stageItems.forEach(function(t){
+          const realIndex = t._idx;
+          let deadlineBadge = '';
+          if(t.deadline){
+            const d = new Date(t.deadline);
+            const diff = Math.ceil((d - now) / (1000 * 60 * 60 * 24));
+            if(diff >= 0 && t.status === 'Open'){
+              const cls = diff <= 3 ? 'deadline-urgent' : (diff <= 7 ? 'deadline-soon' : 'deadline-ok');
+              deadlineBadge = '<span class="badge ' + (diff <= 3 ? 'badge-lost' : 'badge-open') + '" style="font-size:10px;"><i class="fas fa-clock"></i> ' + diff + 'd left</span>';
+            }
+          }
+
+          const checklistItems = Array.isArray(t.checklist) ? t.checklist : [];
+          const checklistDone = checklistItems.filter(function(i){ return i && i.done; }).length;
+          const checklistTotal = checklistItems.length;
+
+          const card = document.createElement('div');
+          card.className = 'kanban-card';
+          card.draggable = true;
+          card.ondragstart = function(e){ e.dataTransfer.setData('text/plain', realIndex); };
+
+          card.innerHTML = `
+            <div class="kanban-card-ref">
+              <span onclick="openTenderDossier(${realIndex})" style="cursor:pointer;"><i class="fas fa-file-signature"></i> ${escapeHtml(t.reference||'AO')}</span>
+              ${deadlineBadge}
+            </div>
+            <div class="kanban-card-title">${escapeHtml(t.title||'Sans titre')}</div>
+            <div class="kanban-card-authority"><i class="fas fa-building text-muted"></i> ${escapeHtml(t.authority||'-')}</div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span class="kanban-card-amount">${formatMoney(t.amount||0)}</span>
+              <span class="badge badge-checklist" style="font-size:10.5px;">Docs: ${checklistDone}/${checklistTotal}</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width:${checklistTotal ? Math.round(checklistDone/checklistTotal*100) : 0}%;"></div></div>
+            <div class="kanban-card-footer">
+              <div class="kanban-card-actions">
+                <button class="btn btn-secondary btn-sm" style="padding:4px 8px;" onclick="openTenderDossier(${realIndex})" title="Dossier"><i class="fas fa-eye"></i></button>
+                <button class="btn btn-info btn-sm" style="padding:4px 8px;" onclick="openSmartPricingForTender(${realIndex})" title="Smart Pricing AI"><i class="fas fa-brain"></i></button>
+                <button class="btn btn-purple btn-sm" style="padding:4px 8px;" onclick="runRiskAnalysis('tender', ${realIndex})" title="AI Risk"><i class="fas fa-shield-alt"></i></button>
+                <button class="btn btn-warning btn-sm" style="padding:4px 8px;" onclick="toggleChecklist(${realIndex})" title="Checklist"><i class="fas fa-tasks"></i></button>
+              </div>
+              <div style="display:flex; gap:4px;">
+                ${stage === 'Open' ? `<button class="btn btn-warning btn-sm" style="padding:4px 8px;" onclick="moveTenderStatus(${realIndex}, 'Submitted')" title="Submit"><i class="fas fa-paper-plane"></i></button>` : ''}
+                ${stage === 'Submitted' ? `
+                  <button class="btn btn-success btn-sm" style="padding:4px 8px;" onclick="moveTenderStatus(${realIndex}, 'Won')" title="Mark Won"><i class="fas fa-trophy"></i></button>
+                  <button class="btn btn-danger btn-sm" style="padding:4px 8px;" onclick="moveTenderStatus(${realIndex}, 'Lost')" title="Mark Lost"><i class="fas fa-times"></i></button>
+                ` : ''}
+              </div>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+      });
+    }
+
+    // Drag and drop handlers for Kanban
+    function handleDragOver(e){
+      e.preventDefault();
+      e.currentTarget.classList.add('dragover');
+    }
+    window.handleDragOver = handleDragOver;
+
+    function handleDrop(e, newStatus){
+      e.preventDefault();
+      document.querySelectorAll('.kanban-cards').forEach(el => el.classList.remove('dragover'));
+      const idxStr = e.dataTransfer.getData('text/plain');
+      const idx = parseInt(idxStr, 10);
+      if(Number.isInteger(idx) && idx >= 0 && idx < tenders.length){
+        moveTenderStatus(idx, newStatus);
+      }
+    }
+    window.handleDrop = handleDrop;
+
+    function moveTenderStatus(idx, newStatus){
+      if(tenders[idx]){
+        tenders[idx].status = newStatus;
+        saveData();
+        renderAll();
+        showToast('Tender ' + (tenders[idx].reference||'') + ' status updated to ' + newStatus, 'success');
+      }
+    }
+    window.moveTenderStatus = moveTenderStatus;
+
+    function renderAll(){
+      renderConsultations();
+      renderTenders();
+      renderRequisitions();
+      renderStats();
+    }
+    window.renderAll = renderAll;
+
+    // ── Consultation Modal Handlers ──
+    function openConsultModal(){
+      document.getElementById('consultModalTitle').textContent = tr('new_consultation','New Consultation');
+      document.getElementById('consultEditIdx').value = -1;
+      document.getElementById('consultClient').value = '';
+      document.getElementById('consultConsultant').value = '';
+      document.getElementById('consultDate').value = new Date().toISOString().slice(0,10);
+      document.getElementById('consultSubject').value = '';
+      document.getElementById('consultCategory').value = 'Legal';
+      document.getElementById('consultStatus').value = 'Open';
+      openModal('consultModal');
+    }
+    window.openConsultModal = openConsultModal;
+
+    function closeConsultModal(){ closeModal('consultModal'); }
+    window.closeConsultModal = closeConsultModal;
+
+    function saveConsult(){
+      const editIdx = parseInt(document.getElementById('consultEditIdx').value, 10);
+      const data = {
+        client: document.getElementById('consultClient').value.trim(),
+        consultant: document.getElementById('consultConsultant').value.trim(),
+        date: document.getElementById('consultDate').value,
+        subject: document.getElementById('consultSubject').value.trim(),
+        category: document.getElementById('consultCategory').value,
+        status: document.getElementById('consultStatus').value,
+        createdAt: new Date().toISOString()
+      };
+      if(!data.client || !data.subject){
+        showToast(tr('req_need_ref_or_items','Please enter at least client and subject.'), 'error');
+        return;
+      }
+      if(editIdx >= 0 && editIdx < consultations.length){
+        data.createdAt = consultations[editIdx].createdAt || data.createdAt;
+        consultations[editIdx] = data;
+        showToast('Consultation updated successfully.', 'success');
+      } else {
+        consultations.push(data);
+        showToast('New consultation created.', 'success');
+      }
+      saveData(); renderAll(); closeConsultModal();
+    }
+    window.saveConsult = saveConsult;
+
+    function editConsultation(idx){
+      if(!Number.isInteger(idx) || idx < 0 || idx >= consultations.length) return;
+      const c = consultations[idx];
+      openConsultModal();
+      document.getElementById('consultModalTitle').textContent = tr('edit_consultation','Edit Consultation');
+      document.getElementById('consultEditIdx').value = idx;
+      document.getElementById('consultClient').value = c.client || '';
+      document.getElementById('consultConsultant').value = c.consultant || '';
+      document.getElementById('consultDate').value = c.date || '';
+      document.getElementById('consultSubject').value = c.subject || '';
+      document.getElementById('consultCategory').value = c.category || 'Legal';
+      document.getElementById('consultStatus').value = c.status || 'Open';
+    }
+    window.editConsultation = editConsultation;
+
+    function deleteConsultation(index){
+      if(!confirm(tr('confirm_delete_consultation','Delete this consultation record?'))) return;
+      consultations.splice(index, 1);
+      saveData(); renderAll();
+      showToast('Consultation deleted.', 'info');
+    }
+    window.deleteConsultation = deleteConsultation;
+
+    // ── Tender Modal Handlers ──
+    function openTenderModal(){
+      document.getElementById('tenderModalTitle').textContent = tr('new_tender','New Tender');
+      document.getElementById('tenderEditIdx').value = -1;
+      document.getElementById('tenderRef').value = '';
+      document.getElementById('tenderTitle').value = '';
+      document.getElementById('tenderAuthority').value = '';
+      document.getElementById('tenderDeadline').value = '';
+      document.getElementById('tenderAmount').value = '';
+      document.getElementById('tenderStatus').value = 'Open';
+      document.getElementById('tenderNotes').value = '';
+      openModal('tenderModal');
+    }
+    window.openTenderModal = openTenderModal;
+
+    function closeTenderModal(){ closeModal('tenderModal'); }
+    window.closeTenderModal = closeTenderModal;
+
+    function saveTender(){
+      const editIdx = parseInt(document.getElementById('tenderEditIdx').value, 10);
+      const data = {
+        reference: document.getElementById('tenderRef').value.trim(),
+        title: document.getElementById('tenderTitle').value.trim(),
+        authority: document.getElementById('tenderAuthority').value.trim(),
+        deadline: document.getElementById('tenderDeadline').value,
+        amount: parseFloat(document.getElementById('tenderAmount').value) || 0,
+        status: document.getElementById('tenderStatus').value,
+        notes: document.getElementById('tenderNotes').value.trim(),
+        checklist: (editIdx >= 0 && tenders[editIdx] && tenders[editIdx].checklist) ? tenders[editIdx].checklist : (
+          (window._pendingOcrChecklist && window._pendingOcrChecklist.length) ? window._pendingOcrChecklist : [
+            { text: tr('doc_admin_folder', 'Admin Folder'), done: false },
+            { text: tr('doc_technical_offer', 'Technical Offer'), done: false },
+            { text: tr('doc_financial_offer', 'Financial Offer'), done: false },
+            { text: tr('doc_bid_bond', 'Bid Bond / Guarantee'), done: false },
+            { text: tr('doc_tax_clearance', 'Tax Clearance'), done: false },
+            { text: tr('doc_commercial_register', 'Commercial Register'), done: false }
+          ]
+        ),
+        createdAt: new Date().toISOString()
+      };
+      if(!data.reference || !data.title){
+        showToast(tr('req_need_ref_or_items','Please enter reference and title.'), 'error');
+        return;
+      }
+      window._pendingOcrChecklist = null;
+      if(editIdx >= 0 && editIdx < tenders.length){
+        data.id = tenders[editIdx].id || Date.now();
+        data.createdAt = tenders[editIdx].createdAt || data.createdAt;
+        tenders[editIdx] = data;
+        showToast('Tender updated successfully.', 'success');
+      } else {
+        data.id = Date.now();
+        tenders.push(data);
+        showToast('New tender registered in pipeline.', 'success');
+      }
+      saveData(); renderAll(); closeTenderModal();
+    }
+    window.saveTender = saveTender;
+
+    function editTender(idx){
+      if(!Number.isInteger(idx) || idx < 0 || idx >= tenders.length) return;
+      const t = tenders[idx];
+      openTenderModal();
+      document.getElementById('tenderModalTitle').textContent = tr('edit_tender','Edit Tender');
+      document.getElementById('tenderEditIdx').value = idx;
+      document.getElementById('tenderRef').value = t.reference || '';
+      document.getElementById('tenderTitle').value = t.title || '';
+      document.getElementById('tenderAuthority').value = t.authority || '';
+      document.getElementById('tenderDeadline').value = t.deadline || '';
+      document.getElementById('tenderAmount').value = t.amount > 0 ? t.amount.toFixed(2) : '';
+      document.getElementById('tenderStatus').value = t.status || 'Open';
+      document.getElementById('tenderNotes').value = t.notes || '';
+    }
+    window.editTender = editTender;
+
+    function deleteTender(index){
+      if(!confirm(tr('confirm_delete_tender','Delete this tender record?'))) return;
+      tenders.splice(index, 1);
+      saveData(); renderAll();
+      showToast('Tender removed from pipeline.', 'info');
+    }
+    window.deleteTender = deleteTender;
+
+    function triggerSmartPricingFromModal(){
+      const editIdx = parseInt(document.getElementById('tenderEditIdx').value, 10);
+      if (editIdx >= 0) {
+        window.openSmartPricingForTender(editIdx);
+      } else {
+        // Pre-create temp object
+        const tempIdx = tenders.length;
+        tenders.push({
+          reference: document.getElementById('tenderRef').value.trim() || 'AO-TEMP',
+          title: document.getElementById('tenderTitle').value.trim() || 'Tender',
+          authority: document.getElementById('tenderAuthority').value.trim(),
+          amount: parseFloat(document.getElementById('tenderAmount').value) || 0,
+          status: 'Open',
+          notes: document.getElementById('tenderNotes').value.trim(),
+          checklist: []
+        });
+        window.openSmartPricingForTender(tempIdx);
+      }
+    }
+    window.triggerSmartPricingFromModal = triggerSmartPricingFromModal;
+
+    // ── Tender Dossier Overview Modal ──
+    function openTenderDossier(idx){
+      const t = getTenderByIndex(idx);
+      if(!t) return;
+      const modal = document.getElementById('tenderDossierModal');
+      const body = document.getElementById('dossierModalBody');
+      const footer = document.getElementById('dossierModalFooter');
+      const title = document.getElementById('dossierModalTitle');
+      if(!modal || !body) return;
+
+      if(title) title.textContent = (t.reference || 'AO') + ' — ' + (t.title || 'Dossier Overview');
+
+      const checklistItems = Array.isArray(t.checklist) ? t.checklist : [];
+      const checklistDone = checklistItems.filter(i => i && i.done).length;
+      const checklistTotal = checklistItems.length;
+      const percent = checklistTotal ? Math.round((checklistDone / checklistTotal) * 100) : 0;
+
+      const now = new Date();
+      let diffDays = '-';
+      let diffClass = '';
+      if(t.deadline){
+        const d = new Date(t.deadline);
+        const diff = Math.ceil((d - now) / (1000*60*60*24));
+        diffDays = diff >= 0 ? (diff + ' days left') : 'Expired';
+        diffClass = diff <= 3 ? 'text-danger' : (diff <= 7 ? 'text-warning' : 'text-success');
+      }
+
+      body.innerHTML = `
+        <div class="dossier-grid">
+          <div>
+            <div class="dossier-box">
+              <div class="dossier-label">Project Title & Reference</div>
+              <div class="dossier-value" style="font-size:17px; color:#1e40af;">${escapeHtml(t.reference||'-')} — ${escapeHtml(t.title||'-')}</div>
+              <div style="margin-top:8px; font-size:13.5px; color:#475569;"><i class="fas fa-building"></i> Contracting Authority: <strong>${escapeHtml(t.authority||'-')}</strong></div>
+            </div>
+
+            <div class="dossier-box">
+              <div class="dossier-label">Specifications & Description</div>
+              <div style="font-size:13.5px; color:#334155; white-space:pre-wrap; max-height:160px; overflow-y:auto; line-height:1.6;">${escapeHtml(t.notes || 'No description notes provided.')}</div>
+            </div>
+
+            <div class="dossier-box">
+              <div class="dossier-label" style="display:flex; justify-content:space-between;">
+                <span>Required Documentation Checklist</span>
+                <span>${checklistDone}/${checklistTotal} Completed (${percent}%)</span>
+              </div>
+              <div class="progress-bar" style="height:8px; margin:8px 0 12px;"><div class="progress-fill" style="width:${percent}%;"></div></div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                ${checklistItems.map(item => `
+                  <div style="display:flex; align-items:center; gap:8px; font-size:12.5px; color:${item.done ? '#166534' : '#64748b'};">
+                    <i class="fas ${item.done ? 'fa-check-circle text-success' : 'fa-circle-notch text-muted'}"></i> ${escapeHtml(item.text)}
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="dossier-box" style="background:#f0fdf4; border-color:#bbf7d0;">
+              <div class="dossier-label" style="color:#166534;">Estimated Bid Amount</div>
+              <div class="dossier-value" style="font-size:22px; color:#15803d; font-weight:800;">${formatMoney(t.amount||0)}</div>
+              <div style="margin-top:6px; font-size:12px; color:#166534;">
+                <span class="badge ${t.status === 'Won' ? 'badge-won' : t.status === 'Submitted' ? 'badge-submitted' : t.status === 'Lost' ? 'badge-lost' : 'badge-open'}">${t.status}</span>
+              </div>
+            </div>
+
+            <div class="dossier-box">
+              <div class="dossier-label">Submission Deadline</div>
+              <div class="dossier-value ${diffClass}"><i class="fas fa-calendar-alt"></i> ${escapeHtml(t.deadline || '-')}</div>
+              <div style="font-size:12px; margin-top:4px;" class="${diffClass} font-bold">${diffDays}</div>
+            </div>
+
+            <div class="dossier-box" style="display:flex; flex-direction:column; gap:8px;">
+              <div class="dossier-label">Quick Actions</div>
+              <button class="btn btn-info btn-sm" onclick="openSmartPricingForTender(${idx})"><i class="fas fa-brain"></i> <span>Smart Pricing AI</span></button>
+              <button class="btn btn-purple btn-sm" onclick="runRiskAnalysis('tender', ${idx})"><i class="fas fa-shield-alt"></i> <span>Risk Analysis Scan</span></button>
+              <button class="btn btn-secondary btn-sm" onclick="exportTenderSummary(${idx})"><i class="fas fa-file-pdf"></i> <span>Export PDF Report</span></button>
+              ${t.status === 'Won' ? `
+                <button class="btn btn-success btn-sm" onclick="convertToPurchaseOrder(${idx})"><i class="fas fa-cart-arrow-down"></i> <span>Convert to Purchase Order</span></button>
+                <button class="btn btn-primary btn-sm" onclick="convertToSalesQuote(${idx})"><i class="fas fa-file-invoice-dollar"></i> <span>Convert to Sales Quote</span></button>
+              ` : ''}
+              <button class="btn btn-warning btn-sm" onclick="editTender(${idx})"><i class="fas fa-pen"></i> <span>Edit Tender Details</span></button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      modal.classList.add('active');
+      modal.setAttribute('aria-hidden', 'false');
+    }
+    window.openTenderDossier = openTenderDossier;
+
+    function closeTenderDossierModal(){
+      closeModal('tenderDossierModal');
+    }
+    window.closeTenderDossierModal = closeTenderDossierModal;
+
+    // ── Checklist Modal Handlers ──
+    function openChecklistModal(idx){
+      activeChecklistTenderIndex = idx;
+      const t = getTenderByIndex(idx);
+      if(!t) return;
+      document.getElementById('checklistTitle').textContent = tr('checklist_for','Checklist for') + ': ' + (t.reference || t.title);
+      document.getElementById('checklistMeta').innerHTML = '<strong>' + escapeHtml(t.reference||'-') + '</strong> — ' + escapeHtml(t.title||'-') + '<br><span class="text-muted">' + escapeHtml(t.authority||'-') + '</span>';
+      renderChecklistGrid(t);
+      openModal('checklistModal');
+    }
+    window.openChecklistModal = openChecklistModal;
+
+    function renderChecklistGrid(t){
+      const grid = document.getElementById('checklistGrid');
+      if(!grid) return;
+      grid.innerHTML = '';
+      const items = Array.isArray(t.checklist) ? t.checklist : [];
+      items.forEach(function(item, i){
+        const div = document.createElement('div');
+        div.className = 'check-item' + (item.done ? ' done' : '');
+        div.innerHTML = `
+          <label style="display:flex; align-items:center; gap:10px; cursor:pointer; flex:1;">
+            <input type="checkbox" data-check-idx="${i}" ${item.done ? 'checked' : ''} onchange="updateChecklistVisual()">
+            <span>${escapeHtml(item.text)}</span>
+          </label>
+          <button type="button" class="btn btn-danger btn-sm" style="padding:2px 6px; font-size:11px;" onclick="removeChecklistItem(${i})" title="Remove"><i class="fas fa-trash"></i></button>
+        `;
+        grid.appendChild(div);
+      });
+      updateChecklistVisual();
+    }
+
+    function addNewChecklistItem(){
+      const input = document.getElementById('newChecklistInput');
+      const val = (input?.value || '').trim();
+      const t = getTenderByIndex(activeChecklistTenderIndex);
+      if(!val || !t) return;
+      if(!Array.isArray(t.checklist)) t.checklist = [];
+      t.checklist.push({ text: val, done: false });
+      input.value = '';
+      renderChecklistGrid(t);
+    }
+    window.addNewChecklistItem = addNewChecklistItem;
+
+    function removeChecklistItem(itemIdx){
+      const t = getTenderByIndex(activeChecklistTenderIndex);
+      if(!t || !Array.isArray(t.checklist)) return;
+      t.checklist.splice(itemIdx, 1);
+      renderChecklistGrid(t);
+    }
+    window.removeChecklistItem = removeChecklistItem;
+
+    function updateChecklistVisual(){
+      const grid = document.getElementById('checklistGrid');
+      if(!grid) return;
+      const items = grid.querySelectorAll('.check-item');
+      let done = 0;
+      items.forEach(function(item){
+        const cb = item.querySelector('input[type="checkbox"]');
+        if(cb && cb.checked){ item.classList.add('done'); done++; }
+        else { item.classList.remove('done'); }
+      });
+      const total = items.length;
+      const pct = total ? Math.round(done / total * 100) : 0;
+      const pEl = document.getElementById('checklistProgress');
+      if(pEl) pEl.innerHTML = done + '/' + total + ' completed (' + pct + '%)' +
+        '<div class="progress-bar"><div class="progress-fill" style="width:' + pct + '%;"></div></div>';
+    }
+    window.updateChecklistVisual = updateChecklistVisual;
+
+    function closeChecklistModal(){ closeModal('checklistModal'); activeChecklistTenderIndex = null; }
+    window.closeChecklistModal = closeChecklistModal;
+
+    function saveChecklistFromModal(){
+      const tender = getTenderByIndex(activeChecklistTenderIndex);
+      if(!tender || !Array.isArray(tender.checklist)){ closeChecklistModal(); return; }
+      const grid = document.getElementById('checklistGrid');
+      if(grid){
+        const checks = Array.from(grid.querySelectorAll('input[type="checkbox"][data-check-idx]'));
+        checks.forEach(function(input){
+          const idx = Number(input.getAttribute('data-check-idx'));
+          if(Number.isInteger(idx) && idx >= 0 && idx < tender.checklist.length){
+            tender.checklist[idx].done = !!input.checked;
+          }
+        });
+      }
+      saveData(); renderAll(); closeChecklistModal();
+      showToast('Checklist updated.', 'success');
+    }
+    window.saveChecklistFromModal = saveChecklistFromModal;
+
+    window.toggleChecklist = function(idx){ openChecklistModal(idx); };
+
+    // ── Export Tender Summary (PDF) ──
+    window.exportTenderSummary = function(idx) {
+      const t = getTenderByIndex(idx);
+      if(!t){ showToast(tr('invalid_tender', 'The selected tender is no longer available.'), 'error'); return; }
+      const fileSafeRef = String(t.reference || 'tender').replace(/[^a-zA-Z0-9_-]/g, '_');
+      if(window.jspdf && window.jspdf.jsPDF){
+        const doc = new window.jspdf.jsPDF({ unit: 'pt', format: 'a4' });
+        doc.setFillColor(37, 99, 235);
+        doc.rect(0, 0, 595, 45, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(15);
+        doc.text(tr('tender_analysis_report', 'Tender Analysis & Dossier Report'), 40, 28);
+
+        doc.setTextColor(30, 41, 59);
+        doc.setFontSize(11);
+        const checklistItems = Array.isArray(t.checklist) ? t.checklist : [];
+        const lines = [
+          tr('label_reference', 'Reference') + ': ' + (t.reference || '-'),
+          tr('label_title', 'Title') + ': ' + (t.title || '-'),
+          tr('label_authority', 'Authority') + ': ' + (t.authority || '-'),
+          tr('label_deadline', 'Deadline') + ': ' + (t.deadline || '-'),
+          tr('label_amount', 'Amount') + ': ' + formatMoney(t.amount),
+          tr('label_status', 'Status') + ': ' + (t.status || '-'),
+          '',
+          '--- Documentation Checklist ---',
+          ...checklistItems.map(c => (c.done ? '[X] ' : '[ ] ') + c.text),
+          '',
+          '--- Description & Scope ---',
+          (t.notes || 'None'),
+          '',
+          'Generated on: ' + new Date().toLocaleString()
+        ];
+        let y = 70;
+        lines.forEach(function(line){
+          var splitLines = doc.splitTextToSize(String(line), 515);
+          splitLines.forEach(function(sl){
+            doc.text(sl, 40, y);
+            y += 18;
+            if(y > 780){ doc.addPage(); y = 40; }
+          });
+        });
+        doc.save('Tender_' + fileSafeRef + '.pdf');
+        showToast('PDF Report exported.', 'success');
+        return;
+      }
+      const summary = lines.join('\n');
+      const blob = new Blob([summary], { type: 'text/plain' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'Tender_' + fileSafeRef + '.txt';
+      link.click();
+    };
+
+    // ── Cross-Module Conversions ──
+    window.convertToPurchaseOrder = function(idx) {
+      const t = getTenderByIndex(idx);
+      if(!t){ showToast(tr('invalid_tender', 'The selected tender is no longer available.'), 'error'); return; }
+      const purchaseKey = 'zeralda-purchasing-data::' + getActiveCompanyId();
+      let purchasing = {};
+      try { purchasing = JSON.parse(ZS.getItem(purchaseKey) || '{}'); } catch(e){ purchasing = {}; }
+      if(!Array.isArray(purchasing.orders)) purchasing.orders = [];
+      const alreadyExists = purchasing.orders.some(order => String(order.sourceTenderId || '') === String(t.id || ''));
+      if(alreadyExists){ showToast(tr('tender_already_converted', 'This tender was already converted to a Purchase Order.'), 'info'); return; }
+
+      const newPO = {
+        id: Date.now(),
+        number: 'PO-AO-' + (t.reference || Date.now().toString().slice(-4)),
+        supplier: t.authority || 'Contracting Authority',
+        date: new Date().toISOString().split('T')[0],
+        expectedDate: t.deadline || new Date().toISOString().split('T')[0],
+        amount: Number(t.amount || 0),
+        status: 'Pending',
+        sourceTenderId: t.id,
+        sourceTenderRef: t.reference,
+        notes: 'Converted from won tender: ' + (t.title || '')
+      };
+      purchasing.orders.push(newPO);
+      ZS.setItem(purchaseKey, JSON.stringify(purchasing));
+      showToast(tr('tender_to_po_success', 'Success! Converted to Purchase Order in Purchasing.').replace('{ref}', t.reference || ''), 'success');
+    };
+
+    window.convertToSalesQuote = function(idx) {
+      const t = getTenderByIndex(idx);
+      if(!t){ showToast(tr('invalid_tender', 'Invalid tender.'), 'error'); return; }
+      const invoiceKey = 'invoices-data::' + getActiveCompanyId();
+      let invoices = [];
+      try { invoices = JSON.parse(ZS.getItem(invoiceKey) || ZS.getItem('invoices-data') || '[]'); } catch(e){ invoices = []; }
+      if(!Array.isArray(invoices)) invoices = [];
+
+      const newQuote = {
+        id: Date.now(),
+        type: 'quote',
+        number: 'DEV-AO-' + (t.reference || Date.now().toString().slice(-4)),
+        date: new Date().toISOString().split('T')[0],
+        client: t.authority || 'Client',
+        customer: { name: t.authority || 'Client' },
+        amount: Number(t.amount || 0),
+        total: Number(t.amount || 0),
+        status: 'Accepted',
+        items: [{ name: t.title || 'Marché / Projet', qty: 1, price: Number(t.amount || 0), total: Number(t.amount || 0) }],
+        notes: 'Généré depuis la soumission retenue: ' + (t.reference || '')
+      };
+      invoices.push(newQuote);
+      ZS.setItem(invoiceKey, JSON.stringify(invoices));
+      ZS.setItem('invoices-data', JSON.stringify(invoices));
+      showToast(tr('tender_to_quote_success', 'Success! Tender converted to Sales Quotation in Sales module.').replace('{ref}', t.reference || ''), 'success');
+    };
+
+    // ── Tender OCR Handlers (Unified to Copilote IA) ──
+    function openTenderOcrModal(tenderIdx){
+      if(typeof window.openSmartPricingForTender === 'function'){
+        window.openSmartPricingForTender(tenderIdx != null ? tenderIdx : null, 'audit');
+      } else {
+        openModal('tenderOcrModal');
+      }
+    }
+    window.openTenderOcrModal = openTenderOcrModal;
+
+    function closeTenderOcrModal(){ closeModal('tenderOcrModal'); }
+    window.closeTenderOcrModal = closeTenderOcrModal;
+
+    async function runTenderOcrExtraction() {
+      var fileInput = document.getElementById('tenderOcrFile');
+      var statusEl = document.getElementById('tenderOcrStatus');
+      var btn = document.getElementById('tenderOcrBtn');
+      var createBtn = document.getElementById('tenderOcrCreateBtn');
+      var file = fileInput && fileInput.files ? fileInput.files[0] : null;
+
+      function setStatus(msg, color) {
+        if (statusEl) {
+          statusEl.style.display = 'block';
+          statusEl.textContent = msg;
+          statusEl.style.color = color || '#6b7280';
+          statusEl.style.background = color ? '#eff6ff' : '#f8fafc';
+        }
+      }
+
+      var lang = getLang();
+      var isAr = lang === 'ar';
+      if (!file) {
+        setStatus(tr('ocr_select_file'), '#d97706');
+        return;
+      }
+      if (btn) btn.disabled = true;
+      if (createBtn) createBtn.style.display = 'none';
+      setStatus(tr('ocr_extracting'), '#2563eb');
+
+      try {
+        var ocrResult = await UnifiedOCR.extract(file, {
+          endpoint: '/api/ocr/extract',
+          allowImage: true, allowPdf: true, allowExcel: true, allowWordTxt: true,
+          unsupportedTypeMessage: tr('ocr_unsupported'),
+          extraBody: { lang: 'ara+fra+eng' }
+        });
+        var ocrText = String(ocrResult.text || '').trim();
+        if (!ocrText) {
+          setStatus(tr('ocr_no_text'), '#d97706');
+          if (btn) btn.disabled = false;
+          return;
+        }
+
+        setStatus(tr('ocr_analyzing'), '#7c3aed');
+        var tok = ZS.getItem('zeralda-auth-token') || '';
+        var headers = { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' };
+        if (tok) { headers['Authorization'] = 'Bearer ' + tok; }
+
+        var prompt = 'Extract structured data from this tender/bid document text. '
+          + 'Return ONLY a valid JSON object with these exact fields (use null if not found):\n'
+          + '{"reference":"...","title":"...","authority":"...","deadline":"YYYY-MM-DD","amount":0.00,"description":"..."}\n\n'
+          + 'Document text:\n' + ocrText.slice(0, 4500);
+
+        var response = await fetch('/api/ai/chat', {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify({ messages: [{ role: 'user', content: prompt }], type: 'general' })
+        });
+
+        if (!response.ok) throw new Error('AI analysis failed: ' + response.status);
+        var data = await response.json();
+        var aiText = String((data && (data.text || data.content || data.response || data.result)) || '').trim();
+
+        var parsed = {};
+        try {
+          var jsonMatch = aiText.match(/\{[\s\S]*\}/);
+          if (jsonMatch) parsed = JSON.parse(jsonMatch[0]);
+        } catch(e) { parsed = {}; }
+
+        tenderOcrExtractedData = {
+          reference: String(parsed.reference || '').trim(),
+          title: String(parsed.title || '').trim(),
+          authority: String(parsed.authority || '').trim(),
+          deadline: String(parsed.deadline || '').trim(),
+          amount: parseFloat(parsed.amount) || 0,
+          notes: String(parsed.description || '').trim()
+        };
+
+        var previewLines = [];
+        if (tenderOcrExtractedData.reference) previewLines.push('• ' + tr('label_reference') + ': ' + tenderOcrExtractedData.reference);
+        if (tenderOcrExtractedData.title) previewLines.push('• ' + tr('label_title') + ': ' + tenderOcrExtractedData.title);
+        if (tenderOcrExtractedData.authority) previewLines.push('• ' + tr('label_authority') + ': ' + tenderOcrExtractedData.authority);
+        if (tenderOcrExtractedData.deadline) previewLines.push('• ' + tr('label_deadline') + ': ' + tenderOcrExtractedData.deadline);
+        if (tenderOcrExtractedData.amount > 0) previewLines.push('• ' + tr('label_amount') + ': ' + formatMoney(tenderOcrExtractedData.amount));
+        if (tenderOcrExtractedData.notes) previewLines.push('• ' + tr('label_notes') + ': ' + tenderOcrExtractedData.notes.slice(0, 80));
+
+        if (previewLines.length) {
+          setStatus('✅ ' + tr('ocr_done') + '\n\n' + previewLines.join('\n'), '#059669');
+          if (createBtn) createBtn.style.display = 'inline-flex';
+        } else {
+          setStatus(tr('ocr_no_fields'), '#d97706');
+        }
+      } catch (err) {
+        setStatus(tr('ocr_error') + ': ' + (err && err.message || 'Unknown error'), '#dc2626');
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+    window.runTenderOcrExtraction = runTenderOcrExtraction;
+
+    function createTenderFromOcrData(){
+      if (!tenderOcrExtractedData) return;
+      openTenderModal();
+      document.getElementById('tenderRef').value = tenderOcrExtractedData.reference || '';
+      document.getElementById('tenderTitle').value = tenderOcrExtractedData.title || '';
+      document.getElementById('tenderAuthority').value = tenderOcrExtractedData.authority || '';
+      document.getElementById('tenderDeadline').value = tenderOcrExtractedData.deadline || '';
+      document.getElementById('tenderAmount').value = tenderOcrExtractedData.amount > 0 ? tenderOcrExtractedData.amount.toFixed(2) : '';
+      document.getElementById('tenderNotes').value = tenderOcrExtractedData.notes || '';
+      closeTenderOcrModal();
+    }
+    window.createTenderFromOcrData = createTenderFromOcrData;
+
+    // ── Consultation OCR Handlers ──
+    function openConsultOcrModal(){
+      if (window.ZeraldaOCR) {
+        window.ZeraldaOCR.open({
+          mode: 'consultation',
+          title: (window.currentLanguage === 'fr' ? 'Scan & Extraction Consultation (IA)' : (window.currentLanguage === 'en' ? 'Consultation Document Scan (AI)' : 'مسح واستخراج بيانات الاستشارة (Scan IA)')),
+          subtitle: (window.currentLanguage === 'fr' ? 'Scannez un contrat ou document de consultation pour pré-remplir les champs' : (window.currentLanguage === 'en' ? 'Scan consultation contract or memo to extract details' : 'ارفع عقد استشارة أو مستند لاستخراج العميل والموضوع والتاريخ تلقائياً')),
+          icon: 'fas fa-user-tie',
+          onApply: function(data) {
+            openConsultModal();
+            var setVal = function(id, val) {
+              var el = document.getElementById(id);
+              if (el && String(val || '').trim()) el.value = String(val).trim();
+            };
+            setVal('consultClient', data.customerName || data.client);
+            setVal('consultSubject', data.subject || (data.rawText ? (data.rawText.split('\n')[0] || '').slice(0, 100) : ''));
+            setVal('consultDate', data.date || new Date().toISOString().slice(0, 10));
+          }
+        });
+        return;
+      }
+      openModal('consultOcrModal');
+    }
+    window.openConsultOcrModal = openConsultOcrModal;
+
+    function closeConsultOcrModal(){ closeModal('consultOcrModal'); }
+    window.closeConsultOcrModal = closeConsultOcrModal;
+
+    async function runConsultOcrExtraction(){
+      var fileInput = document.getElementById('consultOcrFile');
+      var statusEl = document.getElementById('consultOcrStatus');
+      var btn = document.getElementById('consultOcrBtn');
+      var createBtn = document.getElementById('consultOcrCreateBtn');
+      var file = fileInput && fileInput.files ? fileInput.files[0] : null;
+
+      function setStatus(msg, color){
+        if (statusEl) {
+          statusEl.style.display = 'block';
+          statusEl.textContent = msg;
+          statusEl.style.color = color || '#6b7280';
+          statusEl.style.background = color ? '#eff6ff' : '#f8fafc';
+        }
+      }
+
+      if (!file) { setStatus(tr('ocr_select_file'), '#d97706'); return; }
+      if (btn) btn.disabled = true;
+      if (createBtn) createBtn.style.display = 'none';
+      setStatus(tr('ocr_extracting'), '#2563eb');
+
+      try {
+        var ocrResult = await UnifiedOCR.extract(file, {
+          endpoint: '/api/ocr/extract',
+          allowImage: true, allowPdf: true, allowExcel: true, allowWordTxt: true,
+          unsupportedTypeMessage: tr('ocr_unsupported'),
+          extraBody: { lang: 'ara+fra+eng' }
+        });
+        var ocrText = String(ocrResult.text || '').trim();
+        if (!ocrText) {
+          setStatus(tr('ocr_no_text'), '#d97706');
+          if (btn) btn.disabled = false;
+          return;
+        }
+
+        setStatus(tr('ocr_analyzing'), '#7c3aed');
+        var tok = ZS.getItem('zeralda-auth-token') || '';
+        var headers = { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' };
+        if (tok) headers['Authorization'] = 'Bearer ' + tok;
+
+        var prompt = 'Extract structured data from this consultation document text. '
+          + 'Return ONLY a valid JSON object with these exact fields (use null if not found):\n'
+          + '{"client":"...","consultant":"...","date":"YYYY-MM-DD","subject":"...","category":"Legal|Financial|Technical|HR|Strategic|Other","notes":"..."}\n\n'
+          + 'Document text:\n' + ocrText.slice(0, 4500);
+
+        var response = await fetch('/api/ai/chat', {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify({ messages: [{ role: 'user', content: prompt }], type: 'general' })
+        });
+
+        if (!response.ok) throw new Error('AI analysis failed: ' + response.status);
+        var data = await response.json();
+        var aiText = String((data && (data.text || data.content || data.response || data.result)) || '').trim();
+
+        var parsed = {};
+        try {
+          var jsonMatch = aiText.match(/\{[\s\S]*\}/);
+          if (jsonMatch) parsed = JSON.parse(jsonMatch[0]);
+        } catch(e) { parsed = {}; }
+
+        consultOcrExtractedData = {
+          client: String(parsed.client || '').trim(),
+          consultant: String(parsed.consultant || '').trim(),
+          date: String(parsed.date || '').trim(),
+          subject: String(parsed.subject || '').trim(),
+          category: String(parsed.category || 'Other').trim(),
+          notes: String(parsed.notes || '').trim()
+        };
+
+        var previewLines = [];
+        if (consultOcrExtractedData.client) previewLines.push('• Client: ' + consultOcrExtractedData.client);
+        if (consultOcrExtractedData.consultant) previewLines.push('• Consultant: ' + consultOcrExtractedData.consultant);
+        if (consultOcrExtractedData.subject) previewLines.push('• Subject: ' + consultOcrExtractedData.subject);
+        if (consultOcrExtractedData.category) previewLines.push('• Category: ' + consultOcrExtractedData.category);
+
+        if (previewLines.length) {
+          setStatus('✅ ' + tr('ocr_done') + '\n\n' + previewLines.join('\n'), '#059669');
+          if (createBtn) createBtn.style.display = 'inline-flex';
+        } else {
+          setStatus(tr('ocr_no_fields'), '#d97706');
+        }
+      } catch (err) {
+        setStatus(tr('ocr_error') + ': ' + (err && err.message || 'Unknown error'), '#dc2626');
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+    window.runConsultOcrExtraction = runConsultOcrExtraction;
+
+    function createConsultFromOcrData(){
+      if (!consultOcrExtractedData) return;
+      openConsultModal();
+      document.getElementById('consultClient').value = consultOcrExtractedData.client || '';
+      document.getElementById('consultConsultant').value = consultOcrExtractedData.consultant || '';
+      document.getElementById('consultDate').value = consultOcrExtractedData.date || new Date().toISOString().slice(0,10);
+      document.getElementById('consultSubject').value = consultOcrExtractedData.subject || '';
+      document.getElementById('consultCategory').value = consultOcrExtractedData.category || 'Legal';
+      closeConsultOcrModal();
+    }
+    window.createConsultFromOcrData = createConsultFromOcrData;
+
+    // ── AI Risk Analysis Handlers ──
+    function closeRiskModal(){ closeModal('riskModal'); }
+    window.closeRiskModal = closeRiskModal;
+
+    async function runRiskAnalysis(type, idx){
+      var item = null;
+      var docText = '';
+      if(type === 'tender'){
+        item = getTenderByIndex(idx);
+        if(!item){ showToast(tr('invalid_tender','Invalid tender'), 'error'); return; }
+        docText = 'TENDER SPECIFICATION:\n'
+          + 'Reference: ' + (item.reference||'N/A') + '\n'
+          + 'Title: ' + (item.title||'N/A') + '\n'
+          + 'Authority: ' + (item.authority||'N/A') + '\n'
+          + 'Deadline: ' + (item.deadline||'N/A') + '\n'
+          + 'Amount: ' + (item.amount||0) + ' DZD\n'
+          + 'Status: ' + (item.status||'N/A') + '\n'
+          + 'Notes: ' + (item.notes||'N/A');
+      } else if(type === 'consult'){
+        if(!Number.isInteger(idx) || idx < 0 || idx >= consultations.length) return;
+        item = consultations[idx];
+        docText = 'CONSULTATION BRIEF:\n'
+          + 'Client: ' + (item.client||'N/A') + '\n'
+          + 'Consultant: ' + (item.consultant||'N/A') + '\n'
+          + 'Date: ' + (item.date||'N/A') + '\n'
+          + 'Category: ' + (item.category||'N/A') + '\n'
+          + 'Subject: ' + (item.subject||'N/A');
+      } else { return; }
+
+      var modal = document.getElementById('riskModal');
+      var titleEl = document.getElementById('riskModalTitle');
+      var statusEl = document.getElementById('riskModalStatus');
+      var contentEl = document.getElementById('riskModalContent');
+      if(!modal || !statusEl || !contentEl) return;
+
+      var lang = getLang();
+      var isAr = lang === 'ar';
+      if(titleEl) titleEl.textContent = (isAr ? 'تحليل المخاطر: ' : 'AI Risk Analysis: ') + (item.reference || item.title || item.client || '');
+
+      modal.classList.add('active');
+      modal.setAttribute('aria-hidden','false');
+      statusEl.style.display = 'block';
+      statusEl.innerHTML = '<div style="padding:12px 16px;border-radius:8px;font-size:14px;background:#eff6ff;color:#1e40af;"><i class="fas fa-spinner fa-spin"></i> ' + (isAr ? 'جاري تحليل الوثيقة بالذكاء الاصطناعي...' : 'AI analyzing document for legal & financial risks...') + '</div>';
+      contentEl.innerHTML = '';
+
+      try {
+        var tok = ZS.getItem('zeralda-auth-token') || '';
+        var headers = { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' };
+        if (tok) headers['Authorization'] = 'Bearer ' + tok;
+
+        var prompt = 'You are a legal and commercial risk analyst for procurement & contracts. Analyze this ' + type + ' document for:\n'
+          + '1. Hidden conditions or disadvantageous clauses\n'
+          + '2. Financial / penalty exposure & loopholes\n'
+          + '3. Inconsistencies or unfair terms\n\n'
+          + 'Return ONLY a valid JSON object matching this schema:\n'
+          + '{"overall_risk":"High|Medium|Low|None","risks":[{"severity":"High|Medium|Low","category":"Legal|Financial|Technical","title":"...","description":"...","suggestion":"..."}],"summary":"..."}\n\n'
+          + 'Document:\n' + docText.slice(0, 4500);
+
+        var response = await fetch('/api/ai/chat', {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify({ messages: [{ role: 'user', content: prompt }], type: 'general' })
+        });
+
+        if (!response.ok) throw new Error('AI analysis failed: ' + response.status);
+        var data = await response.json();
+        var aiText = String((data && (data.text || data.content || data.response || data.result)) || '').trim();
+        aiText = aiText.replace(/```json\s*/gi, '').replace(/```\s*/g, '');
+
+        var parsed = {};
+        try {
+          var jsonMatch = aiText.match(/\{[\s\S]*\}/);
+          if (jsonMatch) parsed = JSON.parse(jsonMatch[0]);
+        } catch(e) { parsed = {}; }
+
+        statusEl.style.display = 'none';
+        if(parsed.overall_risk || (parsed.risks && parsed.risks.length) || parsed.summary){
+          renderRiskResults(contentEl, parsed, isAr);
+        } else {
+          contentEl.innerHTML = '<div class="risk-section none"><div class="risk-title none"><i class="fas fa-info-circle"></i> Result</div><div class="risk-item"><div class="risk-desc" style="white-space:pre-wrap;">' + escapeHtml(aiText.slice(0, 3000)) + '</div></div></div>';
+        }
+      } catch (err) {
+        statusEl.style.display = 'block';
+        statusEl.innerHTML = '<div style="padding:12px 16px;border-radius:8px;font-size:14px;background:#fef2f2;color:#991b1b;">❌ ' + (err && err.message || 'Unknown error') + '</div>';
+      }
+    }
+    window.runRiskAnalysis = runRiskAnalysis;
+
+    function renderRiskResults(container, parsed, isAr){
+      if(!container) return;
+      var html = '';
+      var overall = String(parsed.overall_risk || 'None').toLowerCase();
+      var overallClass = (overall === 'high') ? 'high' : (overall === 'medium') ? 'medium' : (overall === 'low') ? 'low' : 'none';
+      var overallIcon = (overall === 'high') ? 'fa-exclamation-triangle' : (overall === 'medium') ? 'fa-exclamation-circle' : (overall === 'low') ? 'fa-info-circle' : 'fa-check-circle';
+      var overallLabel = isAr ? ('مستوى المخاطر الإجمالي: ' + ({high:'مرتفع',medium:'متوسط',low:'منخفض',none:'لا توجد مخاطر'}[overall]||overall)) : ('Overall Risk Level: ' + overall.charAt(0).toUpperCase() + overall.slice(1));
+
+      html += '<div class="risk-section ' + overallClass + '">';
+      html += '<div class="risk-title ' + overallClass + '"><i class="fas ' + overallIcon + '"></i> ' + escapeHtml(overallLabel) + '</div>';
+      if(parsed.summary){
+        html += '<div class="risk-item"><div class="risk-item-head"><span class="risk-badge info">' + (isAr?'ملخص تحليلي':'Summary') + '</span></div><div class="risk-desc">' + escapeHtml(parsed.summary) + '</div></div>';
+      }
+      html += '</div>';
+
+      var risks = Array.isArray(parsed.risks) ? parsed.risks : [];
+      if(risks.length){
+        html += '<h4 style="margin:16px 0 8px;font-size:14px;font-weight:700;"><i class="fas fa-list-ul"></i> ' + (isAr?'النقاط المحددة':'Identified Risk Points') + ' (' + risks.length + ')</h4>';
+        risks.forEach(function(r){
+          var sev = String(r.severity||'Low').toLowerCase();
+          var sevClass = (sev === 'high') ? 'high' : (sev === 'medium') ? 'medium' : 'low';
+          html += '<div class="risk-item">';
+          html += '<div class="risk-item-head"><span class="risk-badge ' + sevClass + '">' + escapeHtml(r.severity||'Low') + '</span> <span class="risk-badge info">' + escapeHtml(r.category||'General') + '</span> ' + escapeHtml(r.title||'') + '</div>';
+          if(r.description) html += '<div class="risk-desc">' + escapeHtml(r.description) + '</div>';
+          if(r.suggestion) html += '<div class="risk-suggestion"><i class="fas fa-lightbulb"></i> ' + escapeHtml(r.suggestion) + '</div>';
+          html += '</div>';
+        });
+      }
+      container.innerHTML = html;
+    }
+
+    // ── Requisitions Management ──
+    function setReqSort(field){
+      if(reqSortField === field){ reqSortDir = reqSortDir === 'asc' ? 'desc' : 'asc'; }
+      else { reqSortField = field; reqSortDir = 'asc'; }
+      renderRequisitions();
+    }
+    window.setReqSort = setReqSort;
+
+    function renderRequisitions(){
+      var tbody = document.getElementById('reqTableBody');
+      if(!tbody) return;
+      var filterText = String((document.getElementById('reqFilterText')||{}).value||'').toLowerCase().trim();
+      var filterStatus = String((document.getElementById('reqFilterStatus')||{}).value||'');
+      var filterPriority = String((document.getElementById('reqFilterPriority')||{}).value||'');
+      var now = new Date();
+
+      var filtered = requisitions.map(function(r, i){ return Object.assign({}, r, {_idx: i}); });
+      if(filterText) filtered = filtered.filter(function(r){ return [r.reference,r.department,r.items,r.requestedBy,r.notes].some(function(v){ return String(v||'').toLowerCase().includes(filterText); }); });
+      if(filterStatus) filtered = filtered.filter(function(r){ return r.status === filterStatus; });
+      if(filterPriority) filtered = filtered.filter(function(r){ return r.priority === filterPriority; });
+
+      filtered.sort(function(a, b){
+        var dir = reqSortDir === 'asc' ? 1 : -1;
+        switch(reqSortField){
+          case 'reference': return String(a.reference||'').localeCompare(String(b.reference||'')) * dir;
+          case 'date': return (new Date(a.date||0).getTime() - new Date(b.date||0).getTime()) * dir;
+          case 'amount': return (Number(a.amount||0) - Number(b.amount||0)) * dir;
+          case 'status': return String(a.status||'').localeCompare(String(b.status||'')) * dir;
+          default: return 0;
+        }
+      });
+
+      tbody.innerHTML = '';
+      if(!filtered.length){
+        tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><i class="fas fa-shopping-cart"></i><p>' + escapeHtml(tr('no_requisitions_yet','No requisitions found.')) + '</p></div></td></tr>';
+        return;
+      }
+
+      var statusClasses = {Draft:'badge-closed',Pending:'badge-open',Approved:'badge-won',Rejected:'badge-lost',Fulfilled:'badge-submitted'};
+      var priorityClasses = {Urgent:'badge-lost',High:'badge-open',Normal:'badge-checklist',Low:'badge-closed'};
+
+      filtered.forEach(function(r){
+        var realIndex = r._idx;
+        var itemsShort = String(r.items||'').slice(0, 80);
+        if(String(r.items||'').length > 80) itemsShort += '…';
+        var reqDateInfo = escapeHtml(r.date || '-');
+        if(r.requiredDate){
+          var rd = new Date(r.requiredDate);
+          var diff = Math.ceil((rd - now) / (1000*60*60*24));
+          if(diff >= 0 && r.status !== 'Fulfilled' && r.status !== 'Rejected'){
+            var cls = diff <= 3 ? 'deadline-urgent' : (diff <= 7 ? 'deadline-soon' : 'deadline-ok');
+            reqDateInfo += '<br><span class="' + cls + '" style="font-size:11px;"><i class="fas fa-clock"></i> ' + diff + ' ' + escapeHtml(tr('days_left','days left')) + '</span>';
+          }
+        }
+        var tr_el = document.createElement('tr');
+        tr_el.innerHTML =
+          '<td><strong>' + escapeHtml(r.reference||'-') + '</strong></td>' +
+          '<td>' + escapeHtml(r.department||'-') + '</td>' +
+          '<td style="max-width:220px;color:#475569;">' + escapeHtml(itemsShort||'-') + '</td>' +
+          '<td class="nowrap">' + reqDateInfo + '</td>' +
+          '<td style="text-align:right;" class="nowrap font-bold text-primary">' + formatMoney(r.amount||0) + '</td>' +
+          '<td><span class="badge ' + (priorityClasses[r.priority]||'badge-closed') + '">' + escapeHtml(r.priority||'Normal') + '</span></td>' +
+          '<td><span class="badge ' + (statusClasses[r.status]||'badge-closed') + '">' + escapeHtml(r.status||'Draft') + '</span></td>' +
+          '<td style="text-align:right;white-space:nowrap;">' +
+            '<button class="btn btn-secondary btn-sm" onclick="exportRequisition(' + realIndex + ')" title="Export PDF"><i class="fas fa-file-pdf"></i></button> ' +
+            (r.status === 'Approved' ? `<button class="btn btn-success btn-sm" onclick="convertRequisitionToPO(${realIndex})" title="Convert to PO"><i class="fas fa-cart-arrow-down"></i></button> ` : '') +
+            '<button class="btn btn-warning btn-sm" onclick="editRequisition(' + realIndex + ')" title="Edit"><i class="fas fa-pen"></i></button> ' +
+            '<button class="btn btn-danger btn-sm" onclick="deleteRequisition(' + realIndex + ')" title="Delete"><i class="fas fa-trash"></i></button>' +
+          '</td>';
+        tbody.appendChild(tr_el);
+      });
+    }
+    window.renderRequisitions = renderRequisitions;
+
+    function openRequisitionModal(){
+      document.getElementById('reqModalTitle').textContent = tr('new_requisition','New Requisition');
+      document.getElementById('reqEditIdx').value = -1;
+      document.getElementById('reqRef').value = 'REQ/' + new Date().getFullYear() + '/' + String(requisitions.length + 1).padStart(3, '0');
+      document.getElementById('reqDepartment').value = '';
+      document.getElementById('reqDate').value = new Date().toISOString().slice(0,10);
+      document.getElementById('reqRequiredDate').value = '';
+      document.getElementById('reqAmount').value = '';
+      document.getElementById('reqRequestedBy').value = '';
+      document.getElementById('reqItems').value = '';
+      document.getElementById('reqNotes').value = '';
+      document.getElementById('reqPriority').value = 'Normal';
+      document.getElementById('reqStatus').value = 'Pending';
+      openModal('requisitionModal');
+    }
+    window.openRequisitionModal = openRequisitionModal;
+
+    function closeRequisitionModal(){ closeModal('requisitionModal'); }
+    window.closeRequisitionModal = closeRequisitionModal;
+
+    function saveRequisition(){
+      var editIdx = parseInt(document.getElementById('reqEditIdx').value, 10);
+      var data = {
+        reference: document.getElementById('reqRef').value.trim(),
+        department: document.getElementById('reqDepartment').value.trim(),
+        date: document.getElementById('reqDate').value,
+        requiredDate: document.getElementById('reqRequiredDate').value,
+        amount: parseFloat(document.getElementById('reqAmount').value) || 0,
+        requestedBy: document.getElementById('reqRequestedBy').value.trim(),
+        items: document.getElementById('reqItems').value.trim(),
+        notes: document.getElementById('reqNotes').value.trim(),
+        priority: document.getElementById('reqPriority').value,
+        status: document.getElementById('reqStatus').value,
+        createdAt: new Date().toISOString()
+      };
+      if(!data.reference && !data.items){
+        showToast(tr('req_need_ref_or_items','Please enter reference or items description.'), 'error');
+        return;
+      }
+      if(editIdx >= 0 && editIdx < requisitions.length){
+        data.createdAt = requisitions[editIdx].createdAt || data.createdAt;
+        requisitions[editIdx] = data;
+        showToast('Requisition updated.', 'success');
+      } else {
+        requisitions.push(data);
+        showToast('New requisition created.', 'success');
+      }
+      saveData(); renderAll(); closeRequisitionModal();
+    }
+    window.saveRequisition = saveRequisition;
+
+    function editRequisition(idx){
+      if(!Number.isInteger(idx) || idx < 0 || idx >= requisitions.length) return;
+      var r = requisitions[idx];
+      openRequisitionModal();
+      document.getElementById('reqModalTitle').textContent = tr('edit_requisition','Edit Requisition');
+      document.getElementById('reqEditIdx').value = idx;
+      document.getElementById('reqRef').value = r.reference || '';
+      document.getElementById('reqDepartment').value = r.department || '';
+      document.getElementById('reqDate').value = r.date || '';
+      document.getElementById('reqRequiredDate').value = r.requiredDate || '';
+      document.getElementById('reqAmount').value = r.amount > 0 ? r.amount.toFixed(2) : '';
+      document.getElementById('reqRequestedBy').value = r.requestedBy || '';
+      document.getElementById('reqItems').value = r.items || '';
+      document.getElementById('reqNotes').value = r.notes || '';
+      document.getElementById('reqPriority').value = r.priority || 'Normal';
+      document.getElementById('reqStatus').value = r.status || 'Pending';
+    }
+    window.editRequisition = editRequisition;
+
+    function deleteRequisition(idx){
+      if(!confirm(tr('confirm_delete_req','Delete this requisition?'))) return;
+      requisitions.splice(idx, 1);
+      saveData(); renderAll();
+      showToast('Requisition deleted.', 'info');
+    }
+    window.deleteRequisition = deleteRequisition;
+
+    function convertRequisitionToPO(idx){
+      var r = requisitions[idx];
+      if(!r) return;
+      var purchaseKey = 'zeralda-purchasing-data::' + getActiveCompanyId();
+      var purchasing = {};
+      try { purchasing = JSON.parse(ZS.getItem(purchaseKey) || '{}'); } catch(e){ purchasing = {}; }
+      if(!Array.isArray(purchasing.orders)) purchasing.orders = [];
+
+      var newPO = {
+        id: Date.now(),
+        number: 'PO-FROM-' + (r.reference || Date.now().toString().slice(-4)),
+        supplier: r.department ? ('Fournisseur pour ' + r.department) : 'Fournisseur externe',
+        date: new Date().toISOString().split('T')[0],
+        expectedDate: r.requiredDate || new Date().toISOString().split('T')[0],
+        amount: Number(r.amount || 0),
+        status: 'Pending',
+        sourceReqRef: r.reference,
+        notes: 'Articles: ' + (r.items || '')
+      };
+      purchasing.orders.push(newPO);
+      ZS.setItem(purchaseKey, JSON.stringify(purchasing));
+      r.status = 'Fulfilled';
+      saveData();
+      renderAll();
+      showToast(tr('req_to_po_success', 'Requisition converted to Purchase Order successfully!'), 'success');
+    }
+    window.convertRequisitionToPO = convertRequisitionToPO;
+
+    function exportRequisition(idx){
+      if(!Number.isInteger(idx) || idx < 0 || idx >= requisitions.length) return;
+      var r = requisitions[idx];
+      if(!window.jspdf || !window.jspdf.jsPDF){
+        showToast(tr('pdf_lib_not_loaded','PDF library not loaded.'), 'error');
+        return;
+      }
+      var doc = new window.jspdf.jsPDF({ unit: 'pt', format: 'a4' });
+      doc.setFillColor(6, 182, 212);
+      doc.rect(0, 0, 595, 45, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(16);
+      doc.text('Demande d\'achat / Purchase Requisition', 40, 28);
+
+      doc.setTextColor(30, 41, 59);
+      doc.setFontSize(11);
+      var lines = [
+        'Reference: ' + (r.reference || '-'),
+        'Department: ' + (r.department || '-'),
+        'Date: ' + (r.date || '-'),
+        'Required by: ' + (r.requiredDate || '-'),
+        'Requested by: ' + (r.requestedBy || '-'),
+        'Priority: ' + (r.priority || '-'),
+        'Status: ' + (r.status || '-'),
+        'Est. Amount: ' + formatMoney(r.amount || 0),
+        '',
+        'Items / Description:',
+        (r.items || '-'),
+        '',
+        'Notes:',
+        (r.notes || '-')
+      ];
+      var y = 75;
+      lines.forEach(function(line){
+        var splitLines = doc.splitTextToSize(line, 515);
+        splitLines.forEach(function(sl){
+          doc.text(sl, 40, y);
+          y += 16;
+          if(y > 780){ doc.addPage(); y = 40; }
+        });
+      });
+      doc.save('requisition_' + String(r.reference||'req').replace(/[^a-zA-Z0-9_-]/g,'_') + '.pdf');
+      showToast('Requisition PDF exported.', 'success');
+    }
+    window.exportRequisition = exportRequisition;
+
+    // ── Export CSV Utilities ──
+    function downloadCSV(filename, headers, rows){
+      var csvContent = '\uFEFF' + headers.join(',') + '\n' + rows.map(r => r.map(field => {
+        var str = String(field == null ? '' : field).replace(/"/g, '""');
+        return '"' + str + '"';
+      }).join(',')).join('\n');
+
+      var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      var link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      link.click();
+      showToast('CSV Export generated.', 'success');
+    }
+
+    function exportTendersCSV(){
+      var headers = ['Reference', 'Title', 'Authority', 'Deadline', 'Amount_DZD', 'Status', 'Checklist_Done', 'Notes'];
+      var rows = tenders.map(t => {
+        var cList = Array.isArray(t.checklist) ? t.checklist : [];
+        var doneCount = cList.filter(i => i.done).length;
+        return [
+          t.reference || '',
+          t.title || '',
+          t.authority || '',
+          t.deadline || '',
+          t.amount || 0,
+          t.status || '',
+          doneCount + '/' + cList.length,
+          t.notes || ''
+        ];
+      });
+      downloadCSV('tenders_export_' + new Date().toISOString().slice(0,10) + '.csv', headers, rows);
+    }
+    window.exportTendersCSV = exportTendersCSV;
+
+    function exportConsultationsCSV(){
+      var headers = ['Client', 'Consultant', 'Date', 'Category', 'Status', 'Subject'];
+      var rows = consultations.map(c => [
+        c.client || '',
+        c.consultant || '',
+        c.date || '',
+        c.category || '',
+        c.status || '',
+        c.subject || ''
+      ]);
+      downloadCSV('consultations_export_' + new Date().toISOString().slice(0,10) + '.csv', headers, rows);
+    }
+    window.exportConsultationsCSV = exportConsultationsCSV;
+
+    function exportRequisitionsCSV(){
+      var headers = ['Reference', 'Department', 'RequestedBy', 'Date', 'RequiredDate', 'Amount_DZD', 'Priority', 'Status', 'Items'];
+      var rows = requisitions.map(r => [
+        r.reference || '',
+        r.department || '',
+        r.requestedBy || '',
+        r.date || '',
+        r.requiredDate || '',
+        r.amount || 0,
+        r.priority || '',
+        r.status || '',
+        r.items || ''
+      ]);
+      downloadCSV('requisitions_export_' + new Date().toISOString().slice(0,10) + '.csv', headers, rows);
+    }
+    window.exportRequisitionsCSV = exportRequisitionsCSV;
+
+    function printPage(){
+      if(window.PrintEngine && typeof window.PrintEngine.printCurrentPage === 'function'){
+        window.PrintEngine.printCurrentPage();
+      } else {
+        window.print();
+      }
+    }
+    window.printPage = printPage;
+
+    // Modal Helpers
+    function openModal(id){
+      const m = document.getElementById(id);
+      if(m){ m.classList.add('active'); m.setAttribute('aria-hidden','false'); }
+    }
+    function closeModal(id){
+      const m = document.getElementById(id);
+      if(m){ m.classList.remove('active'); m.setAttribute('aria-hidden','true'); }
+    }
+
+    // ── Company Scope Watcher ──
+    let __companyScopeCache = null;
+    function startCompanyScopeWatcher(){
+      __companyScopeCache = getActiveCompanyId();
+      setInterval(function(){
+        const current = getActiveCompanyId();
+        if(current !== __companyScopeCache){
+          __companyScopeCache = current;
+          loadData(); renderAll();
+        }
+      }, 1000);
+    }
+
+    // ── Init on Cache Ready ──
+    function initModule(){
+      loadData();
+      loadLanguage();
+      renderAll();
+      startCompanyScopeWatcher();
+    }
+
+    if(window.ZDB && typeof window.ZDB.cacheReady === 'function'){
+      window.ZDB.cacheReady().then(initModule).catch(initModule);
+    } else {
+      initModule();
+    }
+
+    // ── Event Listeners ──
+    window.addEventListener('click', function(event){
+      ['consultModal','tenderModal','tenderDossierModal','tenderOcrModal','consultOcrModal','checklistModal','requisitionModal','riskModal'].forEach(function(id){
+        const modal = document.getElementById(id);
+        if(modal && event.target === modal) closeModal(id);
+      });
+    });
+
+    window.addEventListener('keydown', function(event){
+      if(event && event.key === 'Escape'){
+        ['consultModal','tenderModal','tenderDossierModal','tenderOcrModal','consultOcrModal','checklistModal','requisitionModal','riskModal'].forEach(function(id){
+          closeModal(id);
+        });
+      }
+    });
+
+    window.addEventListener('storage', function(ev){
+      if(!ev || !ev.key) return;
+      const consultKey = scopedKey(CONSULT_KEY);
+      const tenderKey = scopedKey(TENDER_KEY);
+      const reqKey = scopedKey(REQ_KEY);
+      if(ev.key === consultKey || ev.key === tenderKey || ev.key === reqKey){
+        loadData(); renderAll();
+      }
+    });
+  </script>
+  <script src="shared/license_auto.js?v=20260828a" defer></script>
+</body>
+</html>

@@ -1,0 +1,149 @@
+<!-- Zeralda ERP — Shared Header & Sidebar (v2026-02-26) -->
+<div class="header" role="banner">
+  <!-- ROW 1: logo / controls -->
+  <div class="header-top">
+    <div class="header-left">
+      <button class="sidebar-toggle-btn" onclick="toggleSidebarCollapse()" title="Toggle Sidebar" aria-label="Toggle sidebar visibility">
+        <i class="fas fa-bars" id="sidebarToggleIcon"></i>
+      </button>
+      <i class="fas fa-bars mobile-menu-btn" onclick="toggleSidebar()" style="display:none;"></i>
+      <div class="logo">
+        <img src="logo.png" alt="Company Logo" class="logo-image" id="mainLogo"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+        <i class="fas fa-building" style="display:none;"></i>
+        <div class="logo-brand">
+          <span id="app-title">Zeralda ERP Tool</span>
+          <span class="shell-developer-credit"><span data-en="Developed by:" data-ar="تطوير:" data-fr="Développé par :">Développé par :</span> zitouni abdelhakim<br><a class="shell-developer-credit-link" href="tel:0696409083">0696409083</a> &nbsp;|&nbsp; <a class="shell-developer-credit-link" href="mailto:saddamzeralda@gmail.com">saddamzeralda@gmail.com</a></span>
+        </div>
+      </div>
+    </div>
+    <div class="header-middle">
+      <div class="header-row row-1">
+        <div class="company-switcher" title="Active Company">
+          <i class="fas fa-building" aria-hidden="true"></i>
+          <select id="companySwitcher" onchange="onHeaderCompanySwitch(this.value)" aria-label="Switch company"></select>
+        </div>
+      </div>
+      <div class="header-row row-2">
+        <div class="lang-datetime-row">
+          <div class="language-indicator" title="Language">
+            <i class="fas fa-language" aria-hidden="true"></i>
+            <select id="headerLanguageSelect" aria-label="Switch language">
+              <option value="en">English</option>
+              <option value="ar">العربية</option>
+              <option value="fr">Français</option>
+            </select>
+          </div>
+          <div class="datetime-display">
+            <div class="date-display"><i class="fas fa-calendar-alt"></i><span id="currentDate"></span></div>
+            <div class="analog-clock" id="headerAnalogClock">
+              <svg viewBox="0 0 100 100" width="48" height="48">
+                <circle cx="50" cy="50" r="48" class="clock-face"/>
+                <g class="clock-marks" id="clockMarks"></g>
+                <g id="clockHourHand" class="clock-hand hour-hand"><line x1="50" y1="50" x2="50" y2="28"/></g>
+                <g id="clockMinuteHand" class="clock-hand minute-hand"><line x1="50" y1="50" x2="50" y2="20"/></g>
+                <g id="clockSecondHand" class="clock-hand second-hand"><line x1="50" y1="50" x2="50" y2="16"/></g>
+                <circle cx="50" cy="50" r="3" class="clock-center"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="header-row row-1">
+        <button id="headerHostShareBtn" class="header-fullscreen-btn" type="button"
+                onclick="window.showNetworkHostingModal && window.showNetworkHostingModal()"
+                data-en-title="Network & Remote Host"
+                data-ar-title="الاستضافة والربط الشبكي"
+                data-fr-title="Hébergement Réseau & Distant"
+                title="الاستضافة والربط الشبكي"
+                aria-label="Network & Remote Host"
+                style="color:#38bdf8;">
+          <i class="fas fa-network-wired" aria-hidden="true"></i>
+        </button>
+        <button id="headerFullscreenBtn" class="header-fullscreen-btn" type="button"
+                onclick="toggleHeaderFullscreen()"
+                data-en-title="Fullscreen (F11)"
+                data-ar-title="ملء الشاشة (F11)"
+                data-fr-title="Plein ecran (F11)"
+                title="Fullscreen (F11)"
+                aria-label="Fullscreen (F11)">
+          <span class="header-fullscreen-shortcut" aria-hidden="true">F11</span>
+          <i class="fas fa-expand" aria-hidden="true"></i>
+        </button>
+        <div class="user-info" id="layoutUserInfo">
+          <div class="user-avatar" id="layoutUserAvatar">US</div>
+          <div>
+            <div style="font-weight: 600;" class="user-name" id="layoutUserName"
+                 data-en="User" data-ar="مستخدم" data-fr="Utilisateur">User</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /.header-top -->
+</div><!-- /.header -->
+
+
+<div class="sidebar" id="sidebar">
+  <div class="menu">
+    <a class="menu-item" href="zeralda_erp_dashboard.html">
+      <i class="fas fa-home" aria-hidden="true"></i>
+      <span class="menu-text" data-en="Dashboard" data-ar="لوحة التحكم" data-fr="Tableau de bord">Dashboard</span>
+    </a>
+    <a class="menu-item" href="modules/sales/sales_management.html?v=20260829a">
+      <i class="fas fa-shopping-cart" aria-hidden="true"></i>
+      <span class="menu-text" data-en="Sales Management" data-ar="إدارة المبيعات" data-fr="Gestion des ventes">Sales Management</span>
+    </a>
+    <a class="menu-item" href="modules/purchasing/purchasing_management.html?v=20260829a">
+      <i class="fas fa-shopping-bag" aria-hidden="true"></i>
+      <span class="menu-text" data-en="Purchasing" data-ar="المشتريات" data-fr="Achats">Purchasing</span>
+    </a>
+    <a class="menu-item" href="modules/inventory/inventory_management.html?v=20260829a">
+      <i class="fas fa-boxes" aria-hidden="true"></i>
+      <span class="menu-text" data-en="Inventory" data-ar="المخزون" data-fr="Inventaire">Inventory</span>
+    </a>
+    <a class="menu-item" href="modules/finance/finance_accounting.html?v=20260829a">
+      <i class="fas fa-dollar-sign" aria-hidden="true"></i>
+      <span class="menu-text" data-en="Finance & Accounting" data-ar="المالية والحسابات" data-fr="Finance et Comptabilité">Finance & Accounting</span>
+    </a>
+    <a class="menu-item" href="modules/hr/hr_management.html?v=20260829a">
+      <i class="fas fa-users" aria-hidden="true"></i>
+      <span class="menu-text" data-en="Human Resources" data-ar="الموارد البشرية" data-fr="Ressources Humaines">Human Resources</span>
+    </a>
+    <a class="menu-item" href="modules/crm/crm_management.html?v=20260829a">
+      <i class="fas fa-user-friends" aria-hidden="true"></i>
+      <span class="menu-text" data-en="Customer Relations" data-ar="علاقات العملاء" data-fr="Relations Clients">Customer Relations</span>
+    </a>
+    <a class="menu-item" href="modules/reports/reports_analytics.html?v=20260829a">
+      <i class="fas fa-chart-line" aria-hidden="true"></i>
+      <span class="menu-text" data-en="Reports & Analytics" data-ar="التقارير والتحليلات" data-fr="Rapports et Analyses">Reports & Analytics</span>
+    </a>
+    <a class="menu-item" href="modules/services/services_management.html?v=20260829a">
+      <i class="fas fa-concierge-bell" aria-hidden="true"></i>
+      <span class="menu-text" data-en="Services" data-ar="الخدمات" data-fr="Services">Services</span>
+    </a>
+    <a class="menu-item" href="modules/consulting/consulting_tenders_management.html?v=20260829a">
+      <i class="fas fa-file-signature" aria-hidden="true"></i>
+      <span class="menu-text" data-en="Consulting & Tenders" data-ar="الاستشارات والمناقصات" data-fr="Conseil & Appels d'offres">Consulting & Tenders</span>
+    </a>
+    <a class="menu-item" href="settings.html">
+      <i class="fas fa-cog" aria-hidden="true"></i>
+      <span class="menu-text" data-en="Settings" data-ar="الإعدادات" data-fr="Paramètres">Settings</span>
+    </a>
+  </div>
+  <div class="sidebar-footer">
+    <div class="developer-credit-card">
+      <div class="dev-card-header">
+        <i class="fas fa-code" aria-hidden="true"></i>
+        <span data-en="Developed by:" data-ar="تطوير:" data-fr="Développé par :">Développé par :</span>
+      </div>
+      <div class="dev-card-name">zitouni abdelhakim</div>
+      <div class="dev-card-contacts">
+        <a href="tel:0696409083" class="dev-card-link" title="Appeler"><i class="fas fa-phone-alt"></i> 0696409083</a>
+        <span class="dev-card-sep">|</span>
+        <a href="mailto:saddamzeralda@gmail.com" class="dev-card-link" title="Email"><i class="fas fa-envelope"></i> saddamzeralda@gmail.com</a>
+      </div>
+    </div>
+  </div>
+</div>

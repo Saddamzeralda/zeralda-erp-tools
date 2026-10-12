@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en" dir="rtl">
+<head>
+    <script src="shared/zeralda_db.js?v=20260731a"></script>
+    <script src="shared/theme_manager.js"></script>
+    <script src="shared/company_storage.js?v=20260807b"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>استعادة النسخة الاحتياطية - Zeralda ERP</title>
+<script src="shared/storage_adapter.js?v=20260721c" defer></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f6f1e8; color: #1f1b16; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+  .card { background: #fff; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); padding: 40px; max-width: 560px; width: 90%; text-align: center; }
+  h1 { font-size: 24px; margin-bottom: 8px; }
+  p { color: #6b6258; margin-bottom: 20px; line-height: 1.6; }
+  #status { font-size: 14px; min-height: 60px; margin: 20px 0; text-align: left; background: #f9f6f0; border-radius: 8px; padding: 16px; max-height: 300px; overflow-y: auto; font-family: monospace; white-space: pre-wrap; }
+  .ok { color: #16a34a; }
+  .err { color: #dc2626; }
+  .warn { color: #d97706; }
+  .info { color: #2563eb; }
+  button { background: #d36b2e; color: #fff; border: none; border-radius: 8px; padding: 12px 32px; font-size: 16px; cursor: pointer; transition: 0.2s; }
+  button:hover { filter: brightness(0.95); transform: translateY(-1px); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .hidden { display: none; }
+</style>
+    <link rel="stylesheet" href="styles/dark_theme.css">
+</head>
+<body>
+<div class="card">
+  <h1>استعادة النسخة الاحتياطية</h1>
+  <p>سيتم استعادة جميع البيانات من ملف النسخة الاحتياطية إلى localStorage و IndexedDB.</p>
+  <div id="status">جارٍ التحضير...</div>
+  <button id="restoreBtn" onclick="doRestore()">استعادة الآن</button>
+  <button id="dashboardBtn" class="hidden" onclick="goDashboard()">الذهاب للوحة التحكم</button>
+</div>
+<script>
+var BACKUP_FILE = 'zeralda-backup-2026-07-03.json';
+var statusEl = document.getElementById('status');
+var restoreBtn = document.getElementById('restoreBtn');
+var dashboardBtn = document.getElementById('dashboardBtn');
+
+function log(msg, cls) {
+  var span = document.createElement('span');
+  span.className = cls || 'info';
+  span.textContent = msg + '\n';
+  statusEl.appendChild(span);
+  statusEl.scrollTop = statusEl.scrollHeight;
+}
+
+async function doRestore() {
+  restoreBtn.disabled = true;
+  restoreBtn.textContent = 'جارٍ الاستعادة...';
+  statusEl.innerHTML = '';
+
+  try {
+    // Step 1: Wait for storage_adapter to be ready
+    log('⏳ انتظار تهيئة محول التخزين...', 'info');
+    if (window.ZeraldaStorageAdapter && window.ZeraldaStorageAdapter.readyPromise) {
+      await window.ZeraldaStorageAdapter.readyPromise;
+      log('✅ محول التخزين جاهز', 'ok');
+    } else {
+      log('⚠️ محول التخزين غير محمّل — سيتم الكتابة مباشرة في localStorage', 'warn');
+    }
+
+    // Step 2: Fetch backup file
+    log('⏳ تحميل ملف النسخة الاحتياطية...', 'info');
+    var resp = await fetch(BACKUP_FILE);
+    if (!resp.ok) throw new Error('فشل تحميل الملف: ' + resp.status);
+    var backup = await resp.json();
+    log('✅ تم تحميل الملف', 'ok');
+
+    // Step 3: Parse backup
+    var lsData = backup.localStorage || {};
+    var keys = Object.keys(lsData);
+    log('📦 عدد المفاتيح: ' + keys.length, 'info');
+
+    // Step 4: Clear migration flag so migration runs fresh after restore
+    try {
+      ZS.removeItem('storage-adapter-migrated-v1');
+      ZS.removeItem('storage-adapter-migrated-v2');
+      ZS.removeItem('storage-adapter-migrated-v3');
+    } catch (e) {}
+
+    // Step 5: Write all keys via localStorage (routed through ZDB patch)
+    var smallCount = 0, largeCount = 0;
+    var adapterReady = window.ZDB && window.ZDB.isReady && window.ZDB.isReady();
+
+    for (var i = 0; i < keys.length; i++) {
+      var key = keys[i];
+      var value = lsData[key];
+
+      // Skip internal timer keys
+      if (key === '_prefSyncTimer') continue;
+
+      try {
+        ZS.setItem(key, value);
+        // All keys go to ZDB (IndexedDB) now
+        if (adapterReady) {
+          largeCount++;
+        } else {
+          smallCount++;
+        }
+      } catch (e) {
+        // If localStorage is full, try writing directly via native setItem
+        // which should go to IDB if adapter is active
+        log('⚠️ فشل كتابة: ' + key + ' — ' + e.message, 'warn');
+      }
+    }
+
+    log('✅ تمت الكتابة: ' + smallCount + ' مفتاح صغير، ' + largeCount + ' مفتاح كبير (IndexedDB)', 'ok');
+
+    // Step 6: Flush pending IDB writes
+    if (window.ZeraldaStorageAdapter && window.ZeraldaStorageAdapter.flush) {
+      log('⏳ تأكيد كتابة IndexedDB...', 'info');
+      await window.ZeraldaStorageAdapter.flush();
+      log('✅ تمت كتابة جميع البيانات في IndexedDB', 'ok');
+    }
+
+    // Step 7: Verify
+    var memKeys = window.ZeraldaStorageAdapter ? window.ZeraldaStorageAdapter.getCacheKeys() : [];
+    log('🔍 مفاتيح IndexedDB في الذاكرة: ' + memKeys.length, 'info');
+    log('🔍 مفاتيح localStorage: ' + ZS.length, 'info');
+
+    // Check key data
+    var customers = ZS.getItem('customers-data::c_8py68ss');
+    var invoices = ZS.getItem('invoices-data::c_8py68ss');
+    var products = ZS.getItem('products-data::c_8py68ss');
+    log('--- التحقق من البيانات ---', 'info');
+    log('العملاء: ' + (customers ? JSON.parse(customers).length + ' سجل' : 'غير موجود'), customers ? 'ok' : 'err');
+    log('الفواتير: ' + (invoices ? JSON.parse(invoices).length + ' سجل' : 'غير موجود'), invoices ? 'ok' : 'err');
+    log('المنتجات: ' + (products ? JSON.parse(products).length + ' سجل' : 'غير موجود'), products ? 'ok' : 'err');
+
+    log('\n✅ تمت الاستعادة بنجاح!', 'ok');
+    dashboardBtn.classList.remove('hidden');
+    restoreBtn.classList.add('hidden');
+
+  } catch (err) {
+    log('❌ خطأ: ' + (err.message || err), 'err');
+    restoreBtn.disabled = false;
+    restoreBtn.textContent = 'إعادة المحاولة';
+  }
+}
+
+function goDashboard() {
+  window.location.href = 'zeralda_erp_dashboard.html';
+}
+</script>
+</body>
+</html>

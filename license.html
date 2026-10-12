@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>License Activation - Zeralda ERP</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap">
+    <script src="shared/zeralda_db.js?v=20260731a"></script>
+    <script src="shared/theme_manager.js"></script>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --ink: #f1f5f9;
+            --muted: #94a3b8;
+            --accent: #d36b2e;
+            --accent-hover: #c05a1f;
+            --success: #10b981;
+            --error: #ef4444;
+            --warning: #f59e0b;
+            --border: #334155;
+            --radius: 14px;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Space Grotesk', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--ink);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .license-container {
+            max-width: 560px;
+            width: 100%;
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            border: 1px solid var(--border);
+        }
+        .license-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .license-header .icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        .license-header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .license-header p {
+            color: var(--muted);
+            font-size: 14px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 24px;
+        }
+        .status-badge.active { background: rgba(16,185,129,0.15); color: var(--success); }
+        .status-badge.trial { background: rgba(245,158,11,0.15); color: var(--warning); }
+        .status-badge.expired { background: rgba(239,68,68,0.15); color: var(--error); }
+        .status-badge.grace { background: rgba(245,158,11,0.15); color: var(--warning); }
+        .form-group { margin-bottom: 20px; }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--muted);
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 15px;
+            font-family: 'Space Grotesk', monospace;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg);
+            color: var(--ink);
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        .btn {
+            width: 100%;
+            padding: 14px 24px;
+            font-size: 15px;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: opacity 0.2s, background 0.2s;
+        }
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-primary:hover { background: var(--accent-hover); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-secondary { background: var(--border); color: var(--ink); margin-top: 12px; }
+        .btn-danger { background: var(--error); color: white; margin-top: 12px; }
+        .info-box {
+            background: rgba(211,107,46,0.08);
+            border: 1px solid rgba(211,107,46,0.2);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+        .info-box .label { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+        .info-box .value { font-size: 14px; font-family: monospace; color: var(--ink); word-break: break-all; }
+        .error-msg { color: var(--error); font-size: 13px; min-height: 20px; margin-bottom: 12px; text-align: center; }
+        .success-msg { color: var(--success); font-size: 13px; min-height: 20px; margin-bottom: 12px; text-align: center; }
+        .license-info { margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border); }
+        .license-info .row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; }
+        .license-info .row .key { color: var(--muted); }
+        .license-info .row .val { color: var(--ink); font-weight: 500; }
+        .tabs { display: flex; gap: 4px; margin-bottom: 24px; background: var(--bg); border-radius: 8px; padding: 4px; }
+        .tab { flex: 1; padding: 10px; text-align: center; font-size: 13px; font-weight: 600; border-radius: 6px; cursor: pointer; color: var(--muted); transition: all 0.2s; }
+        .tab.active { background: var(--accent); color: white; }
+        .hidden { display: none !important; }
+        .admin-panel { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border); }
+        .admin-panel h2 { font-size: 18px; margin-bottom: 16px; }
+        .license-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .license-table th, .license-table td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+        .license-table th { color: var(--muted); font-weight: 600; }
+        .license-table td { color: var(--ink); }
+        .revoke-btn { background: none; border: 1px solid var(--error); color: var(--error); padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; }
+    </style>
+</head>
+<body>
+    <div class="license-container">
+        <div class="license-header">
+            <div class="icon">🔒</div>
+            <h1>Zeralda ERP License</h1>
+            <p>Activate your license to continue using the system</p>
+            <div id="statusBadge" class="status-badge trial">Trial Mode</div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <div class="tab active" id="tabActivate" onclick="switchTab('activate')">Activate</div>
+            <div class="tab" id="tabStatus" onclick="switchTab('status')">Status</div>
+            <div class="tab" id="tabAdmin" onclick="switchTab('admin')">Admin</div>
+        </div>
+
+        <!-- Activate Tab -->
+        <div id="activatePanel">
+            <div class="info-box">
+                <div class="label" style="display:flex;justify-content:space-between;align-items:center;">
+                    <span>Hardware ID (معرّف الجهاز)</span>
+                    <button id="copyHwBtn" type="button" style="background:#334155;color:#e2e8f0;border:none;border-radius:4px;padding:3px 10px;font-size:11px;cursor:pointer;">📋 Copy | نسخ</button>
+                </div>
+                <div class="value" id="hwIdDisplay" style="color:#38bdf8;font-family:monospace;">Loading...</div>
+            </div>
+            <div class="form-group">
+                <label>License Key or Activation Key (مفتاح الترخيص أو كود التفعيل)</label>
+                <input type="text" id="licenseKeyInput" placeholder="ZERALDA-XXXX... أو KEY-XXXX..." autocomplete="off" />
+            </div>
+            <div class="error-msg" id="errorMsg"></div>
+            <div class="success-msg" id="successMsg"></div>
+            <button class="btn btn-primary" id="activateBtn" onclick="activateLicense()">Activate License</button>
+            <button class="btn btn-secondary" id="continueTrialBtn" onclick="continueTrial()">Continue Trial</button>
+        </div>
+
+        <!-- Status Tab -->
+        <div id="statusPanel" class="hidden">
+            <div id="statusContent">
+                <div class="info-box">
+                    <div class="label">License Status</div>
+                    <div class="value" id="licenseStatusText">Loading...</div>
+                </div>
+                <div class="license-info" id="licenseDetails"></div>
+                <button class="btn btn-danger" id="deactivateBtn" onclick="deactivateLicense()">Deactivate License</button>
+            </div>
+        </div>
+
+        <!-- Admin Tab -->
+        <div id="adminPanel" class="hidden">
+            <div class="admin-panel">
+                <h2>Create New License</h2>
+                <div class="form-group">
+                    <label>Customer Name</label>
+                    <input type="text" id="adminCustomer" placeholder="Company Name" />
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="text" id="adminEmail" placeholder="customer@example.com" />
+                </div>
+                <div class="form-group">
+                    <label>License Type</label>
+                    <select id="adminType" style="width:100%;padding:12px 16px;background:var(--bg);color:var(--ink);border:1px solid var(--border);border-radius:8px;">
+                        <option value="standard">Standard (Perpetual)</option>
+                        <option value="trial">Trial (Time-limited)</option>
+                        <option value="enterprise">Enterprise (Multi-seat)</option>
+                        <option value="subscription">Subscription (Renewable)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Expires (days, 0=perpetual)</label>
+                    <input type="number" id="adminExpiresDays" value="0" min="0" />
+                </div>
+                <div class="form-group">
+                    <label>Max Devices</label>
+                    <input type="number" id="adminMaxDevices" value="1" min="1" />
+                </div>
+                <div class="error-msg" id="adminError"></div>
+                <div class="success-msg" id="adminSuccess"></div>
+                <button class="btn btn-primary" onclick="createLicense()">Generate License</button>
+
+                <h2 style="margin-top:32px;">Existing Licenses</h2>
+                <table class="license-table" id="licensesTable">
+                    <thead><tr><th>Key</th><th>Type</th><th>Customer</th><th>Devices</th><th>Status</th><th>Action</th></tr></thead>
+                    <tbody id="licensesTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="shared/license_crypto.js"></script>
+    <script src="shared/license_manager.js"></script>
+    <script src="shared/license_guard.js"></script>
+    <script>
+    var currentTab = 'activate';
+
+    async function init() {
+        // Initialize license manager
+        await LicenseManager.init();
+        var status = LicenseManager.getStatus();
+
+        // Display hardware ID
+        var hwVal = status.hwId || status.serverHwId || '—';
+        document.getElementById('hwIdDisplay').textContent = hwVal;
+
+        var copyBtn = document.getElementById('copyHwBtn');
+        if (copyBtn) {
+            copyBtn.onclick = function() {
+                if (hwVal && hwVal !== '—' && navigator.clipboard) {
+                    navigator.clipboard.writeText(hwVal).then(function() {
+                        copyBtn.textContent = '✓ Copied | تم النسخ';
+                        setTimeout(function() { copyBtn.textContent = '📋 Copy | نسخ'; }, 2000);
+                    });
+                }
+            };
+        }
+
+        // Update status badge
+        updateStatusBadge(status);
+
+        // Update status panel
+        updateStatusPanel(status);
+
+        // Load admin licenses if admin
+        loadAdminLicenses();
+    }
+
+    function updateStatusBadge(status) {
+        var badge = document.getElementById('statusBadge');
+        badge.className = 'status-badge ' + status.status;
+        var labels = {
+            active: '✓ Licensed',
+            trial: 'Trial (' + status.daysLeft + 'd left)',
+            expired: 'Expired',
+            invalid: 'Invalid',
+            grace: 'Grace (' + status.graceHoursLeft + 'h left)',
+            unknown: 'Unknown',
+        };
+        badge.textContent = labels[status.status] || status.status;
+    }
+
+    function updateStatusPanel(status) {
+        document.getElementById('licenseStatusText').textContent = status.status.toUpperCase();
+        var details = document.getElementById('licenseDetails');
+        if (status.license) {
+            var lic = status.license;
+            var expiresText = lic.expiresAt ? new Date(lic.expiresAt).toLocaleDateString() : 'Perpetual';
+            details.innerHTML = [
+                '<div class="row"><span class="key">License Key:</span><span class="val">' + lic.licenseKey + '</span></div>',
+                '<div class="row"><span class="key">Type:</span><span class="val">' + lic.type + '</span></div>',
+                '<div class="row"><span class="key">Customer:</span><span class="val">' + (lic.customer || '—') + '</span></div>',
+                '<div class="row"><span class="key">Email:</span><span class="val">' + (lic.email || '—') + '</span></div>',
+                '<div class="row"><span class="key">Issued:</span><span class="val">' + new Date(lic.issuedAt).toLocaleDateString() + '</span></div>',
+                '<div class="row"><span class="key">Expires:</span><span class="val">' + expiresText + '</span></div>',
+                '<div class="row"><span class="key">Max Devices:</span><span class="val">' + lic.maxDevices + '</span></div>',
+                '<div class="row"><span class="key">Features:</span><span class="val">' + (lic.features || []).join(', ') + '</span></div>',
+            ].join('');
+            document.getElementById('deactivateBtn').style.display = 'block';
+        } else if (status.status === 'trial') {
+            details.innerHTML = [
+                '<div class="row"><span class="key">Trial Start:</span><span class="val">' + new Date(status.trialEnd - 14*24*60*60*1000).toLocaleDateString() + '</span></div>',
+                '<div class="row"><span class="key">Trial End:</span><span class="val">' + new Date(status.trialEnd).toLocaleDateString() + '</span></div>',
+                '<div class="row"><span class="key">Days Left:</span><span class="val">' + status.daysLeft + '</span></div>',
+            ].join('');
+            document.getElementById('deactivateBtn').style.display = 'none';
+        } else {
+            details.innerHTML = '<div class="row"><span class="key">No active license</span></div>';
+            document.getElementById('deactivateBtn').style.display = 'none';
+        }
+    }
+
+    function switchTab(tab) {
+        currentTab = tab;
+        document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+        document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+        document.getElementById('activatePanel').classList.add('hidden');
+        document.getElementById('statusPanel').classList.add('hidden');
+        document.getElementById('adminPanel').classList.add('hidden');
+        document.getElementById(tab + 'Panel').classList.remove('hidden');
+    }
+
+    async function activateLicense() {
+        var key = document.getElementById('licenseKeyInput').value.trim();
+        if (!key) {
+            document.getElementById('errorMsg').textContent = 'Please enter a license key';
+            return;
+        }
+        var btn = document.getElementById('activateBtn');
+        btn.disabled = true;
+        btn.textContent = 'Activating...';
+        document.getElementById('errorMsg').textContent = '';
+        document.getElementById('successMsg').textContent = '';
+
+        try {
+            var result = await LicenseManager.activate(key);
+            if (result.ok) {
+                document.getElementById('successMsg').textContent = '✓ License activated successfully!';
+                btn.textContent = '✓ Activated';
+                setTimeout(function() {
+                    var redirect = new URLSearchParams(window.location.search).get('redirect');
+                    window.location.href = redirect || '/zeralda_erp_dashboard.html';
+                }, 1500);
+            } else {
+                document.getElementById('errorMsg').textContent = result.error || 'Activation failed';
+                btn.disabled = false;
+                btn.textContent = 'Activate License';
+            }
+        } catch (e) {
+            document.getElementById('errorMsg').textContent = e.message;
+            btn.disabled = false;
+            btn.textContent = 'Activate License';
+        }
+    }
+
+    function continueTrial() {
+        var status = LicenseManager.getStatus();
+        if (status.status === 'trial' && status.daysLeft > 0) {
+            var redirect = new URLSearchParams(window.location.search).get('redirect');
+            window.location.href = redirect || '/zeralda_erp_dashboard.html';
+        } else {
+            document.getElementById('errorMsg').textContent = 'Trial has expired. Please activate a license.';
+        }
+    }
+
+    async function deactivateLicense() {
+        if (!confirm('Deactivate this license on this machine?')) return;
+        await LicenseManager.deactivate();
+        var status = LicenseManager.getStatus();
+        updateStatusBadge(status);
+        updateStatusPanel(status);
+        document.getElementById('successMsg').textContent = 'License deactivated.';
+    }
+
+    async function createLicense() {
+        var data = {
+            type: document.getElementById('adminType').value,
+            customer: document.getElementById('adminCustomer').value,
+            email: document.getElementById('adminEmail').value,
+            expiresDays: parseInt(document.getElementById('adminExpiresDays').value, 10) || 0,
+            maxDevices: parseInt(document.getElementById('adminMaxDevices').value, 10) || 1,
+        };
+        document.getElementById('adminError').textContent = '';
+        document.getElementById('adminSuccess').textContent = '';
+
+        try {
+            var resp = await fetch('/api/license/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
+            var result = await resp.json();
+            if (result.ok) {
+                document.getElementById('adminSuccess').textContent = '✓ License created: ' + result.licenseKey;
+                loadAdminLicenses();
+            } else {
+                document.getElementById('adminError').textContent = result.error || 'Failed to create license';
+            }
+        } catch (e) {
+            document.getElementById('adminError').textContent = e.message;
+        }
+    }
+
+    async function loadAdminLicenses() {
+        try {
+            var resp = await fetch('/api/license/list');
+            var data = await resp.json();
+            if (data.ok) {
+                var tbody = document.getElementById('licensesTableBody');
+                tbody.innerHTML = data.licenses.map(function(l) {
+                    var status = l.revoked ? 'Revoked' : 'Active';
+                    var statusColor = l.revoked ? 'var(--error)' : 'var(--success)';
+                    return '<tr>' +
+                        '<td><code>' + l.licenseKey + '</code></td>' +
+                        '<td>' + l.type + '</td>' +
+                        '<td>' + (l.customer || '—') + '</td>' +
+                        '<td>' + l.activeDevices + '/' + l.maxDevices + '</td>' +
+                        '<td style="color:' + statusColor + ';">' + status + '</td>' +
+                        '<td>' + (l.revoked ? '' : '<button class="revoke-btn" onclick="revokeLicense(\'' + l.licenseKey + '\')">Revoke</button>') + '</td>' +
+                        '</tr>';
+                }).join('');
+            }
+        } catch (e) { /* ignore */ }
+    }
+
+    async function revokeLicense(key) {
+        if (!confirm('Revoke license ' + key + '?')) return;
+        try {
+            await fetch('/api/license/revoke', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ licenseKey: key }),
+            });
+            loadAdminLicenses();
+        } catch (e) {}
+    }
+
+    // Initialize on load
+    init().catch(function(e) { console.error('License page init failed:', e); });
+    </script>
+</body>
+</html>

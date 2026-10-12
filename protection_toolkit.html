@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Protection Toolkit - Zeralda ERP</title>
+    <link rel="icon" href="favicon.ico">
+    <style>
+        :root {
+            --bg: #0a0e1a;
+            --bg2: #111827;
+            --card: #1a2235;
+            --card2: #1e293b;
+            --ink: #f1f5f9;
+            --muted: #94a3b8;
+            --dim: #64748b;
+            --accent: #d36b2e;
+            --accent2: #f97316;
+            --success: #10b981;
+            --error: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --border: #2a3650;
+            --radius: 12px;
+            --shadow: 0 4px 6px -1px rgba(0,0,0,0.3), 0 2px 4px -1px rgba(0,0,0,0.2);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', 'Cairo', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--ink);
+            min-height: 100vh;
+        }
+        /* ── Sidebar ── */
+        .sidebar {
+            position: fixed; right: 0; top: 0; bottom: 0; width: 260px;
+            background: var(--bg2); border-left: 1px solid var(--border);
+            display: flex; flex-direction: column; padding: 20px 0;
+            overflow-y: auto;
+        }
+        .sidebar .logo {
+            padding: 0 24px 24px; border-bottom: 1px solid var(--border);
+            margin-bottom: 16px;
+        }
+        .sidebar .logo h1 { font-size: 18px; font-weight: 700; }
+        .sidebar .logo h1 span { color: var(--accent); }
+        .sidebar .logo p { font-size: 11px; color: var(--muted); margin-top: 4px; }
+        .nav-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 24px; cursor: pointer; color: var(--muted);
+            font-size: 14px; font-weight: 500; transition: all 0.2s;
+            border-right: 3px solid transparent;
+        }
+        .nav-item:hover { background: rgba(255,255,255,0.03); color: var(--ink); }
+        .nav-item.active {
+            background: rgba(211,107,46,0.1); color: var(--accent);
+            border-right-color: var(--accent);
+        }
+        .nav-item .icon { font-size: 18px; width: 24px; text-align: center; }
+        .nav-item .badge-count {
+            margin-right: auto; background: var(--accent); color: white;
+            border-radius: 10px; padding: 2px 8px; font-size: 11px; font-weight: 700;
+        }
+        .sidebar .footer {
+            margin-top: auto; padding: 16px 24px; border-top: 1px solid var(--border);
+            font-size: 11px; color: var(--dim);
+        }
+        .sidebar .footer .status-dot {
+            display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+            background: var(--success); margin-left: 6px;
+        }
+        /* ── Main ── */
+        .main { margin-right: 260px; padding: 24px 32px; }
+        .page-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 24px; flex-wrap: wrap; gap: 12px;
+        }
+        .page-header h2 { font-size: 22px; font-weight: 700; }
+        .page-header h2 .icon { color: var(--accent); margin-left: 8px; }
+        .page-header .actions { display: flex; gap: 8px; }
+        /* ── Buttons ── */
+        .btn {
+            padding: 10px 18px; border: none; border-radius: 8px;
+            cursor: pointer; font-size: 13px; font-weight: 600;
+            display: inline-flex; align-items: center; gap: 6px;
+            transition: all 0.2s; font-family: inherit;
+        }
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-primary:hover { background: var(--accent2); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-success:hover { opacity: 0.85; }
+        .btn-danger { background: var(--error); color: white; }
+        .btn-danger:hover { opacity: 0.85; }
+        .btn-warning { background: var(--warning); color: #1a1a2e; }
+        .btn-warning:hover { opacity: 0.85; }
+        .btn-info { background: var(--info); color: white; }
+        .btn-info:hover { opacity: 0.85; }
+        .btn-ghost {
+            background: transparent; color: var(--muted);
+            border: 1px solid var(--border);
+        }
+        .btn-ghost:hover { background: var(--card); color: var(--ink); }
+        .btn:disabled { opacity: 0.5; cursor: wait; }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+        /* ── Cards ── */
+        .card {
+            background: var(--card); border-radius: var(--radius);
+            border: 1px solid var(--border); box-shadow: var(--shadow);
+            margin-bottom: 20px; overflow: hidden;
+        }
+        .card-header {
+            padding: 16px 20px; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .card-header h3 { font-size: 15px; font-weight: 600; }
+        .card-header h3 .icon { color: var(--accent); margin-left: 6px; }
+        .card-body { padding: 20px; }
+        /* ── Stat cards ── */
+        .stat-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 16px; margin-bottom: 24px;
+        }
+        .stat-card {
+            background: var(--card); border-radius: var(--radius); padding: 20px;
+            border: 1px solid var(--border); text-align: center; transition: transform 0.2s;
+        }
+        .stat-card:hover { transform: translateY(-2px); }
+        .stat-card .icon { font-size: 28px; margin-bottom: 8px; }
+        .stat-card .value { font-size: 28px; font-weight: 700; }
+        .stat-card .label { font-size: 11px; color: var(--muted); margin-top: 4px; }
+        .stat-card.success .icon { color: var(--success); }
+        .stat-card.success .value { color: var(--success); }
+        .stat-card.warning .icon { color: var(--warning); }
+        .stat-card.warning .value { color: var(--warning); }
+        .stat-card.error .icon { color: var(--error); }
+        .stat-card.error .value { color: var(--error); }
+        .stat-card.info .icon { color: var(--info); }
+        .stat-card.info .value { color: var(--info); }
+        .stat-card.accent .icon { color: var(--accent); }
+        .stat-card.accent .value { color: var(--accent); }
+        /* ── Tables ── */
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th {
+            text-align: right; padding: 10px 14px; color: var(--muted);
+            border-bottom: 2px solid var(--border); font-weight: 600;
+            font-size: 12px; white-space: nowrap;
+        }
+        td { padding: 10px 14px; border-bottom: 1px solid var(--border); }
+        tr:hover td { background: rgba(255,255,255,0.02); }
+        .mono { font-family: 'Consolas', 'Courier New', monospace; font-size: 12px; }
+        /* ── Badges ── */
+        .badge {
+            display: inline-block; padding: 3px 10px; border-radius: 12px;
+            font-size: 11px; font-weight: 600;
+        }
+        .badge.active { background: rgba(16,185,129,0.15); color: var(--success); }
+        .badge.inactive { background: rgba(148,163,184,0.15); color: var(--muted); }
+        .badge.revoked { background: rgba(239,68,68,0.15); color: var(--error); }
+        .badge.high { background: rgba(239,68,68,0.2); color: var(--error); }
+        .badge.medium { background: rgba(245,158,11,0.2); color: var(--warning); }
+        .badge.low { background: rgba(148,163,184,0.15); color: var(--muted); }
+        .badge.trial { background: rgba(59,130,246,0.15); color: var(--info); }
+        .badge.grace { background: rgba(245,158,11,0.15); color: var(--warning); }
+        .badge.expired { background: rgba(239,68,68,0.15); color: var(--error); }
+        /* ── Forms ── */
+        .form-group { margin-bottom: 16px; }
+        .form-group label {
+            display: block; font-size: 13px; color: var(--muted);
+            margin-bottom: 6px; font-weight: 500;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 10px 14px; background: var(--bg2);
+            border: 1px solid var(--border); border-radius: 8px;
+            color: var(--ink); font-size: 14px; font-family: inherit;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none; border-color: var(--accent);
+        }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        /* ── Alerts ── */
+        .alert {
+            padding: 12px 16px; border-radius: 8px; margin-bottom: 8px;
+            display: flex; align-items: flex-start; gap: 10px; font-size: 13px;
+        }
+        .alert.high { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); }
+        .alert.medium { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); }
+        .alert .alert-icon { font-size: 18px; flex-shrink: 0; }
+        .alert.high .alert-icon { color: var(--error); }
+        .alert.medium .alert-icon { color: var(--warning); }
+        .alert .alert-body { flex: 1; }
+        .alert .alert-title { font-weight: 600; margin-bottom: 2px; }
+        .alert .alert-detail { color: var(--muted); font-size: 12px; }
+        /* ── Toast ── */
+        .toast-container {
+            position: fixed; top: 20px; left: 20px; z-index: 9999;
+            display: flex; flex-direction: column; gap: 8px;
+        }
+        .toast {
+            padding: 14px 20px; border-radius: 8px; font-size: 14px;
+            font-weight: 500; box-shadow: var(--shadow);
+            animation: slideIn 0.3s ease; display: flex; align-items: center; gap: 10px;
+            min-width: 300px; max-width: 500px;
+        }
+        .toast.success { background: var(--success); color: white; }
+        .toast.error { background: var(--error); color: white; }
+        .toast.warning { background: var(--warning); color: #1a1a2e; }
+        .toast.info { background: var(--info); color: white; }
+        @keyframes slideIn {
+            from { transform: translateX(-100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes fadeOut {
+            to { opacity: 0; transform: translateX(-20px); }
+        }
+        /* ── Modal ── */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+            display: none; align-items: center; justify-content: center; z-index: 1000;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal {
+            background: var(--card); border-radius: var(--radius);
+            border: 1px solid var(--border); width: 90%; max-width: 500px;
+            box-shadow: var(--shadow); animation: modalIn 0.2s ease;
+        }
+        @keyframes modalIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal-header {
+            padding: 16px 20px; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .modal-header h3 { font-size: 16px; font-weight: 600; }
+        .modal-header .close { cursor: pointer; color: var(--muted); font-size: 20px; }
+        .modal-header .close:hover { color: var(--ink); }
+        .modal-body { padding: 20px; }
+        .modal-footer {
+            padding: 16px 20px; border-top: 1px solid var(--border);
+            display: flex; gap: 8px; justify-content: flex-start;
+        }
+        /* ── Sections ── */
+        .section { display: none; }
+        .section.active { display: block; }
+        /* ── Event log ── */
+        .event-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 14px; border-bottom: 1px solid var(--border);
+            font-size: 13px;
+        }
+        .event-item:last-child { border-bottom: none; }
+        .event-icon { font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; }
+        .event-type { font-weight: 600; min-width: 100px; }
+        .event-time { color: var(--muted); font-size: 12px; margin-right: auto; }
+        .event-hw { color: var(--dim); font-size: 12px; font-family: monospace; }
+        /* ── Progress ── */
+        .progress-bar {
+            height: 6px; background: var(--bg2); border-radius: 3px;
+            overflow: hidden; margin: 8px 0;
+        }
+        .progress-fill {
+            height: 100%; background: var(--accent); border-radius: 3px;
+            transition: width 0.3s;
+        }
+        /* ── Empty state ── */
+        .empty {
+            text-align: center; padding: 40px 20px; color: var(--dim);
+        }
+        .empty .icon { font-size: 48px; margin-bottom: 12px; opacity: 0.3; }
+        .empty p { font-size: 14px; }
+        /* ── Code block ── */
+        .code-block {
+            background: var(--bg); border: 1px solid var(--border);
+            border-radius: 8px; padding: 14px; font-family: monospace;
+            font-size: 12px; color: var(--success); overflow-x: auto;
+            max-height: 300px; overflow-y: auto; white-space: pre-wrap;
+        }
+        /* ── Test results ── */
+        .test-result {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 14px; border-bottom: 1px solid var(--border);
+            font-size: 13px;
+        }
+        .test-result .test-icon { font-size: 16px; flex-shrink: 0; }
+        .test-result.pass .test-icon { color: var(--success); }
+        .test-result.fail .test-icon { color: var(--error); }
+        .test-result .test-name { flex: 1; }
+        .test-result .test-detail { color: var(--muted); font-size: 12px; font-family: monospace; }
+        /* ── Loading spinner ── */
+        .spinner {
+            display: inline-block; width: 16px; height: 16px;
+            border: 2px solid rgba(255,255,255,0.2); border-top-color: white;
+            border-radius: 50%; animation: spin 0.6s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            .sidebar { width: 60px; }
+            .sidebar .logo h1, .sidebar .logo p,
+            .nav-item span:not(.icon), .nav-item .badge-count,
+            .sidebar .footer { display: none; }
+            .main { margin-right: 60px; padding: 16px; }
+            .form-row { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Toast container -->
+<div class="toast-container" id="toasts"></div>
+
+<!-- Sidebar -->
+<div class="sidebar">
+    <div class="logo">
+        <h1>🛡️ Protection <span>Toolkit</span></h1>
+        <p>Zeralda ERP — Developer Rights Protection</p>
+    </div>
+    <div class="nav-item active" data-section="dashboard">
+        <span class="icon">📊</span><span>لوحة التحكم</span>
+    </div>
+    <div class="nav-item" data-section="keys">
+        <span class="icon">🔑</span><span>المفاتيح والتراخيص</span>
+        <span class="badge-count" id="keys-count" style="display:none">0</span>
+    </div>
+    <div class="nav-item" data-section="analytics">
+        <span class="icon">📈</span><span>الإحصائيات</span>
+    </div>
+    <div class="nav-item" data-section="obfuscation">
+        <span class="icon">🔐</span><span>تعمية الكود</span>
+    </div>
+    <div class="nav-item" data-section="integrity">
+        <span class="icon">🛡️</span><span>فحص السلامة</span>
+    </div>
+    <div class="nav-item" data-section="tests">
+        <span class="icon">🧪</span><span>الاختبارات</span>
+    </div>
+    <div class="nav-item" data-section="server">
+        <span class="icon">🖥️</span><span>حالة الخادم</span>
+    </div>
+    <div class="footer">
+        <span class="status-dot" id="server-dot"></span>
+        <span id="server-status-text">غير متصل</span>
+    </div>
+</div>
+
+<!-- Main content -->
+<div class="main">
+
+    <!-- ═══ Dashboard ═══ -->
+    <div class="section active" id="section-dashboard">
+        <div class="page-header">
+            <h2><span class="icon">📊</span>لوحة التحكم</h2>
+            <div class="actions">
+                <button class="btn btn-ghost btn-sm" onclick="refreshAll()">
+                    🔄 تحديث الكل
+                </button>
+            </div>
+        </div>
+        <div class="stat-grid" id="dash-stats">
+            <div class="stat-card accent"><div class="icon">🔑</div><div class="value" id="stat-keys">—</div><div class="label">إجمالي المفاتيح</div></div>
+            <div class="stat-card success"><div class="icon">✅</div><div class="value" id="stat-active-keys">—</div><div class="label">مفاتيح نشطة</div></div>
+            <div class="stat-card info"><div class="icon">📜</div><div class="value" id="stat-licenses">—</div><div class="label">التراخيص</div></div>
+            <div class="stat-card warning"><div class="icon">💻</div><div class="value" id="stat-devices">—</div><div class="label">الأجهزة</div></div>
+            <div class="stat-card error"><div class="icon">🚨</div><div class="value" id="stat-suspicious">—</div><div class="label">نشاط مشبوه</div></div>
+            <div class="stat-card success"><div class="icon">💓</div><div class="value" id="stat-events24">—</div><div class="label">أحداث (24س)</div></div>
+        </div>
+        <div class="card">
+            <div class="card-header"><h3><span class="icon">⚡</span>إجراءات سريعة</h3></div>
+            <div class="card-body" style="display:flex;flex-wrap:wrap;gap:10px">
+                <button class="btn btn-primary" onclick="showGenerateModal()">➕ توليد مفتاح جديد</button>
+                <button class="btn btn-info" onclick="loadSection('analytics')">📈 عرض الإحصائيات</button>
+                <button class="btn btn-warning" onclick="loadSection('obfuscation')">🔐 تعمية الكود</button>
+                <button class="btn btn-success" onclick="runFullTest()">🧪 اختبار شامل</button>
+                <button class="btn btn-ghost" onclick="checkIntegrity()">🛡️ فحص السلامة</button>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header"><h3><span class="icon">📋</span>آخر الأحداث</h3></div>
+            <div class="card-body" id="dash-events">
+                <div class="empty"><div class="icon">📭</div><p>جارٍ التحميل...</p></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ Keys ═══ -->
+    <div class="section" id="section-keys">
+        <div class="page-header">
+            <h2><span class="icon">🔑</span>المفاتيح والتراخيص</h2>
+            <div class="actions">
+                <button class="btn btn-primary btn-sm" onclick="showGenerateModal()">➕ مفتاح جديد</button>
+                <button class="btn btn-ghost btn-sm" onclick="loadKeys()">🔄 تحديث</button>
+            </div>
+        </div>
+        <div class="card" style="margin-bottom: 16px;">
+            <div class="card-header"><h3><span class="icon">🔍</span>فحص ومطابقة مفتاح تفعيل أو ترخيص</h3></div>
+            <div class="card-body">
+                <div style="display:flex;gap:10px;align-items:center;">
+                    <input type="text" id="verify-key-input" placeholder="أدخل رمز التفعيل (KEY-...) أو مفتاح الترخيص (ZERALDA-...) أو رقم الهاتف..." style="flex:1;">
+                    <button class="btn btn-primary" onclick="verifyKeyTool()">🔍 فحص فوري</button>
+                </div>
+                <div id="verify-tool-result" style="margin-top:14px;display:none;"></div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header"><h3><span class="icon">📋</span>العرض الموحد</h3></div>
+            <div class="card-body" style="padding:0;overflow-x:auto">
+                <table id="keys-table">
+                    <thead>
+                        <tr>
+                            <th>المفتاح الموحد (Master Key)</th><th>الهاتف المسجل</th><th>الرمز المصغر (Alias)</th>
+                            <th>الحالة</th><th>مربوط بجهاز</th><th>إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="keys-tbody">
+                        <tr><td colspan="6"><div class="empty"><div class="icon">🔑</div><p>جارٍ التحميل...</p></div></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ Analytics ═══ -->
+    <div class="section" id="section-analytics">
+        <div class="page-header">
+            <h2><span class="icon">📈</span>الإحصائيات</h2>
+            <div class="actions">
+                <button class="btn btn-ghost btn-sm" onclick="loadAnalytics()">🔄 تحديث</button>
+                <button class="btn btn-warning btn-sm" onclick="simulateEvents()">🎲 محاكاة أحداث</button>
+                <button class="btn btn-danger btn-sm" onclick="clearAnalytics()">🗑️ مسح السجل</button>
+            </div>
+        </div>
+        <div class="stat-grid" id="analytics-stats"></div>
+        <div class="card">
+            <div class="card-header"><h3><span class="icon">🚨</span>النشاط المشبوه</h3></div>
+            <div class="card-body" id="analytics-suspicious">
+                <div class="empty"><div class="icon">✅</div><p>لا يوجد نشاط مشبوه</p></div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header"><h3><span class="icon">💻</span>الأجهزة</h3></div>
+            <div class="card-body" style="padding:0;overflow-x:auto">
+                <table>
+                    <thead><tr><th>الجهاز</th><th>الهاتف</th><th>تراخيص</th><th>أحداث</th><th>آخر ظهور</th><th>الحالة</th></tr></thead>
+                    <tbody id="analytics-devices"></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header"><h3><span class="icon">📋</span>آخر الأحداث</h3></div>
+            <div class="card-body" id="analytics-events" style="max-height:400px;overflow-y:auto"></div>
+        </div>
+    </div>
+
+    <!-- ═══ Obfuscation ═══ -->
+    <div class="section" id="section-obfuscation">
+        <div class="page-header">
+            <h2><span class="icon">🔐</span>تعمية الكود</h2>
+        </div>
+        <div class="card">
+            <div class="card-header"><h3><span class="icon">📜</span>JavaScript</h3></div>
+            <div class="card-body" style="display:flex;gap:10px;flex-wrap:wrap">
+                <button class="btn btn-warning" onclick="obfuscateJS()">🔐 تعمية JS</button>
+                <button class="btn btn-ghost" onclick="restoreJS()">↩️ استعادة JS</button>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header"><h3><span class="icon">🐍</span>Python</h3></div>
+            <div class="card-body" style="display:flex;gap:10px;flex-wrap:wrap">
+                <button class="btn btn-warning" onclick="obfuscatePY()">🔐 تعمية Python</button>
+                <button class="btn btn-ghost" onclick="restorePY()">↩️ استعادة Python</button>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header"><h3><span class="icon">⚡</span>إجراءات شاملة</h3></div>
+            <div class="card-body" style="display:flex;gap:10px;flex-wrap:wrap">
+                <button class="btn btn-primary" onclick="obfuscateAll()">🔐 تعمية الكل</button>
+                <button class="btn btn-ghost" onclick="restoreAll()">↩️ استعادة الكل</button>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header"><h3><span class="icon">📤</span>النتائج</h3></div>
+            <div class="card-body">
+                <div class="code-block" id="obf-output">// النتائج ستظهر هنا...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ Integrity ═══ -->
+    <div class="section" id="section-integrity">
+        <div class="page-header">
+            <h2><span class="icon">🛡️</span>فحص سلامة الملفات</h2>
+            <div class="actions">
+                <button class="btn btn-success btn-sm" onclick="checkIntegrity()">🛡️ فحص الآن</button>
+                <button class="btn btn-warning btn-sm" onclick="resetIntegrity()">🔄 إعادة تسجيل Hashes</button>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header"><h3><span class="icon">📋</span>النتائج</h3></div>
+            <div class="card-body" id="integrity-results">
+                <div class="empty"><div class="icon">🛡️</div><p>اضغط "فحص الآن" للبدء</p></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ Tests ═══ -->
+    <div class="section" id="section-tests">
+        <div class="page-header">
+            <h2><span class="icon">🧪</span>الاختبارات الشاملة</h2>
+            <div class="actions">
+                <button class="btn btn-success" onclick="runFullTest()">
+                    <span id="test-btn-text">▶️ تشغيل الاختبارات (10)</span>
+                </button>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <h3><span class="icon">📊</span>النتائج</h3>
+                <span id="test-summary" style="font-size:13px;color:var(--muted)"></span>
+            </div>
+            <div class="card-body" id="test-results" style="max-height:500px;overflow-y:auto">
+                <div class="empty"><div class="icon">🧪</div><p>اضغط "تشغيل الاختبارات" للبدء</p></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ Server Status ═══ -->
+    <div class="section" id="section-server">
+        <div class="page-header">
+            <h2><span class="icon">🖥️</span>حالة الخادم</h2>
+            <div class="actions">
+                <button class="btn btn-ghost btn-sm" onclick="loadServerStatus()">🔄 تحديث</button>
+            </div>
+        </div>
+        <div class="stat-grid" id="server-stats"></div>
+        <div class="card">
+            <div class="card-header"><h3><span class="icon">📋</span>التفاصيل</h3></div>
+            <div class="card-body" id="server-details">
+                <div class="empty"><div class="icon">🖥️</div><p>جارٍ التحميل...</p></div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Generate Key Modal -->
+<div class="modal-overlay" id="gen-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>➕ توليد مفتاح + ترخيص</h3>
+            <span class="close" onclick="closeModal('gen-modal')">×</span>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>رقم الهاتف *</label>
+                <input type="text" id="gen-phone" placeholder="+213661234567">
+            </div>
+            <div class="form-group">
+                <label>البريد الإلكتروني (اختياري)</label>
+                <input type="email" id="gen-email" placeholder="user@example.com">
+            </div>
+            <div class="form-group">
+                <label>صلاحية الترخيص (أيام، 0=دائم)</label>
+                <input type="number" id="gen-expires" value="0" min="0">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="generateKey()">توليد</button>
+            <button class="btn btn-ghost" onclick="closeModal('gen-modal')">إلغاء</button>
+        </div>
+    </div>
+</div>
+
+<!-- Key Generation Result Modal -->
+<div class="modal-overlay" id="key-result-modal">
+    <div class="modal" style="max-width: 580px;">
+        <div class="modal-header">
+            <h3>🎉 تم توليد المفتاح الموحد بنجاح</h3>
+            <span class="close" onclick="closeModal('key-result-modal')">×</span>
+        </div>
+        <div class="modal-body" style="display:flex;flex-direction:column;gap:16px;">
+            <div style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);border-radius:8px;padding:12px;font-size:13px;color:var(--success);">
+                ✅ تم إنشاء وتفعيل المفتاح الموحد بنجاح ومزامنته مع النظام. مفتاح واحد شامل يعمل لكل من تسجيل الدخول وتفعيل رخصة الجهاز!
+            </div>
+
+            <!-- Unified System Key -->
+            <div style="background:var(--bg2);border:2px solid var(--accent);border-radius:8px;padding:16px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                    <span style="font-weight:700;font-size:14px;color:var(--ink);">🌟 المفتاح الموحد الشامل (Unified System Key)</span>
+                    <span class="badge active" style="font-size:11px;">دخول + ترخيص</span>
+                </div>
+                <div style="display:flex;gap:8px;">
+                    <input type="text" id="res-unified-key" readonly style="font-family:monospace;font-size:15px;font-weight:bold;letter-spacing:1px;background:var(--bg);color:var(--accent);">
+                    <button class="btn btn-primary btn-sm" onclick="copyKeyText('res-unified-key')">📋 نسخ</button>
+                </div>
+                <p style="color:var(--muted);font-size:12px;margin-top:8px;margin-bottom:0;line-height:1.5;">
+                    💡 <strong>طريقة الاستخدام:</strong> يعمل في صفحة الدخول <code>login.html</code> (مع رقم الهاتف) ويعمل أيضاً في صفحة ترخيص الجهاز <code>license.html</code>.
+                </p>
+            </div>
+
+            <div style="font-size:12px;color:var(--muted);line-height:1.7;background:var(--bg);padding:10px 14px;border-radius:6px;">
+                <div>📞 <strong>رقم الهاتف المسجل:</strong> <span id="res-phone" class="mono" style="color:var(--ink);font-weight:600;"></span></div>
+                <div>⏳ <strong>مدة الصلاحية:</strong> <span id="res-expires" style="color:var(--ink);"></span></div>
+                <div style="margin-top:4px;padding-top:4px;border-top:1px dashed var(--border);font-size:11px;color:var(--muted);">
+                    🔑 <strong>الرمز المصغر الإضافي (Alias):</strong> <span id="res-legacy-key" class="mono" style="color:var(--muted);"></span>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer" style="display:flex;justify-content:flex-end;gap:10px;width:100%;">
+            <button class="btn btn-ghost" onclick="closeModal('key-result-modal')">إغلاق</button>
+            <button class="btn btn-primary" onclick="copyKeyText('res-unified-key')">📋 نسخ المفتاح الموحد</button>
+        </div>
+    </div>
+</div>
+
+<!-- Revoke Confirm Modal -->
+<div class="modal-overlay" id="revoke-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>⚠️ تأكيد الإلغاء</h3>
+            <span class="close" onclick="closeModal('revoke-modal')">×</span>
+        </div>
+        <div class="modal-body">
+            <p>هل أنت متأكد من إلغاء المفتاح: <strong id="revoke-key-display" style="color:var(--error)"></strong>؟</p>
+            <p style="color:var(--muted);font-size:13px;margin-top:8px">سيتم إلغاء المفتاح والترخيص المرتبط به نهائياً.</p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-danger" onclick="confirmRevoke()">نعم، إلغاء</button>
+            <button class="btn btn-ghost" onclick="closeModal('revoke-modal')">تراجع</button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div class="modal-overlay" id="delete-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>🗑️ تأكيد الحذف النهائي</h3>
+            <span class="close" onclick="closeModal('delete-modal')">×</span>
+        </div>
+        <div class="modal-body">
+            <p>هل أنت متأكد من <strong style="color:var(--error)">الحذف النهائي</strong> للمفتاح: <strong id="delete-key-display" style="color:var(--error)"></strong>؟</p>
+            <p style="color:var(--error);font-size:13px;margin-top:8px">⚠️ سيتم حذف المفتاح تماماً من قاعدة البيانات ولا يمكن استرجاعه. سيتم أيضاً إلغاء الترخيص المرتبط به.</p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-danger" onclick="confirmDelete()">نعم، حذف نهائي</button>
+            <button class="btn btn-ghost" onclick="closeModal('delete-modal')">تراجع</button>
+        </div>
+    </div>
+</div>
+
+<!-- Key Details Modal -->
+<div class="modal-overlay" id="details-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>📋 تفاصيل الترخيص</h3>
+            <span class="close" onclick="closeModal('details-modal')">×</span>
+        </div>
+        <div class="modal-body" id="details-body"></div>
+        <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="closeModal('details-modal')">إغلاق</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  API Helper
+// ═══════════════════════════════════════════════════════════
+const API = '/api/toolkit';
+
+async function api(path, options = {}) {
+    try {
+        const res = await fetch(API + path, {
+            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            ...options
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+        return data;
+    } catch (e) {
+        toast(e.message, 'error');
+        throw e;
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  Toast notifications
+// ═══════════════════════════════════════════════════════════
+function toast(msg, type = 'info', duration = 4000) {
+    const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+    const el = document.createElement('div');
+    el.className = `toast ${type}`;
+    el.innerHTML = `<span>${icons[type] || 'ℹ️'}</span><span>${msg}</span>`;
+    document.getElementById('toasts').appendChild(el);
+    setTimeout(() => {
+        el.style.animation = 'fadeOut 0.3s ease forwards';
+        setTimeout(() => el.remove(), 300);
+    }, duration);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  Navigation
+// ═══════════════════════════════════════════════════════════
+document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => loadSection(item.dataset.section));
+});
+
+function loadSection(name) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById(`section-${name}`).classList.add('active');
+    document.querySelector(`.nav-item[data-section="${name}"]`).classList.add('active');
+
+    const loaders = {
+        dashboard: loadDashboard,
+        keys: loadKeys,
+        analytics: loadAnalytics,
+        integrity: checkIntegrity,
+        server: loadServerStatus,
+    };
+    if (loaders[name]) loaders[name]();
+}
+
+// ═══════════════════════════════════════════════════════════
+//  Dashboard
+// ═══════════════════════════════════════════════════════════
+async function loadDashboard() {
+    try {
+        const [stats, keys] = await Promise.all([
+            api('/analytics').catch(() => ({ summary: {} })),
+            api('/keys/list').catch(() => ({ keys: [], count: 0 }))
+        ]);
+
+        const s = stats.summary || {};
+        document.getElementById('stat-keys').textContent = keys.count || 0;
+        document.getElementById('stat-active-keys').textContent = (keys.keys || []).filter(k => k.active).length;
+        document.getElementById('stat-licenses').textContent = s.totalLicenses || 0;
+        document.getElementById('stat-devices').textContent = s.totalDevices || 0;
+        document.getElementById('stat-suspicious').textContent = (stats.suspicious || []).length;
+        document.getElementById('stat-events24').textContent = s.events24h || 0;
+
+        // Events
+        const events = stats.recentEvents || [];
+        const evContainer = document.getElementById('dash-events');
+        if (events.length === 0) {
+            evContainer.innerHTML = '<div class="empty"><div class="icon">📭</div><p>لا توجد أحداث</p></div>';
+        } else {
+            evContainer.innerHTML = events.slice(0, 10).map(e => formatEvent(e)).join('');
+        }
+
+        // Update server status
+        updateServerStatus(stats);
+    } catch (e) { /* handled by api() */ }
+}
+
+function refreshAll() {
+    loadDashboard();
+    toast('تم التحديث', 'success', 2000);
+}
+
+function updateServerStatus(stats) {
+    const dot = document.getElementById('server-dot');
+    const text = document.getElementById('server-status-text');
+    const status = (stats.serverStatus || {}).status || 'unknown';
+    const colors = { active: '#10b981', trial: '#3b82f6', grace: '#f59e0b', expired: '#ef4444' };
+    dot.style.background = colors[status] || '#64748b';
+    text.textContent = status === 'active' ? 'متصل — نشط' :
+                       status === 'trial' ? 'متصل — تجريبي' :
+                       status === 'grace' ? 'متصل — فترة سماح' :
+                       status === 'expired' ? 'متصل — منتهي' : 'غير متصل';
+}
+
+// ═══════════════════════════════════════════════════════════
+//  Keys
+// ═══════════════════════════════════════════════════════════
+async function loadKeys() {
+    try {
+        const data = await api('/keys/list');
+        const tbody = document.getElementById('keys-tbody');
+        const countBadge = document.getElementById('keys-count');
+
+        if (data.count === 0) {
+            tbody.innerHTML = '<tr><td colspan="6"><div class="empty"><div class="icon">🔑</div><p>لا توجد مفاتيح. اضغط "مفتاح جديد" للبدء</p></div></td></tr>';
+            countBadge.style.display = 'none';
+            return;
+        }
+
+        countBadge.textContent = data.count;
+        countBadge.style.display = 'inline-block';
+
+        tbody.innerHTML = data.keys.map(k => {
+            const lic = k.license || {};
+            const masterKey = lic.licenseKey || k.key;
+            const aliasKey = (lic.licenseKey && lic.licenseKey !== k.key) ? k.key : '—';
+            return `<tr>
+                <td class="mono" style="font-weight:600;color:var(--accent);">${masterKey}</td>
+                <td>${k.phone || '—'}</td>
+                <td class="mono" style="font-size:12px;color:var(--muted);">${aliasKey}</td>
+                <td><span class="badge ${k.active ? 'active' : 'revoked'}">${k.active ? 'نشط' : 'ملغى'}</span></td>
+                <td>${lic.hwFingerprint ? '<span class="badge active">نعم</span>' : '<span class="badge inactive">لا</span>'}</td>
+                <td>
+                    <button class="btn btn-ghost btn-sm" onclick="showKeyDetails('${k.key}')" title="تفاصيل المفتاح">📋</button>
+                    ${k.active ? `<button class="btn btn-danger btn-sm" onclick="showRevokeModal('${k.key}')">إلغاء</button>` : ''}
+                    <button class="btn btn-danger btn-sm" onclick="showDeleteModal('${k.key}')" title="حذف نهائي">🗑️</button>
+                </td>
+            </tr>`;
+        }).join('');
+    } catch (e) { /* handled */ }
+}
+
+function showGenerateModal() {
+    document.getElementById('gen-phone').value = '';
+    document.getElementById('gen-email').value = '';
+    document.getElementById('gen-expires').value = '0';
+    document.getElementById('gen-modal').classList.add('show');
+    document.getElementById('gen-phone').focus();
+}
+
+async function generateKey() {
+    const phone = document.getElementById('gen-phone').value.trim();
+    const email = document.getElementById('gen-email').value.trim();
+    const expires = parseInt(document.getElementById('gen-expires').value) || 0;
+
+    if (!phone) { toast('رقم الهاتف مطلوب', 'error'); return; }
+
+    try {
+        const result = await api('/keys/generate', {
+            method: 'POST',
+            body: JSON.stringify({ phone, email: email || null, expires_days: expires })
+        });
+        closeModal('gen-modal');
+
+        // Populate Key Result Modal
+        const masterKey = result.licenseKey || result.key || '';
+        document.getElementById('res-unified-key').value = masterKey;
+        document.getElementById('res-legacy-key').textContent = result.key || '—';
+        document.getElementById('res-phone').textContent = result.phone || phone;
+        document.getElementById('res-expires').textContent = expires > 0 ? `${expires} يوم` : 'دائم (غير منتهي)';
+        document.getElementById('key-result-modal').classList.add('show');
+
+        toast(`تم توليد المفتاح الموحد بنجاح!`, 'success', 5000);
+        loadKeys();
+        loadDashboard();
+    } catch (e) { /* handled */ }
+}
+
+function copyKeyText(elementId) {
+    const input = document.getElementById(elementId);
+    if (!input || !input.value) return;
+    navigator.clipboard.writeText(input.value).then(() => {
+        toast(`تم نسخ: ${input.value}`, 'success', 2500);
+    }).catch(() => {
+        input.select();
+        document.execCommand('copy');
+        toast(`تم النسخ`, 'success', 2500);
+    });
+}
+
+function copyBothKeys() {
+    const k = document.getElementById('res-keygen-key').value;
+    const l = document.getElementById('res-license-key').value;
+    const phone = document.getElementById('res-phone').textContent;
+    const text = `رقم الهاتف: ${phone}\nرمز التفعيل للهاتف: ${k}\nمفتاح الترخيص للجهاز: ${l}`;
+    navigator.clipboard.writeText(text).then(() => {
+        toast('تم نسخ معلومات المفاتيح كاملة للحافظة', 'success', 3000);
+    }).catch(() => {
+        toast('يرجى نسخ كل مفتاح على حدة', 'warning');
+    });
+}
+
+async function verifyKeyTool() {
+    const input = document.getElementById('verify-key-input');
+    const query = (input ? input.value : '').trim();
+    const resBox = document.getElementById('verify-tool-result');
+    if (!query) {
+        toast('يرجى إدخال مفتاح أو رقم هاتف للفحص', 'warning');
+        return;
+    }
+    resBox.style.display = 'block';
+    resBox.innerHTML = '<div style="color:var(--muted);"><span class="spin">⏳</span> جارٍ الفحص والمطابقة في قاعدة البيانات...</div>';
+
+    try {
+        const result = await api('/keys/verify', {
+            method: 'POST',
+            body: JSON.stringify({ key: query })
+        });
+
+        if (result && result.ok) {
+            const masterKey = result.licenseKey || result.key || '—';
+            resBox.innerHTML = `
+                <div style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);border-radius:8px;padding:14px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                        <span style="font-weight:bold;color:var(--success);font-size:14px;">✅ المفتاح صالح ومقبول 100% في النظام</span>
+                        <span class="badge ${result.active ? 'active' : 'revoked'}">${result.active ? 'نشط' : 'ملغى'}</span>
+                    </div>
+                    <div style="margin-bottom:8px;padding:8px 10px;background:var(--bg);border-radius:6px;">
+                        🌟 <strong>المفتاح الموحد الشامل:</strong> <span class="mono" style="color:var(--accent);font-weight:bold;font-size:13px;">${masterKey}</span>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;line-height:1.7;color:var(--ink);">
+                        <div>📞 <strong>رقم الهاتف:</strong> <span class="mono">${result.phone || '—'}</span></div>
+                        <div>🔑 <strong>الرمز المصغر (Alias):</strong> <span class="mono">${result.key || '—'}</span></div>
+                        <div>📧 <strong>البريد:</strong> ${result.email || '—'}</div>
+                        <div>🔢 <strong>مرات الاستخدام:</strong> ${result.usage_count || 0}</div>
+                        <div>⏳ <strong>الصلاحية:</strong> ${result.expires_at || 'دائم'}</div>
+                    </div>
+                </div>
+            `;
+        } else {
+            resBox.innerHTML = `
+                <div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:12px;color:var(--error);font-size:13px;">
+                    ❌ ${(result && result.error) ? result.error : 'المفتاح غير موجود أو غير صالح'}
+                </div>
+            `;
+        }
+    } catch (e) {
+        resBox.innerHTML = `
+            <div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:12px;color:var(--error);font-size:13px;">
+                ❌ ${e.message || 'فشل فحص المفتاح'}
+            </div>
+        `;
+    }
+}
+
+function showRevokeModal(key) {
+    document.getElementById('revoke-key-display').textContent = key;
+    document.getElementById('revoke-modal').dataset.key = key;
+    document.getElementById('revoke-modal').classList.add('show');
+}
+
+async function confirmRevoke() {
+    const key = document.getElementById('revoke-modal').dataset.key;
+    try {
+        await api('/keys/revoke', { method: 'POST', body: JSON.stringify({ key }) });
+        closeModal('revoke-modal');
+        toast(`تم إلغاء المفتاح: ${key}`, 'success');
+        loadKeys();
+        loadDashboard();
+    } catch (e) { /* handled */ }
+}
+
+function showDeleteModal(key) {
+    document.getElementById('delete-key-display').textContent = key;
+    document.getElementById('delete-modal').dataset.key = key;
+    document.getElementById('delete-modal').classList.add('show');
+}
+
+async function confirmDelete() {
+    const key = document.getElementById('delete-modal').dataset.key;
+    try {
+        await api('/keys/delete', { method: 'POST', body: JSON.stringify({ key }) });
+        closeModal('delete-modal');
+        toast(`تم حذف المفتاح نهائياً: ${key}`, 'success');
+        loadKeys();
+        loadDashboard();
+    } catch (e) { /* handled */ }
+}
+
+async function showKeyDetails(key) {
+    try {
+        const result = await api(`/keys/license/${encodeURIComponent(key)}`);
+        const p = result.payload || {};
+        const body = document.getElementById('details-body');
+        body.innerHTML = `
+            <div style="display:grid;gap:10px;font-size:14px">
+                <div style="padding:8px 10px;background:var(--bg);border-radius:6px;">🌟 <strong>المفتاح الموحد الشامل:</strong> <span class="mono" style="color:var(--accent);font-weight:bold;">${result.licenseKey || key}</span></div>
+                <div><strong>الرمز المصغر (Alias):</strong> <span class="mono">${key}</span></div>
+                <div><strong>العميل:</strong> ${p.customer || '—'}</div>
+                <div><strong>الهاتف:</strong> <span class="mono">${p.phone || '—'}</span></div>
+                <div><strong>البريد:</strong> ${p.email || '—'}</div>
+                <div><strong>أجهزة مسموحة:</strong> ${p.maxDevices || 1}</div>
+                <div><strong>مربوط بجهاز:</strong> ${p.hwFingerprint ? 'نعم (' + (p.hwId || '') + ')' : 'لا'}</div>
+                <div><strong>الحالة:</strong> <span class="badge ${p.revoked ? 'revoked' : 'active'}">${p.revoked ? 'ملغى' : 'نشط'}</span></div>
+                <div><strong>ينتهي:</strong> ${p.expiresAt > 0 ? new Date(p.expiresAt * 1000).toLocaleString('ar') : 'دائم'}</div>
+            </div>
+        `;
+        document.getElementById('details-modal').classList.add('show');
+    } catch (e) { /* handled */ }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  Analytics
+// ═══════════════════════════════════════════════════════════
+async function loadAnalytics() {
+    try {
+        const stats = await api('/analytics');
+        const s = stats.summary || {};
+
+        const statGrid = document.getElementById('analytics-stats');
+        statGrid.innerHTML = `
+            <div class="stat-card info"><div class="icon">💻</div><div class="value">${s.totalDevices || 0}</div><div class="label">إجمالي الأجهزة</div></div>
+            <div class="stat-card success"><div class="icon">✅</div><div class="value">${s.activeDevices24h || 0}</div><div class="label">نشط (24س)</div></div>
+            <div class="stat-card warning"><div class="icon">📋</div><div class="value">${s.events24h || 0}</div><div class="label">أحداث (24س)</div></div>
+            <div class="stat-card accent"><div class="icon">📜</div><div class="value">${s.totalLicenses || 0}</div><div class="label">إجمالي التراخيص</div></div>
+            <div class="stat-card success"><div class="icon">✅</div><div class="value">${s.activeLicenses || 0}</div><div class="label">تراخيص نشطة</div></div>
+            <div class="stat-card error"><div class="icon">❌</div><div class="value">${s.revokedLicenses || 0}</div><div class="label">تراخيص ملغاة</div></div>
+        `;
+
+        // Suspicious
+        const susp = stats.suspicious || [];
+        const suspEl = document.getElementById('analytics-suspicious');
+        if (susp.length === 0) {
+            suspEl.innerHTML = '<div class="empty"><div class="icon">✅</div><p>لا يوجد نشاط مشبوه</p></div>';
+        } else {
+            suspEl.innerHTML = susp.map(a => `
+                <div class="alert ${a.severity}">
+                    <span class="alert-icon">${a.severity === 'high' ? '🔴' : '🟡'}</span>
+                    <div class="alert-body">
+                        <div class="alert-title">${a.type}</div>
+                        <div class="alert-detail">${a.detail}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Devices
+        const devices = stats.devices || [];
+        const devEl = document.getElementById('analytics-devices');
+        if (devices.length === 0) {
+            devEl.innerHTML = '<tr><td colspan="6"><div class="empty"><div class="icon">💻</div><p>لا توجد أجهزة مسجلة</p></div></td></tr>';
+        } else {
+            devEl.innerHTML = devices.map(d => `
+                <tr>
+                    <td class="mono">${(d.hwId || '—').substring(0, 20)}</td>
+                    <td>${d.phone || '—'}</td>
+                    <td>${(d.licenseKeys || []).length}</td>
+                    <td>${d.eventCount || 0}</td>
+                    <td>${d.lastSeen ? new Date(d.lastSeen * 1000).toLocaleDateString('ar') : '—'}</td>
+                    <td><span class="badge ${d.status === 'active' ? 'active' : 'inactive'}">${d.status === 'active' ? 'نشط' : 'خامل'}</span></td>
+                </tr>
+            `).join('');
+        }
+
+        // Events
+        const events = stats.recentEvents || [];
+        const evEl = document.getElementById('analytics-events');
+        if (events.length === 0) {
+            evEl.innerHTML = '<div class="empty"><div class="icon">📭</div><p>لا توجد أحداث</p></div>';
+        } else {
+            evEl.innerHTML = events.map(e => formatEvent(e)).join('');
+        }
+    } catch (e) { /* handled */ }
+}
+
+async function simulateEvents() {
+    try {
+        await api('/analytics/simulate', { method: 'POST' });
+        toast('تم تسجيل 5 أحداث تجريبية', 'success');
+        loadAnalytics();
+    } catch (e) { /* handled */ }
+}
+
+async function clearAnalytics() {
+    if (!confirm('هل أنت متأكد من مسح جميع البيانات؟')) return;
+    try {
+        await api('/analytics/clear', { method: 'POST' });
+        toast('تم مسح السجل', 'success');
+        loadAnalytics();
+    } catch (e) { /* handled */ }
+}
+
+function formatEvent(e) {
+    const icons = {
+        activation: '🟢', heartbeat: '💓', revocation: '🔴',
+        tampering: '🐛', hw_mismatch: '⚠️', max_devices: '👥', login_with_key: '🔑'
+    };
+    const time = e.ts ? new Date(e.ts * 1000).toLocaleString('ar') : '—';
+    return `<div class="event-item">
+        <span class="event-icon">${icons[e.type] || '•'}</span>
+        <span class="event-type">${e.type || '?'}</span>
+        <span class="event-time">${time}</span>
+        <span class="event-hw">${(e.hwId || '—').substring(0, 16)}</span>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  Obfuscation
+// ═══════════════════════════════════════════════════════════
+async function obfuscateJS() {
+    try {
+        const r = await api('/obfuscate/js', { method: 'POST' });
+        showObfResult(r);
+        toast(`تم تعمية ${r.count} ملف JS`, 'success');
+    } catch (e) { /* handled */ }
+}
+
+async function obfuscatePY() {
+    try {
+        const r = await api('/obfuscate/py', { method: 'POST' });
+        showObfResult(r);
+        toast(`تم تعمية ${r.count} ملف Python`, 'success');
+    } catch (e) { /* handled */ }
+}
+
+async function obfuscateAll() {
+    try {
+        const r = await api('/obfuscate/all', { method: 'POST' });
+        showObfResult(r);
+        toast(`تم تعمية ${r.total} ملف`, 'success');
+    } catch (e) { /* handled */ }
+}
+
+async function restoreJS() {
+    try {
+        const r = await api('/restore/js', { method: 'POST' });
+        showObfResult(r);
+        toast(`تم استعادة ${r.count} ملف JS`, 'success');
+    } catch (e) { /* handled */ }
+}
+
+async function restorePY() {
+    try {
+        const r = await api('/restore/py', { method: 'POST' });
+        showObfResult(r);
+        toast(`تم استعادة ${r.count} ملف Python`, 'success');
+    } catch (e) { /* handled */ }
+}
+
+async function restoreAll() {
+    try {
+        const r = await api('/restore/all', { method: 'POST' });
+        showObfResult(r);
+        toast(`تم استعادة ${r.total} ملف`, 'success');
+    } catch (e) { /* handled */ }
+}
+
+function showObfResult(r) {
+    const el = document.getElementById('obf-output');
+    if (r.files && r.files.length) {
+        el.textContent = r.files.map(f =>
+            `✅ ${f.file}: ${f.original_size}B → ${f.obfuscated_size}B (${f.ratio})`
+        ).join('\n');
+    } else if (r.restored) {
+        el.textContent = r.restored.map(f => `↩️ ${f}`).join('\n');
+    } else {
+        el.textContent = JSON.stringify(r, null, 2);
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  Integrity
+// ═══════════════════════════════════════════════════════════
+async function checkIntegrity() {
+    const el = document.getElementById('integrity-results');
+    el.innerHTML = '<div class="empty"><div class="icon">⏳</div><p>جارٍ الفحص...</p></div>';
+    try {
+        const r = await api('/integrity/check');
+        if (r.ok) {
+            el.innerHTML = `<div class="alert medium">
+                <span class="alert-icon">✅</span>
+                <div class="alert-body">
+                    <div class="alert-title">جميع الملفات سليمة</div>
+                    <div class="alert-detail">تم فحص ${r.checked} ملف — لا توجد تعديلات</div>
+                </div>
+            </div>`;
+        } else {
+            const mismatches = r.mismatches || [];
+            el.innerHTML = `<div class="alert high">
+                <span class="alert-icon">⚠️</span>
+                <div class="alert-body">
+                    <div class="alert-title">تم العثور على ${mismatches.length} ملف معدل</div>
+                </div>
+            </div>` + mismatches.map(m => `
+                <div class="alert high" style="margin-top:4px">
+                    <span class="alert-icon">❌</span>
+                    <div class="alert-body">
+                        <div class="alert-title mono">${m.file}</div>
+                        <div class="alert-detail">متوقع: ${m.expected.substring(0, 20)}... / فعلي: ${m.actual.substring(0, 20)}...</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+    } catch (e) {
+        el.innerHTML = `<div class="empty"><div class="icon">❌</div><p>فشل الفحص</p></div>`;
+    }
+}
+
+async function resetIntegrity() {
+    if (!confirm('سيتم تحديث جميع الـ hashes. متابعة؟')) return;
+    try {
+        const r = await api('/integrity/reset', { method: 'POST' });
+        toast(`تم تسجيل ${r.registered} ملف`, 'success');
+        checkIntegrity();
+    } catch (e) { /* handled */ }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  Tests
+// ═══════════════════════════════════════════════════════════
+async function runFullTest() {
+    const btn = document.getElementById('test-btn-text');
+    const el = document.getElementById('test-results');
+    btn.innerHTML = '<span class="spinner"></span> جارٍ التشغيل...';
+    el.innerHTML = '';
+    try {
+        const r = await api('/test/full', { method: 'POST' });
+        const tests = r.tests || [];
+        el.innerHTML = tests.map(t => `
+            <div class="test-result ${t.pass ? 'pass' : 'fail'}">
+                <span class="test-icon">${t.pass ? '✅' : '❌'}</span>
+                <span class="test-name">${t.name}</span>
+                <span class="test-detail">${t.detail || ''}</span>
+            </div>
+        `).join('');
+        document.getElementById('test-summary').textContent =
+            `${r.passed} نجح / ${r.failed} فشل — ${r.failed === 0 ? '🎉 جميع الاختبارات نجحت' : '⚠️ بعض الاختبارات فشلت'}`;
+        toast(r.failed === 0 ? `جميع الاختبارات نجحت (${r.passed})` : `${r.failed} اختبار فشل`, r.failed === 0 ? 'success' : 'error');
+    } catch (e) {
+        el.innerHTML = '<div class="empty"><div class="icon">❌</div><p>فشل تشغيل الاختبارات</p></div>';
+    }
+    btn.innerHTML = '▶️ تشغيل الاختبارات (10)';
+}
+
+// ═══════════════════════════════════════════════════════════
+//  Server Status
+// ═══════════════════════════════════════════════════════════
+async function loadServerStatus() {
+    try {
+        const r = await api('/server/status');
+        const status = r.status || 'unknown';
+        const colors = { active: 'success', trial: 'info', grace: 'warning', expired: 'error' };
+        const statGrid = document.getElementById('server-stats');
+        statGrid.innerHTML = `
+            <div class="stat-card ${colors[status] || 'info'}">
+                <div class="icon">🖥️</div><div class="value">${status.toUpperCase()}</div><div class="label">الحالة</div>
+            </div>
+            <div class="stat-card accent"><div class="icon">🔑</div><div class="value">${r.keysTotal || 0}</div><div class="label">إجمالي المفاتيح</div></div>
+            <div class="stat-card success"><div class="icon">✅</div><div class="value">${r.keysActive || 0}</div><div class="label">مفاتيح نشطة</div></div>
+            <div class="stat-card info"><div class="icon">📜</div><div class="value">${r.licensesTotal || 0}</div><div class="label">إجمالي التراخيص</div></div>
+        `;
+        const details = document.getElementById('server-details');
+        details.innerHTML = `
+            <div style="display:grid;gap:10px;font-size:14px">
+                <div><strong>الحالة:</strong> <span class="badge ${colors[status] || 'low'}">${status}</span></div>
+                ${r.daysLeft !== undefined ? `<div><strong>الأيام المتبقية:</strong> ${r.daysLeft}</div>` : ''}
+                ${r.graceHoursLeft !== undefined ? `<div><strong>ساعات السماح:</strong> ${r.graceHoursLeft}</div>` : ''}
+                ${r.trialStart ? `<div><strong>بداية التجربة:</strong> ${new Date(r.trialStart * 1000).toLocaleString('ar')}</div>` : ''}
+                ${r.lastHeartbeat ? `<div><strong>آخر heartbeat:</strong> ${new Date(r.lastHeartbeat * 1000).toLocaleString('ar')}</div>` : ''}
+                ${r.publicKeySpki ? `<div><strong>المفتاح العام (SPKI):</strong> <span class="mono">${r.publicKeySpki.substring(0, 40)}...</span></div>` : ''}
+            </div>
+        `;
+    } catch (e) {
+        document.getElementById('server-details').innerHTML = '<div class="empty"><div class="icon">❌</div><p>تعذر تحميل الحالة</p></div>';
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  Modal helpers
+// ═══════════════════════════════════════════════════════════
+function closeModal(id) {
+    document.getElementById(id).classList.remove('show');
+}
+
+document.querySelectorAll('.modal-overlay').forEach(m => {
+    m.addEventListener('click', e => { if (e.target === m) m.classList.remove('show'); });
+});
+
+// ═══════════════════════════════════════════════════════════
+//  Init
+// ═══════════════════════════════════════════════════════════
+loadDashboard();
+</script>
+</body>
+</html>

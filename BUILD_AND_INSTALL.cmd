@@ -1,0 +1,57 @@
+@echo off
+REM ====================================================================
+REM  BUILD_AND_INSTALL.cmd - Build installer + install silently
+REM  Run this after every modification to update the installed ERP
+REM ====================================================================
+setlocal enabledelayedexpansion
+set "SCRIPT_DIR=%~dp0"
+cd /d "%SCRIPT_DIR%"
+
+echo ============================================================
+echo  Zeralda ERP - Build ^& Install
+echo ============================================================
+echo.
+
+REM Step 1: Stop running servers
+echo [1/4] Stopping running servers...
+taskkill /F /IM python.exe >nul 2>&1
+timeout /t 2 /nobreak >nul
+echo     Done.
+echo.
+
+REM Step 2: Build installer
+echo [2/4] Building installer...
+"C:\Program Files\Inno Setup 7\ISCC.exe" "installer\Zeralda_ERP_Setup.iss" >nul 2>&1
+if errorlevel 1 (
+    echo     ❌ Build failed! Running with output:
+    "C:\Program Files\Inno Setup 7\ISCC.exe" "installer\Zeralda_ERP_Setup.iss"
+    pause
+    exit /b 1
+)
+echo     ✅ Installer built: installer\dist\Zeralda_ERP_Setup_v1.3.8.exe
+echo.
+
+REM Step 3: Install silently (requires admin - will UAC prompt)
+echo [3/4] Installing (silent mode)...
+set "INSTALLER=%SCRIPT_DIR%installer\dist\Zeralda_ERP_Setup_v1.3.8.exe"
+powershell -Command "Start-Process -FilePath '%INSTALLER%' -ArgumentList '/SILENT','/NORESTART' -Verb RunAs -Wait"
+echo     ✅ Installation complete.
+echo.
+
+REM Step 4: Start server
+echo [4/4] Starting ERP server...
+powershell -Command "Start-Process -FilePath 'C:\Program Files\Zeralda ERP\python\python.exe' -ArgumentList '-m','app.main' -WorkingDirectory 'C:\Program Files\Zeralda ERP'"
+timeout /t 8 /nobreak >nul
+
+REM Verify
+powershell -Command "try { $r = Invoke-RestMethod -Uri 'http://127.0.0.1:8080/api/ping' -TimeoutSec 5; Write-Host '    ✅ Server running: ok='$r.ok } catch { Write-Host '    ❌ Server failed to start' }"
+echo.
+
+echo ============================================================
+echo  ✅ Done! ERP installed and running.
+echo  URL: https://athletic-concepts-brochure-next.trycloudflare.com/login.html?next=%%2Fzeralda_erp_dashboard.html
+echo ============================================================
+echo.
+REM Open browser
+start "https://athletic-concepts-brochure-next.trycloudflare.com/login.html?next=%%2Fzeralda_erp_dashboard.html"
+pause

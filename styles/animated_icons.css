@@ -1,0 +1,132 @@
+/* ============================================================
+   Zeralda ERP — Unified Animated Icons
+   Adds a consistent, polished motion layer to icons across every
+   module (stat cards, tabs, buttons, action bars). Pure CSS —
+   no markup changes required. Respects prefers-reduced-motion.
+   ============================================================ */
+
+@media (prefers-reduced-motion: no-preference) {
+
+    /* ── Stat card icon boxes (.stat-icon) ───────────────────── */
+    .stat-icon {
+        position: relative;
+        animation: zicon-float 3.2s ease-in-out infinite;
+        transition: transform .35s cubic-bezier(.34, 1.56, .64, 1),
+                    box-shadow .35s ease;
+        will-change: transform;
+    }
+
+    /* Soft glow halo behind each icon, pulsing gently */
+    .stat-icon::after {
+        content: '';
+        position: absolute;
+        inset: -6px;
+        border-radius: inherit;
+        background: inherit;
+        opacity: .28;
+        filter: blur(10px);
+        z-index: -1;
+        animation: zicon-pulse 2.6s ease-in-out infinite;
+        pointer-events: none;
+    }
+
+    .stat-card:hover .stat-icon,
+    .stat:hover .stat-icon {
+        transform: scale(1.14) rotate(-6deg);
+        box-shadow: 0 10px 24px rgba(0, 0, 0, .2);
+    }
+
+    /* Staggered entrance animation for stat cards */
+    .stat-card,
+    .kpi-card,
+    .metric-card {
+        animation: zicon-pop .5s cubic-bezier(.34, 1.56, .64, 1) backwards;
+    }
+
+    .stats-grid > *:nth-child(1),  .kpi-grid > *:nth-child(1)  { animation-delay: .02s; }
+    .stats-grid > *:nth-child(2),  .kpi-grid > *:nth-child(2)  { animation-delay: .07s; }
+    .stats-grid > *:nth-child(3),  .kpi-grid > *:nth-child(3)  { animation-delay: .12s; }
+    .stats-grid > *:nth-child(4),  .kpi-grid > *:nth-child(4)  { animation-delay: .17s; }
+    .stats-grid > *:nth-child(5),  .kpi-grid > *:nth-child(5)  { animation-delay: .22s; }
+    .stats-grid > *:nth-child(6),  .kpi-grid > *:nth-child(6)  { animation-delay: .27s; }
+    .stats-grid > *:nth-child(7),  .kpi-grid > *:nth-child(7)  { animation-delay: .32s; }
+    .stats-grid > *:nth-child(8),  .kpi-grid > *:nth-child(8)  { animation-delay: .37s; }
+
+    /* ── Compact ".stat" cards (consulting / services modules) ── */
+    .stat {
+        animation: zicon-pop .45s cubic-bezier(.34, 1.56, .64, 1) backwards;
+        transition: transform .25s ease, box-shadow .25s ease;
+    }
+    .stat:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 18px rgba(0, 0, 0, .08);
+    }
+    .stats > *:nth-child(1) { animation-delay: .02s; }
+    .stats > *:nth-child(2) { animation-delay: .06s; }
+    .stats > *:nth-child(3) { animation-delay: .10s; }
+    .stats > *:nth-child(4) { animation-delay: .14s; }
+    .stats > *:nth-child(5) { animation-delay: .18s; }
+    .stats > *:nth-child(6) { animation-delay: .22s; }
+
+    /* ── Icons inside tabs / nav / buttons ───────────────────── */
+    .tab i,
+    .tabs-nav-btn i,
+    .btn i,
+    button i,
+    .action-bar i {
+        display: inline-block;
+        transition: transform .25s cubic-bezier(.34, 1.56, .64, 1);
+    }
+
+    .tab:hover i { transform: scale(1.18) rotate(-4deg); }
+    .tab.active i { animation: zicon-wiggle .6s ease; }
+    .tabs-nav-btn:hover i { transform: scale(1.2); }
+    .btn:hover i,
+    button:hover i { transform: translateY(-1px) scale(1.12); }
+
+    /* Spin the refresh/sync-style icons while their button is active */
+    .btn.loading i,
+    button.loading i,
+    i.fa-spinner,
+    i.fa-sync,
+    i.fa-rotate,
+    i.fa-circle-notch {
+        animation: zicon-spin 1s linear infinite;
+    }
+}
+
+@keyframes zicon-float {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-4px); }
+}
+
+@keyframes zicon-pulse {
+    0%, 100% { opacity: .16; transform: scale(.9); }
+    50%      { opacity: .38; transform: scale(1.08); }
+}
+
+@keyframes zicon-pop {
+    from { opacity: 0; transform: translateY(10px) scale(.94); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes zicon-wiggle {
+    0%, 100% { transform: rotate(0deg); }
+    25%      { transform: rotate(-8deg); }
+    75%      { transform: rotate(8deg); }
+}
+
+@keyframes zicon-spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+/* Respect reduced-motion users completely — no animation, only
+   the existing static styles remain. */
+@media (prefers-reduced-motion: reduce) {
+    .stat-icon, .stat-card, .kpi-card, .metric-card, .stat,
+    .tab i, .tabs-nav-btn i, .btn i, button i, .action-bar i {
+        animation: none !important;
+        transition: none !important;
+    }
+}

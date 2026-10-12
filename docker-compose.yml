@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  erp:
+    build: .
+    container_name: zeralda_erp
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - ENVIRONMENT=production
+      - AUTO_OPEN_BROWSER=false
+      - ENABLE_REMOTE_TUNNEL=false
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+
+  # Optional Postgres database service (if using PostgreSQL instead of JSON store)
+  # db:
+  #   image: postgres:15-alpine
+  #   container_name: zeralda_db
+  #   restart: unless-stopped
+  #   environment:
+  #     POSTGRES_DB: zeralda_erp
+  #     POSTGRES_USER: zeralda
+  #     POSTGRES_PASSWORD: your_secure_password
+  #   volumes:
+  #     - pgdata:/var/lib/postgresql/data
+  #   ports:
+  #     - "5432:5432"
+
+# volumes:
+#   pgdata:

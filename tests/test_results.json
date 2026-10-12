@@ -1,0 +1,129 @@
+{
+  "total": 24,
+  "pass": 23,
+  "fail": 0,
+  "skip": 1,
+  "results": [
+    {
+      "name": "normalize_line_items preserves fields",
+      "status": "PASS",
+      "details": "3 items, product_code excluded, other fields preserved"
+    },
+    {
+      "name": "EU number parsing (_parse_num)",
+      "status": "PASS",
+      "details": "12 cases"
+    },
+    {
+      "name": "_clean_number (ocr handler)",
+      "status": "PASS",
+      "details": "6 cases"
+    },
+    {
+      "name": "_extract_first_json_object",
+      "status": "PASS",
+      "details": "4 test cases (simple, nested, braces-in-string, no-json)"
+    },
+    {
+      "name": "OCR extract: sample_invoice.txt",
+      "status": "PASS",
+      "details": "word-text-parser | 1192 chars"
+    },
+    {
+      "name": "OCR extract: sample_utf16.txt",
+      "status": "PASS",
+      "details": "word-text-parser | 113 chars"
+    },
+    {
+      "name": "OCR extract: sample_products.csv",
+      "status": "PASS",
+      "details": "spreadsheet-parser | 582 chars"
+    },
+    {
+      "name": "OCR extract: sample_products.xlsx",
+      "status": "PASS",
+      "details": "spreadsheet-parser | 655 chars"
+    },
+    {
+      "name": "OCR extract: sample_invoice.docx",
+      "status": "PASS",
+      "details": "word-text-parser | 461 chars"
+    },
+    {
+      "name": "OCR extract: sample_employee_id.txt",
+      "status": "PASS",
+      "details": "word-text-parser | 341 chars"
+    },
+    {
+      "name": "OCR extract: sample_cv.txt",
+      "status": "PASS",
+      "details": "word-text-parser | 669 chars"
+    },
+    {
+      "name": "OCR extract: sample_tender.txt",
+      "status": "PASS",
+      "details": "word-text-parser | 800 chars"
+    },
+    {
+      "name": "OCR extract: sample_supplier.txt",
+      "status": "PASS",
+      "details": "word-text-parser | 472 chars"
+    },
+    {
+      "name": "Invoice extract: sample_invoice.txt",
+      "status": "PASS",
+      "details": "word-text-parser | 5 items | fields=11"
+    },
+    {
+      "name": "Invoice extract: sample_invoice.pdf",
+      "status": "PASS",
+      "details": "pdf-text-layer | 5 items | fields=17"
+    },
+    {
+      "name": "Invoice extract: sample_invoice.docx",
+      "status": "PASS",
+      "details": "word-text-parser | 2 items | fields=10"
+    },
+    {
+      "name": "Invoice extract: sample_products.csv",
+      "status": "PASS",
+      "details": "spreadsheet-parser | 10 items | fields=4"
+    },
+    {
+      "name": "Invoice extract: sample_products.xlsx",
+      "status": "PASS",
+      "details": "spreadsheet-parser | 5 items | fields=4"
+    },
+    {
+      "name": "General extract: sample_employee_id.txt",
+      "status": "PASS",
+      "details": "word-text-parser | 341 chars | records=0"
+    },
+    {
+      "name": "General extract: sample_cv.txt",
+      "status": "PASS",
+      "details": "word-text-parser | 669 chars | records=0"
+    },
+    {
+      "name": "General extract: sample_tender.txt",
+      "status": "PASS",
+      "details": "word-text-parser | 800 chars | records=0"
+    },
+    {
+      "name": "General extract: sample_supplier.txt",
+      "status": "PASS",
+      "details": "word-text-parser | 472 chars | records=0"
+    },
+    {
+      "name": "OCR extract: sample_invoice.pdf",
+      "status": "PASS",
+      "details": "tesseract | 597 chars"
+    },
+    {
+      "name": "Scanned PDF (AI Vision)",
+      "status": "SKIP",
+      "details": "provider check failed: cannot import name '_get_active_provider' from 'backend.cloud_ai_service' (C:\\Users\\User\\Desktop\\zeralda-erp-employees-main\\backend\\cloud_ai_service.py)"
+    }
+  ],
+  "timestamp": "2026-08-09 00:14:53"
+}

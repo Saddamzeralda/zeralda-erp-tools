@@ -1,0 +1,31 @@
+# Zeralda ERP - Python Dependencies
+
+# Python 3.8+ required
+
+# Runtime essentials (used by server/backend directly)
+SQLAlchemy>=2.0.20
+psycopg2-binary>=2.9.7
+pyOpenSSL>=23.2.0
+PyMuPDF>=1.24.0
+openpyxl>=3.1.5
+xlrd>=2.0.1
+cryptography>=42.0.0
+
+# Web framework (modular app in app/)
+fastapi>=0.110.0
+uvicorn[standard]>=0.27.0
+pydantic>=2.6.0
+python-multipart>=0.0.9
+
+# System tray launcher (eliminates the console window)
+pystray>=0.19.5
+Pillow>=10.0.0
+
+# Optional extras (not required for core runtime)
+# bcrypt>=4.0.1
+# argon2-cffi>=23.1.0
+# alembic>=1.11.3
+# kreuzberg>=4.4.5
+
+# Optional for robust legacy .doc extraction (Word binary files)
+# Install LibreOffice and make sure `soffice` is in PATH, or set SOFFICE_CMD

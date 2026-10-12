@@ -1,0 +1,2189 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="../../" />
+    <script src="shared/theme_manager.js"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap">
+    <title>Reports & Analytics - Zeralda ERP Tools</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles/common_header_layout.css?v=20261012a">
+    <link rel="stylesheet" href="styles/common_header_brand.css">
+    <link rel="stylesheet" href="styles/design_tokens.css">
+    <link rel="stylesheet" href="styles/responsive_global.css">
+    <link rel="stylesheet" href="styles/animated_icons.css">
+    <script src="shared/print_engine.js" defer></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #1e40af;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --info-color: #06b6d4;
+            --purple-color: #8b5cf6;
+            --dark-color: #1f2937;
+            --light-color: #f3f4f6;
+            --white-color: #ffffff;
+            --sidebar-width: 280px;
+            --header-height: 143px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light-color);
+            color: var(--dark-color);
+        }
+
+        body.rtl {
+            direction: rtl;
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--header-height);
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--dark-color);
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        /* Filter Bar */
+        .filter-bar {
+            background: white;
+            padding: 20px 25px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            min-width: 150px;
+        }
+
+        .filter-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #6b7280;
+        }
+
+        .filter-select,
+        .filter-input {
+            padding: 10px 15px;
+            border: 2px solid var(--light-color);
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .filter-select:focus,
+        .filter-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+
+        .stat-icon {
+            width: 65px;
+            height: 65px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: white;
+        }
+
+        .stat-icon.blue { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .stat-icon.green { background: linear-gradient(135deg, #10b981, #059669); }
+        .stat-icon.orange { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .stat-icon.red { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .stat-icon.purple { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+        .stat-icon.cyan { background: linear-gradient(135deg, #06b6d4, #0891b2); }
+
+        .stat-details h3 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-details p {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .stat-change {
+            font-size: 13px;
+            margin-top: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .stat-change.positive {
+            color: var(--success-color);
+        }
+
+        .stat-change.negative {
+            color: var(--danger-color);
+        }
+
+        /* Tabs */
+        .tabs-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid var(--light-color);
+            overflow-x: auto;
+        }
+
+        .tab {
+            padding: 18px 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 3px solid transparent;
+            font-weight: 500;
+        }
+
+        .tab:hover {
+            background: var(--light-color);
+        }
+
+        .tab.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+            background: rgba(37, 99, 235, 0.05);
+        }
+
+        .tab-content {
+            display: none;
+            padding: 30px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 12px 25px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-success {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        /* Charts */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .chart-container h3 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .chart-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chart-btn {
+            width: 35px;
+            height: 35px;
+            border-radius: 8px;
+            background: var(--light-color);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .chart-btn:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        /* Report Card */
+        .report-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .report-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            transition: all 0.3s;
+            cursor: pointer;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .report-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+
+        .report-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+        }
+
+        .report-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .report-description {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .report-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 15px;
+            border-top: 1px solid var(--light-color);
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        /* Comparison Table */
+        .comparison-container {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            margin-bottom: 25px;
+        }
+
+        .comparison-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--light-color);
+        }
+
+        body.rtl .comparison-table th,
+        body.rtl .comparison-table td {
+            text-align: right;
+        }
+
+        .comparison-table thead {
+            background: var(--light-color);
+        }
+
+        .comparison-table th {
+            font-weight: 600;
+        }
+
+        .comparison-table tbody tr:hover {
+            background: #f9fafb;
+        }
+
+        .trend-up {
+            color: var(--success-color);
+        }
+
+        .trend-down {
+            color: var(--danger-color);
+        }
+
+        /* KPI Cards */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .kpi-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            text-align: center;
+        }
+
+        .kpi-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .kpi-label {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+
+        .kpi-trend {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        /* Language Dropdown */
+        .language-dropdown {
+            position: relative;
+        }
+
+        .language-options {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+            margin-top: 10px;
+            overflow: hidden;
+            display: none;
+            z-index: 1001;
+        }
+
+        .language-dropdown:hover .language-options {
+            display: block;
+        }
+
+        .language-option {
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--dark-color);
+        }
+
+        .language-option:hover {
+            background: var(--light-color);
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            body.rtl .sidebar {
+                transform: translateX(100%);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            body.rtl .main-content {
+                margin-right: 0;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .report-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-bar {
+                flex-direction: column;
+            }
+
+            .filter-group {
+                width: 100%;
+            }
+        }
+        @media (max-width: 768px) {
+            .datetime-display { display: none; }
+        }
+        /* Unified UI overrides */
+        .page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:30px; flex-wrap:wrap; gap:15px; }
+        .page-title { font-size:28px; font-weight:700; color: var(--dark-color); }
+        .breadcrumb { display:flex; align-items:center; gap:10px; font-size:14px; color:#6b7280; }
+        .btn { padding:12px 25px; border-radius:10px; border:none; cursor:pointer; font-size:14px; font-weight:600; display:inline-flex; align-items:center; gap:8px; transition:all 0.3s; }
+        .table-container { background:white; border-radius:10px; box-shadow:0 2px 10px rgba(0,0,0,0.08); overflow-x:auto; overflow-y:hidden; }
+        table { width:100%; border-collapse:collapse; }
+        thead { background: var(--light-color); }
+        th, td { padding:15px; border-bottom:1px solid var(--light-color); }
+        tbody tr:hover { background:#f9fafb; }
+        .stat-card { background:white; padding:25px; border-radius:15px; box-shadow:0 2px 10px rgba(0,0,0,0.08); display:flex; align-items:center; gap:20px; transition: transform 0.3s, box-shadow 0.3s; }
+        .stat-card:hover { transform: translateY(-5px); box-shadow:0 5px 20px rgba(0,0,0,0.15); }
+        body { font-family: "Space Grotesk", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; }
+        :root {
+            --primary-color: #d36b2e;
+            --secondary-color: #b95522;
+            --success-color: #0f766e;
+            --warning-color: #e3a02f;
+            --danger-color: #dc2626;
+            --info-color: #0f766e;
+            --purple-color: #7c3aed;
+            --dark-color: #1f1b16;
+            --light-color: #f6f1e8;
+            --white-color: #fff9f0;
+        }
+        body {
+            background: radial-gradient(1200px 600px at 10% 10%, #f0e6d8, transparent),
+                        radial-gradient(900px 500px at 90% 20%, #e6f2ef, transparent),
+                        var(--light-color);
+            color: var(--dark-color);
+        }
+        /* Warm theme component overrides */
+        .stat-card,
+        .chart-container,
+        .table-container,
+        .tabs-container,
+        .modal-content {
+            background: #fff9f0;
+            border: 1px solid #eadcc8;
+        }
+        .btn-primary { background: var(--primary-color); }
+        .btn-secondary { background: #7c6f61; color: #fff; }
+        .btn-success { background: var(--success-color); }
+        .btn-info { background: var(--info-color); }
+        .btn-warning { background: var(--warning-color); color: #1f1b16; }
+        .btn-danger { background: var(--danger-color); }
+        .badge { border: 1px solid #eadcc8; }
+        /* Warm theme polish */
+        .stat-card,
+        .chart-container,
+        .table-container,
+        .tabs-container,
+        .modal-content,
+        .settings-section {
+            box-shadow: 0 12px 28px rgba(31, 27, 22, 0.10);
+            border-radius: 18px;
+        }
+        .stat-card { border-radius: 20px; }
+        .table-container { border-radius: 16px; }
+        .modal-content { border-radius: 20px; }
+        thead { background: #f4eadb; }
+        th { color: #5b5044; }
+        tbody tr:hover { background: #fff2e2; }
+        .btn { border: 1px solid rgba(31, 27, 22, 0.08); }
+        .btn:hover { filter: brightness(0.97); transform: translateY(-1px); }
+        .btn:active { transform: translateY(0); }
+        .stat-icon { filter: saturate(0.9); }
+    </style>
+    <link rel="stylesheet" href="styles/dark_theme.css">
+</head>
+<body>
+    <div id="sharedLayoutMount" data-active-page="reports_analytics.html"></div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="page-header">
+            <div>
+                <h1 class="page-title" data-en="Reports & Analytics" data-ar="التقارير والتحليلات" data-fr="Rapports et Analyses">Reports & Analytics</h1>
+                <div class="breadcrumb">
+                    <i class="fas fa-home"></i>
+                    <span data-en="Home" data-ar="الرئيسية" data-fr="Accueil">Home</span>
+                    <i class="fas fa-chevron-right"></i>
+                    <span data-en="Reports" data-ar="التقارير" data-fr="Rapports">Reports</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+            <div class="filter-group">
+                <label class="filter-label" data-en="Department" data-ar="القسم" data-fr="Département">Department</label>
+                <select class="filter-select">
+                    <option data-en="All Departments" data-ar="جميع الأقسام" data-fr="Tous les départements">All Departments</option>
+                    <option data-en="Sales" data-ar="المبيعات" data-fr="Ventes">Sales</option>
+                    <option data-en="Purchasing" data-ar="المشتريات" data-fr="Achats">Purchasing</option>
+                    <option data-en="Finance" data-ar="المالية" data-fr="Finance">Finance</option>
+                    <option data-en="HR" data-ar="الموارد البشرية" data-fr="RH">HR</option>
+                </select>
+            </div>
+            <div class="btn-group" style="margin-top: auto;">
+                <button class="btn btn-primary" onclick="applyFilters()">
+                    <i class="fas fa-filter"></i>
+                    <span data-en="Apply" data-ar="تطبيق" data-fr="Appliquer">Apply</span>
+                </button>
+                <button class="btn btn-secondary" onclick="resetFilters()">
+                    <i class="fas fa-redo"></i>
+                    <span data-en="Reset" data-ar="إعادة تعيين" data-fr="Réinitialiser">Reset</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-value">$0</div>
+                <div class="kpi-label" data-en="Total Revenue" data-ar="إجمالي الإيرادات" data-fr="Revenu Total">Total Revenue</div>
+                <div class="kpi-trend">
+                    <i class="fas fa-minus"></i> -
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-value">$0</div>
+                <div class="kpi-label" data-en="Net Profit" data-ar="صافي الربح" data-fr="Bénéfice Net">Net Profit</div>
+                <div class="kpi-trend">
+                    <i class="fas fa-minus"></i> -
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-value">0</div>
+                <div class="kpi-label" data-en="Total Orders" data-ar="إجمالي الطلبات" data-fr="Total Commandes">Total Orders</div>
+                <div class="kpi-trend">
+                    <i class="fas fa-minus"></i> -
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-value">0</div>
+                <div class="kpi-label" data-en="Total Customers" data-ar="إجمالي العملاء" data-fr="Total Clients">Total Customers</div>
+                <div class="kpi-trend">
+                    <i class="fas fa-minus"></i> -
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-value">0%</div>
+                <div class="kpi-label" data-en="Conversion Rate" data-ar="معدل التحويل" data-fr="Taux Conversion">Conversion Rate</div>
+                <div class="kpi-trend">
+                    <i class="fas fa-minus"></i> -
+                </div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-value">0</div>
+                <div class="kpi-label" data-en="Employees" data-ar="الموظفين" data-fr="Employés">Employees</div>
+                <div class="kpi-trend">
+                    <i class="fas fa-minus"></i> -
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs-container">
+            <div class="tabs" role="tablist" aria-label="Reports Sections" data-en-aria-label="Reports Sections" data-ar-aria-label="أقسام التقارير" data-fr-aria-label="Sections Rapports">
+                <div id="tab-overview" class="tab active" data-tab="overview" role="tab" tabindex="0" aria-selected="true" aria-controls="overview" onclick="switchTab(event, 'overview')">
+                    <i class="fas fa-chart-pie"></i>
+                    <span data-en="Overview" data-ar="نظرة عامة" data-fr="Aperçu">Overview</span>
+                </div>
+                <div id="tab-sales" class="tab" data-tab="sales" role="tab" tabindex="-1" aria-selected="false" aria-controls="sales" onclick="switchTab(event, 'sales')">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span data-en="Sales Reports" data-ar="تقارير المبيعات" data-fr="Rapports Ventes">Sales Reports</span>
+                </div>
+                <div id="tab-financial" class="tab" data-tab="financial" role="tab" tabindex="-1" aria-selected="false" aria-controls="financial" onclick="switchTab(event, 'financial')">
+                    <i class="fas fa-dollar-sign"></i>
+                    <span data-en="Financial Reports" data-ar="التقارير المالية" data-fr="Rapports Financiers">Financial Reports</span>
+                </div>
+                <div id="tab-inventory" class="tab" data-tab="inventory" role="tab" tabindex="-1" aria-selected="false" aria-controls="inventory" onclick="switchTab(event, 'inventory')">
+                    <i class="fas fa-boxes"></i>
+                    <span data-en="Inventory Reports" data-ar="تقارير المخزون" data-fr="Rapports Stock">Inventory Reports</span>
+                </div>
+                <div id="tab-custom" class="tab" data-tab="custom" role="tab" tabindex="-1" aria-selected="false" aria-controls="custom" onclick="switchTab(event, 'custom')">
+                    <i class="fas fa-cogs"></i>
+                    <span data-en="Custom Reports" data-ar="تقارير مخصصة" data-fr="Rapports Personnalisés">Custom Reports</span>
+                </div>
+            </div>
+
+            <!-- Overview Tab -->
+            <div id="overview" class="tab-content active" role="tabpanel" aria-labelledby="tab-overview" aria-hidden="false">
+                <h3 style="margin-bottom: 20px;" data-en="Business Overview - January 2024" data-ar="��ظرة عامة على الأعمال - يناير 2024" data-fr="Aperçu Activité - Janvier 2024">Business Overview - January 2024</h3>
+
+                <div class="charts-grid">
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3 data-en="Revenue vs Expenses" data-ar="الإيرادات مقابل المصروفات" data-fr="Revenus vs Dépenses">Revenue vs Expenses</h3>
+                            <div class="chart-actions">
+                                <button class="chart-btn" data-en-title="Download" data-ar-title="تحميل" data-fr-title="Télécharger" title="Download"><i class="fas fa-download"></i></button>
+                                <button class="chart-btn" data-en-title="Fullscreen" data-ar-title="ملء الشاشة" data-fr-title="Plein écran" title="Fullscreen"><i class="fas fa-expand"></i></button>
+                            </div>
+                        </div>
+                        <canvas id="revenueExpenseChart"></canvas>
+                    </div>
+
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3 data-en="Sales by Category" data-ar="المبيعات حسب الفئة" data-fr="Ventes par Catégorie">Sales by Category</h3>
+                            <div class="chart-actions">
+                                <button class="chart-btn" data-en-title="Download" data-ar-title="تحميل" data-fr-title="Télécharger" title="Download"><i class="fas fa-download"></i></button>
+                                <button class="chart-btn" data-en-title="Fullscreen" data-ar-title="ملء الشاشة" data-fr-title="Plein écran" title="Fullscreen"><i class="fas fa-expand"></i></button>
+                            </div>
+                        </div>
+                        <canvas id="salesCategoryChart"></canvas>
+                    </div>
+
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3 data-en="Customer Growth" data-ar="نمو العملاء" data-fr="Croissance Clients">Customer Growth</h3>
+                            <div class="chart-actions">
+                                <button class="chart-btn" data-en-title="Download" data-ar-title="تحميل" data-fr-title="Télécharger" title="Download"><i class="fas fa-download"></i></button>
+                                <button class="chart-btn" data-en-title="Fullscreen" data-ar-title="ملء الشاشة" data-fr-title="Plein écran" title="Fullscreen"><i class="fas fa-expand"></i></button>
+                            </div>
+                        </div>
+                        <canvas id="customerGrowthChart"></canvas>
+                    </div>
+
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3 data-en="Top Selling Products" data-ar="المنتجات الأكثر مبيعاً" data-fr="Produits Populaires">Top Selling Products</h3>
+                            <div class="chart-actions">
+                                <button class="chart-btn" data-en-title="Download" data-ar-title="تحميل" data-fr-title="Télécharger" title="Download"><i class="fas fa-download"></i></button>
+                                <button class="chart-btn" data-en-title="Fullscreen" data-ar-title="ملء الشاشة" data-fr-title="Plein écran" title="Fullscreen"><i class="fas fa-expand"></i></button>
+                            </div>
+                        </div>
+                        <canvas id="topProductsChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Comparison Table -->
+                <div class="comparison-container">
+                    <div class="comparison-header">
+                        <h3 data-en="Month-over-Month Comparison" data-ar="مقارنة شهر بشهر" data-fr="Comparaison Mensuelle">Month-over-Month Comparison</h3>
+                        <button class="btn btn-secondary">
+                            <i class="fas fa-file-export"></i>
+                            <span data-en="Export" data-ar="تصدير" data-fr="Exporter">Export</span>
+                        </button>
+                    </div>
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th data-en="Metric" data-ar="المقياس" data-fr="Métrique">Metric</th>
+                                <th data-en="December 2023" data-ar="ديسمبر 2023" data-fr="Décembre 2023">December 2023</th>
+                                <th data-en="January 2024" data-ar="يناير 2024" data-fr="Janvier 2024">January 2024</th>
+                                <th data-en="Change" data-ar="التغيير" data-fr="Variation">Change</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="4" style="text-align: center; padding: 40px 20px; color: #6b7280;">
+                                    <p data-en="No data available. Start adding business transactions to see reports." data-ar="لا توجد بيانات. ابدأ بإضافة المعاملات لمشاهدة التقارير." data-fr="Aucune donnée. Ajoutez des transactions pour voir les rapports.">No data available. Start adding business transactions to see reports.</p>
+                                </td>
+                            </tr>
+                            <!--<tr>
+                                <td><strong data-en="Employee Count" data-ar="عدد الموظفين" data-fr="Nombre Employés">Employee Count</strong></td>
+                                <td>45</td>
+                                <td>48</td>
+                                <td class="trend-up"><i class="fas fa-arrow-up"></i> +6.7%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Sales Reports Tab -->
+            <div id="sales" class="tab-content" role="tabpanel" aria-labelledby="tab-sales" aria-hidden="true">
+                <h3 style="margin-bottom: 20px;" data-en="Sales Reports" data-ar="تقارير المبيعات" data-fr="Rapports Ventes">Sales Reports</h3>
+
+                <div class="report-grid">
+                    <div class="report-card" onclick="generateReport('sales-summary')">
+                        <div class="report-header">
+                            <div class="report-icon blue">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                        </div>
+                        <div class="report-title" data-en="Sales Summary Report" data-ar="تقرير ملخص المبيعات" data-fr="Rapport Résumé Ventes">Sales Summary Report</div>
+                        <div class="report-description" data-en="Comprehensive sales overview including revenue, orders, and trends" data-ar="نظرة عامة شاملة على المبيعات بما في ذلك الإيرادات والطلبات والاتجاهات" data-fr="Aperçu complet des ventes incluant revenus, commandes et tendances">Comprehensive sales overview including revenue, orders, and trends</div>
+                        <div class="report-meta">
+                            <span><i class="fas fa-calendar"></i> <span data-en="Last updated: Today" data-ar="آخر تحديث: اليوم" data-fr="Dernière mise à jour : Aujourd'hui">Last updated: Today</span></span>
+                            <span><i class="fas fa-download"></i></span>
+                        </div>
+                    </div>
+
+                    <div class="report-card" onclick="generateReport('customer-sales')" style="border-left-color: var(--success-color);">
+                        <div class="report-header">
+                            <div class="report-icon green">
+                                <i class="fas fa-users"></i>
+                            </div>
+                        </div>
+                        <div class="report-title" data-en="Sales by Customer" data-ar="المبيعات حسب العميل" data-fr="Ventes par Client">Sales by Customer</div>
+                        <div class="report-description" data-en="Detailed breakdown of sales performance by individual customers" data-ar="تفصيل مفصل لأداء المبيعات حسب العملاء الأفراد" data-fr="Détail des performances de vente par client individuel">Detailed breakdown of sales performance by individual customers</div>
+                        <div class="report-meta">
+                            <span><i class="fas fa-calendar"></i> <span data-en="Last updated: Today" data-ar="آخر تحديث: اليوم" data-fr="Dernière mise à jour : Aujourd'hui">Last updated: Today</span></span>
+                            <span><i class="fas fa-download"></i></span>
+                        </div>
+                    </div>
+
+                    <div class="report-card" onclick="generateReport('product-sales')" style="border-left-color: var(--warning-color);">
+                        <div class="report-header">
+                            <div class="report-icon orange">
+                                <i class="fas fa-box"></i>
+                            </div>
+                        </div>
+                        <div class="report-title" data-en="Sales by Product" data-ar="المبيعات حسب المنتج" data-fr="Ventes par Produit">Sales by Product</div>
+                        <div class="report-description" data-en="Product-wise sales analysis with quantities and revenue" data-ar="تحليل المبيعات حسب الم��تج مع الكميات والإيرادات" data-fr="Analyse des ventes par produit avec quantités et revenus">Product-wise sales analysis with quantities and revenue</div>
+                        <div class="report-meta">
+                            <span><i class="fas fa-calendar"></i> <span data-en="Last updated: Today" data-ar="آخر تحديث: اليوم" data-fr="Dernière mise à jour : Aujourd'hui">Last updated: Today</span></span>
+                            <span><i class="fas fa-download"></i></span>
+                        </div>
+                    </div>
+
+                    <div class="report-card" onclick="generateReport('sales-rep')" style="border-left-color: var(--purple-color);">
+                        <div class="report-header">
+                            <div class="report-icon purple">
+                                <i class="fas fa-user-tie"></i>
+                            </div>
+                        </div>
+                        <div class="report-title" data-en="Sales by Representative" data-ar="المبيعات حسب الممثل" data-fr="Ventes par Commercial">Sales by Representative</div>
+                        <div class="report-description" data-en="Performance metrics for each sales representative" data-ar="مقاييس الأداء لكل ممثل مبيعات" data-fr="Métriques de performance pour chaque commercial">Performance metrics for each sales representative</div>
+                        <div class="report-meta">
+                            <span><i class="fas fa-calendar"></i> <span data-en="Last updated: Today" data-ar="آخر تحديث: اليوم" data-fr="Dernière mise à jour : Aujourd'hui">Last updated: Today</span></span>
+                            <span><i class="fas fa-download"></i></span>
+                        </div>
+                    </div>
+
+                    <div class="report-card" onclick="generateReport('sales-trend')" style="border-left-color: var(--info-color);">
+                        <div class="report-header">
+                            <div class="report-icon cyan">
+                                <i class="fas fa-chart-area"></i>
+                            </div>
+                        </div>
+                        <div class="report-title" data-en="Sales Trend Analysis" data-ar="تحليل اتجاه المبيعات" data-fr="Analyse Tendances Ventes">Sales Trend Analysis</div>
+                        <div class="report-description" data-en="Historical sales trends with forecasting and predictions" data-ar="اتجاهات المبيعات التاريخية مع التنبؤات والتوقعات" data-fr="Tendances historiques avec prévisions et prédictions">Historical sales trends with forecasting and predictions</div>
+                        <div class="report-meta">
+                            <span><i class="fas fa-calendar"></i> <span data-en="Last updated: Today" data-ar="آخر تحديث: اليوم" data-fr="Dernière mise à jour : Aujourd'hui">Last updated: Today</span></span>
+                            <span><i class="fas fa-download"></i></span>
+                        </div>
+                    </div>
+
+                    <div class="report-card" onclick="generateReport('payment-status')" style="border-left-color: var(--danger-color);">
+                        <div class="report-header">
+                            <div class="report-icon red">
+                                <i class="fas fa-credit-card"></i>
+                            </div>
+                        </div>
+                        <div class="report-title" data-en="Payment Status Report" data-ar="تقرير حالة الدفع" data-fr="Rapport Statut Paiement">Payment Status Report</div>
+                        <div class="report-description" data-en="Outstanding payments and collection analysis" data-ar="المدفوعات المستحقة وتحليل التحصيل" data-fr="Paiements en suspens et analyse de recouvrement">Outstanding payments and collection analysis</div>
+                        <div class="report-meta">
+                            <span><i class="fas fa-calendar"></i> <span data-en="Last updated: Today" data-ar="آخر تحديث: اليوم" data-fr="Dernière mise à jour : Aujourd'hui">Last updated: Today</span></span>
+                            <span><i class="fas fa-download"></i></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="charts-grid">
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3 data-en="Monthly Sales Performance" data-ar="أداء المبيعات الشهرية" data-fr="Performance Ventes Mensuelles">Monthly Sales Performance</h3>
+                            <div class="chart-actions">
+                                <button class="chart-btn"><i class="fas fa-download"></i></button>
+                            </div>
+                        </div>
+                        <canvas id="monthlySalesChart"></canvas>
+                    </div>
+
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3 data-en="Sales by Region" data-ar="المبيعات حسب المنطقة" data-fr="Ventes par Région">Sales by Region</h3>
+                            <div class="chart-actions">
+                                <button class="chart-btn"><i class="fas fa-download"></i></button>
+                            </div>
+                        </div>
+                        <canvas id="salesRegionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Financial Reports Tab -->
+            <div id="financial" class="tab-content" role="tabpanel" aria-labelledby="tab-financial" aria-hidden="true">
+                <h3 style="margin-bottom: 20px;" data-en="Financial Reports" data-ar="التقارير المالية" data-fr="Rapports Financiers">Financial Reports</h3>
+
+                <div class="report-grid">
+                    <div class="report-card" onclick="generateReport('profit-loss')">
+                        <div class="report-header">
+                            <div class="report-icon blue">
+                                <i class="fas fa-file-invoice-dollar"></i>
+                            </div>
+                        </div>
+                        <div class="report-title" data-en="Profit & Loss Statement" data-ar="قائمة الأرباح والخسائر" data-fr="Compte de Résultat">Profit & Loss Statement</div>
+                        <div class="report-description" data-en="Comprehensive income statement showing revenues and expenses" data-ar="قائمة دخل شاملة توضح الإيرادات والمصروفات" data-fr="État des revenus complet montrant revenus et dépenses">Comprehensive income statement showing revenues and expenses</div>
+                        <div class="report-meta">
+                            <span><i class="fas fa-calendar"></i> January 2024</span>
+                            <span><i class="fas fa-download"></i></span>
+                        </div>
+                    </div>
+
+                    <div class="report-card" onclick="generateReport('balance-sheet')" style="border-left-color: var(--success-color);">
+                        <div class="report-header">
+                            <div class="report-icon green">
+                                <i class="fas fa-balance-scale"></i>
+                            </div>
+                        </div>
+                        <div class="report-title" data-en="Balance Sheet" data-ar="الميزانية العمومية" data-fr="Bilan">Balance Sheet</div>
+                        <div class="report-description" data-en="Financial position with assets, liabilities, and equity" data-ar="المركز المالي مع الأصول والخصوم وحقوق الملكية" data-fr="Position financière avec actifs, passifs et capitaux">Financial position with assets, liabilities, and equity</div>
+                        <div class="report-meta">
+                            <span><i class="fas fa-calendar"></i> As of Jan 31, 2024</span>
+                            <span><i class="fas fa-download"></i></span>
+                        </div>
+                    </div>
+
+                    <div class="report-card" onclick="generateReport('cash-flow')" style="border-left-color: var(--warning-color);">
+                        <div class="report-header">
+                            <div class="report-icon orange">
+                                <i class="fas fa-exchange-alt"></i>
+                            </div>
+                        </div>
+                        <div class="report-title" data-en="Cash Flow Statement" data-ar="قائمة التدفقات النقدية" data-fr="Tableau Flux Trésorerie">Cash Flow Statement</div>
+                        <div class="report-description" data-en="Cash inflows and outflows from operations and investments" data-ar="التدفقات النقدية الواردة والصادرة من العمليات والاستثمارات" data-fr="Flux de trésorerie des opérations et investissements">Cash inflows and outflows from operations and investments</div>
+                        <div class="report-meta">
+                            <span><i class="fas fa-calendar"></i> January 2024</span>
+                            <span><i class="fas fa-download"></i></span>
+                        </div>
+                    </div>
+
+                    <div class="report-card" onclick="generateReport('accounts-receivable')" style="border-left-color: var(--purple-color);">
+                        <div class="report-header">
+                            <div class="report-icon purple">
+                                <i class="fas fa-hand-holding-usd"></i>
+                            </div>
+                        </div>
+                        <div class="report-title" data-en="Accounts Receivable" data-ar="الحسابات المدينة" data-fr="Comptes Clients">Accounts Receivable</div>
+                        <div class="report-description" data-en="Outstanding customer invoices and aging analysis" data-ar="فواتير العملاء المستحقة وتحليل الشيخوخة" data-fr="Factures clients en suspens et analyse de vieillissement">Outstanding customer invoices and aging analysis</div>
+                        <div class="report-meta">
+                            <span><i class="fas fa-calendar"></i> As of Today</span>
+                            <span><i class="fas fa-download"></i></span>
+                        </div>
+                    </div>
+
+                    <div class="report-card" onclick="generateReport('accounts-payable')" style="border-left-color: var(--info-color);">
+                        <div class="report-header">
+                            <div class="report-icon cyan">
+                                <i class="fas fa-file-invoice"></i>
+                            </div>
+                        </div>
+                        <div class="report-title" data-en="Accounts Payable" data-ar="الحسابات الدائنة" data-fr="Comptes Fournisseurs">Accounts Payable</div>
+                        <div class="report-description" data-en="Vendor bills and payment due analysis" data-ar="فواتير الموردين وتحليل المدفوعات المستحقة" data-fr="Factures fournisseurs et analyse échéances">Vendor bills and payment due analysis</div>
+                        <div class="report-meta">
+                            <span><i class="fas fa-calendar"></i> As of Today</span>
+                            <span><i class="fas fa-download"></i></span>
+                        </div>
+                    </div>
+
+                    <div class="report-card" onclick="generateReport('tax-summary')" style="border-left-color: var(--danger-color);">
+                        <div class="report-header">
+                            <div class="report-icon red">
+                                <i class="fas fa-percentage"></i>
+                            </div>
+                        </div>
+                        <div class="report-title" data-en="Tax Summary Report" data-ar="تقرير ملخص الضرائب" data-fr="Résumé Taxes">Tax Summary Report</div>
+                        <div class="report-description" data-en="Tax collected, paid, and pending for the period" data-ar="الضرائب المحصلة والمدفوعة والمعلقة للفترة" data-fr="Taxes perçues, payées et en attente pour la période">Tax collected, paid, and pending for the period</div>
+                        <div class="report-meta">
+                            <span><i class="fas fa-calendar"></i> January 2024</span>
+                            <span><i class="fas fa-download"></i></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="charts-grid">
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3 data-en="Financial Performance Trend" data-ar="اتجاه الأداء المالي" data-fr="Tendance Performance Financière">Financial Performance Trend</h3>
+                            <div class="chart-actions">
+                                <button class="chart-btn"><i class="fas fa-download"></i></button>
+                            </div>
+                        </div>
+                        <canvas id="financialTrendChart"></canvas>
+                    </div>
+
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3 data-en="Expense Breakdown" data-ar="تفصيل المصروفات" data-fr="Répartition Dépenses">Expense Breakdown</h3>
+                            <div class="chart-actions">
+                                <button class="chart-btn"><i class="fas fa-download"></i></button>
+                            </div>
+                        </div>
+                        <canvas id="expenseBreakdownChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inventory Reports Tab -->
+            <div id="inventory" class="tab-content" role="tabpanel" aria-labelledby="tab-inventory" aria-hidden="true">
+                <h3 style="margin-bottom: 20px;" data-en="Inventory Reports" data-ar="تقارير المخزون" data-fr="Rapports Stock">Inventory Reports</h3>
+
+                <div class="report-grid">
+                    <div class="report-card" onclick="generateReport('inventory-summary')">
+                        <div class="report-header">
+                            <div class="report-icon blue">
+                                <i class="fas fa-warehouse"></i>
+                            </div>
+                        </div>
+                        <div class="report-title" data-en="Inventory Summary" data-ar="ملخص المخزون" data-fr="Résumé Stock">Inventory Summary</div>
+                        <div class="report-description" data-en="Complete overview of inventory levels and valuations" data-ar="نظرة عامة كاملة على مستويات المخزون والتقييمات" data-fr="Aperçu complet des niveaux et valorisations du stock">Complete overview of inventory levels and valuations</div>
+                        <div class="report-meta">
+                            <span><i class="fas fa-calendar"></i> As of Today</span>
+                            <span><i class="fas fa-download"></i></span>
+                        </div>
+                    </div>
+
+                    <div class="report-card" onclick="generateReport('stock-movement')" style="border-left-color: var(--success-color);">
+                        <div class="report-header">
+                            <div class="report-icon green">
+                                <i class="fas fa-exchange-alt"></i>
+                            </div>
+                        </div>
+                        <div class="report-title" data-en="Stock Movement Report" data-ar="تقرير حركة المخزون" data-fr="Rapport Mouvements Stock">Stock Movement Report</div>
+                        <div class="report-description" data-en="Detailed log of all inventory transactions and movements" data-ar="سجل مفصل لجميع معاملات وحركات المخزون" data-fr="Journal détaillé de toutes les transactions et mouvements">Detailed log of all inventory transactions and movements</div>
+                        <div class="report-meta">
+                            <span><i class="fas fa-calendar"></i> January 2024</span>
+                            <span><i class="fas fa-download"></i></span>
+                        </div>
+                    </div>
+
+                    <div class="report-card" onclick="generateReport('low-stock')" style="border-left-color: var(--warning-color);">
+                        <div class="report-header">
+                            <div class="report-icon orange">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                        </div>
+                        <div class="report-title" data-en="Low Stock Alert" data-ar="تنبيه المخزون المنخفض" data-fr="Alerte Stock Faible">Low Stock Alert</div>
+                        <div class="report-description" data-en="Products below minimum stock levels requiring reorder" data-ar="المنتجات أقل من مستويات المخزون الدنيا التي تتطلب إعادة الطلب" data-fr="Produits sous seuil minimum nécessitant réapprovisionnement">Products below minimum stock levels requiring reorder</div>
+                        <div class="report-meta">
+                            <span><i class="fas fa-calendar"></i> As of Today</span>
+                            <span><i class="fas fa-download"></i></span>
+                        </div>
+                    </div>
+
+                    <div class="report-card" onclick="generateReport('inventory-valuation')" style="border-left-color: var(--purple-color);">
+                        <div class="report-header">
+                            <div class="report-icon purple">
+                                <i class="fas fa-calculator">
+								</i>
+                            </div>
+                        </div>
+                        <div class="report-title" data-en="Inventory Valuation" data-ar="تقييم المخزون" data-fr="Valorisation Stock">Inventory Valuation</div>
+                        <div class="report-description" data-en="Total inventory value based on current costs" data-ar="إجمالي قيمة المخزون بناءً على التكاليف الحالية" data-fr="Valeur totale du stock basée sur les coûts actuels">Total inventory value based on current costs</div>
+                        <div class="report-meta">
+                            <span><i class="fas fa-calendar"></i> As of Today</span>
+                            <span><i class="fas fa-download"></i></span>
+                        </div>
+                    </div>
+
+                    <div class="report-card" onclick="generateReport('dead-stock')" style="border-left-color: var(--info-color);">
+                        <div class="report-header">
+                            <div class="report-icon cyan">
+                                <i class="fas fa-ban"></i>
+                            </div>
+                        </div>
+                        <div class="report-title" data-en="Dead Stock Analysis" data-ar="تحليل المخزون الراكد" data-fr="Analyse Stock Mort">Dead Stock Analysis</div>
+                        <div class="report-description" data-en="Slow-moving and obsolete inventory items" data-ar="العناصر بطيئة الحركة والمخزون المتقادم" data-fr="Articles à rotation lente et obsolètes">Slow-moving and obsolete inventory items</div>
+                        <div class="report-meta">
+                            <span><i class="fas fa-calendar"></i> <span data-en="Last 90 Days" data-ar="آخر 90 يوماً" data-fr="90 derniers jours">Last 90 Days</span></span>
+                            <span><i class="fas fa-download"></i></span>
+                        </div>
+                    </div>
+
+                    <div class="report-card" onclick="generateReport('abc-analysis')" style="border-left-color: var(--danger-color);">
+                        <div class="report-header">
+                            <div class="report-icon red">
+                                <i class="fas fa-sort-amount-down"></i>
+                            </div>
+                        </div>
+                        <div class="report-title" data-en="ABC Analysis" data-ar="تحليل ABC" data-fr="Analyse ABC">ABC Analysis</div>
+                        <div class="report-description" data-en="Product classification based on value and importance" data-ar="تصنيف المنتجات حسب القيمة والأهمية" data-fr="Classification des produits par valeur et importance">Product classification based on value and importance</div>
+                        <div class="report-meta">
+                            <span><i class="fas fa-calendar"></i> As of Today</span>
+                            <span><i class="fas fa-download"></i></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="charts-grid">
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3 data-en="Inventory Turnover" data-ar="دوران المخزون" data-fr="Rotation Stock">Inventory Turnover</h3>
+                            <div class="chart-actions">
+                                <button class="chart-btn"><i class="fas fa-download"></i></button>
+                            </div>
+                        </div>
+                        <canvas id="inventoryTurnoverChart"></canvas>
+                    </div>
+
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3 data-en="Stock Level by Category" data-ar="مستوى المخزون حسب الفئة" data-fr="Niveau Stock par Catégorie">Stock Level by Category</h3>
+                            <div class="chart-actions">
+                                <button class="chart-btn"><i class="fas fa-download"></i></button>
+                            </div>
+                        </div>
+                        <canvas id="stockCategoryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Custom Reports Tab -->
+            <div id="custom" class="tab-content" role="tabpanel" aria-labelledby="tab-custom" aria-hidden="true">
+                <h3 style="margin-bottom: 20px;" data-en="Create Custom Report" data-ar="إنشاء تقرير مخصص" data-fr="Créer Rapport Personnalisé">Create Custom Report</h3>
+
+                <div style="background: white; padding: 30px; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.08);">
+                    <div class="form-grid">
+                        <div class="filter-group">
+                            <label class="filter-label" data-en="Report Type" data-ar="نوع التقرير" data-fr="Type Rapport">Report Type</label>
+                            <select class="filter-select">
+                                <option data-en="Select Report Type" data-ar="اختر نوع ��لتقرير" data-fr="Sélectionner Type">Select Report Type</option>
+                                <option data-en="Sales Report" data-ar="تقرير المبيعات" data-fr="Rapport Ventes">Sales Report</option>
+                                <option data-en="Financial Report" data-ar="التقرير المالي" data-fr="Rapport Financier">Financial Report</option>
+                                <option data-en="Inventory Report" data-ar="تقرير المخزون" data-fr="Rapport Inventaire">Inventory Report</option>
+                                <option data-en="HR Report" data-ar="تقرير الموارد البشرية" data-fr="Rapport RH">HR Report</option>
+                                <option data-en="CRM Report" data-ar="تقرير إدارة العملاء" data-fr="Rapport CRM">CRM Report</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label" data-en="Data Source" data-ar="مصدر البيانات" data-fr="Source Données">Data Source</label>
+                            <select class="filter-select">
+                                <option data-en="Select Data Source" data-ar="اختر مصدر البيانات" data-fr="Sélectionner Source">Select Data Source</option>
+                                <option data-en="Sales Orders" data-ar="أوامر البيع" data-fr="Commandes de vente">Sales Orders</option>
+                                <option data-en="Invoices" data-ar="الفواتير" data-fr="Factures">Invoices</option>
+                                <option data-en="Customers" data-ar="العملاء" data-fr="Clients">Customers</option>
+                                <option data-en="Products" data-ar="المنتجات" data-fr="Produits">Products</option>
+                                <option data-en="Employees" data-ar="الموظفون" data-fr="Employés">Employees</option>
+                                <option data-en="Financial Transactions" data-ar="المعاملات المالية" data-fr="Transactions financières">Financial Transactions</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label" data-en="Group By" data-ar="تجميع حسب" data-fr="Grouper Par">Group By</label>
+                            <select class="filter-select">
+                                <option data-en="No Grouping" data-ar="بدون تجميع" data-fr="Sans Groupement">No Grouping</option>
+                                <option data-en="Date" data-ar="التاريخ" data-fr="Date">Date</option>
+                                <option data-en="Customer" data-ar="العميل" data-fr="Client">Customer</option>
+                                <option data-en="Product" data-ar="المنتج" data-fr="Produit">Product</option>
+                                <option data-en="Category" data-ar="الفئة" data-fr="Catégorie">Category</option>
+                                <option data-en="Department" data-ar="القسم" data-fr="Département">Department</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label" data-en="Output Format" data-ar="تنسيق الإخراج" data-fr="Format Sortie">Output Format</label>
+                            <select class="filter-select">
+                                <option data-en="PDF" data-ar="PDF" data-fr="PDF">PDF</option>
+                                <option data-en="Excel (XLSX)" data-ar="Excel (XLSX)" data-fr="Excel (XLSX)">Excel (XLSX)</option>
+                                <option data-en="CSV" data-ar="CSV" data-fr="CSV">CSV</option>
+                                <option data-en="HTML" data-ar="HTML" data-fr="HTML">HTML</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 25px;">
+                        <h4 style="margin-bottom: 15px;" data-en="Select Columns" data-ar="اختر الأعمدة" data-fr="Sélectionner Colonnes">Select Columns</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;">
+                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                                <input type="checkbox" checked>
+                                <span data-en="Order Date" data-ar="تاريخ الطلب" data-fr="Date Commande">Order Date</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                                <input type="checkbox" checked>
+                                <span data-en="Customer Name" data-ar="اسم العميل" data-fr="Nom Client">Customer Name</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                                <input type="checkbox" checked>
+                                <span data-en="Product Name" data-ar="اسم المنتج" data-fr="Nom Produit">Product Name</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                                <input type="checkbox" checked>
+                                <span data-en="Quantity" data-ar="الكمية" data-fr="Quantité">Quantity</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                                <input type="checkbox" checked>
+                                <span data-en="Unit Price" data-ar="سعر الوحدة" data-fr="Prix Unitaire">Unit Price</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                                <input type="checkbox" checked>
+                                <span data-en="Total Amount" data-ar="المبلغ الإجمالي" data-fr="Montant Total">Total Amount</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                                <input type="checkbox">
+                                <span data-en="Payment Status" data-ar="حالة الدفع" data-fr="Statut Paiement">Payment Status</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                                <input type="checkbox">
+                                <span data-en="Discount" data-ar="الخصم" data-fr="Remise">Discount</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 25px;">
+                        <h4 style="margin-bottom: 15px;" data-en="Filters" data-ar="الفلاتر" data-fr="Filtres">Filters</h4>
+                        <div class="form-grid">
+                            <div class="filter-group">
+                                <label class="filter-label" data-en="Status" data-ar="الحالة" data-fr="Statut">Status</label>
+                                <select class="filter-select">
+                                    <option data-en="All" data-ar="الكل" data-fr="Tous">All</option>
+                                    <option data-en="Active" data-ar="نشط" data-fr="Actif">Active</option>
+                                    <option data-en="Completed" data-ar="مكتمل" data-fr="Terminé">Completed</option>
+                                    <option data-en="Pending" data-ar="قيد الانتظار" data-fr="En attente">Pending</option>
+                                    <option data-en="Cancelled" data-ar="ملغى" data-fr="Annulé">Cancelled</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label class="filter-label" data-en="Minimum Amount" data-ar="الحد الأدنى للمبلغ" data-fr="Montant Minimum">Minimum Amount</label>
+                                <input type="number" class="filter-input" placeholder="0.00">
+                            </div>
+                            <div class="filter-group">
+                                <label class="filter-label" data-en="Maximum Amount" data-ar="الحد الأقصى للمبلغ" data-fr="Montant Maximum">Maximum Amount</label>
+                                <input type="number" class="filter-input" placeholder="0.00">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 30px; display: flex; gap: 15px; justify-content: center;">
+                        <button class="btn btn-primary" onclick="generateCustomReport()">
+                            <i class="fas fa-file-alt"></i>
+                            <span data-en="Generate Report" data-ar="إنشاء التقرير" data-fr="Générer Rapport">Generate Report</span>
+                        </button>
+                        <button class="btn btn-success" onclick="saveCustomReport()">
+                            <i class="fas fa-save"></i>
+                            <span data-en="Save Template" data-ar="حفظ كقالب" data-fr="Enregistrer Modèle">Save Template</span>
+                        </button>
+                        <button class="btn btn-secondary" onclick="resetCustomReport()">
+                            <i class="fas fa-redo"></i>
+                            <span data-en="Reset" data-ar="إعادة تعيين" data-fr="Réinitialiser">Reset</span>
+                        </button>
+                    </div>
+                </div>
+
+                <h3 style="margin: 40px 0 20px 0;" data-en="Saved Report Templates" data-ar="قوالب التقارير المحفوظة" data-fr="Modèles Rapports Enregistrés">Saved Report Templates</h3>
+                <div class="report-grid">
+                    <div class="report-card" onclick="loadTemplate(1)">
+                        <div class="report-header">
+                            <div class="report-icon blue">
+                                <i class="fas fa-file-alt"></i>
+                            </div>
+                        </div>
+                        <div class="report-title" data-en="Monthly Sales Summary" data-ar="ملخص المبيعات الشهرية" data-fr="Résumé Ventes Mensuelles">Monthly Sales Summary</div>
+                        <div class="report-description" data-en="Custom template for monthly sales overview" data-ar="قالب مخصص لنظرة عامة على المبيعات الشهرية" data-fr="Modèle personnalisé pour aperçu mensuel">Custom template for monthly sales overview</div>
+                        <div class="report-meta">
+                            <span><i class="fas fa-user"></i> <span data-en="Created by: Admin" data-ar="أنشأه: المدير" data-fr="Créé par : Admin">Created by: Admin</span></span>
+                            <span><i class="fas fa-calendar"></i> 2024-01-15</span>
+                        </div>
+                    </div>
+
+                    <div class="report-card" onclick="loadTemplate(2)" style="border-left-color: var(--success-color);">
+                        <div class="report-header">
+                            <div class="report-icon green">
+                                <i class="fas fa-file-alt"></i>
+                            </div>
+                        </div>
+                        <div class="report-title" data-en="Top Customers Report" data-ar="تقرير أفضل العملاء" data-fr="Rapport Meilleurs Clients">Top Customers Report</div>
+                        <div class="report-description" data-en="Analysis of top 20 customers by revenue" data-ar="تحليل أفضل 20 عميلاً حسب الإيرادات" data-fr="Analyse des 20 meilleurs clients par chiffre d'affaires">Analysis of top 20 customers by revenue</div>
+                        <div class="report-meta">
+                            <span><i class="fas fa-user"></i> <span data-en="Created by: Admin" data-ar="أنشأه: المدير" data-fr="Créé par : Admin">Created by: Admin</span></span>
+                            <span><i class="fas fa-calendar"></i> 2024-01-10</span>
+                        </div>
+                    </div>
+
+                    <div class="report-card" onclick="loadTemplate(3)" style="border-left-color: var(--warning-color);">
+                        <div class="report-header">
+                            <div class="report-icon orange">
+                                <i class="fas fa-file-alt"></i>
+                            </div>
+                        </div>
+                        <div class="report-title" data-en="Quarterly Financial Overview" data-ar="نظرة مالية ربع سنوية" data-fr="Aperçu Financier Trimestriel">Quarterly Financial Overview</div>
+                        <div class="report-description" data-en="Comprehensive quarterly financial performance" data-ar="الأداء المالي الشامل ربع السنوي" data-fr="Performance financière trimestrielle complète">Comprehensive quarterly financial performance</div>
+                        <div class="report-meta">
+                            <span><i class="fas fa-user"></i> <span data-en="Created by: Finance Team" data-ar="أنشأه: فريق المالية" data-fr="Créé par : Équipe Finance">Created by: Finance Team</span></span>
+                            <span><i class="fas fa-calendar"></i> 2024-01-05</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div><!-- /tabs-container -->
+    </div><!-- /main-content -->
+
+    <script src="shared/zeralda_db.js?v=20260731a"></script>
+    <script src="shared/layout_shell.js?v=20261011d" defer></script>
+    <script src="shared/ai_chat_widget.js?v=20260806b" defer></script>
+    <script src="shared/storage_adapter.js?v=20260721c" defer></script>
+    <script src="shared/session_timeout.js" defer></script>
+    <script src="shared/company_storage.js?v=20260807b"></script>
+    <script src="shared/app_sync.js?v=20260807b" defer></script>
+    <script src="shared/role_access_control.js" defer></script>
+    <script src="shared/header_company_switcher.js?v=20261012a" defer></script>
+    <script src="shared/header_language_switcher.js" defer></script>
+    <script src="shared/runtime_i18n.js"></script>
+    <script>
+    // FIX: Guard against zeralda_db.js failing to load
+    if (typeof ZS === 'undefined') {
+      var _zsFallback = {};
+      window.ZS = {
+        getItem: function(k) { return _zsFallback[k] || null; },
+        setItem: function(k, v) { _zsFallback[k] = String(v); },
+        removeItem: function(k) { delete _zsFallback[k]; },
+        clear: function() { _zsFallback = {}; },
+        key: function(i) { return Object.keys(_zsFallback)[i] || null; }
+      };
+      console.error('[reports] ZS storage not available — using in-memory fallback');
+    }
+    // Language Translations
+    const translations = {
+        en: {
+            appTitle: 'Zeralda ERP Tools',
+            currentLang: 'English'
+        },
+            ar: {
+                appTitle: 'Zeralda ERP Tools',
+                currentLang: 'العربية'
+            },
+            fr: {
+                appTitle: 'Zeralda ERP Tools',
+                currentLang: 'Français'
+            }
+    };
+
+    const tRuntime = createRuntimeTranslator({
+            filters_applied: { en: 'Filters applied! ✅\n\nData is being refreshed with selected filters.', ar: 'تم تطبيق الفلاتر! ✅\n\nيتم تحديث البيانات حسب الفلاتر المختارة.', fr: 'Filtres appliqués ! ✅\n\nLes données sont actualisées avec les filtres sélectionnés.' },
+            filters_reset: { en: 'Filters reset! ✅\n\nAll filters have been cleared.', ar: 'تمت إعادة تعيين الفلاتر! ✅\n\nتم مسح جميع الفلاتر.', fr: 'Filtres réinitialisés ! ✅\n\nTous les filtres ont été effacés.' },
+            generating_report: { en: 'Generating {type} report...\n\n📊 Report will be ready in a moment!', ar: 'جاري إنشاء تقرير {type}...\n\n📊 سيكون التقرير جاهزًا بعد لحظات!', fr: 'Génération du rapport {type}...\n\n📊 Le rapport sera prêt dans un instant !' },
+            generating_custom: { en: 'Generating custom report... ✅\n\n📊 Your custom report is being created!', ar: 'جاري إنشاء تقرير مخصص... ✅\n\n📊 يتم إنشاء تقريرك المخصص!', fr: 'Génération du rapport personnalisé... ✅\n\n📊 Votre rapport personnalisé est en cours de création !' },
+            template_saved: { en: 'Report template saved! ✅\n\nYour custom report template has been saved and can be reused.', ar: 'تم حفظ قالب التقرير! ✅\n\nتم حفظ قالب التقرير المخصص ويمكن إعادة استخدامه.', fr: 'Modèle de rapport enregistré ! ✅\n\nVotre modèle personnalisé a été enregistré et peut être réutilisé.' },
+            custom_form_reset: { en: 'Custom report form reset! ✅', ar: 'تمت إعادة تعيين نموذج التقرير المخصص! ✅', fr: 'Formulaire de rapport personnalisé réinitialisé ! ✅' },
+            loading_template: { en: 'Loading template #{id}...\n\nTemplate loaded successfully!', ar: 'جاري تحميل القالب #{id}...\n\nتم تحميل القالب بنجاح!', fr: 'Chargement du modèle #{id}...\n\nModèle chargé avec succès !' }
+    });
+
+    function applyLocalizedAriaLabels(lang) {
+        const safeLang = (lang === 'ar' || lang === 'fr') ? lang : 'en';
+        document.querySelectorAll('[data-en-aria-label]').forEach(element => {
+            const value = element.getAttribute('data-' + safeLang + '-aria-label') || element.getAttribute('data-en-aria-label');
+            if (value) {
+                element.setAttribute('aria-label', value);
+            }
+        });
+    }
+
+    // Change Language Function
+    function changeLanguage(lang) {
+        const body = document.body;
+        const html = document.documentElement;
+
+        if (lang === 'ar') {
+            body.classList.add('rtl');
+            html.setAttribute('dir', 'rtl');
+            html.setAttribute('lang', 'ar');
+        } else {
+            body.classList.remove('rtl');
+            html.setAttribute('dir', 'ltr');
+            html.setAttribute('lang', lang);
+        }
+
+        document.querySelectorAll('[data-' + lang + ']').forEach(element => {
+            element.textContent = element.getAttribute('data-' + lang);
+        });
+
+        document.querySelectorAll('[data-' + lang + '-placeholder]').forEach(element => {
+            element.placeholder = element.getAttribute('data-' + lang + '-placeholder');
+        });
+
+        document.querySelectorAll('[data-' + lang + '-title]').forEach(element => {
+            element.title = element.getAttribute('data-' + lang + '-title');
+        });
+
+        applyLocalizedAriaLabels(lang);
+
+        const appTitle = document.getElementById('app-title');
+        const currentLang = document.getElementById('current-lang');
+        if (appTitle) appTitle.textContent = translations[lang].appTitle;
+        if (currentLang) currentLang.textContent = translations[lang].currentLang;
+
+        ZS.setItem('preferred-language', lang);
+    }
+
+    // Toggle Sidebar
+    function toggleSidebar() {
+        var sb = document.getElementById('sidebar');
+        if (!sb) return;
+        var isNowOpen = !sb.classList.contains('active');
+        sb.classList.toggle('active');
+        document.body.classList.toggle('sidebar-open', isNowOpen);
+    }
+
+    function updateDateTime(){
+        const now = new Date();
+        const df = ZS.getItem('date-format') || 'YYYY-MM-DD';
+        const tf = ZS.getItem('time-format') || '24';
+        const d = String(now.getDate()).padStart(2,'0');
+        const m = String(now.getMonth()+1).padStart(2,'0');
+        const y = now.getFullYear();
+        let ds = df === 'DD/MM/YYYY' ? d + '/' + m + '/' + y : df === 'MM/DD/YYYY' ? m + '/' + d + '/' + y : y + '-' + m + '-' + d;
+        let h = now.getHours();
+        const mn = String(now.getMinutes()).padStart(2,'0');
+        let ts = tf === '12' ? (h%12||12) + ':' + mn + (h>=12 ? ' PM' : ' AM') : String(h).padStart(2,'0') + ':' + mn;
+        const de = document.getElementById('currentDate');
+        const te = document.getElementById('currentTime');
+        if(de) de.textContent = ds;
+        if(te) te.textContent = ts;
+    }
+
+    function getCurrencySymbol(){
+        const legacy = ZS.getItem('system-currency');
+        if(legacy) {
+            const map = { 'USD':'$', 'EUR':'€', 'GBP':'£', 'DZD':'DA', 'SAR':'SAR', 'MAD':'MAD', 'TND':'TND', 'EGP':'EGP' };
+            return map[legacy] || '$';
+        }
+        try {
+            const raw = ZS.getItem('zeralda-settings');
+            if(raw){
+                const settings = JSON.parse(raw);
+                const code = settings && settings.systemCurrency ? settings.systemCurrency : 'USD';
+                const map = { 'USD':'$', 'EUR':'€', 'GBP':'£', 'DZD':'DA', 'SAR':'SAR', 'MAD':'MAD', 'TND':'TND', 'EGP':'EGP' };
+                return map[code] || '$';
+            }
+        } catch(e){}
+        return '$';
+    }
+
+    function applyCurrencyText(){
+        const symbol = getCurrencySymbol();
+        const root = document.querySelector('.main-content') || document.body;
+        root.querySelectorAll('*').forEach(el => {
+            if(el.children.length === 0){
+                const txt = el.textContent;
+                if(txt && txt.indexOf('$') !== -1){
+                    el.textContent = txt.replace(/\$/g, symbol);
+                }
+            }
+        });
+    }
+
+    let __currencyCache = null;
+    function getCurrencyKey(){
+        const legacy = ZS.getItem('system-currency');
+        if(legacy) return legacy;
+        try {
+            const raw = ZS.getItem('zeralda-settings');
+            if(raw){
+                const settings = JSON.parse(raw);
+                return settings && settings.systemCurrency ? settings.systemCurrency : 'USD';
+            }
+        } catch(e){}
+        return 'USD';
+    }
+
+    function startCurrencyTicker(){
+        __currencyCache = getCurrencyKey();
+        setInterval(function(){
+            const current = getCurrencyKey();
+            if(current !== __currencyCache){
+                __currencyCache = current;
+                applyCurrencyText();
+            }
+        }, 1000);
+    }
+
+    window.addEventListener('load', function(){
+        applyCurrencyText();
+        startCurrencyTicker();
+    });
+
+    window.addEventListener('storage', function(event){
+        if(event && (event.key === 'system-currency' || event.key === 'zeralda-settings')){
+            applyCurrencyText();
+        }
+    });
+
+    function applyActiveUserFromSettings(){
+        try {
+            const raw = ZS.getItem('zeralda-settings');
+            if(!raw) return;
+            const settings = JSON.parse(raw);
+            const users = settings && Array.isArray(settings.users) ? settings.users : [];
+            const activeId = settings && settings.activeUserId ? settings.activeUserId : null;
+            const u = users.find(x => x.id === activeId) || null;
+            if(!u) return;
+            const nameEl = document.querySelector('.user-info div div');
+            const avatarEl = document.querySelector('.user-avatar');
+            if(nameEl) nameEl.textContent = u.fullName || 'User';
+            if(avatarEl){
+                const parts = (u.fullName || 'U').trim().split(/\s+/);
+                const initials = (parts[0]?.[0] || 'U') + (parts[1]?.[0] || '');
+                avatarEl.textContent = initials.toUpperCase();
+            }
+        } catch(err){
+            console.warn('Failed to apply active user', err);
+        }
+    }
+
+    window.addEventListener('load', function(){
+        applyActiveUserFromSettings();
+    });
+
+    // Switch Tabs
+    function switchTab(event, tabName) {
+        const tabs = Array.from(document.querySelectorAll('.tab'));
+        const panels = Array.from(document.querySelectorAll('.tab-content'));
+        const targetTab = (event && event.currentTarget) || document.querySelector('.tab[data-tab="' + tabName + '"]');
+        const targetPanel = document.getElementById(tabName);
+
+        tabs.forEach(tab => {
+            tab.classList.remove('active');
+            tab.setAttribute('aria-selected', 'false');
+            tab.setAttribute('tabindex', '-1');
+        });
+        panels.forEach(content => {
+            content.classList.remove('active');
+            content.setAttribute('aria-hidden', 'true');
+        });
+
+        if (targetTab) {
+            targetTab.classList.add('active');
+            targetTab.setAttribute('aria-selected', 'true');
+            targetTab.setAttribute('tabindex', '0');
+            targetTab.focus();
+        }
+        if (targetPanel) {
+            targetPanel.classList.add('active');
+            targetPanel.setAttribute('aria-hidden', 'false');
+        }
+    }
+
+    function initTabsKeyboardNavigation() {
+        const tabs = Array.from(document.querySelectorAll('.tab'));
+        if (!tabs.length) return;
+
+        tabs.forEach(tab => {
+            tab.addEventListener('keydown', function(e) {
+                const currentIndex = tabs.indexOf(e.currentTarget);
+                if (currentIndex === -1) return;
+
+                let nextIndex = currentIndex;
+                if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                    nextIndex = (currentIndex + 1) % tabs.length;
+                    e.preventDefault();
+                } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                    nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+                    e.preventDefault();
+                } else if (e.key === 'Home') {
+                    nextIndex = 0;
+                    e.preventDefault();
+                } else if (e.key === 'End') {
+                    nextIndex = tabs.length - 1;
+                    e.preventDefault();
+                } else if (e.key === 'Enter' || e.key === ' ') {
+                    const activeTabName = e.currentTarget.getAttribute('data-tab');
+                    if (activeTabName) switchTab(e, activeTabName);
+                    e.preventDefault();
+                    return;
+                } else {
+                    return;
+                }
+
+                tabs[nextIndex].focus();
+                const nextTabName = tabs[nextIndex].getAttribute('data-tab');
+                if (nextTabName) switchTab({ currentTarget: tabs[nextIndex] }, nextTabName);
+            });
+        });
+    }
+
+    // Filter Functions
+    function applyFilters() {
+        alert(tRuntime('filters_applied'));
+    }
+
+    function resetFilters() {
+        alert(tRuntime('filters_reset'));
+    }
+
+    // Report Functions
+    function generateReport(reportType) {
+        alert(tRuntime('generating_report', { type: reportType }));
+    }
+
+    function generateCustomReport() {
+        alert(tRuntime('generating_custom'));
+    }
+
+    function saveCustomReport() {
+        alert(tRuntime('template_saved'));
+    }
+
+    function resetCustomReport() {
+        alert(tRuntime('custom_form_reset'));
+    }
+
+    function loadTemplate(id) {
+        alert(tRuntime('loading_template', { id }));
+    }
+
+    // Initialize Charts
+    window.onload = function() {
+        initTabsKeyboardNavigation();
+        const savedLang = ZS.getItem('preferred-language') || 'en';
+        changeLanguage(savedLang);
+
+        function safeArray(key) {
+            try {
+                const raw = ZS.getItem(key);
+                const parsed = raw ? JSON.parse(raw) : [];
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (err) {
+                return [];
+            }
+        }
+
+        function buildMonthBuckets() {
+            const now = new Date();
+            const labels = [];
+            const keys = [];
+            for (let i = 11; i >= 0; i--) {
+                const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                labels.push(d.toLocaleString('en', { month: 'short' }));
+                keys.push(d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'));
+            }
+            return { labels: labels, keys: keys };
+        }
+
+        const invoices = safeArray('invoices-data');
+        const customers = safeArray('customers-data');
+        const products = safeArray('products-data');
+        const companyId = ZS.getItem('active-company-id') || 'default';
+        const purchasing = safeArray('zeralda-purchasing-data-' + companyId);
+        const purchaseBills = Array.isArray(purchasing.bills) ? purchasing.bills : [];
+
+        const monthMeta = buildMonthBuckets();
+        const monthLabels = monthMeta.labels;
+        const monthKeys = monthMeta.keys;
+
+        const revenueMap = {};
+        const expenseMap = {};
+        monthKeys.forEach(function(k) { revenueMap[k] = 0; expenseMap[k] = 0; });
+
+        invoices.forEach(function(inv) {
+            const d = new Date(String((inv && inv.date) || ''));
+            if (isNaN(d.getTime())) return;
+            const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+            if (Object.prototype.hasOwnProperty.call(revenueMap, key)) {
+                revenueMap[key] += Number(inv.total || 0);
+            }
+        });
+
+        purchaseBills.forEach(function(bill) {
+            const d = new Date(String((bill && (bill.billDate || bill.dueDate)) || ''));
+            if (isNaN(d.getTime())) return;
+            const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+            if (Object.prototype.hasOwnProperty.call(expenseMap, key)) {
+                expenseMap[key] += Number(bill.amount || 0);
+            }
+        });
+
+        const monthlyRevenue = monthKeys.map(function(k) { return Number(revenueMap[k] || 0).toFixed(2); });
+        let monthlyExpenses = monthKeys.map(function(k) { return Number(expenseMap[k] || 0).toFixed(2); });
+        const expensesSum = monthlyExpenses.reduce(function(s, v) { return s + Number(v || 0); }, 0);
+        if (expensesSum <= 0) {
+            monthlyExpenses = monthlyRevenue.map(function(v) { return (Number(v || 0) * 0.65).toFixed(2); });
+        }
+
+        const customerMonthMap = {};
+        monthKeys.forEach(function(k) { customerMonthMap[k] = 0; });
+        customers.forEach(function(c) {
+            const d = new Date(Number(c && c.id) || String((c && (c.createdAt || c.date)) || ''));
+            if (isNaN(d.getTime())) return;
+            const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+            if (Object.prototype.hasOwnProperty.call(customerMonthMap, key)) {
+                customerMonthMap[key] += 1;
+            }
+        });
+        const monthlyNewCustomers = monthKeys.map(function(k) { return customerMonthMap[k] || 0; });
+
+        const productUnits = {};
+        const categoryTotals = {};
+        const regionTotals = {};
+        invoices.forEach(function(inv) {
+            const customerCity = String((((inv && inv.customer) || {}).city) || '').trim() || 'Others';
+            regionTotals[customerCity] = (regionTotals[customerCity] || 0) + Number(inv.total || 0);
+
+            const items = Array.isArray(inv && inv.items) ? inv.items : [];
+            items.forEach(function(it) {
+                const qty = Number(it && it.quantity || 0);
+                const productName = String((it && (it.description || it.name || it.productName)) || 'Unknown Product');
+                productUnits[productName] = (productUnits[productName] || 0) + qty;
+
+                const productId = String((it && it.productId) || '');
+                const productMeta = products.find(function(p) { return String((p && p.id) || '') === productId; }) || null;
+                const category = String((productMeta && productMeta.category) || (it && it.category) || 'Other');
+                categoryTotals[category] = (categoryTotals[category] || 0) + Number(it && (it.total || (it.price || it.unitPrice || 0) * qty) || 0);
+            });
+        });
+
+        const topProductsSorted = Object.keys(productUnits)
+            .map(function(name) { return { name: name, value: productUnits[name] }; })
+            .sort(function(a, b) { return b.value - a.value; })
+            .slice(0, 5);
+        const topProductLabels = topProductsSorted.length ? topProductsSorted.map(function(x) { return x.name; }) : ['No Product Data'];
+        const topProductValues = topProductsSorted.length ? topProductsSorted.map(function(x) { return x.value; }) : [0];
+
+        const categoriesSorted = Object.keys(categoryTotals)
+            .map(function(name) { return { name: name, value: categoryTotals[name] }; })
+            .sort(function(a, b) { return b.value - a.value; })
+            .slice(0, 6);
+        const salesCategoryLabels = categoriesSorted.length ? categoriesSorted.map(function(x) { return x.name; }) : ['No Category Data'];
+        const salesCategoryValues = categoriesSorted.length ? categoriesSorted.map(function(x) { return Number(x.value.toFixed ? x.value.toFixed(2) : x.value); }) : [0];
+
+        const regionsSorted = Object.keys(regionTotals)
+            .map(function(name) { return { name: name, value: regionTotals[name] }; })
+            .sort(function(a, b) { return b.value - a.value; })
+            .slice(0, 6);
+        const salesRegionLabels = regionsSorted.length ? regionsSorted.map(function(x) { return x.name; }) : ['No Region Data'];
+        const salesRegionValues = regionsSorted.length ? regionsSorted.map(function(x) { return Number(x.value.toFixed ? x.value.toFixed(2) : x.value); }) : [0];
+
+        const assetsSeries = [];
+        const liabilitiesSeries = [];
+        const equitySeries = [];
+        let cumulativeRevenue = 0;
+        let cumulativeExpenses = 0;
+        monthKeys.forEach(function(k, idx) {
+            cumulativeRevenue += Number(monthlyRevenue[idx] || 0);
+            cumulativeExpenses += Number(monthlyExpenses[idx] || 0);
+            const assets = cumulativeRevenue;
+            const liabilities = cumulativeExpenses;
+            assetsSeries.push(Number(assets.toFixed(2)));
+            liabilitiesSeries.push(Number(liabilities.toFixed(2)));
+            equitySeries.push(Number((assets - liabilities).toFixed(2)));
+        });
+
+        const totalExpenses = monthlyExpenses.reduce(function(sum, value) { return sum + Number(value || 0); }, 0);
+        const expenseBreakdownValues = totalExpenses > 0
+            ? [
+                Number((totalExpenses * 0.63).toFixed(2)),
+                Number((totalExpenses * 0.23).toFixed(2)),
+                Number((totalExpenses * 0.06).toFixed(2)),
+                Number((totalExpenses * 0.045).toFixed(2)),
+                Number((totalExpenses * 0.03).toFixed(2)),
+                Number((totalExpenses * 0.005).toFixed(2))
+            ]
+            : [0, 0, 0, 0, 0, 0];
+
+        const stockCategoryMap = {};
+        products.forEach(function(p) {
+            const category = String((p && p.category) || 'Other');
+            const stock = Number((p && (p.quantity || p.stock || 0)) || 0);
+            const price = Number((p && (p.costPrice || p.price || p.unitPrice || 0)) || 0);
+            stockCategoryMap[category] = (stockCategoryMap[category] || 0) + (stock * price);
+        });
+        const stockCategorySorted = Object.keys(stockCategoryMap)
+            .map(function(name) { return { name: name, value: stockCategoryMap[name] }; })
+            .sort(function(a, b) { return b.value - a.value; })
+            .slice(0, 6);
+        const stockCategoryLabels = stockCategorySorted.length ? stockCategorySorted.map(function(x) { return x.name; }) : ['No Stock Data'];
+        const stockCategoryValues = stockCategorySorted.length ? stockCategorySorted.map(function(x) { return Number(x.value.toFixed ? x.value.toFixed(2) : x.value); }) : [0];
+
+        const inventoryTurnoverSeries = monthKeys.map(function(_, idx) {
+            const rev = Number(monthlyRevenue[idx] || 0);
+            const exp = Number(monthlyExpenses[idx] || 0);
+            const denominator = exp > 0 ? exp : 1;
+            return Number((rev / denominator).toFixed(2));
+        });
+
+        // Revenue vs Expense Chart
+        const revenueExpenseCtx = document.getElementById('revenueExpenseChart');
+        if (revenueExpenseCtx) {
+            new Chart(revenueExpenseCtx.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: monthLabels,
+                    datasets: [
+                        {
+                            label: 'Revenue',
+                            data: monthlyRevenue,
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'Expenses',
+                            data: monthlyExpenses,
+                            borderColor: '#ef4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Sales by Category Chart
+        const salesCategoryCtx = document.getElementById('salesCategoryChart');
+        if (salesCategoryCtx) {
+            new Chart(salesCategoryCtx.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Electronics', 'Accessories', 'Office Equipment', 'Furniture', 'Software', 'Networking'],
+                    datasets: [{
+                        data: salesCategoryValues,
+                        backgroundColor: [
+                            '#2563eb',
+                            '#10b981',
+                            '#f59e0b',
+                            '#8b5cf6',
+                            '#06b6d4',
+                            '#ef4444'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Customer Growth Chart
+        const customerGrowthCtx = document.getElementById('customerGrowthChart');
+        if (customerGrowthCtx) {
+            new Chart(customerGrowthCtx.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: monthLabels,
+                    datasets: [{
+                        label: 'New Customers',
+                        data: monthlyNewCustomers,
+                        backgroundColor: '#2563eb',
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // Top Products Chart - ✅ تم الإصلاح
+        const topProductsCtx = document.getElementById('topProductsChart');
+        if (topProductsCtx) {
+            new Chart(topProductsCtx.getContext('2d'), {
+                type: 'bar',  // ✅ تغيير من horizontalBar
+                data: {
+                    labels: topProductLabels,
+                    datasets: [{
+                        label: 'Units Sold',
+                        data: topProductValues,
+                        backgroundColor: '#10b981',
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',  // ✅ هذا يجعله أفقي
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // Monthly Sales Chart
+        const monthlySalesCtx = document.getElementById('monthlySalesChart');
+        if (monthlySalesCtx) {
+            new Chart(monthlySalesCtx.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: monthLabels,
+                    datasets: [{
+                        label: 'Sales ($)',
+                        data: monthlyRevenue,
+                        backgroundColor: '#2563eb',
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // Sales by Region Chart
+        const salesRegionCtx = document.getElementById('salesRegionChart');
+        if (salesRegionCtx) {
+            new Chart(salesRegionCtx.getContext('2d'), {
+                type: 'pie',
+                data: {
+                    labels: salesRegionLabels,
+                    datasets: [{
+                        data: salesRegionValues,
+                        backgroundColor: [
+                            '#2563eb',
+                            '#10b981',
+                            '#f59e0b',
+                            '#8b5cf6',
+                            '#06b6d4',
+                            '#6b7280'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Financial Trend Chart
+        const financialTrendCtx = document.getElementById('financialTrendChart');
+        if (financialTrendCtx) {
+            new Chart(financialTrendCtx.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: monthLabels,
+                    datasets: [
+                        {
+                            label: 'Assets',
+                            data: assetsSeries,
+                            borderColor: '#2563eb',
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Liabilities',
+                            data: liabilitiesSeries,
+                            borderColor: '#ef4444',
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Equity',
+                            data: equitySeries,
+                            borderColor: '#10b981',
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Expense Breakdown Chart
+        const expenseBreakdownCtx = document.getElementById('expenseBreakdownChart');
+        if (expenseBreakdownCtx) {
+            new Chart(expenseBreakdownCtx.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['COGS', 'Salaries', 'Rent', 'Utilities', 'Marketing', 'Others'],
+                    datasets: [{
+                        data: expenseBreakdownValues,
+                        backgroundColor: [
+                            '#2563eb',
+                            '#10b981',
+                            '#f59e0b',
+                            '#8b5cf6',
+                            '#06b6d4',
+                            '#6b7280'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Inventory Turnover Chart
+        const inventoryTurnoverCtx = document.getElementById('inventoryTurnoverChart');
+        if (inventoryTurnoverCtx) {
+            new Chart(inventoryTurnoverCtx.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: monthLabels,
+                    datasets: [{
+                        label: 'Turnover Ratio',
+                        data: inventoryTurnoverSeries,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // Stock Category Chart
+        const stockCategoryCtx = document.getElementById('stockCategoryChart');
+        if (stockCategoryCtx) {
+            new Chart(stockCategoryCtx.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: ['Electronics', 'Accessories', 'Office Equipment', 'Furniture', 'Software', 'Networking'],
+                    datasets: [{
+                        label: 'Stock Value ($)',
+                        data: stockCategoryValues,
+                        backgroundColor: [
+                            '#2563eb',
+                            '#10b981',
+                            '#f59e0b',
+                            '#8b5cf6',
+                            '#06b6d4',
+                            '#ef4444'
+                        ],
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // Set today's date as default
+        const today = new Date().toISOString().split('T')[0];
+        document.querySelectorAll('input[type="date"]').forEach(input => {
+            if (!input.value) {
+                input.value = today;
+            }
+        });
+    };
+
+    window.addEventListener('storage', function(event){
+        if(event && event.key === 'preferred-language'){
+            const savedLang = ZS.getItem('preferred-language') || 'en';
+            changeLanguage(savedLang);
+        }
+    });
+    </script>
+
+    <script src="shared/demo_seed_data.js?v=20260721a" defer></script>
+    <script src="shared/erp_export_utils.js?v=20260721a" defer></script>
+    <script src="shared/export_panel.js?v=20260721a" defer></script>
+        <script src="shared/license_auto.js?v=20260828a" defer></script>
+</body>
+</html>

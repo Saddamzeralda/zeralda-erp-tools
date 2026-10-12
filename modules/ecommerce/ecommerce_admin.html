@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <base href="../../" />
+    <script>
+      (function () {
+        var REQUIRED_VERSION = '20261009a';
+        var url = new URL(window.location.href);
+        var currentVersion = url.searchParams.get('v');
+        if (currentVersion !== REQUIRED_VERSION) {
+          url.searchParams.set('v', REQUIRED_VERSION);
+          window.location.replace(url.toString());
+        }
+      })();
+    </script>
+    <script src="shared/theme_manager.js"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap">
+    <title data-en="E-commerce Admin - Zeralda ERP" data-ar="إدارة التجارة الإلكترونية - زيرالدا ERP" data-fr="Administration E-commerce - Zeralda ERP">E-commerce Admin - Zeralda ERP</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles/common_header_layout.css?v=20261012a">
+    <link rel="stylesheet" href="styles/common_header_brand.css">
+    <link rel="stylesheet" href="styles/design_tokens.css">
+    <link rel="stylesheet" href="styles/responsive_global.css">
+    <link rel="stylesheet" href="styles/animated_icons.css">
+    <script src="shared/print_engine.js?v=20260104d" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
+    <style>
+      :root {
+        --primary-color: #2563eb;
+        --secondary-color: #1e40af;
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+        --danger-color: #ef4444;
+        --info-color: #06b6d4;
+        --purple-color: #8b5cf6;
+        --dark-color: #1f2937;
+        --light-color: #f3f4f6;
+        --white-color: #ffffff;
+        --sidebar-width: 280px;
+      }
+
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      
+      body {
+        font-family: 'Space Grotesk', Arial, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        overflow: hidden;
+      }
+
+      .header {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        color: white;
+        padding: 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .header h1 {
+        font-size: 28px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .header-stats {
+        display: flex;
+        gap: 20px;
+      }
+
+      .stat-card {
+        background: rgba(255,255,255,0.2);
+        padding: 15px 25px;
+        border-radius: 10px;
+        text-align: center;
+        backdrop-filter: blur(10px);
+      }
+
+      .stat-card .number {
+        font-size: 24px;
+        font-weight: 700;
+      }
+
+      .stat-card .label {
+        font-size: 12px;
+        opacity: 0.9;
+      }
+
+      .tabs {
+        display: flex;
+        background: var(--light-color);
+        padding: 0;
+        border-bottom: 2px solid #e5e7eb;
+      }
+
+      .tab {
+        padding: 20px 30px;
+        cursor: pointer;
+        font-weight: 600;
+        color: var(--dark-color);
+        border: none;
+        background: none;
+        transition: all 0.3s;
+        position: relative;
+      }
+
+      .tab:hover {
+        background: rgba(37, 99, 235, 0.1);
+      }
+
+      .tab.active {
+        color: var(--primary-color);
+        background: white;
+      }
+
+      .tab.active::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--primary-color);
+      }
+
+      .tab-content {
+        display: none;
+        padding: 30px;
+      }
+
+      .tab-content.active {
+        display: block;
+      }
+
+      .toolbar {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 25px;
+        flex-wrap: wrap;
+      }
+
+      .btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s;
+        font-size: 14px;
+      }
+
+      .btn-primary {
+        background: var(--primary-color);
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: var(--secondary-color);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+      }
+
+      .btn-success {
+        background: var(--success-color);
+        color: white;
+      }
+
+      .btn-success:hover {
+        background: #059669;
+        transform: translateY(-2px);
+      }
+
+      .btn-danger {
+        background: var(--danger-color);
+        color: white;
+      }
+
+      .btn-danger:hover {
+        background: #dc2626;
+        transform: translateY(-2px);
+      }
+
+      .btn-warning {
+        background: var(--warning-color);
+        color: white;
+      }
+
+      .btn-warning:hover {
+        background: #d97706;
+        transform: translateY(-2px);
+      }
+
+      .search-box {
+        flex: 1;
+        min-width: 300px;
+        position: relative;
+      }
+
+      .search-box input {
+        width: 100%;
+        padding: 12px 20px 12px 45px;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: all 0.3s;
+      }
+
+      .search-box input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+      }
+
+      .search-box i {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #9ca3af;
+      }
+
+      .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      }
+
+      .data-table thead {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        color: white;
+      }
+
+      .data-table th {
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .data-table td {
+        padding: 15px;
+        border-bottom: 1px solid #e5e7eb;
+      }
+
+      .data-table tbody tr:hover {
+        background: #f0f7ff;
+      }
+
+      .status-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+
+      .status-active {
+        background: #d1fae5;
+        color: #065f46;
+      }
+
+      .status-inactive {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+
+      .status-pending {
+        background: #fef3c7;
+        color: #92400e;
+      }
+
+      .status-completed {
+        background: #dbeafe;
+        color: #1e40af;
+      }
+
+      .action-buttons {
+        display: flex;
+        gap: 8px;
+      }
+
+      .action-btn {
+        padding: 8px 12px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 12px;
+        transition: all 0.3s;
+      }
+
+      .action-btn.edit {
+        background: var(--info-color);
+        color: white;
+      }
+
+      .action-btn.delete {
+        background: var(--danger-color);
+        color: white;
+      }
+
+      .action-btn.view {
+        background: var(--success-color);
+        color: white;
+      }
+
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 10000;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .modal.active {
+        display: flex;
+      }
+
+      .modal-content {
+        background: white;
+        border-radius: 15px;
+        max-width: 800px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+        padding: 30px;
+        animation: slideIn 0.3s ease;
+      }
+
+      @keyframes slideIn {
+        from {
+          transform: translateY(-50px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #e5e7eb;
+      }
+
+      .modal-header h2 {
+        font-size: 24px;
+        color: var(--dark-color);
+      }
+
+      .close-modal {
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: #9ca3af;
+        transition: color 0.3s;
+      }
+
+      .close-modal:hover {
+        color: var(--danger-color);
+      }
+
+      .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: var(--dark-color);
+        font-size: 14px;
+      }
+
+      .form-group input,
+      .form-group select,
+      .form-group textarea {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: all 0.3s;
+      }
+
+      .form-group input:focus,
+      .form-group select:focus,
+      .form-group textarea:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+      }
+
+      .form-group textarea {
+        resize: vertical;
+        min-height: 100px;
+      }
+
+      .image-upload {
+        border: 2px dashed #e5e7eb;
+        border-radius: 10px;
+        padding: 30px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .image-upload:hover {
+        border-color: var(--primary-color);
+        background: #f0f7ff;
+      }
+
+      .image-upload i {
+        font-size: 48px;
+        color: #9ca3af;
+        margin-bottom: 15px;
+      }
+
+      .image-preview {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 10px;
+        margin-top: 15px;
+      }
+
+      .image-preview img {
+        width: 100%;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 2px solid #e5e7eb;
+      }
+
+      .modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 15px;
+        margin-top: 25px;
+        padding-top: 20px;
+        border-top: 2px solid #e5e7eb;
+      }
+
+      .charts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 25px;
+        margin-bottom: 30px;
+      }
+
+      .chart-container {
+        background: white;
+        padding: 25px;
+        border-radius: 15px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      }
+
+      .chart-container h3 {
+        margin-bottom: 20px;
+        font-size: 18px;
+        color: var(--dark-color);
+      }
+
+      .toast {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 25px;
+        border-radius: 10px;
+        color: white;
+        font-weight: 600;
+        z-index: 10001;
+        animation: slideInRight 0.3s ease;
+      }
+
+      @keyframes slideInRight {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+
+      .toast.success {
+        background: var(--success-color);
+      }
+
+      .toast.error {
+        background: var(--danger-color);
+      }
+
+      .toast.warning {
+        background: var(--warning-color);
+      }
+
+      .toast.info {
+        background: var(--info-color);
+      }
+
+      .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 25px;
+      }
+
+      .pagination button {
+        padding: 10px 15px;
+        border: 2px solid #e5e7eb;
+        background: white;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .pagination button:hover {
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+      }
+
+      .pagination button.active {
+        background: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+      }
+
+      body.rtl {
+        direction: rtl;
+      }
+
+      body.rtl .search-box i {
+        left: auto;
+        right: 15px;
+      }
+
+      body.rtl .search-box input {
+        padding: 12px 45px 12px 20px;
+      }
+
+      body.rtl .data-table th,
+      body.rtl .data-table td {
+        text-align: right;
+      }
+
+      @media (max-width: 768px) {
+        .header {
+          flex-direction: column;
+          gap: 20px;
+        }
+
+        .header-stats {
+          flex-wrap: wrap;
+          justify-content: center;
+        }
+
+        .tabs {
+          overflow-x: auto;
+        }
+
+        .toolbar {
+          flex-direction: column;
+        }
+
+        .search-box {
+          min-width: 100%;
+        }
+      }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>
+                <i class="fas fa-shopping-cart"></i>
+                <span data-en="E-commerce Administration" data-ar="إدارة التجارة الإلكترونية" data-fr="Administration E-commerce">E-commerce Administration</span>
+            </h1>
+            <div class="header-stats">
+                <div class="stat-card">
+                    <div class="number" id="totalProducts">0</div>
+                    <div class="label" data-en="Products" data-ar="المنتجات" data-fr="Produits">Products</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number" id="totalOrders">0</div>
+                    <div class="label" data-en="Orders" data-ar="الطلبات" data-fr="Commandes">Orders</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number" id="totalRevenue">$0</div>
+                    <div class="label" data-en="Revenue" data-ar="الإيرادات" data-fr="Revenus">Revenue</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" data-tab="dashboard">
+                <i class="fas fa-chart-line"></i>
+                <span data-en="Dashboard" data-ar="لوحة التحكم" data-fr="Tableau de bord">Dashboard</span>
+            </button>
+            <button class="tab" data-tab="products">
+                <i class="fas fa-box"></i>
+                <span data-en="Products" data-ar="المنتجات" data-fr="Produits">Products</span>
+            </button>
+            <button class="tab" data-tab="categories">
+                <i class="fas fa-tags"></i>
+                <span data-en="Categories" data-ar="الفئات" data-fr="Catégories">Categories</span>
+            </button>
+            <button class="tab" data-tab="orders">
+                <i class="fas fa-receipt"></i>
+                <span data-en="Orders" data-ar="الطلبات" data-fr="Commandes">Orders</span>
+            </button>
+            <button class="tab" data-tab="customers">
+                <i class="fas fa-users"></i>
+                <span data-en="Customers" data-ar="العملاء" data-fr="Clients">Customers</span>
+            </button>
+            <button class="tab" data-tab="payments">
+                <i class="fas fa-credit-card"></i>
+                <span data-en="Payments" data-ar="المدفوعات" data-fr="Paiements">Payments</span>
+            </button>
+            <button class="tab" data-tab="settings">
+                <i class="fas fa-cog"></i>
+                <span data-en="Settings" data-ar="الإعدادات" data-fr="Paramètres">Settings</span>
+            </button>
+        </div>
+
+        <div class="tab-content active" id="dashboard">
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <h3 data-en="Sales Overview" data-ar="نظرة عامة على المبيعات" data-fr="Aperçu des ventes">Sales Overview</h3>
+                    <canvas id="salesChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3 data-en="Top Products" data-ar="أفضل المنتجات" data-fr="Meilleurs produits">Top Products</h3>
+                    <canvas id="topProductsChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3 data-en="Order Status" data-ar="حالة الطلبات" data-fr="Statut des commandes">Order Status</h3>
+                    <canvas id="orderStatusChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3 data-en="Revenue by Category" data-ar="الإيرادات حسب الفئة" data-fr="Revenus par catégorie">Revenue by Category</h3>
+                    <canvas id="revenueCategoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="products">
+            <div class="toolbar">
+                <button class="btn btn-primary" onclick="openProductModal()">
+                    <i class="fas fa-plus"></i>
+                    <span data-en="Add Product" data-ar="إضافة منتج" data-fr="Ajouter produit">Add Product</span>
+                </button>
+                <button class="btn btn-success" onclick="exportProducts()">
+                    <i class="fas fa-download"></i>
+                    <span data-en="Export" data-ar="تصدير" data-fr="Exporter">Export</span>
+                </button>
+                <button class="btn btn-warning" onclick="importProducts()">
+                    <i class="fas fa-upload"></i>
+                    <span data-en="Import" data-ar="استيراد" data-fr="Importer">Import</span>
+                </button>
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="productSearch" placeholder="Search products..." onkeyup="filterProducts()">
+                </div>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th data-en="Image" data-ar="الصورة" data-fr="Image">Image</th>
+                        <th data-en="Name" data-ar="الاسم" data-fr="Nom">Name</th>
+                        <th data-en="SKU" data-ar="رمز المنتج" data-fr="SKU">SKU</th>
+                        <th data-en="Category" data-ar="الفئة" data-fr="Catégorie">Category</th>
+                        <th data-en="Price" data-ar="السعر" data-fr="Prix">Price</th>
+                        <th data-en="Stock" data-ar="المخزون" data-fr="Stock">Stock</th>
+                        <th data-en="Status" data-ar="الحالة" data-fr="Statut">Status</th>
+                        <th data-en="Actions" data-ar="الإجراءات" data-fr="Actions">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="productsTableBody">
+                </tbody>
+            </table>
+            <div class="pagination" id="productsPagination"></div>
+        </div>
+
+        <div class="tab-content" id="categories">
+            <div class="toolbar">
+                <button class="btn btn-primary" onclick="openCategoryModal()">
+                    <i class="fas fa-plus"></i>
+                    <span data-en="Add Category" data-ar="إضافة فئة" data-fr="Ajouter catégorie">Add Category</span>
+                </button>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th data-en="Name" data-ar="الاسم" data-fr="Nom">Name</th>
+                        <th data-en="Description" data-ar="الوصف" data-fr="Description">Description</th>
+                        <th data-en="Products Count" data-ar="عدد المنتجات" data-fr="Nombre de produits">Products Count</th>
+                        <th data-en="Status" data-ar="الحالة" data-fr="Statut">Status</th>
+                        <th data-en="Actions" data-ar="الإجراءات" data-fr="Actions">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="categoriesTableBody">
+                </tbody>
+            </table>
+        </div>
+
+        <div class="tab-content" id="orders">
+            <div class="toolbar">
+                <button class="btn btn-primary" onclick="openOrderModal()">
+                    <i class="fas fa-plus"></i>
+                    <span data-en="Create Order" data-ar="إنشاء طلب" data-fr="Créer commande">Create Order</span>
+                </button>
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="orderSearch" placeholder="Search orders..." onkeyup="filterOrders()">
+                </div>
+                <select id="orderStatusFilter" onchange="filterOrders()">
+                    <option value="">All Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="processing">Processing</option>
+                    <option value="shipped">Shipped</option>
+                    <option value="delivered">Delivered</option>
+                    <option value="cancelled">Cancelled</option>
+                </select>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th data-en="Order ID" data-ar="رقم الطلب" data-fr="ID commande">Order ID</th>
+                        <th data-en="Customer" data-ar="العميل" data-fr="Client">Customer</th>
+                        <th data-en="Date" data-ar="التاريخ" data-fr="Date">Date</th>
+                        <th data-en="Total" data-ar="المجموع" data-fr="Total">Total</th>
+                        <th data-en="Status" data-ar="الحالة" data-fr="Statut">Status</th>
+                        <th data-en="Payment" data-ar="الدفع" data-fr="Paiement">Payment</th>
+                        <th data-en="Actions" data-ar="الإجراءات" data-fr="Actions">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="ordersTableBody">
+                </tbody>
+            </table>
+            <div class="pagination" id="ordersPagination"></div>
+        </div>
+
+        <div class="tab-content" id="customers">
+            <div class="toolbar">
+                <button class="btn btn-primary" onclick="openCustomerModal()">
+                    <i class="fas fa-plus"></i>
+                    <span data-en="Add Customer" data-ar="إضافة عميل" data-fr="Ajouter client">Add Customer</span>
+                </button>
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="customerSearch" placeholder="Search customers..." onkeyup="filterCustomers()">
+                </div>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th data-en="Name" data-ar="الاسم" data-fr="Nom">Name</th>
+                        <th data-en="Email" data-ar="البريد" data-fr="Email">Email</th>
+                        <th data-en="Phone" data-ar="الهاتف" data-fr="Téléphone">Phone</th>
+                        <th data-en="Total Orders" data-ar="إجمالي الطلبات" data-fr="Total commandes">Total Orders</th>
+                        <th data-en="Total Spent" data-ar="إجمالي الإنفاق" data-fr="Total dépensé">Total Spent</th>
+                        <th data-en="Actions" data-ar="الإجراءات" data-fr="Actions">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="customersTableBody">
+                </tbody>
+            </table>
+        </div>
+
+        <div class="tab-content" id="payments">
+            <div class="toolbar">
+                <button class="btn btn-primary" onclick="openPaymentModal()">
+                    <i class="fas fa-plus"></i>
+                    <span data-en="Record Payment" data-ar="تسجيل دفعة" data-fr="Enregistrer paiement">Record Payment</span>
+                </button>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th data-en="Payment ID" data-ar="رقم الدفعة" data-fr="ID paiement">Payment ID</th>
+                        <th data-en="Order ID" data-ar="رقم الطلب" data-fr="ID commande">Order ID</th>
+                        <th data-en="Amount" data-ar="المبلغ" data-fr="Montant">Amount</th>
+                        <th data-en="Method" data-ar="الطريقة" data-fr="Méthode">Method</th>
+                        <th data-en="Status" data-ar="الحالة" data-fr="Statut">Status</th>
+                        <th data-en="Date" data-ar="التاريخ" data-fr="Date">Date</th>
+                        <th data-en="Actions" data-ar="الإجراءات" data-fr="Actions">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="paymentsTableBody">
+                </tbody>
+            </table>
+        </div>
+
+        <div class="tab-content" id="settings">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label data-en="Store Name" data-ar="اسم المتجر" data-fr="Nom du magasin">Store Name</label>
+                    <input type="text" id="storeName" placeholder="Enter store name">
+                </div>
+                <div class="form-group">
+                    <label data-en="Store Email" data-ar="بريد المتجر" data-fr="Email du magasin">Store Email</label>
+                    <input type="email" id="storeEmail" placeholder="Enter store email">
+                </div>
+                <div class="form-group">
+                    <label data-en="Store Phone" data-ar="هاتف المتجر" data-fr="Téléphone du magasin">Store Phone</label>
+                    <input type="tel" id="storePhone" placeholder="Enter store phone">
+                </div>
+                <div class="form-group">
+                    <label data-en="Currency" data-ar="العملة" data-fr="Devise">Currency</label>
+                    <select id="currency">
+                        <option value="USD">USD ($)</option>
+                        <option value="EUR">EUR (€)</option>
+                        <option value="DZD">DZD (د.ج)</option>
+                        <option value="SAR">SAR (ر.س)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label data-en="Tax Rate (%)" data-ar="نسبة الضريبة" data-fr="Taux de taxe (%)">Tax Rate (%)</label>
+                    <input type="number" id="taxRate" placeholder="Enter tax rate" value="0">
+                </div>
+                <div class="form-group">
+                    <label data-en="Shipping Cost" data-ar="تكلفة الشحن" data-fr="Frais de livraison">Shipping Cost</label>
+                    <input type="number" id="shippingCost" placeholder="Enter shipping cost" value="0">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="saveSettings()">
+                    <i class="fas fa-save"></i>
+                    <span data-en="Save Settings" data-ar="حفظ الإعدادات" data-fr="Enregistrer paramètres">Save Settings</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Modal -->
+    <div class="modal" id="productModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="productModalTitle">Add Product</h2>
+                <button class="close-modal" onclick="closeProductModal()">&times;</button>
+            </div>
+            <form id="productForm">
+                <input type="hidden" id="productId">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label data-en="Product Name" data-ar="اسم المنتج" data-fr="Nom du produit">Product Name *</label>
+                        <input type="text" id="productName" required>
+                    </div>
+                    <div class="form-group">
+                        <label data-en="SKU" data-ar="رمز المنتج" data-fr="SKU">SKU</label>
+                        <input type="text" id="productSku">
+                    </div>
+                    <div class="form-group">
+                        <label data-en="Category" data-ar="الفئة" data-fr="Catégorie">Category *</label>
+                        <select id="productCategory" required>
+                            <option value="">Select Category</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label data-en="Price" data-ar="السعر" data-fr="Prix">Price *</label>
+                        <input type="number" id="productPrice" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label data-en="Cost Price" data-ar="سعر التكلفة" data-fr="Prix de revient">Cost Price</label>
+                        <input type="number" id="productCost" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label data-en="Stock Quantity" data-ar="كمية المخزون" data-fr="Quantité en stock">Stock Quantity</label>
+                        <input type="number" id="productStock" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label data-en="Weight (kg)" data-ar="الوزن (كجم)" data-fr="Poids (kg)">Weight (kg)</label>
+                        <input type="number" id="productWeight" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label data-en="Status" data-ar="الحالة" data-fr="Statut">Status</label>
+                        <select id="productStatus">
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                            <option value="out_of_stock">Out of Stock</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label data-en="Description" data-ar="الوصف" data-fr="Description">Description</label>
+                    <textarea id="productDescription"></textarea>
+                </div>
+                <div class="form-group">
+                    <label data-en="Product Images" data-ar="صور المنتج" data-fr="Images du produit">Product Images</label>
+                    <div class="image-upload" onclick="document.getElementById('productImages').click()">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p data-en="Click to upload images" data-ar="اضغط لرفع الصور" data-fr="Cliquez pour télécharger des images">Click to upload images</p>
+                        <input type="file" id="productImages" multiple accept="image/*" style="display: none" onchange="previewImages(this)">
+                    </div>
+                    <div class="image-preview" id="imagePreview"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" onclick="closeProductModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Product</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Category Modal -->
+    <div class="modal" id="categoryModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="categoryModalTitle">Add Category</h2>
+                <button class="close-modal" onclick="closeCategoryModal()">&times;</button>
+            </div>
+            <form id="categoryForm">
+                <input type="hidden" id="categoryId">
+                <div class="form-group">
+                    <label data-en="Category Name" data-ar="اسم الفئة" data-fr="Nom de la catégorie">Category Name *</label>
+                    <input type="text" id="categoryName" required>
+                </div>
+                <div class="form-group">
+                    <label data-en="Description" data-ar="الوصف" data-fr="Description">Description</label>
+                    <textarea id="categoryDescription"></textarea>
+                </div>
+                <div class="form-group">
+                    <label data-en="Status" data-ar="الحالة" data-fr="Statut">Status</label>
+                    <select id="categoryStatus">
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" onclick="closeCategoryModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="ecommerce_core.js?v=20261009a"></script>
+    <script src="ecommerce_admin.js?v=20261009a"></script>
+</body>
+</html>

@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <base href="../../" />
+    <script src="shared/theme_manager.js"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap">
+  <title>Services Management - Zeralda ERP Tools</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="styles/common_header_layout.css?v=20261012a">
+  <link rel="stylesheet" href="styles/common_header_brand.css">
+  <link rel="stylesheet" href="styles/design_tokens.css">
+  <link rel="stylesheet" href="styles/responsive_global.css">
+  <link rel="stylesheet" href="styles/animated_icons.css">
+  <script src="shared/print_engine.js" defer></script>
+  <script src="shared/zeralda_db.js?v=20260731a"></script>
+    <script src="shared/layout_shell.js?v=20261011d" defer></script>
+    <script src="shared/ai_chat_widget.js?v=20260806b" defer></script>
+    <script src="shared/storage_adapter.js?v=20260721c" defer></script>
+  <script src="shared/session_timeout.js" defer></script>
+    <script src="shared/company_storage.js?v=20260807b"></script>
+    <script src="shared/unified_i18n.js?v=20260802a" defer></script>
+  <script src="shared/app_sync.js?v=20260807b" defer></script>
+  <script src="shared/role_access_control.js" defer></script>
+  <script src="shared/header_company_switcher.js?v=20261012a" defer></script>
+  <script src="shared/header_language_switcher.js" defer></script>
+  <script src="modules/services/services_intelligence.js"></script>
+  <style>
+    :root {
+      --primary-color:#d36b2e;
+      --secondary-color:#b95522;
+      --success-color:#0f766e;
+      --warning-color:#e3a02f;
+      --danger-color:#dc2626;
+      --info-color:#0f766e;
+      --dark-color:#1f1b16;
+      --light-color:#f6f1e8;
+      --white-color:#fff9f0;
+      --header-height:143px;
+      --sidebar-width:280px;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{
+      font-family:"Space Grotesk",'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+      background:radial-gradient(1200px 600px at 10% 10%, #f0e6d8, transparent),radial-gradient(900px 500px at 90% 20%, #e6f2ef, transparent),var(--light-color);
+      color:var(--dark-color);
+    }
+    body.rtl{direction:rtl;}
+    .header{position:fixed;top:0;left:0;right:0;height:var(--header-height);background:linear-gradient(135deg,var(--primary-color),var(--secondary-color));color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 24px;z-index:1000;box-shadow:0 2px 10px rgba(0,0,0,.1);}
+    .header-left{display:flex;align-items:center;gap:14px;}
+    .mobile-menu-btn{font-size:22px;cursor:pointer;display:none;}
+    .logo{display:flex;align-items:center;gap:10px;}
+    .logo-image{height:42px;width:auto;object-fit:contain;}
+    .logo-brand{display:flex;flex-direction:column;line-height:1.1;}
+    .logo-brand #app-title{font-size:17px;font-weight:700;color:#fff;}
+    .developer-credit{font-size:10px;opacity:.9;color:#e5e7eb;text-decoration:none;}
+    .header-right{display:flex;align-items:center;gap:12px;}
+    .datetime-display{display:flex;flex-direction:column;gap:3px;font-size:12px;}
+    .date-display,.time-display{display:flex;align-items:center;gap:6px;}
+    .user-info{display:flex;align-items:center;gap:8px;}
+    .user-meta{display:flex;flex-direction:column;line-height:1.2;}
+    .user-name{font-weight:600;}
+    .user-role{font-size:12px;opacity:.9;}
+    body.rtl .user-meta{text-align:right;}
+    .user-avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.25);font-weight:700;}
+
+    .sidebar{position:fixed;top:var(--header-height);left:0;width:var(--sidebar-width);height:calc(100vh - var(--header-height));background:#fff;box-shadow:2px 0 10px rgba(0,0,0,.08);overflow-y:auto;z-index:900;}
+    body.rtl .sidebar{left:auto;right:0;}
+    .menu{padding:14px;display:flex;flex-direction:column;gap:8px;}
+    .menu-item{display:flex;align-items:center;gap:10px;padding:12px;border-radius:10px;text-decoration:none;color:#374151;transition:.2s;}
+    .menu-item:hover{background:#eff6ff;color:var(--primary-color);}
+    .menu-item.active{background:linear-gradient(135deg,var(--primary-color),var(--secondary-color));color:#fff;}
+
+    .main-content{margin-top:var(--header-height);margin-left:var(--sidebar-width);padding:24px;}
+    body.rtl .main-content{margin-left:0;margin-right:var(--sidebar-width);}
+    .page-title{font-size:28px;font-weight:700;margin-bottom:6px;}
+    .subtitle{color:#6b7280;font-size:14px;margin-bottom:18px;}
+    .reports-bar{background:var(--white-color);border:1px solid #eadcc8;border-radius:16px;padding:14px;box-shadow:0 12px 28px rgba(31,27,22,.10);margin-bottom:16px;display:grid;gap:12px;}
+    .filters{display:grid;grid-template-columns:2fr 1fr 1fr auto auto auto;gap:10px;align-items:end;}
+    .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;}
+    .stat{border:1px solid #eadcc8;border-radius:12px;padding:10px;background:#fffdf7;}
+    .stat-label{font-size:12px;color:#6b7280;}
+    .stat-value{font-size:22px;font-weight:700;color:#111827;line-height:1.2;}
+
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px;}
+    .card{background:var(--white-color);border:1px solid #eadcc8;border-radius:18px;padding:16px;box-shadow:0 12px 28px rgba(31,27,22,.10);}
+    .card h3{margin-bottom:12px;font-size:18px;display:flex;align-items:center;gap:8px;}
+    .form-group{margin-bottom:10px;display:grid;gap:6px;}
+    .inline-with-btn{display:flex;gap:8px;align-items:center;}
+    .inline-with-btn .form-input{flex:1;}
+    .form-label{font-size:13px;font-weight:600;color:#374151;}
+    .form-input,.form-select,.form-textarea{width:100%;padding:10px 12px;border:2px solid #eadcc8;border-radius:10px;font-size:14px;background:#fffdf9;}
+    .form-textarea{min-height:70px;resize:vertical;}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    .date-combined{display:flex;align-items:center;gap:10px;border:2px solid #eadcc8;border-radius:10px;background:#fffdf9;padding:8px 10px;}
+    .date-combined .date-part{border:none;background:transparent;min-width:70px;padding:6px 4px;font-size:14px;outline:none;}
+    .date-sep{color:#6b7280;font-weight:700;line-height:1;}
+    .btn{border:none;border-radius:10px;padding:12px 25px;cursor:pointer;font-weight:600;transition:all .3s;}
+    .btn-primary{background:var(--primary-color);color:#fff;}
+    .btn-secondary{background:#7c6f61;color:#fff;}
+
+    .list{margin-top:12px;display:flex;flex-direction:column;gap:8px;max-height:320px;overflow:auto;}
+    .item{border:1px solid #eadcc8;border-radius:12px;padding:10px;display:flex;justify-content:space-between;gap:10px;align-items:center;background:#fffdf8;}
+    .item-title{font-weight:700;font-size:14px;}
+    .item-meta{font-size:12px;color:#6b7280;display:flex;flex-wrap:wrap;gap:8px;}
+    .seal-img{width:40px;height:40px;border-radius:6px;object-fit:contain;border:1px solid #e5e7eb;background:#fff;}
+    .badge{font-size:11px;padding:2px 6px;border-radius:999px;background:#eef2ff;color:#1d4ed8;}
+    .empty{font-size:12px;color:#6b7280;padding:8px;text-align:center;}
+
+    @media (max-width: 992px){
+      .mobile-menu-btn{display:block;}
+      .sidebar{transform:translateX(-100%);transition:.25s;}
+      body.rtl .sidebar{transform:translateX(100%);}
+      .sidebar.active{transform:translateX(0);}
+      .main-content{margin-left:0 !important;margin-right:0 !important;padding:16px;}
+      .row{grid-template-columns:1fr;}
+      .filters{grid-template-columns:1fr;}
+      .header{padding:0 14px;}
+      .datetime-display{display:none;}
+    }
+  </style>
+    <link rel="stylesheet" href="styles/dark_theme.css">
+</head>
+<body>
+  <div id="sharedLayoutMount" data-active-page="services_management.html"></div>
+
+  <main class="main-content">
+    <h1 class="page-title" data-en="Services Unit" data-ar="وحدة الخدمات" data-fr="Unité des services">Services Unit</h1>
+    <p class="subtitle" data-en="Manage equipment rentals and seal loans by registered institutions." data-ar="إدارة كراء المعدات وإعارة الأختام حسب المؤسسات المسجلة." data-fr="Gérez la location d'équipements et le prêt de cachets par établissement.">Manage equipment rentals and seal loans by registered institutions.</p>
+
+    <section class="reports-bar">
+      <div class="filters">
+        <div class="form-group" style="margin-bottom:0;"><label class="form-label" data-en="Institution Filter" data-ar="تصفية المؤسسة" data-fr="Filtre établissement">Institution Filter</label><select id="reportCompanyFilter" class="form-select" onchange="renderReportsAndLists()"></select></div>
+        <button class="btn btn-secondary" onclick="restoreLastDeleted()"><i class="fas fa-rotate-left"></i> <span data-en="Restore" data-ar="استرجاع" data-fr="Restaurer">Restore</span></button>
+        <button class="btn btn-secondary" onclick="resetReportsFilters()"><i class="fas fa-undo"></i> <span data-en="Reset" data-ar="إعادة تعيين" data-fr="Réinitialiser">Reset</span></button>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="stat-label" data-en="Rentals" data-ar="عمليات الكراء" data-fr="Locations">Rentals</div><div id="statRentals" class="stat-value">0</div></div>
+        <div class="stat"><div class="stat-label" data-en="Active Rentals" data-ar="الكراء النشط" data-fr="Locations actives">Active Rentals</div><div id="statActiveRentals" class="stat-value">0</div></div>
+        <div class="stat"><div class="stat-label" data-en="Seal Loans" data-ar="إعارات الأختام" data-fr="Prêts de cachet">Seal Loans</div><div id="statSealLoans" class="stat-value">0</div></div>
+        <div class="stat"><div class="stat-label" data-en="Estimated Rental Value" data-ar="القيمة التقديرية للكراء" data-fr="Valeur estimée des locations">Estimated Rental Value</div><div id="statRentalValue" class="stat-value">0.00</div></div>
+      </div>
+    </section>
+
+    <div class="grid">
+      <section class="card">
+        <h3><i class="fas fa-truck-loading" style="color:#2563eb;"></i><span data-en="Equipment Rental" data-ar="كراء المعدات" data-fr="Location d'équipement">Equipment Rental</span></h3>
+        <div class="form-group"><label class="form-label" data-en="Customer Name" data-ar="اسم الزبون" data-fr="Nom du client">Customer Name</label><div class="inline-with-btn"><input id="rentalCustomer" class="form-input" type="text" list="rentalCustomersList"><button class="btn btn-secondary" type="button" onclick="removeSavedCustomer()"><i class="fas fa-trash"></i></button></div></div>
+        <div class="row">
+          <div class="form-group"><label class="form-label" data-en="Equipment" data-ar="المعدة" data-fr="Équipement">Equipment</label><div class="inline-with-btn"><input id="rentalEquipment" class="form-input" type="text" list="rentalEquipmentList" oninput="updateRentalAvailability()"><button class="btn btn-secondary" type="button" onclick="removeSavedEquipment()"><i class="fas fa-trash"></i></button></div></div>
+          <div class="form-group"><label class="form-label" data-en="Quantity" data-ar="الكمية" data-fr="Quantité">Quantity</label><input id="rentalQty" class="form-input" type="number" min="1" value="1"></div>
+        </div>
+        <datalist id="rentalCustomersList"></datalist>
+        <datalist id="rentalEquipmentList"></datalist>
+        <div class="row">
+          <div class="form-group"><label class="form-label" data-en="Start Date" data-ar="تاريخ البداية" data-fr="Date début">Start Date</label><input id="rentalStart" class="form-input" type="date"></div>
+          <div class="form-group"><label class="form-label" data-en="End Date" data-ar="تاريخ النهاية" data-fr="Date fin">End Date</label><input id="rentalEnd" class="form-input" type="date"></div>
+        </div>
+        <div class="row">
+          <div class="form-group"><label class="form-label" data-en="Daily Price" data-ar="سعر اليوم" data-fr="Prix journalier">Daily Price</label><input id="rentalDailyPrice" class="form-input" type="number" min="0" step="0.01"></div>
+          <div class="form-group"><label class="form-label" data-en="Status" data-ar="الحالة" data-fr="Statut">Status</label><select id="rentalStatus" class="form-select" onchange="updateRentalAvailability()"><option value="active" data-en="Active" data-ar="نشط" data-fr="Actif">Active</option><option value="returned" data-en="Returned" data-ar="مُعاد" data-fr="Retourné">Returned</option></select></div>
+        </div>
+        <div class="form-group"><label class="form-label" data-en="Notes" data-ar="ملاحظات" data-fr="Notes">Notes</label><textarea id="rentalNotes" class="form-textarea"></textarea></div>
+        <button id="rentalAddBtn" class="btn btn-primary" onclick="addRental()"><i class="fas fa-plus"></i> <span data-en="Add Rental" data-ar="إضافة عملية كراء" data-fr="Ajouter une location">Add Rental</span></button>
+        <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;align-items:center;">
+          <span style="font-size:12px;color:#6b7280;">Sort:</span>
+          <button class="btn btn-sm" style="padding:3px 8px;font-size:11px;" onclick="setRentalSort('equipment')">Equipment <i id="rental-sort-equipment" class="fas fa-sort" style="font-size:8px;"></i></button>
+          <button class="btn btn-sm" style="padding:3px 8px;font-size:11px;" onclick="setRentalSort('startDate')">Date <i id="rental-sort-startDate" class="fas fa-sort" style="font-size:8px;"></i></button>
+          <button class="btn btn-sm" style="padding:3px 8px;font-size:11px;" onclick="setRentalSort('dailyPrice')">Price <i id="rental-sort-dailyPrice" class="fas fa-sort" style="font-size:8px;"></i></button>
+          <button class="btn btn-sm" style="padding:3px 8px;font-size:11px;" onclick="setRentalSort('status')">Status <i id="rental-sort-status" class="fas fa-sort" style="font-size:8px;"></i></button>
+        </div>
+        <div id="rentalsList" class="list"></div>
+      </section>
+
+      <section class="card">
+        <h3><i class="fas fa-stamp" style="color:#2563eb;"></i><span data-en="Seal Loan" data-ar="إعارة الأختام" data-fr="Prêt de cachet">Seal Loan</span></h3>
+        <div class="form-group"><label class="form-label" data-en="Institution" data-ar="المؤسسة" data-fr="Établissement">Institution</label><select id="sealCompany" class="form-select" onchange="updateSealPreview();updateSealLoanAvailability();"></select></div>
+        <div class="form-group">
+          <label class="form-label" data-en="Institution Seal" data-ar="ختم المؤسسة" data-fr="Cachet de l'établissement">Institution Seal</label>
+          <img id="selectedSealPreview" class="seal-img" src="logo.png" alt="seal preview">
+        </div>
+        <div class="row">
+          <div class="form-group"><label class="form-label" data-en="Borrower Name" data-ar="اسم المستعير" data-fr="Nom de l'emprunteur">Borrower Name</label><input id="sealBorrower" class="form-input" type="text"></div>
+          <div class="form-group">
+            <label class="form-label" data-en="Expected Return" data-ar="موعد الإرجاع" data-fr="Retour prévu">Expected Return</label>
+            <div class="date-combined">
+              <select id="sealReturnDay" class="date-part"></select>
+              <select id="sealReturnMonth" class="date-part"></select>
+              <select id="sealReturnYear" class="date-part"></select>
+            </div>
+          </div>
+        </div>
+        <div class="form-group"><label class="form-label" data-en="Loan Reason" data-ar="سبب الإعارة" data-fr="Motif du prêt">Loan Reason</label><textarea id="sealReason" class="form-textarea"></textarea></div>
+        <button id="sealAddBtn" class="btn btn-primary" onclick="addSealLoan()"><i class="fas fa-plus"></i> <span data-en="Add Seal Loan" data-ar="إضافة إعارة ختم" data-fr="Ajouter un prêt de cachet">Add Seal Loan</span></button>
+        <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;align-items:center;">
+          <span style="font-size:12px;color:#6b7280;">Sort:</span>
+          <button class="btn btn-sm" style="padding:3px 8px;font-size:11px;" onclick="setSealSort('recipient')">Recipient <i id="seal-sort-recipient" class="fas fa-sort" style="font-size:8px;"></i></button>
+          <button class="btn btn-sm" style="padding:3px 8px;font-size:11px;" onclick="setSealSort('date')">Date <i id="seal-sort-date" class="fas fa-sort" style="font-size:8px;"></i></button>
+          <button class="btn btn-sm" style="padding:3px 8px;font-size:11px;" onclick="setSealSort('status')">Status <i id="seal-sort-status" class="fas fa-sort" style="font-size:8px;"></i></button>
+        </div>
+        <div id="sealLoansList" class="list"></div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    // FIX: Guard against zeralda_db.js failing to load
+    if (typeof ZS === 'undefined') {
+      var _zsFallback = {};
+      window.ZS = {
+        getItem: function(k) { return _zsFallback[k] || null; },
+        setItem: function(k, v) { _zsFallback[k] = String(v); },
+        removeItem: function(k) { delete _zsFallback[k]; },
+        clear: function() { _zsFallback = {}; },
+        key: function(i) { return Object.keys(_zsFallback)[i] || null; }
+      };
+      console.error('[services] ZS storage not available — using in-memory fallback');
+    }
+    const SETTINGS_KEY = 'zeralda-settings';
+    const SERVICES_KEY = 'zeralda-services';
+    const SERVICES_TRASH_KEY = 'zeralda-services-trash';
+    const SERVICES_MASTER_KEY = 'zeralda-services-master';
+    const I18N_TEXT = {
+      allInstitutions: { en:'All institutions', ar:'كل المؤسسات', fr:'Tous les établissements' },
+      noInstitutions: { en:'No institutions', ar:'لا توجد مؤسسات', fr:'Aucun établissement' },
+      pleaseFillRental: { en:'Please fill customer name, equipment and start date.', ar:'يرجى إدخال اسم الزبون والمعدة وتاريخ البداية.', fr:'Veuillez renseigner le nom du client, l\'équipement et la date de début.' },
+      pleaseFillSeal: { en:'Please fill institution, borrower name and reason.', ar:'يرجى إدخال المؤسسة واسم المستعير وسبب الإعارة.', fr:'Veuillez renseigner établissement, nom de l\'emprunteur et motif du prêt.' },
+      noRentalOps: { en:'No rental operations yet.', ar:'لا توجد عمليات كراء بعد.', fr:'Aucune opération de location pour le moment.' },
+      noSealOps: { en:'No seal loan operations yet.', ar:'لا توجد عمليات إعارة أختام بعد.', fr:'Aucune opération de prêt de cachet pour le moment.' },
+      returnLabel: { en:'Return', ar:'الإرجاع', fr:'Retour' },
+      sealLoan: { en:'Seal Loan', ar:'إعارة ختم', fr:'Prêt de cachet' },
+      day: { en:'Day', ar:'اليوم', fr:'Jour' },
+      month: { en:'Month', ar:'الشهر', fr:'Mois' },
+      year: { en:'Year', ar:'السنة', fr:'Année' },
+      noDeletedToRestore: { en:'No deleted operation to restore.', ar:'لا توجد عملية محذوفة للاسترجاع.', fr:'Aucune opération supprimée à restaurer.' },
+      restoredItem: { en:'Operation restored.', ar:'تم استرجاع العملية.', fr:'Opération restaurée.' },
+      removedSavedItem: { en:'Saved item removed.', ar:'تم حذف العنصر المحفوظ.', fr:'Élément enregistré supprimé.' },
+      equipmentBusy: { en:'This equipment is currently rented and cannot be rented again until returned.', ar:'هذه المعدة مكتراة حاليًا ولا يمكن كراؤها حتى يتم استرجاعها.', fr:'Cet équipement est actuellement loué et ne peut pas être reloué avant retour.' },
+      sealBusy: { en:'This seal is currently loaned and cannot be loaned again until returned.', ar:'هذا الختم معار حاليًا ولا يمكن إعارته حتى يتم استرجاعه.', fr:'Ce cachet est actuellement prêté et ne peut pas être prêté à nouveau avant retour.' }
+    };
+
+    // ── نظام الترجمة الموحد (createRuntimeTranslator من unified_i18n.js) ──
+    var tr = window.createRuntimeTranslator ? window.createRuntimeTranslator(I18N_TEXT) : function (k) { return k; };
+
+    function applyTranslations(lang){
+      const selectedLang = ['en','ar','fr'].includes(lang) ? lang : 'en';
+      const html = document.documentElement;
+      const body = document.body;
+      html.setAttribute('lang', selectedLang);
+      if(selectedLang === 'ar'){
+        html.setAttribute('dir', 'rtl');
+        body.classList.add('rtl');
+      } else {
+        html.setAttribute('dir', 'ltr');
+        body.classList.remove('rtl');
+      }
+      document.querySelectorAll('[data-' + selectedLang + ']').forEach(el => {
+        const v = el.getAttribute('data-' + selectedLang);
+        if(v !== null) el.textContent = v;
+      });
+      document.querySelectorAll('[data-' + selectedLang + '-placeholder]').forEach(el => {
+        const v = el.getAttribute('data-' + selectedLang + '-placeholder');
+        if(v !== null) el.setAttribute('placeholder', v);
+      });
+      document.querySelectorAll('[data-' + selectedLang + '-title]').forEach(el => {
+        const v = el.getAttribute('data-' + selectedLang + '-title');
+        if(v !== null) el.setAttribute('title', v);
+      });
+    }
+
+    function getCompanies(){
+      const s = getSettings();
+      return Array.isArray(s.companies) ? s.companies : [];
+    }
+
+    function getActiveCompanyId(){
+      if (window.CompanyStorage && window.CompanyStorage.getActiveCompanyId) {
+        var cid = window.CompanyStorage.getActiveCompanyId();
+        if (cid) return String(cid);
+      }
+      const s = getSettings();
+      return String((s && s.activeCompanyId) || 'default-company');
+    }
+
+    function scopedKey(baseKey){
+      return `${baseKey}::${getActiveCompanyId()}`;
+    }
+
+    function getServicesData(){
+      try {
+        const key = scopedKey(SERVICES_KEY);
+        const raw = JSON.parse(ZS.getItem(key) || '{}');
+        return {
+          rentals: Array.isArray(raw.rentals) ? raw.rentals : [],
+          sealLoans: Array.isArray(raw.sealLoans) ? raw.sealLoans : []
+        };
+      } catch(e){
+        return { rentals: [], sealLoans: [] };
+      }
+    }
+
+    function saveServicesData(data){
+      ZS.setItem(scopedKey(SERVICES_KEY), JSON.stringify(data || { rentals: [], sealLoans: [] }));
+    }
+
+    function getServicesMasterData(){
+      try {
+        const key = scopedKey(SERVICES_MASTER_KEY);
+        const raw = JSON.parse(ZS.getItem(key) || '{}');
+        return {
+          customers: Array.isArray(raw.customers) ? raw.customers : [],
+          equipment: Array.isArray(raw.equipment) ? raw.equipment : []
+        };
+      } catch(e){
+        return { customers: [], equipment: [] };
+      }
+    }
+
+    function saveServicesMasterData(data){
+      const payload = {
+        customers: Array.isArray(data && data.customers) ? data.customers : [],
+        equipment: Array.isArray(data && data.equipment) ? data.equipment : []
+      };
+      ZS.setItem(scopedKey(SERVICES_MASTER_KEY), JSON.stringify(payload));
+    }
+
+    function normalizeEntryName(value){
+      return String(value || '').trim().replace(/\s+/g, ' ');
+    }
+
+    function upsertMasterEntry(kind, value){
+      const text = normalizeEntryName(value);
+      if(!text) return;
+      const data = getServicesMasterData();
+      const list = kind === 'equipment' ? data.equipment : data.customers;
+      if(!list.some(item => String(item).toLowerCase() === text.toLowerCase())){
+        list.push(text);
+        if(list.length > 300) list.shift();
+        saveServicesMasterData(data);
+      }
+    }
+
+    function getRentalSuggestionValues(kind){
+      const master = getServicesMasterData();
+      const combined = new Set();
+      if(kind === 'equipment'){
+        (master.equipment || []).forEach(v => { if(v) combined.add(String(v)); });
+      } else {
+        (master.customers || []).forEach(v => { if(v) combined.add(String(v)); });
+      }
+      return Array.from(combined).sort((a, b) => a.localeCompare(b, undefined, { sensitivity:'base' }));
+    }
+
+    function removeMasterEntry(kind, value){
+      const text = normalizeEntryName(value);
+      if(!text) return;
+      const data = getServicesMasterData();
+      if(kind === 'equipment'){
+        data.equipment = (data.equipment || []).filter(item => String(item).toLowerCase() !== text.toLowerCase());
+      } else {
+        data.customers = (data.customers || []).filter(item => String(item).toLowerCase() !== text.toLowerCase());
+      }
+      saveServicesMasterData(data);
+      alert(tr('removedSavedItem'));
+      renderRentalAutoLists();
+    }
+
+    function removeSavedCustomer(){
+      const value = (document.getElementById('rentalCustomer') || {}).value || '';
+      removeMasterEntry('customers', value);
+    }
+
+    function removeSavedEquipment(){
+      const value = (document.getElementById('rentalEquipment') || {}).value || '';
+      removeMasterEntry('equipment', value);
+      updateRentalAvailability();
+    }
+
+    function renderRentalAutoLists(){
+      const customerList = document.getElementById('rentalCustomersList');
+      const equipmentList = document.getElementById('rentalEquipmentList');
+      if(customerList){
+        customerList.innerHTML = '';
+        getRentalSuggestionValues('customers').forEach(name => {
+          const option = document.createElement('option');
+          option.value = name;
+          customerList.appendChild(option);
+        });
+      }
+      if(equipmentList){
+        equipmentList.innerHTML = '';
+        getRentalSuggestionValues('equipment').forEach(name => {
+          const option = document.createElement('option');
+          option.value = name;
+          equipmentList.appendChild(option);
+        });
+      }
+    }
+
+    function captureRentalDraft(){
+      const customer = (document.getElementById('rentalCustomer') || {}).value || '';
+      const equipment = (document.getElementById('rentalEquipment') || {}).value || '';
+      upsertMasterEntry('customers', customer);
+      upsertMasterEntry('equipment', equipment);
+      renderRentalAutoLists();
+    }
+
+    function getDeletedStack(){
+      try {
+        const key = scopedKey(SERVICES_TRASH_KEY);
+        const raw = JSON.parse(ZS.getItem(key) || ZS.getItem(SERVICES_TRASH_KEY) || '[]');
+        return Array.isArray(raw) ? raw : [];
+      } catch(e){
+        return [];
+      }
+    }
+
+    function saveDeletedStack(stack){
+      ZS.setItem(scopedKey(SERVICES_TRASH_KEY), JSON.stringify(Array.isArray(stack) ? stack : []));
+    }
+
+    function pushDeletedItem(type, item){
+      const stack = getDeletedStack();
+      stack.push({ type, item, deletedAt: new Date().toISOString() });
+      if(stack.length > 50) stack.shift();
+      saveDeletedStack(stack);
+    }
+
+    function getSealReturnDateFromSelectors(){
+      const day = (document.getElementById('sealReturnDay') || {}).value || '';
+      const month = (document.getElementById('sealReturnMonth') || {}).value || '';
+      const year = (document.getElementById('sealReturnYear') || {}).value || '';
+      if(!day || !month || !year) return '';
+      const iso = `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+      const date = new Date(iso);
+      if(Number.isNaN(date.getTime())) return '';
+      return iso;
+    }
+
+    function setSealReturnSelectors(value){
+      const daySel = document.getElementById('sealReturnDay');
+      const monthSel = document.getElementById('sealReturnMonth');
+      const yearSel = document.getElementById('sealReturnYear');
+      if(!daySel || !monthSel || !yearSel) return;
+      const dateText = String(value || '');
+      if(/^\d{4}-\d{2}-\d{2}$/.test(dateText)){
+        daySel.value = String(Number(dateText.slice(8,10)));
+        monthSel.value = String(Number(dateText.slice(5,7)));
+        yearSel.value = String(Number(dateText.slice(0,4)));
+      } else {
+        daySel.value = '';
+        monthSel.value = '';
+        yearSel.value = '';
+      }
+    }
+
+    function initSealReturnSelectors(){
+      const daySel = document.getElementById('sealReturnDay');
+      const monthSel = document.getElementById('sealReturnMonth');
+      const yearSel = document.getElementById('sealReturnYear');
+      if(!daySel || !monthSel || !yearSel) return;
+
+      const selectedDay = daySel.value;
+      const selectedMonth = monthSel.value;
+      const selectedYear = yearSel.value;
+      const currentYear = new Date().getFullYear();
+
+      daySel.innerHTML = '';
+      monthSel.innerHTML = '';
+      yearSel.innerHTML = '';
+
+      for(let day = 1; day <= 30; day++){
+        const option = document.createElement('option');
+        option.value = String(day);
+        option.textContent = String(day);
+        daySel.appendChild(option);
+      }
+      for(let month = 1; month <= 12; month++){
+        const option = document.createElement('option');
+        option.value = String(month);
+        option.textContent = String(month);
+        monthSel.appendChild(option);
+      }
+      for(let year = currentYear - 1; year <= currentYear + 8; year++){
+        const option = document.createElement('option');
+        option.value = String(year);
+        option.textContent = String(year);
+        yearSel.appendChild(option);
+      }
+
+      const programNow = getDateForOffset(parseUTCOffset((getSettings().timezone || 'UTC+1')));
+      const defaultDay = String(programNow.getDate());
+      const defaultMonth = String(programNow.getMonth() + 1);
+      const defaultYear = String(programNow.getFullYear());
+
+      daySel.value = selectedDay || defaultDay;
+      monthSel.value = selectedMonth || defaultMonth;
+      yearSel.value = selectedYear || defaultYear;
+    }
+
+    function uid(prefix){ return `${prefix}_${Math.random().toString(36).slice(2,9)}`; }
+
+    function renderCompanyOptions(){
+      const companies = getCompanies();
+      const activeCompanyId = getSettings().activeCompanyId || '';
+      const sealSelect = document.getElementById('sealCompany');
+      const reportSelect = document.getElementById('reportCompanyFilter');
+      [sealSelect].forEach(sel => {
+        if(!sel) return;
+        sel.innerHTML = '';
+        if(!companies.length){
+          const o = document.createElement('option');
+          o.value = '';
+          o.textContent = tr('noInstitutions');
+          sel.appendChild(o);
+          sel.disabled = true;
+          return;
+        }
+        companies.forEach(c => {
+          const o = document.createElement('option');
+          o.value = c.id;
+          o.textContent = c.name || 'Institution';
+          sel.appendChild(o);
+        });
+        sel.disabled = false;
+        if(activeCompanyId && companies.find(c => c.id === activeCompanyId)) sel.value = activeCompanyId;
+      });
+      if(reportSelect){
+        reportSelect.innerHTML = '';
+        const allOption = document.createElement('option');
+        allOption.value = '';
+        allOption.textContent = tr('allInstitutions');
+        reportSelect.appendChild(allOption);
+        companies.forEach(c => {
+          const o = document.createElement('option');
+          o.value = c.id;
+          o.textContent = c.name || 'Institution';
+          reportSelect.appendChild(o);
+        });
+      }
+      updateSealPreview();
+    }
+
+    function companyById(id){
+      return getCompanies().find(c => c.id === id) || null;
+    }
+
+    function getSealImageOrFallback(sealDataUrl){
+      const value = String(sealDataUrl || '');
+      return value.startsWith('data:image/') ? value : 'logo.png';
+    }
+
+    function updateSealPreview(){
+      const companyId = (document.getElementById('sealCompany') || {}).value || '';
+      const company = companyById(companyId);
+      const img = document.getElementById('selectedSealPreview');
+      if(!img) return;
+      img.src = getSealImageOrFallback(company && company.sealDataUrl);
+    }
+
+    function hasActiveSealLoan(companyId){
+      if(!companyId) return false;
+      const data = getServicesData();
+      return (data.sealLoans || []).some(item => item && item.companyId === companyId && (item.status || 'loaned') === 'loaned');
+    }
+
+    function updateSealLoanAvailability(){
+      const companyId = (document.getElementById('sealCompany') || {}).value || '';
+      const button = document.getElementById('sealAddBtn');
+      if(!button) return;
+      const busy = hasActiveSealLoan(companyId);
+      button.disabled = busy;
+      button.title = busy ? tr('sealBusy') : '';
+    }
+
+    function hasActiveEquipmentRental(equipmentName){
+      const text = normalizeEntryName(equipmentName).toLowerCase();
+      if(!text) return false;
+      const data = getServicesData();
+      return (data.rentals || []).some(item => item && normalizeEntryName(item.equipment).toLowerCase() === text && (item.status || 'active') === 'active');
+    }
+
+    function updateRentalAvailability(){
+      const equipment = (document.getElementById('rentalEquipment') || {}).value || '';
+      const status = (document.getElementById('rentalStatus') || {}).value || 'active';
+      const button = document.getElementById('rentalAddBtn');
+      if(!button) return;
+      const busy = status === 'active' && hasActiveEquipmentRental(equipment);
+      button.disabled = busy;
+      button.title = busy ? tr('equipmentBusy') : '';
+    }
+
+    function getReportFilters(){
+      return {
+        companyId: (document.getElementById('reportCompanyFilter') || {}).value || '',
+        fromDate: '',
+        toDate: ''
+      };
+    }
+
+    function toDateValue(v){
+      if(!v) return '';
+      return String(v).slice(0,10);
+    }
+
+    function isDateInRange(value, fromDate, toDate){
+      if(!value) return !fromDate && !toDate;
+      const d = toDateValue(value);
+      if(fromDate && d < fromDate) return false;
+      if(toDate && d > toDate) return false;
+      return true;
+    }
+
+    function daysBetweenInclusive(startDate, endDate){
+      const start = new Date(startDate);
+      const end = new Date(endDate || startDate);
+      if(isNaN(start.getTime()) || isNaN(end.getTime())) return 1;
+      const safeEnd = end < start ? start : end;
+      return Math.max(1, Math.floor((safeEnd - start) / 86400000) + 1);
+    }
+
+    function applyReportFilters(data){
+      const filters = getReportFilters();
+      const rentals = (data.rentals || []).filter(r => {
+        const dateValue = r.startDate || r.createdAt;
+        return isDateInRange(dateValue, filters.fromDate, filters.toDate);
+      });
+      const sealLoans = (data.sealLoans || []).filter(l => {
+        if(filters.companyId && l.companyId !== filters.companyId) return false;
+        const dateValue = l.createdAt || l.returnDate;
+        return isDateInRange(dateValue, filters.fromDate, filters.toDate);
+      });
+      return { rentals, sealLoans };
+    }
+
+    function renderReports(){
+      const data = getServicesData();
+      const filtered = applyReportFilters(data);
+      const rentals = filtered.rentals;
+      const sealLoans = filtered.sealLoans;
+      const activeRentals = rentals.filter(r => (r.status || 'active') === 'active').length;
+      const estimatedValue = rentals.reduce((sum, r) => {
+        const unitPrice = Number(r.dailyPrice || 0);
+        const quantity = Number(r.qty || 1);
+        const days = daysBetweenInclusive(r.startDate, r.endDate);
+        return sum + (Math.max(0, unitPrice) * Math.max(1, quantity) * days);
+      }, 0);
+
+      const rentalsEl = document.getElementById('statRentals');
+      const activeEl = document.getElementById('statActiveRentals');
+      const loansEl = document.getElementById('statSealLoans');
+      const valueEl = document.getElementById('statRentalValue');
+      if(rentalsEl) rentalsEl.textContent = String(rentals.length);
+      if(activeEl) activeEl.textContent = String(activeRentals);
+      if(loansEl) loansEl.textContent = String(sealLoans.length);
+      if(valueEl) valueEl.textContent = estimatedValue.toFixed(2);
+    }
+
+    function resetReportsFilters(){
+      const company = document.getElementById('reportCompanyFilter');
+      if(company) company.value = '';
+      renderReportsAndLists();
+    }
+
+    function setCurrentMonthReportDateFilters(force){
+      // تم حذف فيلترات التاريخ
+      return;
+    }
+
+    function renderReportsAndLists(){
+      renderReports();
+      renderRentals();
+      renderSealLoans();
+      if (typeof window.injectServicesIntelUI === 'function') {
+        try { window.injectServicesIntelUI(); } catch (_) {}
+      }
+    }
+
+    function addRental(){
+      const customerName = (document.getElementById('rentalCustomer') || {}).value || '';
+      const equipment = (document.getElementById('rentalEquipment') || {}).value || '';
+      const qty = Number((document.getElementById('rentalQty') || {}).value || 1);
+      const startDate = (document.getElementById('rentalStart') || {}).value || '';
+      const endDate = (document.getElementById('rentalEnd') || {}).value || '';
+      const dailyPrice = Number((document.getElementById('rentalDailyPrice') || {}).value || 0);
+      const status = (document.getElementById('rentalStatus') || {}).value || 'active';
+      const notes = (document.getElementById('rentalNotes') || {}).value || '';
+
+      if(!customerName.trim() || !equipment.trim() || !startDate){ alert(tr('pleaseFillRental')); return; }
+      if(status === 'active' && hasActiveEquipmentRental(equipment)){ alert(tr('equipmentBusy')); return; }
+
+      upsertMasterEntry('customers', customerName);
+      upsertMasterEntry('equipment', equipment);
+
+      const data = getServicesData();
+      data.rentals.push({
+        id: uid('rent'),
+        companyId: getActiveCompanyId(),
+        customerName: customerName.trim(),
+        equipment: equipment.trim(),
+        qty: Math.max(1, qty || 1),
+        startDate,
+        endDate,
+        dailyPrice: Math.max(0, dailyPrice || 0),
+        status,
+        notes: notes.trim(),
+        createdAt: new Date().toISOString()
+      });
+      saveServicesData(data);
+      document.getElementById('rentalCustomer').value = '';
+      document.getElementById('rentalEquipment').value = '';
+      document.getElementById('rentalQty').value = '1';
+      document.getElementById('rentalStart').value = '';
+      document.getElementById('rentalEnd').value = '';
+      document.getElementById('rentalDailyPrice').value = '';
+      document.getElementById('rentalNotes').value = '';
+      renderRentalAutoLists();
+      renderReportsAndLists();
+    }
+
+    function addSealLoan(){
+      const companyId = (document.getElementById('sealCompany') || {}).value || '';
+      const borrower = (document.getElementById('sealBorrower') || {}).value || '';
+      const returnDate = getSealReturnDateFromSelectors();
+      const reason = (document.getElementById('sealReason') || {}).value || '';
+      if(!companyId || !borrower.trim() || !reason.trim()){ alert(tr('pleaseFillSeal')); return; }
+      if(hasActiveSealLoan(companyId)){ alert(tr('sealBusy')); return; }
+
+      const company = companyById(companyId);
+      const data = getServicesData();
+      data.sealLoans.push({
+        id: uid('seal'),
+        companyId,
+        companyName: company ? company.name : 'Institution',
+        sealDataUrl: company && company.sealDataUrl ? company.sealDataUrl : '',
+        borrower: borrower.trim(),
+        returnDate,
+        reason: reason.trim(),
+        status: 'loaned',
+        createdAt: new Date().toISOString()
+      });
+      saveServicesData(data);
+      document.getElementById('sealBorrower').value = '';
+      setSealReturnSelectors('');
+      document.getElementById('sealReason').value = '';
+      renderReportsAndLists();
+    }
+
+    function removeRental(id){
+      const data = getServicesData();
+      const removed = data.rentals.find(x => x.id === id);
+      if(removed) pushDeletedItem('rental', removed);
+      data.rentals = data.rentals.filter(x => x.id !== id);
+      saveServicesData(data);
+      updateRentalAvailability();
+      renderReportsAndLists();
+    }
+
+    function removeSealLoan(id){
+      const data = getServicesData();
+      const removed = data.sealLoans.find(x => x.id === id);
+      if(removed) pushDeletedItem('seal', removed);
+      data.sealLoans = data.sealLoans.filter(x => x.id !== id);
+      saveServicesData(data);
+      updateSealLoanAvailability();
+      renderReportsAndLists();
+    }
+
+    function markRentalReturned(id){
+      const data = getServicesData();
+      const item = (data.rentals || []).find(x => x.id === id);
+      if(!item) return;
+      item.status = 'returned';
+      saveServicesData(data);
+      updateRentalAvailability();
+      renderReportsAndLists();
+    }
+
+    function markSealReturned(id){
+      const data = getServicesData();
+      const item = (data.sealLoans || []).find(x => x.id === id);
+      if(!item) return;
+      item.status = 'returned';
+      saveServicesData(data);
+      updateSealLoanAvailability();
+      renderReportsAndLists();
+    }
+
+    function restoreLastDeleted(){
+      const stack = getDeletedStack();
+      if(!stack.length){
+        alert(tr('noDeletedToRestore'));
+        return;
+      }
+      const last = stack.pop();
+      saveDeletedStack(stack);
+      const data = getServicesData();
+      if(last.type === 'rental' && last.item){
+        data.rentals.push(last.item);
+      } else if(last.type === 'seal' && last.item){
+        data.sealLoans.push(last.item);
+      }
+      saveServicesData(data);
+      alert(tr('restoredItem'));
+      updateRentalAvailability();
+      updateSealLoanAvailability();
+      renderReportsAndLists();
+    }
+
+    // ── Sorting for rentals ──
+    var _rentalSortCol = 'startDate';
+    var _rentalSortDir = 'desc';
+    function setRentalSort(col) {
+      if (_rentalSortCol === col) { _rentalSortDir = _rentalSortDir === 'asc' ? 'desc' : 'asc'; }
+      else { _rentalSortCol = col; _rentalSortDir = (col === 'dailyPrice' || col === 'startDate') ? 'desc' : 'asc'; }
+      ['equipment','startDate','dailyPrice','status'].forEach(function(c) {
+        var icon = document.getElementById('rental-sort-' + c);
+        if (!icon) return;
+        icon.className = (c === _rentalSortCol) ? (_rentalSortDir === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down') : 'fas fa-sort';
+      });
+      renderRentals();
+    }
+    window.setRentalSort = setRentalSort;
+
+    function renderRentals(){
+      const list = document.getElementById('rentalsList');
+      if(!list) return;
+      const data = getServicesData();
+      const rentals = applyReportFilters(data).rentals.slice().sort(function(a, b) {
+        var valA, valB;
+        switch(_rentalSortCol) {
+          case 'equipment': valA = String(a.equipment || ''); valB = String(b.equipment || ''); break;
+          case 'startDate': valA = new Date(a.startDate || 0).getTime(); valB = new Date(b.startDate || 0).getTime(); break;
+          case 'dailyPrice': valA = Number(a.dailyPrice || 0); valB = Number(b.dailyPrice || 0); break;
+          case 'status': valA = String(a.status || ''); valB = String(b.status || ''); break;
+          default: return 0;
+        }
+        if (typeof valA === 'string') valA = valA.toLowerCase();
+        if (typeof valB === 'string') valB = valB.toLowerCase();
+        if (valA < valB) return _rentalSortDir === 'asc' ? -1 : 1;
+        if (valA > valB) return _rentalSortDir === 'asc' ? 1 : -1;
+        return 0;
+      });
+      list.innerHTML = '';
+      if(!rentals.length){ list.innerHTML = `<div class="empty">${tr('noRentalOps')}</div>`; return; }
+      rentals.forEach(r => {
+        const c = companyById(r.companyId);
+        const customerText = r.customerName || (c ? c.name : 'Customer');
+        const el = document.createElement('div');
+        el.className = 'item';
+        el.innerHTML = `
+          <div>
+            <div class="item-title">${r.equipment} <span class="badge">x${r.qty}</span></div>
+            <div class="item-meta">
+              <span>${customerText}</span>
+              <span>${r.startDate || ''}${r.endDate ? ' → ' + r.endDate : ''}</span>
+              <span>${(r.dailyPrice || 0).toFixed(2)}</span>
+              <span>${r.status || 'active'}</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;">
+            ${(r.status || 'active') === 'active' ? `<button class="btn btn-secondary" onclick="markRentalReturned('${r.id}')"><i class="fas fa-undo"></i></button>` : ''}
+            <button class="btn btn-secondary" onclick="removeRental('${r.id}')"><i class="fas fa-trash-alt"></i></button>
+          </div>
+        `;
+        list.appendChild(el);
+      });
+    }
+
+    // ── Sorting for seal loans ──
+    var _sealSortCol = 'date';
+    var _sealSortDir = 'desc';
+    function setSealSort(col) {
+      if (_sealSortCol === col) { _sealSortDir = _sealSortDir === 'asc' ? 'desc' : 'asc'; }
+      else { _sealSortCol = col; _sealSortDir = (col === 'date') ? 'desc' : 'asc'; }
+      ['recipient','date','status'].forEach(function(c) {
+        var icon = document.getElementById('seal-sort-' + c);
+        if (!icon) return;
+        icon.className = (c === _sealSortCol) ? (_sealSortDir === 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down') : 'fas fa-sort';
+      });
+      renderSealLoans();
+    }
+    window.setSealSort = setSealSort;
+
+    function renderSealLoans(){
+      const list = document.getElementById('sealLoansList');
+      if(!list) return;
+      const data = getServicesData();
+      const loans = applyReportFilters(data).sealLoans.slice().sort(function(a, b) {
+        var valA, valB;
+        switch(_sealSortCol) {
+          case 'recipient': valA = String(a.recipient || ''); valB = String(b.recipient || ''); break;
+          case 'date': valA = new Date(a.date || 0).getTime(); valB = new Date(b.date || 0).getTime(); break;
+          case 'status': valA = String(a.status || ''); valB = String(b.status || ''); break;
+          default: return 0;
+        }
+        if (typeof valA === 'string') valA = valA.toLowerCase();
+        if (typeof valB === 'string') valB = valB.toLowerCase();
+        if (valA < valB) return _sealSortDir === 'asc' ? -1 : 1;
+        if (valA > valB) return _sealSortDir === 'asc' ? 1 : -1;
+        return 0;
+      });
+      list.innerHTML = '';
+      if(!loans.length){ list.innerHTML = `<div class="empty">${tr('noSealOps')}</div>`; return; }
+      loans.forEach(l => {
+        const c = companyById(l.companyId);
+        const seal = getSealImageOrFallback((c && c.sealDataUrl) || l.sealDataUrl);
+        const titleText = l.borrower || l.reason || tr('sealLoan');
+        const el = document.createElement('div');
+        el.className = 'item';
+        el.innerHTML = `
+          <div style="display:flex;align-items:center;gap:10px;">
+            <img class="seal-img" src="${seal}" alt="seal" />
+            <div>
+              <div class="item-title">${titleText}</div>
+              <div class="item-meta">
+                <span>${c ? c.name : (l.companyName || 'Institution')}</span>
+                <span>${l.reason || ''}</span>
+                <span>${l.returnDate || ''}</span>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;">
+            ${(l.status || 'loaned') === 'loaned' ? `<button class="btn btn-secondary" onclick="markSealReturned('${l.id}')"><i class="fas fa-undo"></i></button>` : ''}
+            <button class="btn btn-secondary" onclick="removeSealLoan('${l.id}')"><i class="fas fa-trash-alt"></i></button>
+          </div>
+        `;
+        list.appendChild(el);
+      });
+    }
+
+    function parseUTCOffset(tzStr){
+      if(!tzStr || typeof tzStr !== 'string') return 0;
+      const m = tzStr.match(/UTC([+-]\d{1,2})/);
+      if(!m) return 0;
+      const v = parseInt(m[1], 10);
+      return isNaN(v) ? 0 : v;
+    }
+    function getDateForOffset(offsetHours){
+      const now = new Date();
+      const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
+      return new Date(utcTime + offsetHours * 3600000);
+    }
+
+    window.addEventListener('load', () => {
+      applyTranslations(getCurrentLanguage());
+      initSealReturnSelectors();
+      renderCompanyOptions();
+      renderRentalAutoLists();
+      setCurrentMonthReportDateFilters(true);
+      const rentalCustomerInput = document.getElementById('rentalCustomer');
+      const rentalEquipmentInput = document.getElementById('rentalEquipment');
+      [rentalCustomerInput, rentalEquipmentInput].forEach(input => {
+        if(!input) return;
+        input.addEventListener('blur', captureRentalDraft);
+        input.addEventListener('change', captureRentalDraft);
+      });
+      updateRentalAvailability();
+      updateSealLoanAvailability();
+      renderReportsAndLists();
+      window.addEventListener('storage', () => {
+        applyTranslations(getCurrentLanguage());
+        initSealReturnSelectors();
+        renderCompanyOptions();
+        renderRentalAutoLists();
+        updateRentalAvailability();
+        updateSealLoanAvailability();
+        renderReportsAndLists();
+      });
+
+      document.addEventListener('layoutLanguageChanged', function(){
+        renderReportsAndLists();
+      });
+    });
+  </script>
+    <script src="shared/demo_seed_data.js?v=20260721a" defer></script>
+    <script src="shared/erp_export_utils.js?v=20260721a" defer></script>
+    <script src="shared/export_panel.js?v=20260721a" defer></script>
+    <script src="shared/data_guard.js?v=20260802a" defer></script>
+        <script src="shared/license_auto.js?v=20260828a" defer></script>
+</body>
+</html>

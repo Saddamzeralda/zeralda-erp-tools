@@ -1,0 +1,231 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Build Chrome Launcher",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/c",
+				"BUILD_CHROME_LAUNCHER_EXE.cmd"
+			],
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Build Installer",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/c",
+				"BUILD_INSTALLER.cmd"
+			],
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Cleanup Project Extras",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-ExecutionPolicy",
+				"Bypass",
+				"-Command",
+				"$root='c:\\Users\\pc\\Desktop\\zeralda-erp-employees-main'; $items=@('archive','backups','build','Setup-Output','tests','__pycache__','check_modules.py','check_trans.py','fix_seal.py','demo_data.html','test_system.cmd','test_system.ps1','npm_install.log','PF0265_26(1).pdf'); foreach($i in $items){$p=Join-Path $root $i; if(Test-Path $p){Remove-Item -Path $p -Recurse -Force -ErrorAction SilentlyContinue; Write-Host \"Removed: $i\"} else {Write-Host \"NotFound: $i\"}}"
+			],
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Cleanup Project Extras CMD",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/c",
+				"for %I in (archive backups build Setup-Output tests __pycache__) do @if exist \"c:\\Users\\pc\\Desktop\\zeralda-erp-employees-main\\%I\" rd /s /q \"c:\\Users\\pc\\Desktop\\zeralda-erp-employees-main\\%I\" & for %F in (check_modules.py check_trans.py fix_seal.py demo_data.html test_system.cmd test_system.ps1 npm_install.log \"PF0265_26(1).pdf\") do @if exist \"c:\\Users\\pc\\Desktop\\zeralda-erp-employees-main\\%~F\" del /f /q \"c:\\Users\\pc\\Desktop\\zeralda-erp-employees-main\\%~F\" & echo cleanup-done"
+			],
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Run Release Cleanup",
+			"type": "shell",
+			"command": "pwsh",
+			"args": [
+				"-NoProfile",
+				"-ExecutionPolicy",
+				"Bypass",
+				"-File",
+				"tools/cleanup_release.ps1"
+			],
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Build Installer Direct",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/c",
+				"\"C:\\Program Files\\Inno Setup 6\\ISCC.exe\" \"ZeraldaERP-Setup.iss\""
+			],
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Build Installer ISCC",
+			"type": "shell",
+			"command": "pwsh",
+			"args": [
+				"-NoProfile",
+				"-Command",
+				"& 'C:/Program Files/Inno Setup 6/ISCC.exe' 'ZeraldaERP-Setup.iss'"
+			],
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Build Installer ISCC DirectShell",
+			"type": "shell",
+			"command": "& \"C:/Program Files/Inno Setup 6/ISCC.exe\" \"ZeraldaERP-Setup.iss\"",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Build Installer ISCC Path",
+			"type": "shell",
+			"command": "ISCC.exe",
+			"args": [
+				"ZeraldaERP-Setup.iss"
+			],
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Build Installer AutoContinue",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/c",
+				"echo.|BUILD_INSTALLER.cmd"
+			],
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Build Installer AutoContinue v2",
+			"type": "shell",
+			"command": "cmd /c \"echo.|BUILD_INSTALLER.cmd\"",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Build Installer AutoContinue v3",
+			"type": "shell",
+			"command": "cmd /c \"echo.^|BUILD_INSTALLER.cmd\"",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Run Installer Build Script",
+			"type": "shell",
+			"command": "pwsh",
+			"args": [
+				"-NoProfile",
+				"-ExecutionPolicy",
+				"Bypass",
+				"-File",
+				"tools/build_installer_release.ps1"
+			],
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Run Installer Build Script v2",
+			"type": "shell",
+			"command": "pwsh",
+			"args": [
+				"-NoProfile",
+				"-ExecutionPolicy",
+				"Bypass",
+				"-File",
+				"tools/build_installer_release.ps1"
+			],
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Run Installer Build Final",
+			"type": "shell",
+			"command": "pwsh",
+			"args": [
+				"-NoProfile",
+				"-ExecutionPolicy",
+				"Bypass",
+				"-File",
+				"tools/build_installer_release.ps1"
+			],
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Run Installer Build Final v2",
+			"type": "shell",
+			"command": "pwsh",
+			"args": [
+				"-NoProfile",
+				"-ExecutionPolicy",
+				"Bypass",
+				"-File",
+				"tools/build_installer_release.ps1"
+			],
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Build Installer",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/c",
+				"BUILD_INSTALLER.cmd"
+			],
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Build Installer",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/c",
+				"BUILD_INSTALLER.cmd"
+			],
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Build Installer Silent",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/c",
+				"BUILD_INSTALLER.cmd < nul"
+			],
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Build Installer Silent Final",
+			"type": "shell",
+			"command": "cmd",
+			"args": [
+				"/c",
+				"BUILD_INSTALLER.cmd < nul"
+			],
+			"isBackground": false,
+			"group": "build"
+		}
+	]
+}

@@ -1,0 +1,91 @@
+# ⚠️ ملفات حساسة — لا ترفعها إلى Git أبداً
+.env
+*.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+
+# بيانات وقت التشغيل
+data/
+logs/
+*.log
+server_log.txt
+launcher/*.pid
+
+# Build / Dist / Installers (ملفات ثقيلة تمنع الرفع إلى Git)
+dist/
+dist_setup/
+installer/dist/
+installer/Output/
+installer/pip-packages/
+tools/SetupProject/bin/
+tools/SetupProject/obj/
+tools/tesseract-setup.exe
+tools/tesseract/
+tools/python-embed/
+launcher/*.exe
+*.exe
+*.whl
+*.zip
+*.tar.gz
+
+
+
+# ملفات مؤقتة وتجريبية
+test_*.py
+!test_ocr_system.py
+!test_real_invoice.py
+!test_invoice_add.py
+!test_conversion.py
+!test_all_functions.py
+!test_backup_restore.py
+.webview2_cache/
+
+# ملفات scratch / تجريبية في الجذر (لا ترفعها إلى Git)
+_*.py
+_*.txt
+_*.json
+_*.pdf
+_*.html
+
+# سكريبتات التحقق والاختبار
+verify_*.py
+
+# تقارير الإصلاحات (تطوير فقط)
+fixes_reports/
+
+# ملفات PDF و HTML كبيرة في الجذر
+nesda*.pdf
+protec_*.pdf
+report_v7_standalone*.html
+zeralda-backup-*.json
+
+# ملفات أخطاء ضخمة
+__err.txt
+__err*.txt
+
+# ملفات تصحيح وتشخيص
+debug_*.txt
+server_debug.log
+server_debug_err.log
+server_err.txt
+srv_new.log
+log_test_*.txt
+
+# Visual Studio
+.vscode/settings.json
+*.suo
+*.user
+
+# ملفات Windows
+Thumbs.db
+Desktop.ini
+
+push_to_github.bat

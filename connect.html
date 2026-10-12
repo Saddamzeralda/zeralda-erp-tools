@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zeralda ERP — مركز الاتصال بالأجهزة والهواتف</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --primary-light: #60a5fa;
+            --success: #10b981;
+            --bg-grad-start: #0f172a;
+            --bg-grad-end: #1e293b;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--bg-grad-start) 0%, var(--bg-grad-end) 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 24px 16px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 28px;
+            max-width: 800px;
+        }
+
+        .badge-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            padding: 6px 14px;
+            border-radius: 9999px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .badge-dot {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #10b981;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.85); }
+        }
+
+        .title {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            background: linear-gradient(to right, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        .grid-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+            width: 100%;
+            max-width: 960px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 24px;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(96, 165, 250, 0.4);
+        }
+
+        .card-tag {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 4px 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .card-tag.lan {
+            background: rgba(37, 99, 235, 0.2);
+            color: #93c5fd;
+            border: 1px solid rgba(37, 99, 235, 0.3);
+        }
+
+        .card-tag.cloud {
+            background: rgba(168, 85, 247, 0.2);
+            color: #d8b4fe;
+            border: 1px solid rgba(168, 85, 247, 0.3);
+        }
+
+        .card-title {
+            font-size: 19px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .card-desc {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 18px;
+            min-height: 38px;
+        }
+
+        .qr-wrapper {
+            background: #ffffff;
+            padding: 16px;
+            border-radius: 16px;
+            margin-bottom: 18px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 192px;
+            min-height: 192px;
+        }
+
+        .qr-wrapper img, .qr-wrapper canvas {
+            display: block;
+            border-radius: 6px;
+        }
+
+        .link-box {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 10px 14px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 14px;
+            direction: ltr;
+        }
+
+        .link-text {
+            font-size: 13.5px;
+            font-weight: 600;
+            color: #93c5fd;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-align: left;
+        }
+
+        .btn-copy {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: background 0.15s;
+            flex-shrink: 0;
+        }
+
+        .btn-copy:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-action {
+            width: 100%;
+            padding: 11px 16px;
+            border-radius: 10px;
+            border: none;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: filter 0.15s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: #fff;
+        }
+
+        .btn-purple {
+            background: linear-gradient(135deg, #9333ea, #7e22ce);
+            color: #fff;
+        }
+
+        .btn-action:hover {
+            filter: brightness(1.15);
+        }
+
+        .pc-section {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 24px;
+            width: 100%;
+            max-width: 960px;
+            backdrop-filter: blur(16px);
+            margin-bottom: 24px;
+        }
+
+        .pc-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .pc-icon {
+            font-size: 24px;
+            background: rgba(59, 130, 246, 0.15);
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pc-title {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .pc-desc {
+            font-size: 14px;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .pc-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .pc-option-box {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .pc-option-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #cbd5e1;
+            margin-bottom: 6px;
+        }
+
+        .pc-option-desc {
+            font-size: 12.5px;
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+
+        .btn-download {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 12.5px;
+            font-weight: 700;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .btn-download:hover {
+            background: rgba(16, 185, 129, 0.25);
+        }
+
+        .footer-nav {
+            margin-top: auto;
+            text-align: center;
+            padding-top: 20px;
+        }
+
+        .btn-back-erp {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: color 0.15s;
+        }
+
+        .btn-back-erp:hover {
+            color: #60a5fa;
+        }
+
+        #toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #10b981;
+            color: #ffffff;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 14px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transition: transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28), opacity 0.3s;
+            z-index: 9999;
+        }
+
+        #toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+    </style>
+    <script src="/shared/qrcode.min.js"></script>
+</head>
+<body>
+
+    <div class="header">
+        <div class="badge-status">
+            <span class="badge-dot"></span>
+            <span>خادم Zeralda ERP متصل وجاهز</span>
+        </div>
+        <h1 class="title">مركز الاتصال بالأجهزة والهواتف</h1>
+        <p class="subtitle">امسح الباركود (QR Code) بكاميرا هاتفك أو افتح الروابط المباشرة للدخول الفوري إلى النظام من أي جهاز في الشبكة.</p>
+    </div>
+
+    <div class="grid-cards">
+        <!-- Local Wi-Fi Card -->
+        <div class="card">
+            <div class="card-tag lan">الشبكة المحلية (Wi-Fi)</div>
+            <h2 class="card-title">الهواتف والأجهزة على نفس الواي فاي</h2>
+            <p class="card-desc">اتصال داخلي فائق السرعة عبر شبكة المكتب بدون استهلاك بيانات الإنترنت.</p>
+            
+            <div class="qr-wrapper" id="qr-lan">
+                <!-- QR Generated Here -->
+            </div>
+
+            <div class="link-box">
+                <span class="link-text" id="text-lan">جاري التحميل...</span>
+                <button class="btn-copy" onclick="copyLink('text-lan')">نسخ</button>
+            </div>
+
+            <a href="#" id="btn-lan" target="_blank" class="btn-action btn-primary">
+                <span>فتح في المتصفح</span>
+                <span>↗</span>
+            </a>
+        </div>
+
+        <!-- Cloud / Remote Tunnel Card -->
+        <div class="card">
+            <div class="card-tag cloud">الوصول العام (Cloud / 4G)</div>
+            <h2 class="card-title">الاتصال من أي مكان في العالم</h2>
+            <p class="card-desc">يعمل فوراً عبر 4G أو من خارج المكتب برابط مشفر ومؤمن (SSL HTTPS).</p>
+            
+            <div class="qr-wrapper" id="qr-cloud">
+                <!-- QR Generated Here -->
+            </div>
+
+            <div class="link-box">
+                <span class="link-text" id="text-cloud">جاري فحص النفق السحابي...</span>
+                <button class="btn-copy" onclick="copyLink('text-cloud')">نسخ</button>
+            </div>
+
+            <a href="#" id="btn-cloud" target="_blank" class="btn-action btn-purple">
+                <span>فتح الرابط السحابي</span>
+                <span>↗</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Other Windows PCs Section -->
+    <div class="pc-section">
+        <div class="pc-header">
+            <div class="pc-icon">💻</div>
+            <div>
+                <h3 class="pc-title">للاتصال من حاسوب آخر في المكتب (Windows PC)</h3>
+                <span style="font-size: 12px; color: #94a3b8;">طريقتان سهلتان للفتح:</span>
+            </div>
+        </div>
+        <p class="pc-desc">
+            لماذا لا يعمل الرابط <code>http://www.zeralda-erp.dz/</code> تلقائياً على الأجهزة الأخرى بدون إعداد؟ لأن اسم النطاق نطاق محلي خاص بالشركة وليس مسجلاً في الإنترنت العالمي. إليك الخيارات المتاحة:
+        </p>
+
+        <div class="pc-options">
+            <div class="pc-option-box">
+                <div class="pc-option-title">1. الدخول المباشر بالآيبي (بدون أي ملف)</div>
+                <div class="pc-option-desc">
+                    افتح المتصفح في الحاسوب الآخر واكتب مباشرة:
+                    <br><strong style="color: #60a5fa;" id="pc-direct-ip">http://192.168.100.18/</strong>
+                    <br>يعمل فوراً بدون أي إعداد إضافي.
+                </div>
+                <button class="btn-copy" style="background: rgba(37, 99, 235, 0.3); color:#93c5fd;" onclick="copyDirectIp()">نسخ العنوان</button>
+            </div>
+
+            <div class="pc-option-box">
+                <div class="pc-option-title">2. استخدام الاسم <code>www.zeralda-erp.dz</code> بنقرة واحدة</div>
+                <div class="pc-option-desc">
+                    قم بتشغيل ملف الربط السريع على الحاسوب الآخر لربط الاسم تلقائياً بنقرة واحدة:
+                </div>
+                <a href="/launcher/Connect_From_Other_PC.cmd" download class="btn-download">
+                    <span>📥 تحميل ملف الربط (Connect_From_Other_PC.cmd)</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-nav">
+        <a href="/index.html" class="btn-back-erp">
+            <span>←</span>
+            <span>الرجوع إلى لوحة تحكم Zeralda ERP</span>
+        </a>
+    </div>
+
+    <div id="toast">تم نسخ الرابط بنجاح!</div>
+
+    <script>
+        let lanUrl = "http://192.168.100.18/";
+        let cloudUrl = "https://athletic-concepts-brochure-next.trycloudflare.com";
+
+        function makeQR(containerId, text) {
+            const el = document.getElementById(containerId);
+            if (!el) return;
+            el.innerHTML = "";
+            if (window.QRCode) {
+                new QRCode(el, {
+                    text: text,
+                    width: 170,
+                    height: 170,
+                    colorDark: "#0f172a",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.M
+                });
+            } else {
+                el.innerHTML = '<span style="color:#ef4444; font-size:12px;">مكتبة QR غير متاحة</span>';
+            }
+        }
+
+        async function initNetworkInfo() {
+            try {
+                const res = await fetch('/api/system/network-info');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.directLanUrl) {
+                        lanUrl = data.directLanUrl;
+                    } else if (data.primaryIp) {
+                        lanUrl = "http://" + data.primaryIp + "/";
+                    }
+
+                    if (data.remoteUrl) {
+                        cloudUrl = data.remoteUrl;
+                    }
+                }
+            } catch (err) {
+                console.warn("Could not fetch network-info, using defaults:", err);
+            }
+
+            // Update UI - LAN
+            document.getElementById('text-lan').textContent = lanUrl;
+            document.getElementById('btn-lan').href = lanUrl;
+            document.getElementById('pc-direct-ip').textContent = lanUrl;
+            makeQR('qr-lan', lanUrl);
+
+            // Update UI - Cloud
+            if (cloudUrl) {
+                document.getElementById('text-cloud').textContent = cloudUrl;
+                document.getElementById('btn-cloud').href = cloudUrl;
+                makeQR('qr-cloud', cloudUrl);
+            } else {
+                document.getElementById('text-cloud').textContent = "النفق السحابي غير مشغل حالياً";
+                document.getElementById('qr-cloud').innerHTML = '<span style="color:#94a3b8; font-size:12px;">استخدم رابط الواي فاي المحلي</span>';
+                document.getElementById('btn-cloud').style.display = 'none';
+            }
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg || 'تم النسخ بنجاح!';
+            t.classList.add('show');
+            setTimeout(() => {
+                t.classList.remove('show');
+            }, 2500);
+        }
+
+        function copyLink(elementId) {
+            const txt = document.getElementById(elementId).textContent;
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(txt).then(() => showToast('تم نسخ الرابط!'));
+            } else {
+                showToast(txt);
+            }
+        }
+
+        function copyDirectIp() {
+            const txt = document.getElementById('pc-direct-ip').textContent;
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(txt).then(() => showToast('تم نسخ الرابط!'));
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', initNetworkInfo);
+    </script>
+</body>
+</html>

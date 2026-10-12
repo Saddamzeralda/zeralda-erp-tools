@@ -1,0 +1,8 @@
+﻿Zeralda ERP DB Health Report
+GeneratedAt: 2026-02-14 00:51:14
+Database: zeralda_erp@127.0.0.1:5432
+Status: FAIL
+MissingCount: N/A
+
+---- Error ----
+psql not found in PATH. Install PostgreSQL client tools and reopen terminal.

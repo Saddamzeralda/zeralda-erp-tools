@@ -1,0 +1,748 @@
+/* =============================================================================
+   Zeralda ERP — Global Responsive Stylesheet        v2026-03-27
+   Covers all module pages. Supplements common_header_layout.css.
+
+   Breakpoints:
+     1200px  — Large desktop  →  medium desktop
+      960px  — Tablet landscape
+      768px  — Tablet portrait  (sidebar hides, main fills full width)
+      600px  — Large mobile
+      480px  — Small mobile
+      400px  — Extra-small mobile
+   ============================================================================= */
+
+/* =============================================================================
+   1.  SIDEBAR OVERLAY BACKDROP (mobile)
+   When the sidebar slides in on mobile a dark curtain appears behind it so
+   the user can tap outside to close the menu.
+   ============================================================================= */
+@media (max-width: 768px) {
+    body.sidebar-open::after {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        z-index: 998; /* just below sidebar z-index 999 */
+        pointer-events: auto;
+        animation: fadeInOverlay 0.2s ease;
+    }
+}
+
+@keyframes fadeInOverlay {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* =============================================================================
+   2.  MAIN CONTENT — FLUID PADDING
+   ============================================================================= */
+@media (max-width: 1200px) {
+    body > .main-content { padding: 20px !important; }
+}
+@media (max-width: 960px) {
+    body > .main-content { padding: 16px !important; }
+}
+@media (max-width: 600px) {
+    body > .main-content { padding: 10px !important; }
+}
+
+/* =============================================================================
+   3.  PAGE HEADER — FLUID TYPOGRAPHY & STACKING
+   ============================================================================= */
+.page-title {
+    font-size: clamp(18px, 3.5vw, 28px) !important;
+    line-height: 1.2;
+}
+
+@media (max-width: 600px) {
+    .page-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 8px !important;
+        margin-bottom: 16px !important;
+    }
+
+    .breadcrumb {
+        font-size: 12px !important;
+        flex-wrap: wrap;
+    }
+
+    .page-title {
+        font-size: 18px !important;
+    }
+}
+
+/* =============================================================================
+   4.  STATS GRID — RESPONSIVE COLUMNS
+   ============================================================================= */
+.stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+@media (max-width: 600px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px !important;
+    }
+}
+
+@media (max-width: 380px) {
+    .stats-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* =============================================================================
+   5.  TABS — COMPACT, HIDDEN SCROLLBAR
+   ============================================================================= */
+.tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+
+.tabs::-webkit-scrollbar {
+    display: none;
+}
+
+@media (max-width: 960px) {
+    .tab {
+        padding: 14px 18px !important;
+        font-size: 13px !important;
+    }
+}
+
+@media (max-width: 600px) {
+    .tab {
+        padding: 12px 14px !important;
+        font-size: 12px !important;
+        gap: 6px !important;
+        white-space: nowrap;
+    }
+
+    .tab i { font-size: 14px; }
+
+    .tab-content {
+        padding: 16px !important;
+    }
+
+    .tabs-container {
+        border-radius: 12px !important;
+        margin-bottom: 16px !important;
+    }
+}
+
+/* =============================================================================
+   6.  ACTION BAR — STACKS ON MOBILE
+   ============================================================================= */
+@media (max-width: 768px) {
+    .action-bar {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+
+    .search-box {
+        max-width: 100% !important;
+        width: 100%;
+    }
+
+    .btn-group {
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 600px) {
+    .btn {
+        padding: 10px 16px !important;
+        font-size: 13px !important;
+    }
+
+    .btn-group {
+        gap: 8px !important;
+    }
+}
+
+/* =============================================================================
+   7.  TABLES — COMPACT CELLS & HORIZONTAL SCROLL HINT
+   ============================================================================= */
+.table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    position: relative;
+}
+
+/* ── FIX: Ensure tables with many columns (e.g. inventory products with 8 columns
+   including action buttons) don't compress the Actions column out of view.
+   900px guarantees enough room for all columns + the action-icons row. ── */
+.table-container table {
+    min-width: 900px;
+}
+
+/* ── Horizontal scrollbar — always visible & styled ──
+   Makes the horizontal scroll bar obvious so users know the table
+   scrolls sideways (e.g. to reach the Actions column). */
+.table-container {
+    scrollbar-width: thin;                          /* Firefox */
+    scrollbar-color: #2563eb #e5e7eb;               /* Firefox */
+}
+
+/* WebKit (Chrome / Edge / Safari) */
+.table-container::-webkit-scrollbar {
+    height: 12px;
+    -webkit-overflow-scrolling: touch;
+}
+.table-container::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 6px;
+    margin: 0 4px;
+}
+.table-container::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #2563eb, #1e40af);
+    border-radius: 6px;
+    border: 2px solid #f1f5f9;
+    min-width: 40px;
+}
+.table-container::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #1e40af, #1e3a8a);
+}
+.table-container::-webkit-scrollbar-corner {
+    background: #f1f5f9;
+}
+
+/* Action icons: compact + wrap on narrow screens */
+.action-icons {
+    flex-wrap: nowrap;
+}
+@media (max-width: 768px) {
+    .action-icons {
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+    .action-icon {
+        width: 32px !important;
+        height: 32px !important;
+    }
+}
+
+/* Fade-right hint tells users the table scrolls horizontally */
+@media (max-width: 768px) {
+    .table-container::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 40px;
+        height: 100%;
+        background: linear-gradient(to left, rgba(255, 255, 255, 0.6), transparent);
+        pointer-events: none;
+    }
+
+    .table-container table {
+        min-width: 760px;
+    }
+
+    th, td {
+        padding: 10px 12px !important;
+        font-size: 13px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    th, td {
+        padding: 8px 10px !important;
+        font-size: 12px !important;
+    }
+
+    .table-container table {
+        min-width: 680px;
+    }
+}
+
+/* =============================================================================
+   8.  MODALS — FULL / NEAR-FULL WIDTH ON MOBILE
+   ============================================================================= */
+@media (max-width: 768px) {
+    .modal,
+    .modal-overlay {
+        padding: 10px !important;
+        align-items: flex-end !important; /* sheet rises from bottom on mobile */
+    }
+
+    .modal-content {
+        width: 100% !important;
+        max-width: 100% !important;
+        max-height: 94dvh !important;
+        max-height: 94vh !important;
+        border-radius: 18px 18px 0 0 !important;
+        display: flex;
+        flex-direction: column;
+        overflow-x: auto !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .invoice-preview-modal,
+    .bill-preview-modal,
+    .preview-modal-content {
+        max-height: 97dvh !important;
+        max-height: 97vh !important;
+        border-radius: 14px 14px 0 0 !important;
+        overflow-x: auto !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    .invoice-preview-shell,
+    .bill-preview-shell {
+        padding: 8px 6px 20px 6px !important;
+        overflow-x: auto !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    .modal-body {
+        overflow-y: auto !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        flex: 1 1 auto;
+    }
+
+    /* Drawers on mobile (Full width, zero side clipping) */
+    .drawer {
+        width: 100vw !important;
+        max-width: 100vw !important;
+        left: 0 !important;
+        right: 0 !important;
+    }
+    body.rtl .drawer {
+        left: 0 !important;
+        right: 0 !important;
+    }
+    .drawer-top {
+        padding: 10px 12px !important;
+    }
+    .drawer-table {
+        padding: 0 6px 16px 6px !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .modal-header {
+        padding: 14px 16px !important;
+    }
+
+    .modal-header h2,
+    .modal-header h3 {
+        font-size: 16px !important;
+    }
+
+    .modal-body {
+        padding: 14px 16px !important;
+    }
+
+    .modal-footer {
+        padding: 12px 16px !important;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .modal-footer .btn {
+        flex: 1 1 auto;
+        min-width: 90px;
+        justify-content: center;
+    }
+}
+
+/* =============================================================================
+   PREVIEW ZOOM & MOBILE SCALING TOOLBAR
+   ============================================================================= */
+.preview-zoom-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    padding: 8px 14px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+}
+
+.zoom-toolbar-left,
+.zoom-toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.zoom-toolbar-title {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #334155;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.zoom-pill {
+    display: inline-flex;
+    align-items: center;
+    background: #ffffff;
+    border: 1px solid #94a3b8;
+    border-radius: 20px;
+    padding: 2px 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+.zoom-btn {
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    color: #1e293b;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    transition: all 0.15s ease;
+}
+
+.zoom-btn:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+
+.zoom-btn:active {
+    transform: scale(0.92);
+}
+
+.zoom-value-badge {
+    font-size: 12px;
+    font-weight: 700;
+    color: #2563eb;
+    min-width: 44px;
+    text-align: center;
+    user-select: none;
+}
+
+.zoom-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #334155;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.zoom-action-btn:hover {
+    background: #f8fafc;
+    border-color: #94a3b8;
+    color: #0f172a;
+}
+
+.zoom-action-btn.btn-zoom-fit {
+    background: #2563eb;
+    border-color: #1d4ed8;
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(37,99,235,0.25);
+}
+
+.zoom-action-btn.btn-zoom-fit:hover {
+    background: #1d4ed8;
+}
+
+.zoom-mobile-hint {
+    width: 100%;
+    font-size: 11px;
+    color: #64748b;
+    display: none;
+    text-align: center;
+    margin-top: 2px;
+}
+
+@media (max-width: 768px) {
+    .preview-zoom-toolbar {
+        padding: 6px 10px;
+        margin-bottom: 8px;
+    }
+
+    .zoom-toolbar-title {
+        font-size: 11px;
+    }
+
+    .zoom-btn {
+        width: 26px;
+        height: 26px;
+        font-size: 11px;
+    }
+
+    .zoom-action-btn {
+        padding: 5px 9px;
+        font-size: 11px;
+    }
+
+    .zoom-mobile-hint {
+        display: block;
+    }
+}
+
+@media print {
+    .preview-zoom-toolbar,
+    .zoom-mobile-hint {
+        display: none !important;
+    }
+    .preview-scale-content {
+        transform: none !important;
+    }
+}
+
+/* =============================================================================
+   9.  FORM GRIDS — SINGLE COLUMN ON MOBILE
+   ============================================================================= */
+@media (max-width: 768px) {
+    .form-grid,
+    .form-grid-2,
+    .form-grid-3,
+    .form-grid-4 {
+        grid-template-columns: 1fr !important;
+        gap: 12px;
+    }
+
+    .form-row {
+        flex-direction: column;
+        gap: 12px;
+    }
+}
+
+@media (max-width: 600px) {
+    .form-group {
+        margin-bottom: 14px !important;
+    }
+
+    .form-group label {
+        font-size: 13px;
+    }
+}
+
+/* =============================================================================
+   10.  CHARTS — FLUID HEIGHT & PADDING
+   ============================================================================= */
+@media (max-width: 960px) {
+    .chart-container {
+        padding: 20px !important;
+    }
+}
+
+@media (max-width: 600px) {
+    .chart-container {
+        padding: 14px !important;
+        margin-bottom: 16px !important;
+    }
+
+    .chart-container canvas {
+        max-height: 240px !important;
+    }
+
+    .chart-container h3 {
+        font-size: 15px !important;
+        margin-bottom: 12px !important;
+    }
+}
+
+/* =============================================================================
+   11.  PRODUCT VIEW MODAL (inventory)
+   ============================================================================= */
+@media (max-width: 600px) {
+    .product-view-hero {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        padding: 16px !important;
+        border-radius: 12px !important;
+    }
+
+    .product-view-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+    }
+
+    .product-view-card {
+        padding: 12px !important;
+    }
+
+    .product-view-stock {
+        text-align: start !important;
+    }
+}
+
+@media (max-width: 400px) {
+    .product-view-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* =============================================================================
+   12.  STATUS BADGES — COMPACT ON MOBILE
+   ============================================================================= */
+@media (max-width: 600px) {
+    .status-badge {
+        padding: 4px 8px !important;
+        font-size: 11px !important;
+    }
+}
+
+/* =============================================================================
+   13.  CARD GRIDS (categories, KPI cards, etc.)
+   ============================================================================= */
+@media (max-width: 768px) {
+    .category-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
+        gap: 12px !important;
+    }
+}
+
+@media (max-width: 600px) {
+    .cards-grid,
+    .modules-grid,
+    .kpi-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px !important;
+    }
+}
+
+@media (max-width: 380px) {
+    .category-grid,
+    .cards-grid,
+    .modules-grid,
+    .kpi-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* =============================================================================
+   14.  DRAWER / SIDE PANEL (sales invoice drawer)
+   ============================================================================= */
+@media (max-width: 768px) {
+    .drawer {
+        width: 100vw !important;
+        max-width: 100vw !important;
+    }
+}
+
+/* =============================================================================
+   15.  TOUCH DEVICES — LARGER HIT AREAS & PREVENT iOS ZOOM-ON-FOCUS
+   ============================================================================= */
+@media (hover: none) and (pointer: coarse) {
+    /* Prevent iOS from zooming in when input is focused */
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="number"],
+    input[type="date"],
+    input[type="search"],
+    input[type="tel"],
+    select,
+    textarea {
+        font-size: 16px !important;
+    }
+
+    /* Bigger tap zones for action icons */
+    .action-icon {
+        width: 40px !important;
+        height: 40px !important;
+    }
+
+    /* Bigger sidebar links */
+    .menu-item {
+        min-height: 48px;
+    }
+
+    /* Remove hover-only effects that feel glitchy on touch */
+    .stat-card:hover {
+        transform: none !important;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08) !important;
+    }
+}
+
+/* =============================================================================
+   16.  RTL — MIRROR DIRECTIONAL HELPERS
+   ============================================================================= */
+body[dir="rtl"] .table-container::after,
+body.rtl .table-container::after {
+    right: auto;
+    left: 0;
+    background: linear-gradient(to right, rgba(255, 255, 255, 0.6), transparent);
+}
+
+/* =============================================================================
+   17.  PRINT — KEEP ONLY CONTENT
+   ============================================================================= */
+@media print {
+    @page {
+        size: A4 portrait;
+        margin: 10mm 8mm 10mm 8mm !important;
+    }
+    html, body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        font-size: 11pt !important;
+        line-height: 1.4 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    .sidebar,
+    .mobile-menu-btn,
+    .sidebar-toggle-btn,
+    .action-bar .btn-group,
+    .header-fullscreen-btn,
+    .no-print,
+    .btn,
+    button:not(.print-keep) {
+        display: none !important;
+    }
+    tr, tbody tr, table, .preview-paper, .facture-container, .preview-card, .preview-totals-card, .preview-signatures, .invoice-header, .invoice-totals, .coordonnees, .totaux, .signature-section {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+    thead {
+        display: table-header-group !important;
+    }
+    tfoot {
+        display: table-footer-group !important;
+    }
+    .invoice-header-banner {
+        display: table !important;
+        width: 100% !important;
+        padding: 6px 12px !important;
+        background-color: #1e2b3c !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+    .invoice-header-banner img {
+        max-height: 36px !important;
+        vertical-align: middle !important;
+    }
+    .invoice-header-banner h1 {
+        font-size: 14px !important;
+        display: inline-block !important;
+        vertical-align: middle !important;
+    }
+    .invoice-header-banner h2 {
+        font-size: 16px !important;
+        display: inline-block !important;
+        vertical-align: middle !important;
+    }
+}

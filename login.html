@@ -1,0 +1,1759 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <script src="shared/zeralda_db.js?v=20260731a"></script>
+    <script src="shared/theme_manager.js"></script>
+    <script src="shared/company_storage.js?v=20260807b"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Zeralda ERP</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <style>
+    :root {
+      --bg: #f0ebe3;
+      --card-bg: #fffaf4;
+      --ink: #1f1b16;
+      --muted: #78716c;
+      --accent: #d36b2e;
+      --accent-hover: #c05a1f;
+      --accent-2: #0f766e;
+      --border: #e7dccd;
+      --error: #ef4444;
+      --shadow: rgba(31, 27, 22, 0.12);
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Space Grotesk", system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      background-image:
+        radial-gradient(ellipse 900px 500px at 15% 20%, rgba(211,107,46,0.07), transparent),
+        radial-gradient(ellipse 700px 400px at 85% 80%, rgba(15,118,110,0.06), transparent);
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    /* ---------- Layout ---------- */
+    .login-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      width: min(820px, 96vw);
+      border-radius: 22px;
+      overflow: hidden;
+      box-shadow: 0 24px 64px -16px var(--shadow);
+      border: 1px solid var(--border);
+    }
+
+    /* ---------- Left Panel (Hero) ---------- */
+    .login-hero {
+      background: linear-gradient(145deg, #fdf4e7, #f3ebe0);
+      padding: 40px 32px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .login-hero::before {
+      content: "";
+      position: absolute;
+      top: -60px; right: -40px;
+      width: 220px; height: 220px;
+      background: conic-gradient(from 120deg, rgba(211,107,46,0.15), rgba(15,118,110,0.12), transparent 55%);
+      border-radius: 50%;
+      filter: blur(4px);
+    }
+    .login-hero::after {
+      content: "";
+      position: absolute;
+      bottom: -40px; left: -30px;
+      width: 160px; height: 160px;
+      background: radial-gradient(circle, rgba(15,118,110,0.08), transparent 70%);
+      border-radius: 50%;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 28px;
+      position: relative;
+      z-index: 1;
+    }
+    .brand-logo {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      background: #fff;
+      border: 1px solid var(--border);
+      object-fit: contain;
+      padding: 6px;
+    }
+    .brand-name {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      color: var(--ink);
+    }
+
+    .login-hero h1 {
+      font-size: 26px;
+      font-weight: 700;
+      line-height: 1.3;
+      margin-bottom: 12px;
+      max-width: 300px;
+      position: relative;
+      z-index: 1;
+    }
+    .login-hero .hero-desc {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.65;
+      max-width: 310px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-features {
+      margin-top: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      position: relative;
+      z-index: 1;
+    }
+    .hero-features .feat {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .hero-features .feat i {
+      color: var(--accent-2);
+      font-size: 14px;
+      width: 18px;
+      text-align: center;
+    }
+
+    /* ---------- Right Panel (Form) ---------- */
+    .login-form-panel {
+      background: var(--card-bg);
+      padding: 40px 32px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 18px;
+    }
+
+    .login-form-panel h2 {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .login-form-panel .subtitle {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .lang-row {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: -6px;
+      margin-bottom: 2px;
+    }
+    .lang-switch {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--ink);
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .lang-switch i {
+      color: var(--accent-2);
+      font-size: 12px;
+    }
+
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .form-field label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .input-wrap {
+      position: relative;
+    }
+    .input-wrap i {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #b8b0a4;
+      font-size: 14px;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .toggle-password i,
+    .saved-accounts-btn i {
+      position: static;
+      transform: none;
+      pointer-events: auto;
+      color: inherit;
+    }
+    .input-wrap input {
+      width: 100%;
+      padding: 12px 14px 12px 40px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 14px;
+      font-family: inherit;
+      background: #fff;
+      color: var(--ink);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .input-wrap input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(211,107,46,0.12);
+    }
+    .input-wrap input.input-invalid {
+      border-color: var(--error);
+      box-shadow: 0 0 0 3px rgba(239,68,68,0.12);
+    }
+
+    .toggle-password {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: #b8b0a4;
+      cursor: pointer;
+      font-size: 14px;
+      padding: 4px;
+      width: auto;
+    }
+    .toggle-password:hover { color: var(--accent); }
+
+    .login-btn {
+      width: 100%;
+      padding: 13px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent), #e18654);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      letter-spacing: 0.3px;
+      transition: opacity 0.2s, transform 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .login-btn:hover { opacity: 0.92; }
+    .login-btn:active { transform: scale(0.98); }
+    .login-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .login-btn .spinner {
+      display: none;
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error-msg {
+      color: var(--error);
+      font-size: 13px;
+      min-height: 18px;
+      display: flex;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 6px;
+      line-height: 1.45;
+      white-space: normal;
+      word-break: break-word;
+    }
+    .error-msg:empty { visibility: hidden; }
+    .error-msg i { font-size: 13px; flex-shrink: 0; margin-top: 2px; }
+
+    .caps-msg {
+      color: #b45309;
+      font-size: 12px;
+      min-height: 16px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: -2px;
+    }
+    .caps-msg:empty { visibility: hidden; }
+
+    .hint-text {
+      font-size: 12px;
+      color: var(--muted);
+      background: rgba(211,107,46,0.05);
+      border: 1px dashed rgba(211,107,46,0.2);
+      border-radius: 8px;
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .hint-text i { color: var(--accent); font-size: 13px; }
+
+    .footer-note {
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    /* ---------- Google Sign-In ---------- */
+    .google-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 4px 0;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .google-divider::before,
+    .google-divider::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+    .google-btn {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid #dadce0;
+      border-radius: 10px;
+      background: #fff;
+      color: #3c4043;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: 'Google Sans', 'Space Grotesk', sans-serif;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+    .google-btn:hover {
+      background: #f8f9fa;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    .google-btn:active { transform: scale(0.98); }
+    .google-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .google-btn .g-logo {
+      width: 18px; height: 18px;
+      flex-shrink: 0;
+    }
+    .google-btn .spinner {
+      display: none;
+      width: 16px; height: 16px;
+      border: 2px solid rgba(60,64,67,0.2);
+      border-top-color: #4285f4;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+    .google-btn.loading .g-logo { display: none; }
+    .google-btn.loading .spinner { display: inline-block; }
+
+    /* ---------- Saved accounts dropdown ---------- */
+    .saved-accounts { position:relative; }
+    .saved-accounts-btn {
+      position:absolute; right:12px; top:50%; transform:translateY(-50%);
+      background:none; border:none; color:#b8b0a4; cursor:pointer; font-size:14px; padding:4px; width:auto;
+    }
+    html[dir="rtl"] .saved-accounts-btn { right:auto; left:12px; }
+    .saved-accounts-btn:hover { color:var(--accent); }
+    .saved-dropdown {
+      position:absolute; top:100%; left:0; right:0; z-index:50;
+      background:var(--card-bg); border:1px solid var(--border); border-radius:10px;
+      box-shadow:0 8px 24px var(--shadow); display:none; max-height:200px; overflow-y:auto;
+    }
+    .saved-dropdown.show { display:block; }
+    .saved-item {
+      display:flex; align-items:center; gap:10px; padding:10px 14px; cursor:pointer;
+      transition:background 0.15s; border-bottom:1px solid var(--border);
+    }
+    .saved-item:last-child { border-bottom:none; }
+    .saved-item:hover { background:rgba(211,107,46,0.06); }
+    .saved-item img { width:28px; height:28px; border-radius:50%; flex-shrink:0; }
+    .saved-item .saved-icon { width:28px; height:28px; border-radius:50%; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; flex-shrink:0; }
+    .saved-item-info { flex:1; min-width:0; }
+    .saved-item-name { font-size:13px; font-weight:600; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .saved-item-email { font-size:11px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .saved-item-del { background:none; border:none; color:#ccc; cursor:pointer; font-size:12px; padding:4px; flex-shrink:0; }
+    .saved-item-del:hover { color:var(--error); }
+
+    /* ---------- Remember Me ---------- */
+    .remember-row {
+      display:flex; align-items:center; gap:8px; margin:-4px 0 4px;
+    }
+    .remember-row label { font-size:12px; color:var(--muted); cursor:pointer; }
+    .remember-row input[type="checkbox"] { accent-color:var(--accent); cursor:pointer; }
+
+    /* ---------- RTL ---------- */
+    html[dir="rtl"] .input-wrap i { left: auto; right: 14px; }
+    html[dir="rtl"] .input-wrap input { padding: 12px 40px 12px 14px; }
+    html[dir="rtl"] .toggle-password { right: auto; left: 12px; }
+    html[dir="rtl"] .hero-features { direction: rtl; }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width: 700px) {
+      .login-container {
+        grid-template-columns: 1fr;
+        max-width: 420px;
+      }
+      .login-hero {
+        padding: 28px 24px;
+      }
+      .login-hero h1 { font-size: 22px; }
+      .hero-features { display: none; }
+      .login-form-panel { padding: 28px 24px; }
+    }
+  </style>
+    <link rel="stylesheet" href="styles/dark_theme.css">
+</head>
+<body>
+  <div class="login-container">
+    <!-- Left: Hero -->
+    <div class="login-hero">
+      <div class="brand">
+        <img src="logo.png" alt="Logo" class="brand-logo" onerror="this.style.display='none'">
+        <span class="brand-name">Zeralda ERP</span>
+      </div>
+      <h1 id="heroTitle">Welcome back to your workspace</h1>
+      <p class="hero-desc" id="heroDesc">Sign in to manage Sales, Purchasing, Inventory, HR, Finance and more.</p>
+      <div class="hero-features">
+        <div class="feat"><i class="fas fa-shield-alt"></i> <span id="feat1">Secure local authentication</span></div>
+        <div class="feat"><i class="fas fa-users"></i> <span id="feat2">Multi-user & role support</span></div>
+        <div class="feat"><i class="fas fa-language"></i> <span id="feat3">Arabic, English & French</span></div>
+      </div>
+    </div>
+
+    <!-- Right: Form -->
+    <div class="login-form-panel">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+        <h2 id="formTitle" style="margin-bottom: 0;">Sign in</h2>
+        <div class="lang-row" style="margin-top: 0;">
+          <button type="button" class="lang-switch" id="langSwitchBtn" title="Change language">
+            <i class="fas fa-language"></i>
+            <span id="langSwitchText">Language: English</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Login Mode Tabs -->
+      <div style="display: flex; gap: 8px; margin-bottom: 18px; border-bottom: 1px solid var(--border); padding-bottom: 12px;">
+        <button type="button" class="login-mode-tab active" data-mode="email" id="tabEmail" style="display: flex !important; visibility: visible !important; opacity: 1 !important;">
+          <i class="fas fa-envelope" style="margin-right: 6px;"></i>
+          <span id="tabEmailText">Email</span>
+        </button>
+        <button type="button" class="login-mode-tab" data-mode="key" id="tabKey" style="display: flex !important; visibility: visible !important; opacity: 1 !important;">
+          <i class="fas fa-key" style="margin-right: 6px;"></i>
+          <span id="tabKeyText">Activation Key</span>
+        </button>
+      </div>
+
+      <style>
+        .login-mode-tab {
+          padding: 8px 12px;
+          border: none;
+          background: none;
+          color: var(--muted);
+          font-size: 13px;
+          font-weight: 600;
+          cursor: pointer;
+          border-bottom: 3px solid transparent;
+          transition: all 0.2s;
+          display: flex !important;
+          align-items: center;
+          visibility: visible !important;
+          opacity: 1 !important;
+        }
+        .login-mode-tab:hover {
+          color: var(--accent);
+        }
+        .login-mode-tab.active {
+          color: var(--accent);
+          border-bottom-color: var(--accent);
+        }
+      </style>
+
+      <p class="subtitle" id="formSubtitle">Enter your credentials to continue</p>
+
+      <!-- Google Sign-In Button -->
+      <div id="googleSignInContainer">
+        <button type="button" class="google-btn" id="googleSignInBtn" onclick="doGoogleSignIn()">
+          <svg class="g-logo" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+          <span class="spinner"></span>
+          <span id="googleBtnText">Sign in with Google</span>
+        </button>
+        <div class="google-divider" id="googleDivider"><span id="orText">or</span></div>
+      </div>
+
+      <!-- Email Login Form -->
+      <form id="loginForm" novalidate class="login-mode-form" data-mode="email" style="display: block;">
+
+      <div class="form-field">
+        <label for="username" id="lblUsername">Username, Email, or Phone</label>
+        <div class="input-wrap saved-accounts">
+          <i class="fas fa-user"></i>
+          <input id="username" type="text" autocomplete="username" placeholder="" maxlength="120" required aria-describedby="error">
+          <button type="button" class="saved-accounts-btn" id="savedAccountsBtn" tabindex="-1" title="Saved accounts" style="display:none;">
+            <i class="fas fa-caret-down"></i>
+          </button>
+          <div class="saved-dropdown" id="savedDropdown"></div>
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label for="password" id="lblPassword">Password</label>
+        <div class="input-wrap">
+          <i class="fas fa-lock"></i>
+          <input id="password" type="password" autocomplete="current-password" placeholder="" maxlength="256" required aria-describedby="error capsLockHint">
+          <button type="button" class="toggle-password" id="togglePwd" tabindex="-1" title="Show password">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+        <div class="caps-msg" id="capsLockHint" aria-live="polite"></div>
+      </div>
+
+      <div class="remember-row">
+        <input type="checkbox" id="rememberMe" checked>
+        <label for="rememberMe" id="lblRemember">Remember me</label>
+      </div>
+
+      <div class="error-msg" id="error" role="alert" aria-live="assertive"></div>
+
+      <button class="login-btn" id="loginBtn" type="submit">
+        <span class="spinner" id="loginSpinner"></span>
+        <span id="loginBtnText">Login</span>
+      </button>
+      </form>
+
+      <!-- Unified Key Login Form -->
+      <form id="keyLoginForm" novalidate class="login-mode-form" data-mode="key" style="display: none;">
+
+      <div class="form-field">
+        <label for="activationKey" id="lblKey">Unified System Key</label>
+        <div class="input-wrap">
+          <i class="fas fa-key"></i>
+          <input id="activationKey" type="text" placeholder="ZERALDA-XXXX-XXXX-XXXX-XXXX" maxlength="50" required>
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label for="keyPhone" id="lblKeyPhone">Phone Number</label>
+        <div class="input-wrap">
+          <i class="fas fa-phone"></i>
+          <input id="keyPhone" type="tel" placeholder="+213XXXXXXXXX / 0XXXXXXXXX" maxlength="25" required>
+        </div>
+      </div>
+
+      <div class="error-msg" id="keyError" role="alert" aria-live="assertive"></div>
+
+      <button class="login-btn" id="keyLoginBtn" type="submit">
+        <span class="spinner" id="keyLoginSpinner"></span>
+        <span id="keyLoginBtnText">Login with Key</span>
+      </button>
+      </form>
+
+      <div class="hint-text" id="hintBox">
+        <i class="fas fa-info-circle"></i>
+        <span id="hintText">Use your assigned account credentials.</span>
+      </div>
+
+      <div class="footer-note" id="footerNote">Need access? Ask your administrator.</div>
+    </div>
+  </div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    // FIX: Guard against zeralda_db.js failing to load
+    if (typeof ZS === 'undefined') {
+      var _zsFallback = {};
+      window.ZS = {
+        getItem: function(k) { return _zsFallback[k] || null; },
+        setItem: function(k, v) { _zsFallback[k] = String(v); },
+        removeItem: function(k) { delete _zsFallback[k]; },
+        clear: function() { _zsFallback = {}; },
+        key: function(i) { return Object.keys(_zsFallback)[i] || null; }
+      };
+      console.error('[login] ZS storage not available — using in-memory fallback');
+    }
+
+    var TOKEN_KEY = 'zeralda-auth-token';
+    var AUTH_META_KEY = 'zeralda-auth-meta';
+    var REMEMBERED_LOGIN_KEY = 'zeralda-remembered-login';
+    var SETTINGS_KEY = 'zeralda-settings';
+
+    function sanitizeNextPage(url) {
+      if (!url || typeof url !== 'string') return '/zeralda_erp_dashboard.html';
+      var trimmed = url.trim();
+      if (!trimmed.startsWith('/')) return '/zeralda_erp_dashboard.html';
+      if (trimmed.startsWith('//')) return '/zeralda_erp_dashboard.html';
+      if (trimmed.indexOf('\\') !== -1) return '/zeralda_erp_dashboard.html';
+      return trimmed;
+    }
+
+    var nextPage = sanitizeNextPage(new URLSearchParams(window.location.search).get('next'));
+
+    function getAuthApiBases() {
+      var origin = String(window.location.origin || '').toLowerCase();
+      var host = (window.location.hostname || '').toLowerCase();
+      var isLocalHost = host === 'localhost' || host === '127.0.0.1';
+      var isFileProtocol = window.location.protocol === 'file:' || origin === 'null';
+      var port = window.location.port;
+      var portSuffix = port ? ':' + port : '';
+      var portNum = parseInt(port, 10) || 0;
+      // Detect if we're on a proxy/dev-tool port (not a real server port)
+      var isUnusualPort = portNum > 0 && [80, 443, 3000, 5000, 8000, 8080, 8443, 9000].indexOf(portNum) === -1;
+
+      var bases = [];
+
+      if (isFileProtocol) {
+        // Running from file:// — try common localhost bases
+        bases.push('http://localhost' + portSuffix);
+        bases.push('http://127.0.0.1' + portSuffix);
+      } else if (isLocalHost) {
+        // Prefer same-origin only to avoid cross-host fallbacks that can trigger CORS
+        // errors when the browser resolves localhost and 127.0.0.1 differently.
+        bases.push(window.location.origin);
+      } else {
+        // On production/custom domains, stay same-origin to respect CSP and avoid mixed content.
+        bases.push(window.location.origin);
+      }
+
+      // When running through a proxy on an unusual port, also try common server ports
+      if (isUnusualPort && isLocalHost) {
+        bases.push('http://127.0.0.1:8080');
+        bases.push('http://localhost:8080');
+        bases.push('http://127.0.0.1:8000');
+        bases.push('http://localhost:8000');
+      }
+
+      // Keep unique and preserve order
+      return bases.filter(function (v, i, a) { return a.indexOf(v) === i; });
+    }
+    // Expose for use in other script blocks
+    window._getAuthApiBases = getAuthApiBases;
+
+    function authRequest(path, options) {
+      var bases = getAuthApiBases();
+      var lastErr = null;
+
+      function tryAt(index) {
+        if (index >= bases.length) {
+          return Promise.reject(lastErr || new Error('Auth endpoint unreachable'));
+        }
+        var url = bases[index] + path;
+        return fetch(url, options).then(function (res) {
+          // Retry on server errors or 404 (proxy) with next origin
+          if ((res.status >= 500 || res.status === 404) && index + 1 < bases.length) {
+            return tryAt(index + 1);
+          }
+          return res;
+        }).catch(function (err) {
+          lastErr = err;
+          return tryAt(index + 1);
+        });
+      }
+
+      return tryAt(0);
+    }
+
+    // ── Helpers ──
+    function readSettings() {
+      try { var r = ZS.getItem(SETTINGS_KEY); return r ? JSON.parse(r) : {}; }
+      catch (e) { return {}; }
+    }
+    function writeSettings(s) { ZS.setItem(SETTINGS_KEY, JSON.stringify(s || {})); }
+
+    function escapeHtml(s) {
+      return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    function hashString(str) {
+      if (!str) return Promise.resolve('');
+      var hasWebCrypto = typeof window !== 'undefined' && window.crypto && window.crypto.subtle && typeof TextEncoder !== 'undefined';
+      if (hasWebCrypto) {
+        var data = new TextEncoder().encode(str);
+        return window.crypto.subtle.digest('SHA-256', data).then(function (buf) {
+          return Array.from(new Uint8Array(buf)).map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+        }).catch(function () {
+          // Fallback for untrusted origins or restricted contexts.
+          var h = 2166136261;
+          for (var i = 0; i < str.length; i++) {
+            h ^= str.charCodeAt(i);
+            h += (h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24);
+          }
+          return ('00000000' + (h >>> 0).toString(16)).slice(-8);
+        });
+      }
+
+      var hash = 2166136261;
+      for (var j = 0; j < str.length; j++) {
+        hash ^= str.charCodeAt(j);
+        hash += (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
+      }
+      return Promise.resolve(('00000000' + (hash >>> 0).toString(16)).slice(-8));
+    }
+
+    // ── Translations ──
+    var TR = {
+      en: {
+        heroTitle: 'Welcome back to your workspace',
+        heroDesc: 'Sign in to manage Sales, Purchasing, Inventory, HR, Finance and more.',
+        feat1: 'Secure local authentication', feat2: 'Multi-user & role support', feat3: 'Arabic, English & French',
+        formTitle: 'Sign in', formSubtitle: 'Enter your credentials to continue',
+        lblUsername: 'Username or Email', lblPassword: 'Password',
+        loginBtn: 'Login', hint: 'Use your assigned account credentials.',
+        footerNote: 'Need access? Ask your administrator.',
+        errEmpty: 'Please enter username and password.',
+        errNotFound: 'User not found.',
+        errInactive: 'This account is disabled.',
+        errWrongPwd: 'Incorrect password.',
+        showPwd: 'Show password', hidePwd: 'Hide password',
+        rememberMe: 'Remember me',
+        capsLockOn: 'Caps Lock is ON',
+        langBtn: 'Language: English',
+        tabEmail: 'Email', tabKey: 'Unified Key',
+        lblKey: 'Unified System Key', lblKeyPhone: 'Registered Phone Number',
+        keyLoginBtn: 'Login with Unified Key',
+        errKeyEmpty: 'Please enter system key and registered phone number.',
+        errKeyInvalid: 'Invalid system key or registered phone number.',
+        keyHint: 'Enter your unified system key and registered phone number.',
+        googleBtn: 'Sign in with Google',
+        orDivider: 'or',
+        googleErr: 'Google sign-in failed. Please try again.',
+        googleErrPopup: 'Google sign-in popup was closed. Please try again.',
+        googleErrNetwork: 'Could not connect to Google. Check your internet connection.'
+      },
+      ar: {
+        heroTitle: 'مرحباً بعودتك إلى مساحة العمل',
+        heroDesc: 'سجّل الدخول لإدارة المبيعات والمشتريات والمخزون والموارد البشرية والمالية والمزيد.',
+        feat1: 'مصادقة محلية آمنة', feat2: 'دعم تعدد المستخدمين والأدوار', feat3: 'العربية والإنجليزية والفرنسية',
+        formTitle: 'تسجيل الدخول', formSubtitle: 'أدخل بياناتك للمتابعة',
+        lblUsername: 'اسم المستخدم أو البريد أو الهاتف', lblPassword: 'كلمة المرور',
+        loginBtn: 'دخول', hint: 'استخدم بيانات الدخول المخصصة لك.',
+        footerNote: 'تحتاج وصولاً؟ تواصل مع المسؤول.',
+        errEmpty: 'أدخل اسم المستخدم وكلمة المرور.',
+        errNotFound: 'المستخدم غير موجود.',
+        errInactive: 'هذا الحساب معطّل.',
+        errWrongPwd: 'كلمة المرور غير صحيحة.',
+        showPwd: 'إظهار كلمة المرور', hidePwd: 'إخفاء كلمة المرور',
+        rememberMe: 'تذكرني',
+        capsLockOn: 'زر الأحرف الكبيرة مفعل',
+        langBtn: 'اللغة: العربية',
+        tabEmail: 'البريد', tabKey: 'المفتاح الموحد',
+        lblKey: 'المفتاح الموحد للنظام', lblKeyPhone: 'رقم الهاتف المسجل',
+        keyLoginBtn: 'دخول بالمفتاح الموحد',
+        errKeyEmpty: 'أدخل المفتاح الموحد ورقم الهاتف المسجل.',
+        errKeyInvalid: 'المفتاح الموحد أو رقم الهاتف غير صحيح.',
+        keyHint: 'أدخل المفتاح الموحد للنظام ورقم هاتفك المسجل لتسجيل الدخول الفوري.',
+        googleBtn: 'تسجيل الدخول عبر Google',
+        orDivider: 'أو',
+        googleErr: 'فشل تسجيل الدخول عبر Google. حاول مرة أخرى.',
+        googleErrPopup: 'تم إغلاق نافذة Google. حاول مرة أخرى.',
+        googleErrNetwork: 'تعذّر الاتصال بـ Google. تحقق من اتصالك بالإنترنت.'
+      },
+      fr: {
+        heroTitle: 'Bienvenue dans votre espace de travail',
+        heroDesc: 'Connectez-vous pour gérer Ventes, Achats, Inventaire, RH, Finance et plus.',
+        feat1: 'Authentification locale sécurisée', feat2: 'Multi-utilisateurs et rôles', feat3: 'Arabe, Anglais et Français',
+        formTitle: 'Connexion', formSubtitle: 'Entrez vos identifiants pour continuer',
+        lblUsername: 'Nom d\'utilisateur ou Email', lblPassword: 'Mot de passe',
+        loginBtn: 'Connexion', hint: 'Utilisez les identifiants attribués à votre compte.',
+        footerNote: 'Besoin d\'accès ? Contactez votre administrateur.',
+        errEmpty: 'Entrez le nom d\'utilisateur et le mot de passe.',
+        errNotFound: 'Utilisateur introuvable.',
+        errInactive: 'Ce compte est désactivé.',
+        errWrongPwd: 'Mot de passe incorrect.',
+        showPwd: 'Afficher le mot de passe', hidePwd: 'Masquer le mot de passe',
+        rememberMe: 'Se souvenir de moi',
+        capsLockOn: 'Verr. Maj est activée',
+        langBtn: 'Langue : Français',
+        tabEmail: 'Email', tabKey: 'Clé Unifiée',
+        lblKey: 'Clé Système Unifiée', lblKeyPhone: 'Numéro de téléphone enregistré',
+        keyLoginBtn: 'Connexion avec clé unifiée',
+        errKeyEmpty: 'Entrez la clé unifiée et le numéro de téléphone enregistré.',
+        errKeyInvalid: 'Clé unifiée ou numéro de téléphone invalide.',
+        keyHint: 'Entrez votre clé système unifiée et votre numéro de téléphone enregistré.',
+        googleBtn: 'Se connecter avec Google',
+        orDivider: 'ou',
+        googleErr: 'Échec de la connexion Google. Veuillez réessayer.',
+        googleErrPopup: 'La fenêtre Google a été fermée. Veuillez réessayer.',
+        googleErrNetwork: 'Impossible de se connecter à Google. Vérifiez votre connexion Internet.'
+      }
+    };
+
+    function getLang() {
+      var s = readSettings();
+      var lang = (s.preferredLanguage || ZS.getItem('preferred-language') || 'en').toLowerCase();
+      if (lang === 'ar' || lang === 'fr') return lang;
+      return 'en';
+    }
+
+    function applyLanguage() {
+      var lang = getLang();
+      var t = TR[lang] || TR.en;
+      document.documentElement.lang = 'en';
+      document.documentElement.dir = (lang === 'ar') ? 'rtl' : 'ltr';
+
+      var map = {
+        heroTitle: 'heroTitle', heroDesc: 'heroDesc',
+        feat1: 'feat1', feat2: 'feat2', feat3: 'feat3',
+        formTitle: 'formTitle', formSubtitle: 'formSubtitle',
+        lblUsername: 'lblUsername', lblPassword: 'lblPassword',
+        lblKeyPhone: 'lblKeyPhone', lblKey: 'lblKey',
+        loginBtnText: 'loginBtn', keyLoginBtnText: 'keyLoginBtn',
+        hintText: 'hint', footerNote: 'footerNote',
+        lblRemember: 'rememberMe',
+        tabEmailText: 'tabEmail', tabKeyText: 'tabKey',
+        googleBtnText: 'googleBtn', orText: 'orDivider'
+      };
+      for (var elId in map) {
+        var el = document.getElementById(elId);
+        if (el) el.textContent = t[map[elId]];
+      }
+      var langBtnText = document.getElementById('langSwitchText');
+      if (langBtnText) langBtnText.textContent = t.langBtn || 'Language';
+      window._loginTr = t;
+    }
+
+    function cycleLanguage() {
+      var current = getLang();
+      var next = current === 'en' ? 'ar' : (current === 'ar' ? 'fr' : 'en');
+      var s = readSettings();
+      s.preferredLanguage = next;
+      writeSettings(s);
+      ZS.setItem('preferred-language', next);
+      applyLanguage();
+    }
+
+    // ── Toggle password visibility ──
+    var pwdVisible = false;
+    document.getElementById('togglePwd').addEventListener('click', function () {
+      var inp = document.getElementById('password');
+      var icon = this.querySelector('i');
+      pwdVisible = !pwdVisible;
+      inp.type = pwdVisible ? 'text' : 'password';
+      icon.className = pwdVisible ? 'fas fa-eye-slash' : 'fas fa-eye';
+      var t = window._loginTr || TR.en;
+      this.title = pwdVisible ? t.hidePwd : t.showPwd;
+    });
+
+    // ── Login ──
+    var isLogging = false;
+
+    function showError(msg, persistent) {
+      var el = document.getElementById('error');
+      el.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + msg;
+      el.dataset.persistent = persistent ? '1' : '';
+    }
+    function clearError(force) {
+      var el = document.getElementById('error');
+      if (!el) return;
+      if (!force && el.dataset.persistent === '1') return;
+      el.innerHTML = '';
+      el.dataset.persistent = '';
+    }
+
+    function setLoading(on) {
+      var btn = document.getElementById('loginBtn');
+      var spinner = document.getElementById('loginSpinner');
+      var txt = document.getElementById('loginBtnText');
+      if (on) {
+        btn.disabled = true;
+        spinner.style.display = 'inline-block';
+        txt.style.opacity = '0.7';
+      } else {
+        btn.disabled = false;
+        spinner.style.display = 'none';
+        txt.style.opacity = '1';
+      }
+    }
+
+    function setFieldError(input, hasError) {
+      if (!input) return;
+      if (hasError) input.classList.add('input-invalid');
+      else input.classList.remove('input-invalid');
+    }
+
+    function doLogin() {
+      if (isLogging) return;
+      var t = window._loginTr || TR.en;
+      var username = document.getElementById('username').value.trim();
+      var password = document.getElementById('password').value;
+      var usernameInput = document.getElementById('username');
+      var passwordInput = document.getElementById('password');
+      clearError(true);
+
+      setFieldError(usernameInput, false);
+      setFieldError(passwordInput, false);
+
+      if (!username || !password) {
+        setFieldError(usernameInput, !username);
+        setFieldError(passwordInput, !password);
+        showError(t.errEmpty);
+        if (!username) usernameInput.focus();
+        else passwordInput.focus();
+        return;
+      }
+
+      isLogging = true;
+      setLoading(true);
+
+      authRequest('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'omit',
+        cache: 'no-store',
+        body: JSON.stringify({
+          identifier: username,
+          password: password
+        })
+      }).then(function (res) {
+        return res.json().catch(function () { return {}; }).then(function (data) {
+          return { status: res.status, data: data || {} };
+        });
+      }).then(function (result) {
+        var data = result.data || {};
+        if (result.status !== 200 || !data.ok) {
+          if (data.code === 'ACCOUNT_LOCKED') {
+            showError('Account is locked temporarily due to multiple failed attempts.');
+          } else if (data.code === 'ACCOUNT_DISABLED') {
+            showError(t.errInactive);
+          } else if (data.code === 'RATE_LIMITED') {
+            showError('Too many login attempts. Please wait and try again.');
+          } else if (data.message) {
+            showError(data.message);
+          } else {
+            showError(t.errWrongPwd);
+          }
+          isLogging = false;
+          setLoading(false);
+          return;
+        }
+
+        var user = data.user || {};
+        var token = data.session_token || '';
+        if (!token) {
+          showError('Login failed: session token missing.');
+          isLogging = false;
+          setLoading(false);
+          return;
+        }
+
+        var rememberChecked = document.getElementById('rememberMe').checked;
+        var sessionTimeoutMin = rememberChecked ? (7 * 24 * 60) : 30;
+        var expiresAt = Date.now() + sessionTimeoutMin * 60 * 1000;
+
+        ZS.setItem(TOKEN_KEY, token);
+        ZS.setItem('zeralda-session-token', token);
+        // FIX: also store token in cookie (survives cache clears)
+        document.cookie = "zeralda-auth-token=" + encodeURIComponent(token) +
+          "; path=/; max-age=604800; SameSite=Lax";
+        ZS.setItem(AUTH_META_KEY, JSON.stringify({
+          failedByUser: {},
+          userId: user.email || user.username || username,
+          loginAt: Date.now(),
+          lastActivityAt: Date.now(),
+          expiresAt: expiresAt,
+          rememberMe: rememberChecked
+        }));
+
+        if (document.getElementById('rememberMe').checked) {
+          // Store a simple hash of the username instead of plaintext
+          var hashInput = username + '_zeralda_salt';
+          var hashVal = 0;
+          for (var i = 0; i < hashInput.length; i++) {
+            hashVal = ((hashVal << 5) - hashVal) + hashInput.charCodeAt(i);
+            hashVal |= 0;
+          }
+          ZS.setItem(REMEMBERED_LOGIN_KEY, username + '|' + Math.abs(hashVal).toString(36));
+        } else {
+          ZS.removeItem(REMEMBERED_LOGIN_KEY);
+        }
+
+        saveAccountIfRemember(username, {
+          email: user.email || username,
+          fullName: user.username || user.email || username,
+          picture: user.picture || ''
+        });
+
+        syncServerPrefsAndRedirect(token, nextPage);
+      }).catch(function (err) {
+        showError(err.message || 'Login failed');
+        isLogging = false;
+        setLoading(false);
+      });
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      doLogin();
+    });
+
+    document.getElementById('username').addEventListener('input', function () {
+      setFieldError(this, false);
+      clearError(false);
+    });
+    document.getElementById('password').addEventListener('input', function () {
+      setFieldError(this, false);
+      clearError(false);
+    });
+
+    document.getElementById('password').addEventListener('keydown', function (e) {
+      var hint = document.getElementById('capsLockHint');
+      var t = window._loginTr || TR.en;
+      if (e.getModifierState && e.getModifierState('CapsLock')) {
+        hint.innerHTML = '<i class="fas fa-keyboard"></i> ' + (t.capsLockOn || 'Caps Lock is ON');
+      } else {
+        hint.innerHTML = '';
+      }
+    });
+    document.getElementById('password').addEventListener('focus', function (e) {
+      var hint = document.getElementById('capsLockHint');
+      var t = window._loginTr || TR.en;
+      if (e.getModifierState && e.getModifierState('CapsLock')) {
+        hint.innerHTML = '<i class="fas fa-keyboard"></i> ' + (t.capsLockOn || 'Caps Lock is ON');
+      }
+    });
+
+    // ══════════════════════════════════════════
+    // Saved Accounts (remember me)
+    // ══════════════════════════════════════════
+    var SAVED_KEY = 'zeralda-saved-accounts';
+
+    function getSavedAccounts() {
+      try { return JSON.parse(ZS.getItem(SAVED_KEY)) || []; }
+      catch (e) { return []; }
+    }
+    function writeSavedAccounts(arr) { ZS.setItem(SAVED_KEY, JSON.stringify(arr)); }
+
+    function saveAccountIfRemember(login, user) {
+      if (!document.getElementById('rememberMe').checked) return;
+      var accounts = getSavedAccounts();
+      var key = (user.email || login).toLowerCase();
+      // Remove existing entry for this user
+      accounts = accounts.filter(function(a) { return (a.email || a.login || '').toLowerCase() !== key; });
+      // Add new entry at top
+      accounts.unshift({
+        login: login,
+        email: user.email || '',
+        fullName: user.fullName || login,
+        picture: user.picture || '',
+        savedAt: Date.now()
+      });
+      // Keep max 5 accounts
+      if (accounts.length > 5) accounts = accounts.slice(0, 5);
+      writeSavedAccounts(accounts);
+    }
+
+    function initSavedAccounts() {
+      var accounts = getSavedAccounts();
+      var btn = document.getElementById('savedAccountsBtn');
+      var dropdown = document.getElementById('savedDropdown');
+      if (!accounts.length) { btn.style.display = 'none'; return; }
+
+      btn.style.display = '';
+      renderSavedDropdown();
+
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        dropdown.classList.toggle('show');
+      });
+
+      document.addEventListener('click', function() {
+        dropdown.classList.remove('show');
+      });
+      dropdown.addEventListener('click', function(e) { e.stopPropagation(); });
+
+      // Auto-fill first account
+      if (accounts.length > 0) {
+        fillFromSaved(accounts[0]);
+      }
+    }
+
+    function renderSavedDropdown() {
+      var accounts = getSavedAccounts();
+      var dropdown = document.getElementById('savedDropdown');
+      var btn = document.getElementById('savedAccountsBtn');
+      dropdown.innerHTML = '';
+
+      if (!accounts.length) { btn.style.display = 'none'; dropdown.classList.remove('show'); return; }
+      btn.style.display = '';
+
+      accounts.forEach(function(acc, idx) {
+        var item = document.createElement('div');
+        item.className = 'saved-item';
+
+        var avatar = '';
+        if (acc.picture) {
+          avatar = '<img src="' + escapeHtml(acc.picture) + '" alt="" onerror="this.style.display=\'none\'">';
+        } else {
+          var initial = escapeHtml((acc.fullName || acc.login || '?').charAt(0).toUpperCase());
+          avatar = '<div class="saved-icon">' + initial + '</div>';
+        }
+
+        var delBtn = document.createElement('button');
+        delBtn.className = 'saved-item-del';
+        delBtn.innerHTML = '<i class="fas fa-times"></i>';
+        delBtn.title = 'Remove';
+        delBtn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var all = getSavedAccounts();
+          all.splice(idx, 1);
+          writeSavedAccounts(all);
+          renderSavedDropdown();
+        });
+
+        item.innerHTML = avatar +
+          '<div class="saved-item-info">' +
+          '<div class="saved-item-name">' + escapeHtml(acc.fullName || acc.login) + '</div>' +
+          '<div class="saved-item-email">' + escapeHtml(acc.email || '') + '</div>' +
+          '</div>';
+        item.appendChild(delBtn);
+
+        item.addEventListener('click', function() {
+          fillFromSaved(acc);
+          dropdown.classList.remove('show');
+        });
+        dropdown.appendChild(item);
+      });
+    }
+
+    function fillFromSaved(acc) {
+      document.getElementById('username').value = acc.email || acc.login || '';
+      document.getElementById('password').value = '';
+    }
+
+    // ── Init ──
+    window._saveAccountIfRemember = saveAccountIfRemember;
+
+    applyLanguage();
+
+    // Check KEYGEN status and show/hide tab accordingly
+    (function checkKeygenStatus() {
+      var tabKey = document.getElementById('tabKey');
+      if (!tabKey) return;
+
+      var bases = getAuthApiBases();
+
+      function tryKeygenCheck(index) {
+        if (index >= bases.length) {
+          // All bases failed, hide tab
+          tabKey.style.display = 'none';
+          return;
+        }
+        var base = bases[index];
+        fetch(base + '/api/config/keygen-status', {
+          method: 'GET',
+          cache: 'no-store',
+          credentials: 'omit'
+        }).then(function(res) {
+          if ((res.status >= 500 || res.status === 404) && index + 1 < bases.length) {
+            return tryKeygenCheck(index + 1);
+          }
+          return res.json().catch(function() { return {}; }).then(function(data) {
+            return { status: res.status, data: data || {} };
+          });
+        }).then(function(result) {
+          if (!result) return;
+          var data = result.data || {};
+          if (result.status === 200 && data.ok && data.keygen_enabled) {
+            tabKey.style.display = 'flex';
+            tabKey.style.visibility = 'visible';
+            tabKey.style.opacity = '1';
+          } else {
+            tabKey.style.display = 'none';
+            tabKey.style.visibility = 'hidden';
+            tabKey.style.opacity = '0';
+          }
+        }).catch(function(err) {
+          if (index + 1 < bases.length) {
+            return tryKeygenCheck(index + 1);
+          }
+          console.warn('[LOGIN] Failed to check KEYGEN status:', err);
+          tabKey.style.display = 'none';
+        });
+      }
+
+      tryKeygenCheck(0);
+    })();
+
+    (function initRememberedLogin() {
+      var rememberedRaw = String(ZS.getItem(REMEMBERED_LOGIN_KEY) || '').trim();
+      if (!rememberedRaw) return;
+      // Extract username from 'username|hash' format
+      var pipeIdx = rememberedRaw.lastIndexOf('|');
+      var remembered = pipeIdx > 0 ? rememberedRaw.substring(0, pipeIdx) : rememberedRaw;
+      if (!remembered) return;
+      var usernameEl = document.getElementById('username');
+      var rememberEl = document.getElementById('rememberMe');
+      if (usernameEl && !String(usernameEl.value || '').trim()) usernameEl.value = remembered;
+      if (rememberEl) rememberEl.checked = true;
+    })();
+
+    initSavedAccounts();
+
+    // Expose helpers for reusable UI error messaging.
+    window.showLoginError = showError;
+    window.clearLoginError = clearError;
+
+    var langSwitchBtn = document.getElementById('langSwitchBtn');
+    if (langSwitchBtn) {
+      langSwitchBtn.addEventListener('click', cycleLanguage);
+    }
+
+    // If already logged in, validate token before redirect
+    function validateExistingSessionAndRedirect() {
+      var existingToken = ZS.getItem(TOKEN_KEY);
+      if (!existingToken) return;
+
+      authRequest('/api/auth/validate', {
+        method: 'GET',
+        credentials: 'omit',
+        headers: {
+          'Authorization': 'Bearer ' + existingToken
+        },
+        cache: 'no-store'
+      }).then(function (res) {
+        return res.json().catch(function () { return {}; }).then(function (data) {
+          return { status: res.status, data: data || {} };
+        });
+      }).then(function (result) {
+        if (result.status === 200 && result.data && result.data.ok) {
+          window.location.href = nextPage;
+          return;
+        }
+        ZS.removeItem(TOKEN_KEY);
+        ZS.removeItem(AUTH_META_KEY);
+      }).catch(function () {
+        // Keep user on login page if validation endpoint is not reachable
+      });
+    }
+
+    // ── Tab Switching for Login Modes ──
+    var tabEmail = document.getElementById('tabEmail');
+    var tabKey = document.getElementById('tabKey');
+    var loginForm = document.getElementById('loginForm');
+    var keyLoginForm = document.getElementById('keyLoginForm');
+
+    function switchMode(mode) {
+      var isEmail = mode === 'email';
+
+      // Update tabs
+      var tabs = document.querySelectorAll('.login-mode-tab');
+      tabs.forEach(function(tab) {
+        if ((isEmail && tab.dataset.mode === 'email') || (!isEmail && tab.dataset.mode === 'key')) {
+          tab.classList.add('active');
+        } else {
+          tab.classList.remove('active');
+        }
+      });
+
+      // Update forms
+      if (loginForm) loginForm.style.display = isEmail ? 'block' : 'none';
+      if (keyLoginForm) keyLoginForm.style.display = isEmail ? 'none' : 'block';
+
+      // Update hint and button
+      var hintText = document.getElementById('hintText');
+      if (hintText) {
+        var t = window._loginTr || TR.en;
+        hintText.textContent = isEmail ? t.hint : t.keyHint;
+      }
+
+      // Clear errors
+      var error = document.getElementById('error');
+      if (error) error.innerHTML = '';
+      var keyError = document.getElementById('keyError');
+      if (keyError) keyError.innerHTML = '';
+    }
+
+    if (tabEmail) tabEmail.addEventListener('click', function() { switchMode('email'); });
+    if (tabKey) tabKey.addEventListener('click', function() { switchMode('key'); });
+
+    // ── KEYGEN Login Handler ──
+    var isKeyLogging = false;
+
+    function showKeyError(msg) {
+      var el = document.getElementById('keyError');
+      if (el) el.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + msg;
+    }
+
+    function setKeyLoading(on) {
+      var btn = document.getElementById('keyLoginBtn');
+      var spinner = document.getElementById('keyLoginSpinner');
+      var txt = document.getElementById('keyLoginBtnText');
+      if (on) {
+        btn.disabled = true;
+        spinner.style.display = 'inline-block';
+        txt.style.opacity = '0.7';
+      } else {
+        btn.disabled = false;
+        spinner.style.display = 'none';
+        txt.style.opacity = '1';
+      }
+    }
+
+    function doKeyLogin() {
+      if (isKeyLogging) return;
+      var t = window._loginTr || TR.en;
+      var phone = document.getElementById('keyPhone').value.trim();
+      var key = document.getElementById('activationKey').value.trim();
+
+      if (!phone || !key) {
+        showKeyError(t.errKeyEmpty);
+        return;
+      }
+
+      isKeyLogging = true;
+      setKeyLoading(true);
+      showKeyError('');
+
+      authRequest('/api/auth/login-with-key', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'omit',
+        cache: 'no-store',
+        body: JSON.stringify({
+          phone: phone,
+          key: key
+        })
+      }).then(function (res) {
+        return res.json().catch(function () { return {}; }).then(function (data) {
+          return { status: res.status, data: data || {} };
+        });
+      }).then(function (result) {
+        var data = result.data || {};
+        if (result.status !== 200 || !data.ok) {
+          if (data.message) {
+            showKeyError(data.message);
+          } else if (data.error) {
+            showKeyError(data.error);
+          } else {
+            showKeyError(t.errKeyInvalid);
+          }
+          isKeyLogging = false;
+          setKeyLoading(false);
+          return;
+        }
+
+        var token = data.session_token || '';
+        if (!token) {
+          showKeyError('Login failed: session token missing.');
+          isKeyLogging = false;
+          setKeyLoading(false);
+          return;
+        }
+
+        var keyExpiresAt = Date.now() + 30 * 60 * 1000;
+
+        ZS.setItem(TOKEN_KEY, token);
+        ZS.setItem('zeralda-session-token', token);
+        // FIX: also store token in cookie (survives cache clears)
+        document.cookie = "zeralda-auth-token=" + encodeURIComponent(token) +
+          "; path=/; max-age=604800; SameSite=Lax";
+        ZS.setItem(AUTH_META_KEY, JSON.stringify({
+          userId: data.user_email || phone,
+          phone: phone,
+          loginAt: Date.now(),
+          lastActivityAt: Date.now(),
+          expiresAt: keyExpiresAt,
+          rememberMe: false
+        }));
+
+        try {
+          localStorage.setItem('zeralda-saved-unified-key', key);
+          localStorage.setItem('zeralda-saved-phone', phone);
+        } catch (_) {}
+
+        syncServerPrefsAndRedirect(token, nextPage);
+      }).catch(function (err) {
+        showKeyError(err.message || 'Login failed');
+        isKeyLogging = false;
+        setKeyLoading(false);
+      });
+    }
+
+    if (keyLoginForm) {
+      keyLoginForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        doKeyLogin();
+      });
+    }
+
+    // ── Auto-fill and Remember Unified Key ──
+    try {
+      var urlParams = new URLSearchParams(window.location.search);
+      var qKey = urlParams.get('key') || '';
+      var qPhone = urlParams.get('phone') || '';
+      var qMode = urlParams.get('mode') || '';
+
+      var savedKey = qKey || localStorage.getItem('zeralda-saved-unified-key') || '';
+      var savedPhone = qPhone || localStorage.getItem('zeralda-saved-phone') || '';
+
+      var elKey = document.getElementById('activationKey');
+      var elPhone = document.getElementById('keyPhone');
+      if (elKey && savedKey) elKey.value = savedKey;
+      if (elPhone && savedPhone) elPhone.value = savedPhone;
+
+      if (qMode === 'key' || qKey) {
+        switchMode('key');
+      }
+    } catch (_) {}
+
+    function syncServerPrefsAndRedirect(token, url) {
+      // FIX: اضبط الـ token في الـ cookie أولاً قبل أي شيء
+      try {
+        document.cookie = "zeralda-auth-token=" + encodeURIComponent(token) + "; path=/; max-age=2592000; SameSite=Lax";
+        if (window.ZS) { try { window.ZS.setItem('zeralda-auth-token', token); } catch(e) {} }
+      } catch(e) {}
+
+      var SYNC_KEYS = [
+        'preferred-language', 'language',
+        'system-currency',
+        'zeralda-zoom-level',
+        'zeralda-sidebar-collapsed',
+        'zeralda-theme',
+        'zeralda-remembered-login',
+        'zeralda-remembered-email',
+        'zeralda-saved-accounts',
+        'zeralda-google-client-id'
+      ];
+      var bases = getAuthApiBases();
+      var base = bases[0] || window.location.origin;
+      fetch(base + '/api/auth/preferences', {
+        headers: { 'X-Session-Token': token }
+      }).then(function(res) {
+        return res.ok ? res.json() : {};
+      }).then(function(prefData) {
+        var prefs = (prefData && prefData.preferences) || {};
+        SYNC_KEYS.forEach(function(k) {
+          if (prefs[k] !== undefined) ZS.setItem(k, prefs[k]);
+        });
+      }).catch(function() {}).then(function() {
+        // FIX: أعد تحميل البيانات من الخادم قبل التحويل
+        if (window.ZS && window.ZS.reloadFromServer) {
+          window.ZS.reloadFromServer().then(function() {
+            window.location.href = url;
+          }).catch(function() {
+            window.location.href = url;
+          });
+        } else {
+          window.location.href = url;
+        }
+      });
+    }
+
+    // ══════════════════════════════════════════════════════════
+    //  Google Sign-In (OAuth popup)
+    // ══════════════════════════════════════════════════════════
+    var GOOGLE_CLIENT_ID = '180070533961-1douevfros9h0smkg249b0fgmmhfesjb.apps.googleusercontent.com';
+    var googleTokenClient = null;
+    var isGoogleLogging = false;
+
+    function initGoogleTokenClient() {
+      if (typeof google === 'undefined' || !google.accounts || !google.accounts.oauth2) return;
+      if (googleTokenClient) return;
+
+      // Check if running in WebView2 (use redirect mode) or normal browser (popup)
+      var isWebView2 = false;
+      try {
+        if (window.chrome && window.chrome.webview) isWebView2 = true;
+        else {
+          var ua = String(navigator.userAgent || '');
+          if (/Edg\//.test(ua) && !(window.chrome && window.chrome.runtime)) isWebView2 = true;
+        }
+      } catch (_) {}
+
+      googleTokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: GOOGLE_CLIENT_ID,
+        scope: 'openid email profile',
+        ux_mode: isWebView2 ? 'redirect' : 'popup',
+        redirect_uri: isWebView2 ? (window.location.origin + '/oauth_callback.html') : undefined,
+        error_callback: function (err) {
+          var mapped = err || {};
+          var t = window._loginTr || TR.en;
+          var msg = t.googleErrPopup;
+          var type = String(mapped.type || '').toLowerCase();
+          if (type === 'popup_failed_to_open') msg = t.googleErrPopup;
+          else if (type === 'popup_closed') msg = t.googleErrPopup;
+          setGoogleLoading(false);
+          showError(msg);
+          isGoogleLogging = false;
+        },
+        callback: function (resp) {
+          if (resp && resp.error) {
+            var t = window._loginTr || TR.en;
+            setGoogleLoading(false);
+            showError(t.googleErr + ' (' + (resp.error || 'unknown') + ')');
+            isGoogleLogging = false;
+            return;
+          }
+          if (resp && resp.access_token) {
+            sendGoogleTokenToServer(resp.access_token);
+          }
+        }
+      });
+    }
+
+    function setGoogleLoading(on) {
+      var btn = document.getElementById('googleSignInBtn');
+      if (!btn) return;
+      if (on) {
+        btn.classList.add('loading');
+        btn.disabled = true;
+      } else {
+        btn.classList.remove('loading');
+        btn.disabled = false;
+      }
+    }
+
+    function doGoogleSignIn() {
+      if (isGoogleLogging) return;
+      var t = window._loginTr || TR.en;
+      clearError(true);
+      isGoogleLogging = true;
+      setGoogleLoading(true);
+
+      // Initialize GIS token client if not already done
+      initGoogleTokenClient();
+
+      if (!googleTokenClient) {
+        // GIS not loaded yet — retry after a delay (script is async)
+        var retryCount = 0;
+        var waitGis = setInterval(function () {
+          retryCount++;
+          initGoogleTokenClient();
+          if (googleTokenClient) {
+            clearInterval(waitGis);
+            googleTokenClient.requestAccessToken({ prompt: '' });
+          } else if (retryCount > 20) {
+            clearInterval(waitGis);
+            setGoogleLoading(false);
+            showError(t.googleErrNetwork);
+            isGoogleLogging = false;
+          }
+        }, 250);
+        return;
+      }
+
+      googleTokenClient.requestAccessToken({ prompt: '' });
+    }
+
+    function sendGoogleTokenToServer(accessToken) {
+      var t = window._loginTr || TR.en;
+      // Fetch Google profile (email, name, picture) using the access token
+      fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { 'Authorization': 'Bearer ' + accessToken }
+      }).then(function (r) {
+        if (!r.ok) throw new Error('profile_fetch_failed');
+        return r.json();
+      }).catch(function () {
+        return { email: '', name: '', picture: '' };
+      }).then(function (gprofile) {
+        // Save Google token and profile to localStorage in ZeraldaGoogle format
+        // so the settings page recognizes the Google connection
+        var nowMs = Date.now();
+        var tokenData = {
+          access_token: accessToken,
+          issued_at: nowMs,
+          expires_in: 3600,
+          expires_at: nowMs + 3600 * 1000
+        };
+        ZS.setItem('zeralda-google-token', JSON.stringify(tokenData));
+        ZS.setItem('zeralda-google-profile', JSON.stringify({
+          email: gprofile.email || '',
+          name: gprofile.name || gprofile.given_name || '',
+          picture: gprofile.picture || '',
+          sub: gprofile.sub || ''
+        }));
+
+        // Send token to server for session creation
+        return authRequest('/api/auth/google-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'omit',
+          cache: 'no-store',
+          body: JSON.stringify({ google_token: accessToken })
+        }).then(function (res) {
+          return res.json().catch(function () { return {}; }).then(function (data) {
+            return { status: res.status, data: data || {} };
+          });
+        }).then(function (result) {
+          var data = result.data || {};
+          if (result.status !== 200 || !data.ok) {
+            setGoogleLoading(false);
+            isGoogleLogging = false;
+            if (data.code === 'ACCOUNT_DISABLED') {
+              showError(t.errInactive);
+            } else if (data.code === 'USER_NOT_FOUND') {
+              showError(data.error || 'No account found for this Google email.');
+            } else {
+              showError(data.error || t.googleErr);
+            }
+            return;
+          }
+
+          var user = data.user || {};
+          var token = data.session_token || '';
+          if (!token) {
+            setGoogleLoading(false);
+            isGoogleLogging = false;
+            showError('Login failed: session token missing.');
+            return;
+          }
+
+          var rememberChecked = document.getElementById('rememberMe').checked;
+          var sessionTimeoutMin = rememberChecked ? (7 * 24 * 60) : 30;
+          var expiresAt = Date.now() + sessionTimeoutMin * 60 * 1000;
+
+          ZS.setItem(TOKEN_KEY, token);
+        ZS.setItem('zeralda-session-token', token);
+          ZS.setItem(AUTH_META_KEY, JSON.stringify({
+            failedByUser: {},
+            userId: user.email || '',
+            loginAt: Date.now(),
+            lastActivityAt: Date.now(),
+            expiresAt: expiresAt,
+            rememberMe: rememberChecked,
+            googleLogin: true
+          }));
+
+          // Save account in saved accounts list
+          saveAccountIfRemember(user.email || '', {
+            email: user.email || '',
+            fullName: user.username || user.email || '',
+            picture: user.picture || gprofile.picture || ''
+          });
+
+          // Redirect to dashboard
+          syncServerPrefsAndRedirect(token, nextPage);
+        });
+      }).catch(function (err) {
+        setGoogleLoading(false);
+        isGoogleLogging = false;
+        showError(t.googleErrNetwork);
+      });
+    }
+
+    // Make doGoogleSignIn globally accessible (called from onclick)
+    window.doGoogleSignIn = doGoogleSignIn;
+
+    // Check existing session — token is in cookie (synchronous, no need to wait for ZDB)
+    validateExistingSessionAndRedirect();
+  })();
+  </script>
+
+  <script>
+  (function () {
+    'use strict';
+
+    var timer = null;
+
+    function getSessionId() {
+      try {
+        var key = 'zeralda-client-session-id';
+        var existing = ZS.getItem(key);
+        if (existing) return existing;
+        var sid = 'sid_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 10);
+        ZS.setItem(key, sid);
+        return sid;
+      } catch (_) {
+        return 'sid_fallback_' + Math.random().toString(36).slice(2, 10);
+      }
+    }
+
+    var getAuthApiBasesFn = window._getAuthApiBases || function() { return [window.location.origin]; };
+    var bases = getAuthApiBasesFn();
+    // Prefer the first non-proxy base (skip the proxy origin for API calls)
+    var apiBase = bases[0] || window.location.origin;
+    var portNum = parseInt(window.location.port, 10) || 0;
+    if (portNum > 0 && [80, 443, 3000, 5000, 8000, 8080, 8443, 9000].indexOf(portNum) === -1 && bases.length > 3) {
+      apiBase = bases[bases.length - 4] || bases[0]; // Use the first fallback server port
+    }
+
+    function signal(path, payload) {
+      var body = JSON.stringify(payload || {});
+      var url = apiBase + path;
+      if (navigator.sendBeacon) {
+        try {
+          navigator.sendBeacon(url, new Blob([body], { type: 'application/json' }));
+          return;
+        } catch (_) {}
+      }
+      try {
+        fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: body,
+          keepalive: true,
+          credentials: 'omit',
+          cache: 'no-store'
+        }).catch(function () {});
+      } catch (_) {}
+    }
+
+    var sid = getSessionId();
+
+    function alive() {
+      signal('/api/client/alive', { sessionId: sid, page: window.location.pathname, ts: Date.now() });
+    }
+
+    alive();
+    timer = setInterval(alive, 15000);
+
+    window.addEventListener('beforeunload', function () {
+      signal('/api/client/bye', { sessionId: sid, page: window.location.pathname, ts: Date.now() });
+    });
+
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'visible') alive();
+    });
+  })();
+  </script>
+
+    </body>
+</html>

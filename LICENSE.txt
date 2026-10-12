@@ -1,0 +1,80 @@
+ZERALDA ERP SOFTWARE LICENSE AGREEMENT
+=======================================
+
+Version 2.0 - March 7, 2026
+
+Copyright (c) 2026 Zitouni Abdelhakim
+All rights reserved.
+
+GRANT OF LICENSE
+----------------
+This software and associated documentation files (the "Software") are licensed, 
+not sold, to you by Zitouni Abdelhakim for use under the following terms:
+
+You are granted a non-exclusive, non-transferable license to:
+1. Install and use the Software on computers owned or controlled by your organization
+2. Make backup copies for archival purposes only
+3. Customize the Software for your internal business needs
+
+RESTRICTIONS
+------------
+You may NOT:
+1. Redistribute, sell, rent, lease, or sublicense the Software
+2. Reverse engineer, decompile, or disassemble the Software
+3. Remove or alter any copyright, trademark, or proprietary notices
+4. Use the Software for illegal purposes or in violation of any laws
+
+SUPPORT AND MAINTENANCE
+-----------------------
+Technical support is provided by:
+Developer: Zitouni Abdelhakim
+Email: saddamzeralda@gmail.com
+Phone: 0696409083
+
+Support includes:
+- Installation assistance
+- Bug fixes and patches
+- Minor updates and improvements
+
+DISCLAIMER OF WARRANTIES
+------------------------
+THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS 
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS 
+FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
+
+LIMITATION OF LIABILITY
+-----------------------
+IN NO EVENT SHALL ZITOUNI ABDELHAKIM BE LIABLE FOR ANY SPECIAL, INCIDENTAL, 
+INDIRECT, OR CONSEQUENTIAL DAMAGES WHATSOEVER ARISING OUT OF THE USE OF OR 
+INABILITY TO USE THE SOFTWARE.
+
+DATA SECURITY
+-------------
+The licensee is responsible for:
+- Regular data backups
+- Database security and access control
+- Compliance with data protection regulations
+
+TERMINATION
+-----------
+This license is effective until terminated. Your rights under this license will 
+terminate automatically without notice if you fail to comply with any term of 
+this agreement.
+
+GOVERNING LAW
+-------------
+This agreement shall be governed by the laws of Algeria.
+
+CONTACT INFORMATION
+-------------------
+For licensing inquiries, technical support, or custom development:
+
+Zitouni Abdelhakim
+Email: saddamzeralda@gmail.com
+Phone: 0696409083
+
+By installing or using this software, you acknowledge that you have read this
+agreement, understand it, and agree to be bound by its terms and conditions.
+
+=======================================
+END OF LICENSE AGREEMENT
