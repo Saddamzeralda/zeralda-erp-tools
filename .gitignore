@@ -13,7 +13,15 @@ __pycache__/
 venv/
 
 # بيانات وقت التشغيل
-data/
+data/*
+!data/users.json
+data/*.backup*
+data/backups/
+data/sessions.json
+data/login_attempts.json
+data/shared_history.json
+data/undo_stack.json
+data/license_usage_log.json
 logs/
 *.log
 server_log.txt

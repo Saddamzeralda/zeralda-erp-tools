@@ -1,0 +1,53 @@
+{
+  "saddamzeralda@gmail.com": {
+    "username": "Admin",
+    "email": "saddamzeralda@gmail.com",
+    "password": "c99b0cbcb008620e0af3900faa6ccf52a3ff8e6f0a3b71a9bd0308e6108a5875",
+    "salt": "608fc65bb0e701ba471118d538331c7475cfcf79b859cc48baf8f6491930e4d2",
+    "role": "admin",
+    "created_at": "2026-07-31T17:47:39.055338",
+    "active": true,
+    "failed_attempts": 0,
+    "locked_until": null,
+    "picture": "https://lh3.googleusercontent.com/a/ACg8ocInJRBqg17uc0Kc0b2NG-QoM40H7cuXYi6Bf0z3vJHT8aBhD1ut=s96-c",
+    "preferences": {
+      "preferred-language": "ar",
+      "system-currency": "DZD",
+      "zeralda-remembered-login": "saddamzeralda@gmail.com|dl6un3",
+      "zeralda-saved-accounts": "[{\"login\":\"saddamzeralda@gmail.com\",\"email\":\"saddamzeralda@gmail.com\",\"fullName\":\"Admin\",\"picture\":\"https://lh3.googleusercontent.com/a/ACg8ocInJRBqg17uc0Kc0b2NG-QoM40H7cuXYi6Bf0z3vJHT8aBhD1ut=s96-c\",\"savedAt\":1785952910086}]"
+    }
+  },
+  "test@example.com": {
+    "username": "+21396409083",
+    "email": "test@example.com",
+    "password": "735f2911a406933819763ea563b7fc1c7de5f0d6e6c8684311d91ea51daa1f98",
+    "salt": "06bebc9bd980deaa18393e69cf7f4579c7fdfd628d3ee7be777f26383bb46643",
+    "role": "user",
+    "created_at": "2026-08-06T00:42:40.835861",
+    "active": true,
+    "failed_attempts": 0,
+    "locked_until": null
+  },
+  "user_0559666951@zeralda.local": {
+    "username": "0559666951",
+    "email": "user_0559666951@zeralda.local",
+    "password": "c4060f6d8e71a9a6517b7b2ac8a33acff799bfca1477d7ef26a58eae366725aa",
+    "salt": "d607859e6bf1dc6298d077f1203e003fa7f0c69b057e8c9a5b50b2149f0d56d5",
+    "role": "user",
+    "created_at": "2026-08-06T00:55:10.704252",
+    "active": true,
+    "failed_attempts": 0,
+    "locked_until": null
+  },
+  "admin@zeralda.dz": {
+    "username": "Admin",
+    "email": "admin@zeralda.dz",
+    "password": "3318f2570ee427aa3e23b32b8e9d21e7589ab099b3ad3f4a1a21688f32a1b062",
+    "salt": "27b005725a6c6af338303cf4f4015c0a523d4f43b238363156a30aac37933d8e",
+    "role": "admin",
+    "created_at": "2026-10-12T22:43:20.977224",
+    "active": true,
+    "failed_attempts": 0,
+    "locked_until": null
+  }
+}
