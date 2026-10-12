@@ -132,7 +132,12 @@ def origin_is_allowed(origin: Optional[str]) -> bool:
                 return True
         except Exception:
             pass
-        if host.endswith(".trycloudflare.com"):
+        if (
+            host.endswith(".trycloudflare.com")
+            or host.endswith(".railway.app")
+            or host.endswith(".up.railway.app")
+            or host.endswith(".onrender.com")
+        ):
             return True
         try:
             ip = ipaddress.ip_address(host)
@@ -275,7 +280,15 @@ def get_session_token(request: Request) -> str:
     if auth_header.startswith("Bearer "):
         return auth_header[7:].strip()
     token = request.headers.get("X-Session-Token", "")
-    return token.strip()
+    if token:
+        return token.strip()
+    # Support cookie set during login
+    cookie_token = (
+        request.cookies.get("zeralda-auth-token", "")
+        or request.cookies.get("session_token", "")
+        or request.cookies.get("zeralda_session", "")
+    )
+    return cookie_token.strip()
 
 
 # ── Auth validation ─────────────────────────────────────────────────────────

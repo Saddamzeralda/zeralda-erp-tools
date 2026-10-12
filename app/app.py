@@ -43,7 +43,7 @@ def create_app() -> FastAPI:
     # we also need to reject disallowed origins explicitly (return no ACAO header).
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=sorted(ALLOWED_ORIGINS),
+        allow_origin_regex=r"^https?://.*",
         allow_credentials=True,
         allow_methods=["GET", "POST", "DELETE", "PATCH", "OPTIONS"],
         allow_headers=["Content-Type", "Authorization", "X-Session-Token", "X-Requested-With",
@@ -154,7 +154,9 @@ def create_app() -> FastAPI:
             from urllib.parse import urlparse
             parsed = urlparse(origin)
             origin_only = f"{parsed.scheme}://{parsed.netloc}"
-            if not origin_is_allowed(origin_only):
+            req_host = (request.headers.get("host") or "").strip().lower()
+            is_same_origin = (parsed.netloc.lower() == req_host) if req_host else False
+            if not is_same_origin and not origin_is_allowed(origin_only):
                 log_structured("WARN", "CSRF: origin not allowed",
                                action="csrf_blocked", origin=origin_only, path=path)
                 return JSONResponse(
