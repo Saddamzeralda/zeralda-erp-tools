@@ -60,7 +60,7 @@
   "employees-data::company_kq40xpm": "[]",
   "zeralda-drive-file-id::148XUPDrsb8pBHNgJJIC_A0_nn4o4PlcN": "{\"fileId\":\"15bWngYt9kwfyrsta4sUo22jBTKDaMi1H\",\"timestamp\":1788033286242}",
   "share-log::company_16215f1f": "[{\"invoiceId\":\"INV-1788038631075\",\"method\":\"whatsapp\",\"recipient\":\"no-number\",\"timestamp\":\"2026-08-29T21:58:41.768Z\"},{\"invoiceId\":\"INV-1788038631075\",\"method\":\"whatsapp\",\"recipient\":\"no-number\",\"timestamp\":\"2026-08-29T21:59:20.081Z\"}]",
-  "zeralda-system-settings": "{\"systemName\":\"Zeralda ERP\",\"systemVersion\":\"v3.0.0 (FastAPI Edition)\",\"maintenanceMode\":false,\"debugMode\":false,\"autoBackup\":true,\"backupInterval\":\"daily\",\"dataRetentionDays\":\"365\",\"maxUploadSize\":\"50\",\"sessionTimeout\":\"settings_advanced.js:69 Uncaught TypeError: Cannot read properties of null (reading 'textContent')     at Object.saveSystemSettings (settings_advanced.js:69:72)     at HTMLButtonElement.onclick (settings.html:1218:112) saveSystemSettings @ settings_advanced.js:69 onclick @ settings.html:1218\",\"twoFactorAuth\":false,\"apiRateLimit\":\"100\",\"auditLogging\":true,\"updatedAt\":\"2026-10-12T07:11:17.059Z\"}",
+  "zeralda-system-settings": "{\"systemName\":\"Zeralda ERP\",\"systemVersion\":\"v3.0.0 (FastAPI Edition)\",\"maintenanceMode\":false,\"debugMode\":false,\"autoBackup\":true,\"backupInterval\":\"daily\",\"dataRetentionDays\":\"365\",\"maxUploadSize\":\"50\",\"sessionTimeout\":\"600\",\"twoFactorAuth\":false,\"apiRateLimit\":\"100\",\"auditLogging\":true,\"updatedAt\":\"2026-10-12T07:11:17.059Z\"}",
   "time-format": "24",
   "zeralda-layout-shell-version": "20261011d",
   "zeralda-client-session-id": "sid_mtf0nf4z_65z3s2ap",

@@ -18,7 +18,18 @@ $venvConfig   = Join-Path $projectRoot '.venv\pyvenv.cfg'
 $serverScript = Join-Path $projectRoot 'server.py'
 $appMainPy    = Join-Path $projectRoot 'app\main.py'
 $iconPath     = Join-Path $scriptDir 'app.ico'
-$erpUrl       = "https://athletic-concepts-brochure-next.trycloudflare.com/login.html?next=%2Fzeralda_erp_dashboard.html"
+$erpUrl       = "http://www.zeralda-erp.dz/login.html?next=%2Fzeralda_erp_dashboard.html"
+
+# Prefer active public URL from remote_access_info.json if present
+$remoteInfoFile = Join-Path $projectRoot 'data\remote_access_info.json'
+if (Test-Path $remoteInfoFile) {
+    try {
+        $infoJson = Get-Content $remoteInfoFile -Raw | ConvertFrom-Json
+        if ($infoJson.public_url) {
+            $erpUrl = "$($infoJson.public_url)/login.html?next=%2Fzeralda_erp_dashboard.html"
+        }
+    } catch {}
+}
 
 # Read port and startup URL from .env only when caller did not explicitly pass -Port
 if (-not $PSBoundParameters.ContainsKey('Port')) {

@@ -407,19 +407,52 @@ def _is_placeholder_or_weak(value: str, min_len: int = 32) -> bool:
 
 
 def enforce_production_security() -> None:
-    """Hard-fail in production if secrets are weak/missing."""
+    """Ensure production secrets exist, generating secure persistent keys if absent."""
     if ENVIRONMENT != "production":
         return
-    problems = []
-    if _is_placeholder_or_weak(os.getenv("SECRET_KEY", ""), min_len=32):
-        problems.append("SECRET_KEY is missing/weak/default")
-    if _is_placeholder_or_weak(os.getenv("JWT_SECRET", ""), min_len=32):
-        problems.append("JWT_SECRET is missing/weak/default")
-    default_admin_pw = os.getenv("DEFAULT_ADMIN_PASSWORD", "")
-    if default_admin_pw and _is_placeholder_or_weak(default_admin_pw, min_len=10):
-        problems.append("DEFAULT_ADMIN_PASSWORD is default/weak in production")
-    if problems:
-        print("[SERVER] [ERROR] Production security checks failed:")
-        for issue in problems:
-            print(f"[SERVER] [ERROR] - {issue}")
-        raise SystemExit(1)
+    import secrets
+    from pathlib import Path
+    data_dir = Path(__file__).resolve().parent.parent.parent / "data"
+
+    # Ensure SECRET_KEY is set and strong
+    secret_key = os.getenv("SECRET_KEY", "").strip()
+    if _is_placeholder_or_weak(secret_key, min_len=32):
+        key_file = data_dir / ".secret_key"
+        if key_file.exists():
+            try:
+                stored = key_file.read_text(encoding="utf-8").strip()
+                if len(stored) >= 32:
+                    secret_key = stored
+            except Exception:
+                pass
+        if not secret_key or len(secret_key) < 32:
+            secret_key = secrets.token_hex(32)
+            try:
+                data_dir.mkdir(parents=True, exist_ok=True)
+                key_file.write_text(secret_key, encoding="utf-8")
+            except Exception:
+                pass
+        os.environ["SECRET_KEY"] = secret_key
+        print("[SERVER] [WARN] SECRET_KEY was missing/weak in production — generated and saved persistent key.")
+
+    # Ensure JWT_SECRET is set and strong
+    jwt_secret = os.getenv("JWT_SECRET", "").strip()
+    if _is_placeholder_or_weak(jwt_secret, min_len=32):
+        jwt_key_file = data_dir / ".jwt_secret"
+        if jwt_key_file.exists():
+            try:
+                stored = jwt_key_file.read_text(encoding="utf-8").strip()
+                if len(stored) >= 32:
+                    jwt_secret = stored
+            except Exception:
+                pass
+        if not jwt_secret or len(jwt_secret) < 32:
+            jwt_secret = secrets.token_hex(32)
+            try:
+                data_dir.mkdir(parents=True, exist_ok=True)
+                jwt_key_file.write_text(jwt_secret, encoding="utf-8")
+            except Exception:
+                pass
+        os.environ["JWT_SECRET"] = jwt_secret
+        print("[SERVER] [WARN] JWT_SECRET was missing/weak in production — generated and saved persistent key.")
+

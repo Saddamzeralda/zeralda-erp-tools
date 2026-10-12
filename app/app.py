@@ -197,6 +197,7 @@ def create_app() -> FastAPI:
         "/api/auth/login",
         "/api/auth/google",
         "/api/config/keygen-status",
+        "/api/ping",
     )
 
     @app.middleware("http")

@@ -23,9 +23,9 @@
 #define AppName        "Zeralda ERP"
 #define AppNameAr      "زرالدة لإدارة موارد المؤسسات"
 #define AppNameFr      "Zeralda ERP"
-#define AppVersion     "1.3.8"
+#define AppVersion     "3.0.0"
 #define AppPublisher   "Zeralda Industries"
-#define AppURL         "https://athletic-concepts-brochure-next.trycloudflare.com/login.html?next=%2Fzeralda_erp_dashboard.html"
+#define AppURL         "http://www.zeralda-erp.dz/login.html?next=%2Fzeralda_erp_dashboard.html"
 #define AppCopyright   "© 2024-2026 Zeralda Industries"
 #define AppExe         "launcher\Zeralda_ERP_Launcher_core.exe"
 #define SourceDir      ".."
@@ -241,6 +241,8 @@ Source: "{#SourceDir}\settings.html";              DestDir: "{app}"; Components:
 Source: "{#SourceDir}\restore_backup.html";        DestDir: "{app}"; Components: core; Flags: ignoreversion
 Source: "{#SourceDir}\restore_session.html";       DestDir: "{app}"; Components: core; Flags: ignoreversion
 Source: "{#SourceDir}\usage_dashboard.html";       DestDir: "{app}"; Components: core; Flags: ignoreversion
+Source: "{#SourceDir}\connect.html";               DestDir: "{app}"; Components: core; Flags: ignoreversion
+Source: "{#SourceDir}\START_CONNECTION_HUB.cmd";   DestDir: "{app}"; Components: core; Flags: ignoreversion
 
 ; ── Core application — Python & config ──────────────────────────────────────
 Source: "{#SourceDir}\server.py";                  DestDir: "{app}"; Components: core; Flags: ignoreversion
@@ -300,6 +302,8 @@ Name: "{app}\logs";  Permissions: users-modify
 Name: "{autodesktop}\{#AppName}";          Filename: "wscript.exe"; Parameters: """{app}\launcher\Start_Tray_Silent.vbs"""; WorkingDir: "{app}"; IconFilename: "{app}\launcher\app.ico"; Tasks: desktopicon; Comment: "Launch Zeralda ERP — opens in browser"
 ; Start Menu shortcut — same launcher
 Name: "{group}\{#AppName}";                Filename: "wscript.exe"; Parameters: """{app}\launcher\Start_Tray_Silent.vbs"""; WorkingDir: "{app}"; IconFilename: "{app}\launcher\app.ico"; Tasks: startmenu;   Comment: "Launch Zeralda ERP — opens in browser"
+; Connection Hub shortcut
+Name: "{group}\{#AppName} (مركز ربط الهواتف - Connection Hub)"; Filename: "{app}\START_CONNECTION_HUB.cmd"; WorkingDir: "{app}"; IconFilename: "{app}\launcher\app.ico"; Tasks: startmenu; Comment: "Zeralda ERP Connection Hub"
 ; Optional diagnostic launcher (visible console, for troubleshooting)
 Name: "{group}\{#AppName} (Diagnostic Mode)"; Filename: "{app}\launch_diagnostic.cmd"; WorkingDir: "{app}"; IconFilename: "{app}\launcher\app.ico"; Tasks: startmenu
 Name: "{group}\{cm:UninstallProgram,{#AppName}}"; Filename: "{uninstallexe}"; Tasks: startmenu

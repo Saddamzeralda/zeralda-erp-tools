@@ -43,6 +43,8 @@ try:
     # Previously a password like "p@ss:w/ord" would silently corrupt the URL
     # and the engine would fall back to JSON-only storage.
     _DB_URL = os.getenv("DATABASE_URL")
+    if _DB_URL and _DB_URL.startswith("postgres://"):
+        _DB_URL = _DB_URL.replace("postgres://", "postgresql://", 1)
     if not _DB_URL:
         _db_user = quote_plus(os.getenv("DB_USER", ""))
         _db_pass = quote_plus(os.getenv("DB_PASSWORD", ""))
