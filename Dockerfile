@@ -22,9 +22,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Install python requirements (skipping Windows-only tray libraries like pystray)
 COPY requirements.txt /app/
-RUN grep -v -i "pystray" requirements.txt > /tmp/req.txt && \
-    pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r /tmp/req.txt
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
 # Copy application source
 COPY . /app/
