@@ -66,7 +66,7 @@ def _load_or_create_secret_key() -> str:
 
 # Configuration
 SECRET_KEY = _load_or_create_secret_key()
-SESSION_TIMEOUT = 30 * 60  # 30 minutes in seconds
+SESSION_TIMEOUT = int(os.getenv('SESSION_TIMEOUT_SECONDS', str(10 * 3600)))  # 10 hours in seconds
 MAX_LOGIN_ATTEMPTS = 5
 LOCKOUT_DURATION = 15 * 60  # 15 minutes
 PBKDF2_ITERATIONS = int(os.getenv('PBKDF2_ITERATIONS', '260000'))

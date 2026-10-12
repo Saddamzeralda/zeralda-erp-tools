@@ -700,7 +700,7 @@
                 </button>
                 <div class="search-box">
                     <i class="fas fa-search"></i>
-                    <input type="text" id="productSearch" placeholder="Search products..." onkeyup="filterProducts()">
+                    <input type="text" id="productSearch" placeholder="Search products..." data-en-placeholder="Search products..." data-ar-placeholder="بحث في المنتجات..." data-fr-placeholder="Rechercher des produits..." onkeyup="filterProducts()">
                 </div>
             </div>
             <table class="data-table">
@@ -752,15 +752,15 @@
                 </button>
                 <div class="search-box">
                     <i class="fas fa-search"></i>
-                    <input type="text" id="orderSearch" placeholder="Search orders..." onkeyup="filterOrders()">
+                    <input type="text" id="orderSearch" placeholder="Search orders..." data-en-placeholder="Search orders..." data-ar-placeholder="بحث في الطلبات..." data-fr-placeholder="Rechercher des commandes..." onkeyup="filterOrders()">
                 </div>
                 <select id="orderStatusFilter" onchange="filterOrders()">
-                    <option value="">All Status</option>
-                    <option value="pending">Pending</option>
-                    <option value="processing">Processing</option>
-                    <option value="shipped">Shipped</option>
-                    <option value="delivered">Delivered</option>
-                    <option value="cancelled">Cancelled</option>
+                    <option value="" data-en="All Status" data-ar="جميع الحالات" data-fr="Tous les statuts">All Status</option>
+                    <option value="pending" data-en="Pending" data-ar="قيد الانتظار" data-fr="En attente">Pending</option>
+                    <option value="processing" data-en="Processing" data-ar="قيد المعالجة" data-fr="En traitement">Processing</option>
+                    <option value="shipped" data-en="Shipped" data-ar="تم الشحن" data-fr="Expédié">Shipped</option>
+                    <option value="delivered" data-en="Delivered" data-ar="تم التوصيل" data-fr="Livré">Delivered</option>
+                    <option value="cancelled" data-en="Cancelled" data-ar="ملغي" data-fr="Annulé">Cancelled</option>
                 </select>
             </div>
             <table class="data-table">
@@ -789,7 +789,7 @@
                 </button>
                 <div class="search-box">
                     <i class="fas fa-search"></i>
-                    <input type="text" id="customerSearch" placeholder="Search customers..." onkeyup="filterCustomers()">
+                    <input type="text" id="customerSearch" placeholder="Search customers..." data-en-placeholder="Search customers..." data-ar-placeholder="بحث في العملاء..." data-fr-placeholder="Rechercher des clients..." onkeyup="filterCustomers()">
                 </div>
             </div>
             <table class="data-table">
@@ -836,15 +836,15 @@
             <div class="form-grid">
                 <div class="form-group">
                     <label data-en="Store Name" data-ar="اسم المتجر" data-fr="Nom du magasin">Store Name</label>
-                    <input type="text" id="storeName" placeholder="Enter store name">
+                    <input type="text" id="storeName" placeholder="Enter store name" data-en-placeholder="Enter store name" data-ar-placeholder="أدخل اسم المتجر" data-fr-placeholder="Entrez le nom du magasin">
                 </div>
                 <div class="form-group">
                     <label data-en="Store Email" data-ar="بريد المتجر" data-fr="Email du magasin">Store Email</label>
-                    <input type="email" id="storeEmail" placeholder="Enter store email">
+                    <input type="email" id="storeEmail" placeholder="Enter store email" data-en-placeholder="Enter store email" data-ar-placeholder="أدخل بريد المتجر" data-fr-placeholder="Entrez l'email du magasin">
                 </div>
                 <div class="form-group">
                     <label data-en="Store Phone" data-ar="هاتف المتجر" data-fr="Téléphone du magasin">Store Phone</label>
-                    <input type="tel" id="storePhone" placeholder="Enter store phone">
+                    <input type="tel" id="storePhone" placeholder="Enter store phone" data-en-placeholder="Enter store phone" data-ar-placeholder="أدخل هاتف المتجر" data-fr-placeholder="Entrez le téléphone du magasin">
                 </div>
                 <div class="form-group">
                     <label data-en="Currency" data-ar="العملة" data-fr="Devise">Currency</label>
@@ -857,11 +857,11 @@
                 </div>
                 <div class="form-group">
                     <label data-en="Tax Rate (%)" data-ar="نسبة الضريبة" data-fr="Taux de taxe (%)">Tax Rate (%)</label>
-                    <input type="number" id="taxRate" placeholder="Enter tax rate" value="0">
+                    <input type="number" id="taxRate" placeholder="Enter tax rate" data-en-placeholder="Enter tax rate" data-ar-placeholder="أدخل نسبة الضريبة" data-fr-placeholder="Entrez le taux de taxe" value="0">
                 </div>
                 <div class="form-group">
                     <label data-en="Shipping Cost" data-ar="تكلفة الشحن" data-fr="Frais de livraison">Shipping Cost</label>
-                    <input type="number" id="shippingCost" placeholder="Enter shipping cost" value="0">
+                    <input type="number" id="shippingCost" placeholder="Enter shipping cost" data-en-placeholder="Enter shipping cost" data-ar-placeholder="أدخل تكلفة الشحن" data-fr-placeholder="Entrez les frais de livraison" value="0">
                 </div>
             </div>
             <div class="modal-footer">
@@ -894,7 +894,7 @@
                     <div class="form-group">
                         <label data-en="Category" data-ar="الفئة" data-fr="Catégorie">Category *</label>
                         <select id="productCategory" required>
-                            <option value="">Select Category</option>
+                            <option value="" data-en="Select Category" data-ar="اختر الفئة" data-fr="Sélectionner une catégorie">Select Category</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -916,9 +916,9 @@
                     <div class="form-group">
                         <label data-en="Status" data-ar="الحالة" data-fr="Statut">Status</label>
                         <select id="productStatus">
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                            <option value="out_of_stock">Out of Stock</option>
+                            <option value="active" data-en="Active" data-ar="نشط" data-fr="Actif">Active</option>
+                            <option value="inactive" data-en="Inactive" data-ar="غير نشط" data-fr="Inactif">Inactive</option>
+                            <option value="out_of_stock" data-en="Out of Stock" data-ar="نفد المخزون" data-fr="Rupture de stock">Out of Stock</option>
                         </select>
                     </div>
                 </div>
@@ -936,8 +936,8 @@
                     <div class="image-preview" id="imagePreview"></div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-danger" onclick="closeProductModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Product</button>
+                    <button type="button" class="btn btn-danger" onclick="closeProductModal()"><span data-en="Cancel" data-ar="إلغاء" data-fr="Annuler">Cancel</span></button>
+                    <button type="submit" class="btn btn-primary"><span data-en="Save Product" data-ar="حفظ المنتج" data-fr="Enregistrer le produit">Save Product</span></button>
                 </div>
             </form>
         </div>
@@ -947,7 +947,7 @@
     <div class="modal" id="categoryModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 id="categoryModalTitle">Add Category</h2>
+                <h2 id="categoryModalTitle" data-en="Add Category" data-ar="إضافة فئة" data-fr="Ajouter une catégorie">Add Category</h2>
                 <button class="close-modal" onclick="closeCategoryModal()">&times;</button>
             </div>
             <form id="categoryForm">
@@ -963,18 +963,19 @@
                 <div class="form-group">
                     <label data-en="Status" data-ar="الحالة" data-fr="Statut">Status</label>
                     <select id="categoryStatus">
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
+                        <option value="active" data-en="Active" data-ar="نشط" data-fr="Actif">Active</option>
+                        <option value="inactive" data-en="Inactive" data-ar="غير نشط" data-fr="Inactif">Inactive</option>
                     </select>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-danger" onclick="closeCategoryModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Category</button>
+                    <button type="button" class="btn btn-danger" onclick="closeCategoryModal()"><span data-en="Cancel" data-ar="إلغاء" data-fr="Annuler">Cancel</span></button>
+                    <button type="submit" class="btn btn-primary"><span data-en="Save Category" data-ar="حفظ الفئة" data-fr="Enregistrer la catégorie">Save Category</span></button>
                 </div>
             </form>
         </div>
     </div>
 
+    <script src="shared/unified_i18n.js"></script>
     <script src="ecommerce_core.js?v=20261009a"></script>
     <script src="ecommerce_admin.js?v=20261009a"></script>
 </body>

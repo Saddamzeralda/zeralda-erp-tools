@@ -10,9 +10,9 @@
   'use strict';
 
   /* Constants */
-  const SESSION_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
-  const WARNING_TIME_MS = 5 * 60 * 1000;      // Warn 5 minutes before logout
-  const INACTIVITY_CHECK_MS = 60 * 1000;       // Check inactivity each minute
+  const SESSION_TIMEOUT_MS = 10 * 60 * 60 * 1000; // 10 hours
+  const WARNING_TIME_MS = 10 * 60 * 1000;         // Warn 10 minutes before logout
+  const INACTIVITY_CHECK_MS = 60 * 1000;          // Check inactivity each minute
   
   /* State */
   let timeoutId = null;
@@ -322,7 +322,7 @@
       }
     });
 
-    console.log('[SessionTimeout] ✅ Auto-logout initialized. Timeout: 30 minutes');
+    console.log('[SessionTimeout] ✅ Auto-logout initialized. Timeout: 10 hours');
   }
 
   // Initialize when DOM is ready — wait for ZDB first

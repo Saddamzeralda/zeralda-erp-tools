@@ -1185,7 +1185,7 @@
 
                 <div class="form-group">
                     <label class="form-label"><span data-en="Session Timeout (Min)" data-ar="انتهاء الجلسة (دقيقة)" data-fr="Timeout session (min)">Session Timeout (Min)</span></label>
-                    <input id="sessionTimeout" type="number" class="form-input" min="5" max="480" value="30">
+                    <input id="sessionTimeout" type="number" class="form-input" min="5" max="1440" value="600">
                 </div>
 
                 <div class="form-group">
@@ -1947,7 +1947,7 @@
                 requireSpecial: true,
                 requireUpper: true,
                 requireNumber: true,
-                sessionTimeoutMinutes: 60,
+                sessionTimeoutMinutes: 600,
                 maxFailedAttempts: 5,
                 autoLogoutInactive: true
             },

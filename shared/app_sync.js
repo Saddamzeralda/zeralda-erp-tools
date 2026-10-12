@@ -8,7 +8,7 @@
 	// app_sync.js's expected_version caused 409 conflicts.
 	const ENABLE_API_SYNC = false;
 	const DEFAULT_SECURITY = {
-		sessionTimeoutMinutes: 30,
+		sessionTimeoutMinutes: 600,
 		autoLogoutInactive: true
 	};
 
@@ -761,7 +761,7 @@
 		if (now - _lastActivityWrite < 15000) return;
 		_lastActivityWrite = now;
 		const security = getSecuritySettings();
-		const baseTimeoutMinutes = Math.max(5, Math.min(1440, Number(security.sessionTimeoutMinutes || 60)));
+		const baseTimeoutMinutes = Math.max(5, Math.min(1440, Number(security.sessionTimeoutMinutes || 600)));
 		const meta = readAuthMeta();
 		const timeoutMinutes = meta.rememberMe ? Math.max(baseTimeoutMinutes, REMEMBER_ME_TIMEOUT_MINUTES) : baseTimeoutMinutes;
 		const nextMeta = {
@@ -791,7 +791,7 @@
 		const expiresAt = Number(meta.expiresAt || 0);
 		if (expiresAt > 0) return now > expiresAt;
 
-		const baseTimeoutMinutes = Math.max(5, Math.min(1440, Number(security.sessionTimeoutMinutes || 60)));
+		const baseTimeoutMinutes = Math.max(5, Math.min(1440, Number(security.sessionTimeoutMinutes || 600)));
 		const timeoutMinutes = meta.rememberMe ? Math.max(baseTimeoutMinutes, REMEMBER_ME_TIMEOUT_MINUTES) : baseTimeoutMinutes;
 		const lastActivityAt = Number(meta.lastActivityAt || meta.loginAt || 0);
 		if (!lastActivityAt) return false;

@@ -28,7 +28,7 @@
         <div class="lang-datetime-row">
           <div class="language-indicator" title="Language">
             <i class="fas fa-language" aria-hidden="true"></i>
-            <select id="headerLanguageSelect" aria-label="Switch language">
+            <select id="headerLanguageSelect" onchange="window.onHeaderLanguageSwitch && window.onHeaderLanguageSwitch(this.value)" aria-label="Switch language">
               <option value="en">English</option>
               <option value="ar">العربية</option>
               <option value="fr">Français</option>

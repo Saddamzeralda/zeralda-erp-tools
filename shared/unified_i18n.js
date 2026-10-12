@@ -105,10 +105,31 @@
     if (!lang) lang = getCurrentLang();
     if (SUPPORTED.indexOf(lang) === -1) lang = 'en';
 
+    function setTextPreservingIcons(el, text) {
+      if (!el || text === null || typeof text === 'undefined') return;
+      var hasIcon = el.querySelector('i, svg');
+      if (hasIcon) {
+        var textNode = null;
+        for (var i = 0; i < el.childNodes.length; i++) {
+          if (el.childNodes[i].nodeType === 3 && el.childNodes[i].nodeValue.trim().length > 0) {
+            textNode = el.childNodes[i];
+            break;
+          }
+        }
+        if (textNode) {
+          textNode.nodeValue = ' ' + text;
+        } else {
+          el.appendChild(document.createTextNode(' ' + text));
+        }
+      } else {
+        el.textContent = text;
+      }
+    }
+
     // ── النظام 1: data-en/data-ar/data-fr (للنصوص الثابتة في HTML) ──
     document.querySelectorAll('[data-' + lang + ']').forEach(function (el) {
       var v = el.getAttribute('data-' + lang);
-      if (v !== null) el.textContent = v;
+      if (v !== null) setTextPreservingIcons(el, v);
     });
 
     // data-{lang}-placeholder
@@ -146,7 +167,7 @@
         var key = el.getAttribute('data-key');
         if (!key) return;
         var val = (translations[lang] && translations[lang][key]) || (translations.en && translations.en[key]);
-        if (val) el.textContent = val;
+        if (val) setTextPreservingIcons(el, val);
       });
       document.querySelectorAll('[data-placeholder-key]').forEach(function (el) {
         var key = el.getAttribute('data-placeholder-key');

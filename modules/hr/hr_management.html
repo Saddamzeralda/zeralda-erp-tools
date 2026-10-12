@@ -1386,12 +1386,12 @@
                 </div>
 
                 <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
-                    <span style="font-size:13px;color:#6b7280;font-weight:600;">Sort by:</span>
-                    <button class="btn btn-sm" style="padding:4px 10px;font-size:12px;" onclick="setEmpSort('fullName')">Name <i id="emp-sort-fullName" class="fas fa-sort" style="font-size:9px;"></i></button>
-                    <button class="btn btn-sm" style="padding:4px 10px;font-size:12px;" onclick="setEmpSort('employeeId')">ID <i id="emp-sort-employeeId" class="fas fa-sort" style="font-size:9px;"></i></button>
-                    <button class="btn btn-sm" style="padding:4px 10px;font-size:12px;" onclick="setEmpSort('department')">Department <i id="emp-sort-department" class="fas fa-sort" style="font-size:9px;"></i></button>
-                    <button class="btn btn-sm" style="padding:4px 10px;font-size:12px;" onclick="setEmpSort('baseSalary')">Salary <i id="emp-sort-baseSalary" class="fas fa-sort" style="font-size:9px;"></i></button>
-                    <button class="btn btn-sm" style="padding:4px 10px;font-size:12px;" onclick="setEmpSort('status')">Status <i id="emp-sort-status" class="fas fa-sort" style="font-size:9px;"></i></button>
+                    <span style="font-size:13px;color:#6b7280;font-weight:600;" data-en="Sort by:" data-ar="ترتيب حسب:" data-fr="Trier par :">Sort by:</span>
+                    <button class="btn btn-sm" style="padding:4px 10px;font-size:12px;" onclick="setEmpSort('fullName')"><span data-en="Name" data-ar="الاسم" data-fr="Nom">Name</span> <i id="emp-sort-fullName" class="fas fa-sort" style="font-size:9px;"></i></button>
+                    <button class="btn btn-sm" style="padding:4px 10px;font-size:12px;" onclick="setEmpSort('employeeId')"><span data-en="ID" data-ar="المعرف" data-fr="ID">ID</span> <i id="emp-sort-employeeId" class="fas fa-sort" style="font-size:9px;"></i></button>
+                    <button class="btn btn-sm" style="padding:4px 10px;font-size:12px;" onclick="setEmpSort('department')"><span data-en="Department" data-ar="القسم" data-fr="Département">Department</span> <i id="emp-sort-department" class="fas fa-sort" style="font-size:9px;"></i></button>
+                    <button class="btn btn-sm" style="padding:4px 10px;font-size:12px;" onclick="setEmpSort('baseSalary')"><span data-en="Salary" data-ar="الراتب" data-fr="Salaire">Salary</span> <i id="emp-sort-baseSalary" class="fas fa-sort" style="font-size:9px;"></i></button>
+                    <button class="btn btn-sm" style="padding:4px 10px;font-size:12px;" onclick="setEmpSort('status')"><span data-en="Status" data-ar="الحالة" data-fr="Statut">Status</span> <i id="emp-sort-status" class="fas fa-sort" style="font-size:9px;"></i></button>
                 </div>
                 <div id="employeesGrid" class="employee-grid">
                     <!-- Employee data will be loaded dynamically -->

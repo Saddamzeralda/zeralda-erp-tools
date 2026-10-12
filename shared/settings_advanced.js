@@ -90,7 +90,7 @@
                 backupInterval: getVal('backupInterval', currentSettings.backupInterval || 'daily'),
                 dataRetentionDays: getVal('dataRetentionDays', currentSettings.dataRetentionDays || '365'),
                 maxUploadSize: getVal('maxUploadSize', currentSettings.maxUploadSize || '50'),
-                sessionTimeout: getVal('sessionTimeout', currentSettings.sessionTimeout || '30'),
+                sessionTimeout: getVal('sessionTimeout', currentSettings.sessionTimeout || '600'),
                 twoFactorAuth: getVal('twoFactorAuth', currentSettings.twoFactorAuth || false),
                 apiRateLimit: getVal('apiRateLimit', currentSettings.apiRateLimit || '100'),
                 auditLogging: getVal('auditLogging', currentSettings.auditLogging !== false),

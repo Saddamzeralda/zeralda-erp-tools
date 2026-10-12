@@ -836,8 +836,15 @@
     function applyLanguage() {
       var lang = getLang();
       var t = TR[lang] || TR.en;
-      document.documentElement.lang = 'en';
+      document.documentElement.lang = lang;
       document.documentElement.dir = (lang === 'ar') ? 'rtl' : 'ltr';
+      if (document.body) {
+        if (lang === 'ar') {
+          document.body.classList.add('rtl');
+        } else {
+          document.body.classList.remove('rtl');
+        }
+      }
 
       var map = {
         heroTitle: 'heroTitle', heroDesc: 'heroDesc',
@@ -985,7 +992,7 @@
         }
 
         var rememberChecked = document.getElementById('rememberMe').checked;
-        var sessionTimeoutMin = rememberChecked ? (7 * 24 * 60) : 30;
+        var sessionTimeoutMin = rememberChecked ? (7 * 24 * 60) : (10 * 60);
         var expiresAt = Date.now() + sessionTimeoutMin * 60 * 1000;
 
         ZS.setItem(TOKEN_KEY, token);
@@ -1647,7 +1654,7 @@
           }
 
           var rememberChecked = document.getElementById('rememberMe').checked;
-          var sessionTimeoutMin = rememberChecked ? (7 * 24 * 60) : 30;
+          var sessionTimeoutMin = rememberChecked ? (7 * 24 * 60) : (10 * 60);
           var expiresAt = Date.now() + sessionTimeoutMin * 60 * 1000;
 
           ZS.setItem(TOKEN_KEY, token);

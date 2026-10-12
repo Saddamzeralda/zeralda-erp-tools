@@ -669,7 +669,7 @@
             </div>
             <div class="search-bar">
                 <i class="fas fa-search"></i>
-                <input type="text" id="searchInput" placeholder="Search products..." onkeyup="searchProducts()">
+                <input type="text" id="searchInput" placeholder="Search products..." data-en-placeholder="Search products..." data-ar-placeholder="بحث في المنتجات..." data-fr-placeholder="Rechercher des produits..." onkeyup="searchProducts()">
             </div>
             <div class="header-actions">
                 <div class="cart-icon" onclick="toggleCart()">
@@ -696,8 +696,8 @@
         <div class="products-header">
             <h2 data-en="Featured Products" data-ar="المنتجات المميزة" data-fr="Produits en vedette">Featured Products</h2>
             <div>
-                <button class="filter-btn active" data-filter="all" onclick="filterProducts('all')">All</button>
-                <button class="filter-btn" data-filter="active" onclick="filterProducts('active')">In Stock</button>
+                <button class="filter-btn active" data-filter="all" onclick="filterProducts('all')" data-en="All" data-ar="الكل" data-fr="Tous">All</button>
+                <button class="filter-btn" data-filter="active" onclick="filterProducts('active')" data-en="In Stock" data-ar="المتوفر في المخزون" data-fr="En stock">In Stock</button>
             </div>
         </div>
         <div class="product-grid" id="productGrid">
@@ -731,6 +731,7 @@
         </div>
     </div>
 
+    <script src="shared/unified_i18n.js"></script>
     <script src="ecommerce_core.js?v=20261009a"></script>
     <script src="storefront.js?v=20261009a"></script>
 </body>

@@ -36,4 +36,16 @@
     }
     window.createRuntimeTranslator = createRuntimeTranslator;
   }
+
+  // If UnifiedI18N is not loaded, dynamically load unified_i18n.js
+  if (!window.UnifiedI18N && typeof document !== 'undefined' && document.createElement) {
+    var hasScript = document.querySelector('script[src*="unified_i18n.js"]');
+    if (!hasScript) {
+      var s = document.createElement('script');
+      var base = (document.querySelector('base') && document.querySelector('base').getAttribute('href')) || '';
+      s.src = (base ? '' : '') + 'shared/unified_i18n.js';
+      s.async = false;
+      document.head.appendChild(s);
+    }
+  }
 })();

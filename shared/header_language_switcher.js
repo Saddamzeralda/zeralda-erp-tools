@@ -38,15 +38,29 @@
   }
 
   function updateDirection(lang) {
-    document.documentElement.lang = 'en';
+    document.documentElement.lang = lang;
     document.documentElement.dir = (lang === 'ar') ? 'rtl' : 'ltr';
+    if (document.body) {
+      if (lang === 'ar') {
+        document.body.classList.add('rtl');
+      } else {
+        document.body.classList.remove('rtl');
+      }
+    }
+  }
+
+  function getSelectElement() {
+    return document.getElementById('headerLanguageSelect') || document.getElementById('headerLanguageSwitcher');
   }
 
   function applySelectionOnly(lang) {
-    const select = document.getElementById('headerLanguageSwitcher');
+    const select = getSelectElement();
     if (select && select.value !== lang) select.value = lang;
     updateLangLabel(lang);
     updateDirection(lang);
+    if (window.applyUnifiedTranslations) {
+      try { window.applyUnifiedTranslations(lang); } catch (e) {}
+    }
   }
 
   function onChangeLanguage(lang) {
@@ -74,11 +88,18 @@
   };
 
   function initLanguageSwitcher() {
-    var select = document.getElementById('headerLanguageSwitcher');
+    var select = getSelectElement();
     if (!select) return;
 
     var current = getLanguage();
     applySelectionOnly(current);
+
+    if (!select._hasLangListener) {
+      select._hasLangListener = true;
+      select.addEventListener('change', function (e) {
+        onChangeLanguage(e.target.value);
+      });
+    }
   }
 
   window.addEventListener('storage', function (event) {

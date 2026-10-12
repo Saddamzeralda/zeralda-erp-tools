@@ -164,11 +164,11 @@
         <div class="form-group"><label class="form-label" data-en="Notes" data-ar="ملاحظات" data-fr="Notes">Notes</label><textarea id="rentalNotes" class="form-textarea"></textarea></div>
         <button id="rentalAddBtn" class="btn btn-primary" onclick="addRental()"><i class="fas fa-plus"></i> <span data-en="Add Rental" data-ar="إضافة عملية كراء" data-fr="Ajouter une location">Add Rental</span></button>
         <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;align-items:center;">
-          <span style="font-size:12px;color:#6b7280;">Sort:</span>
-          <button class="btn btn-sm" style="padding:3px 8px;font-size:11px;" onclick="setRentalSort('equipment')">Equipment <i id="rental-sort-equipment" class="fas fa-sort" style="font-size:8px;"></i></button>
-          <button class="btn btn-sm" style="padding:3px 8px;font-size:11px;" onclick="setRentalSort('startDate')">Date <i id="rental-sort-startDate" class="fas fa-sort" style="font-size:8px;"></i></button>
-          <button class="btn btn-sm" style="padding:3px 8px;font-size:11px;" onclick="setRentalSort('dailyPrice')">Price <i id="rental-sort-dailyPrice" class="fas fa-sort" style="font-size:8px;"></i></button>
-          <button class="btn btn-sm" style="padding:3px 8px;font-size:11px;" onclick="setRentalSort('status')">Status <i id="rental-sort-status" class="fas fa-sort" style="font-size:8px;"></i></button>
+          <span style="font-size:12px;color:#6b7280;" data-en="Sort:" data-ar="ترتيب:" data-fr="Trier :">Sort:</span>
+          <button class="btn btn-sm" style="padding:3px 8px;font-size:11px;" onclick="setRentalSort('equipment')"><span data-en="Equipment" data-ar="المعدة" data-fr="Équipement">Equipment</span> <i id="rental-sort-equipment" class="fas fa-sort" style="font-size:8px;"></i></button>
+          <button class="btn btn-sm" style="padding:3px 8px;font-size:11px;" onclick="setRentalSort('startDate')"><span data-en="Date" data-ar="التاريخ" data-fr="Date">Date</span> <i id="rental-sort-startDate" class="fas fa-sort" style="font-size:8px;"></i></button>
+          <button class="btn btn-sm" style="padding:3px 8px;font-size:11px;" onclick="setRentalSort('dailyPrice')"><span data-en="Price" data-ar="السعر" data-fr="Prix">Price</span> <i id="rental-sort-dailyPrice" class="fas fa-sort" style="font-size:8px;"></i></button>
+          <button class="btn btn-sm" style="padding:3px 8px;font-size:11px;" onclick="setRentalSort('status')"><span data-en="Status" data-ar="الحالة" data-fr="Statut">Status</span> <i id="rental-sort-status" class="fas fa-sort" style="font-size:8px;"></i></button>
         </div>
         <div id="rentalsList" class="list"></div>
       </section>
@@ -194,10 +194,10 @@
         <div class="form-group"><label class="form-label" data-en="Loan Reason" data-ar="سبب الإعارة" data-fr="Motif du prêt">Loan Reason</label><textarea id="sealReason" class="form-textarea"></textarea></div>
         <button id="sealAddBtn" class="btn btn-primary" onclick="addSealLoan()"><i class="fas fa-plus"></i> <span data-en="Add Seal Loan" data-ar="إضافة إعارة ختم" data-fr="Ajouter un prêt de cachet">Add Seal Loan</span></button>
         <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;align-items:center;">
-          <span style="font-size:12px;color:#6b7280;">Sort:</span>
-          <button class="btn btn-sm" style="padding:3px 8px;font-size:11px;" onclick="setSealSort('recipient')">Recipient <i id="seal-sort-recipient" class="fas fa-sort" style="font-size:8px;"></i></button>
-          <button class="btn btn-sm" style="padding:3px 8px;font-size:11px;" onclick="setSealSort('date')">Date <i id="seal-sort-date" class="fas fa-sort" style="font-size:8px;"></i></button>
-          <button class="btn btn-sm" style="padding:3px 8px;font-size:11px;" onclick="setSealSort('status')">Status <i id="seal-sort-status" class="fas fa-sort" style="font-size:8px;"></i></button>
+          <span style="font-size:12px;color:#6b7280;" data-en="Sort:" data-ar="ترتيب:" data-fr="Trier :">Sort:</span>
+          <button class="btn btn-sm" style="padding:3px 8px;font-size:11px;" onclick="setSealSort('recipient')"><span data-en="Recipient" data-ar="المستلم" data-fr="Bénéficiaire">Recipient</span> <i id="seal-sort-recipient" class="fas fa-sort" style="font-size:8px;"></i></button>
+          <button class="btn btn-sm" style="padding:3px 8px;font-size:11px;" onclick="setSealSort('date')"><span data-en="Date" data-ar="التاريخ" data-fr="Date">Date</span> <i id="seal-sort-date" class="fas fa-sort" style="font-size:8px;"></i></button>
+          <button class="btn btn-sm" style="padding:3px 8px;font-size:11px;" onclick="setSealSort('status')"><span data-en="Status" data-ar="الحالة" data-fr="Statut">Status</span> <i id="seal-sort-status" class="fas fa-sort" style="font-size:8px;"></i></button>
         </div>
         <div id="sealLoansList" class="list"></div>
       </section>
