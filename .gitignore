@@ -15,6 +15,7 @@ venv/
 # بيانات وقت التشغيل
 data/*
 !data/users.json
+!data/shared_store.json
 data/*.backup*
 data/backups/
 data/sessions.json
