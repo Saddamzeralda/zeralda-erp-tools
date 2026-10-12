@@ -13,11 +13,13 @@
     <link rel="stylesheet" href="styles/design_tokens.css">
     <link rel="stylesheet" href="styles/responsive_global.css">
     <link rel="stylesheet" href="styles/animated_icons.css">
+    <link rel="stylesheet" href="styles/ocr_unified.css?v=20261012d">
     <script defer src="shared/print_engine.js"></script>
     <script defer src="shared/professional_display_mode.js?v=20260327a"></script>
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.6/JsBarcode.all.min.js"></script>
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script defer src="shared/ocr.js?v=20261012d"></script>
     <style>
         * {
             margin: 0;
@@ -1258,6 +1260,10 @@
                             <i class="fas fa-plus"></i>
                             <span data-en="New Product" data-ar="منتج جديد" data-fr="Nouveau Produit">New Product</span>
                         </button>
+                        <button class="btn btn-info" onclick="openInventoryOcrModal()" title="Scan document or barcode with camera/file">
+                            <i class="fas fa-camera"></i>
+                            <span data-en="Scan IA" data-ar="مسح ذكي (Scan IA)" data-fr="Scan IA">مسح ذكي (Scan IA)</span>
+                        </button>
                         <button class="btn btn-secondary">
                             <i class="fas fa-file-export"></i>
                             <span data-en="Export" data-ar="تصدير" data-fr="Exporter">Export</span>
@@ -1504,25 +1510,18 @@
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label data-en="AI Document Scan" data-ar="المسح والاستخراج الذكي (Scan IA)" data-fr="Scan IA de document">المسح والاستخراج الذكي (Scan IA)</label>
-                        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-                            <input id="inventoryOcrFile" type="file" accept="image/*,application/pdf,.xlsx,.xls,.csv,.doc,.docx,.txt,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain" style="flex:1;min-width:260px;">
-                            <button type="button" class="btn btn-info" id="inventoryOcrBtn" onclick="runInventoryProductOcrExtraction()">
-                                <i class="fas fa-robot"></i>
-                                <span data-en="AI Scan" data-ar="مسح ذكي (Scan IA)" data-fr="Scan IA">مسح ذكي (Scan IA)</span>
-                            </button>
-                            <button type="button" class="btn btn-success" id="inventoryOcrApplyBtn" onclick="applyLatestInventoryOcrProduct()" style="display:none;">
-                                <i class="fas fa-check"></i>
-                                <span data-en="Apply Selected" data-ar="تطبيق المختار" data-fr="Appliquer Sélectionné">Apply Selected</span>
-                            </button>
-                            <button type="button" class="btn btn-primary" id="inventoryOcrAddAllBtn" onclick="addAllSelectedInventoryOcrProducts()" style="display:none;">
-                                <i class="fas fa-plus-circle"></i>
-                                <span data-en="Add All to Inventory" data-ar="إضافة الكل للمخزون" data-fr="Ajouter tout à l'inventaire">Add All to Inventory</span>
-                            </button>
-                        </div>
-                        <div id="inventoryOcrStatus" style="margin-top:10px;padding:12px;border-radius:10px;display:none;font-size:14px;"></div>
-                        <div id="inventoryOcrPreview" style="margin-top:10px;max-height:220px;overflow-y:auto;background:#f9fafb;padding:12px;border-radius:10px;display:none;font-size:13px;"></div>
+                    <div class="form-group" style="background:#f8fafc;padding:14px;border-radius:12px;border:1px dashed #cbd5e1;">
+                        <label style="font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:8px;" data-en="AI Optical Scan / Barcode" data-ar="المسح الضوئي الذكي للمنتج والباركود" data-fr="Scan Optique IA / Code-barres">
+                            <i class="fas fa-camera text-primary"></i>
+                            <span data-en="AI Optical Scan / Barcode" data-ar="المسح الضوئي الذكي للمنتج والباركود" data-fr="Scan Optique IA / Code-barres">المسح الضوئي الذكي للمنتج والباركود</span>
+                        </label>
+                        <p style="font-size:12px;color:#64748b;margin-bottom:10px;" data-en="Scan product label, barcode, or purchase invoice using camera or file" data-ar="امسح ملصق المنتج أو الباركود أو فاتورة الشراء بالكاميرا أو الملف" data-fr="Scannez l'étiquette, le code-barres ou la facture avec caméra ou fichier">
+                            امسح ملصق المنتج أو الباركود أو فاتورة الشراء مباشرة بالكاميرا أو الملف
+                        </p>
+                        <button type="button" class="btn btn-info" onclick="openInventoryOcrModal()" style="display:inline-flex;align-items:center;gap:8px;">
+                            <i class="fas fa-camera"></i>
+                            <span data-en="Launch Unified Scanner" data-ar="فتح المسح الضوئي الذكي" data-fr="Ouvrir le scanner IA">فتح المسح الضوئي الذكي</span>
+                        </button>
                     </div>
                 </form>
             </div>
@@ -3993,93 +3992,88 @@
             });
         }
 
-        async function runInventoryProductOcrExtraction() {
-            const fileInput = document.getElementById('inventoryOcrFile');
-            const ocrBtn = document.getElementById('inventoryOcrBtn');
-            const previewEl = document.getElementById('inventoryOcrPreview');
-            const applyBtn = document.getElementById('inventoryOcrApplyBtn');
-            const file = fileInput && fileInput.files ? fileInput.files[0] : null;
-
-            if (!file) {
-                updateInventoryOcrStatus('Select an invoice image, PDF, Excel, Word, or TXT file first.', 'error');
+        function openInventoryOcrModal() {
+            if (!window.ZeraldaOCR) {
+                alert('جاري تحميل محرك المسح الضوئي...');
                 return;
             }
+            window.ZeraldaOCR.open({
+                mode: 'inventory',
+                onApply: function(data) {
+                    const isAddModalOpen = document.getElementById('addProduct') && document.getElementById('addProduct').classList.contains('active');
+                    if (isAddModalOpen) {
+                        const name = data.productName || data.name || (data.items && data.items[0] && (data.items[0].description || data.items[0].name)) || '';
+                        const barcode = data.barcode || '';
+                        const pPrice = Number(data.purchasePrice || data.unitPrice || data.price || (data.items && data.items[0] && (data.items[0].unitPrice || data.items[0].price))) || 0;
+                        const sPrice = Number(data.sellingPrice || (pPrice * 1.25)) || pPrice;
+                        const qty = Number(data.quantity || (data.items && data.items[0] && data.items[0].quantity)) || 1;
+                        const cat = data.category || 'General';
 
-            try {
-                if (ocrBtn) ocrBtn.disabled = true;
-                updateInventoryOcrStatus('Processing invoice...', 'info');
+                        if (document.getElementById('productName') && name) document.getElementById('productName').value = name;
+                        if (document.getElementById('productBarcode') && barcode) document.getElementById('productBarcode').value = barcode;
+                        if (document.getElementById('productPurchasePrice') && pPrice) document.getElementById('productPurchasePrice').value = pPrice;
+                        if (document.getElementById('productSellingPrice') && sPrice) document.getElementById('productSellingPrice').value = sPrice;
+                        if (document.getElementById('productQuantity') && qty) document.getElementById('productQuantity').value = qty;
+                        if (document.getElementById('productCategory')) {
+                            ensureCategoryExists(cat);
+                            saveInventoryCategories();
+                            populateCategorySelect(cat);
+                            document.getElementById('productCategory').value = cat;
+                        }
+                    } else {
+                        // Check if invoice has multiple lines
+                        const items = Array.isArray(data.items) && data.items.length > 0 ? data.items : [];
+                        if (items.length > 0) {
+                            let addedCount = 0;
+                            items.forEach(function(item) {
+                                const pName = String(item.description || item.name || '').trim();
+                                if (!pName) return;
+                                const pQty = Number(item.quantity) || 1;
+                                const pCost = Number(item.unitPrice || item.price) || 0;
+                                const nextId = getNextProductId();
+                                const nextCode = 'PRD-' + String(nextId).padStart(3, '0');
+                                inventoryProducts.push({
+                                    id: nextId,
+                                    code: nextCode,
+                                    name: pName,
+                                    category: 'General',
+                                    brand: String(data.supplier || '').trim(),
+                                    quantity: pQty,
+                                    minStock: 0,
+                                    maxStock: 0,
+                                    purchasePrice: pCost,
+                                    price: Number((pCost * 1.25).toFixed(2)) || pCost,
+                                    taxRate: 19,
+                                    barcode: '',
+                                    description: 'Imported via Unified OCR',
+                                    unit: 'piece'
+                                });
+                                addedCount++;
+                            });
+                            if (addedCount > 0) {
+                                saveInventoryProducts();
+                                renderProductsTable('');
+                                updateInventoryStats();
+                                alert('تم استخراج وإضافة ' + addedCount + ' منتجات إلى المخزون بنجاح!');
+                                return;
+                            }
+                        }
 
-                const result = await UnifiedOCR.extract(file, {
-                    endpoint: '/api/ai/invoice-extract',
-                    optimizeImageFn: optimizeInventoryImageFile,
-                    imageMaxWidth: 1280,
-                    unsupportedTypeMessage: 'Unsupported file type. Use PDF, image, Excel, Word, or TXT.',
-                    emptyFileMessage: 'Select an invoice image, PDF, Excel, Word, or TXT file first.'
-                });
-                const payload = result.payload;
-                const text = result.text;
-                latestInventoryOcrProducts = buildInventoryProductDraftFromOcr(payload, text);
-                if (!latestInventoryOcrProducts.length) {
-                    updateInventoryOcrStatus('No product lines could be extracted from the invoice.', 'error');
-                    return;
-                }
-
-                if (previewEl) {
-                    let html = '<strong>Extracted Products (' + latestInventoryOcrProducts.length + ')</strong><div style="margin-top:12px;overflow-y:auto;max-height:300px;">';
-                    html += '<table style="width:100%;border-collapse:collapse;font-size:13px;">';
-                    html += '<tr style="background:#f0f0f0;border-bottom:1px solid #ddd;"><th style="padding:6px;text-align:left;"><input type="checkbox" id="invOcrSelectAll" onchange="toggleAllInventoryOcrProducts(this.checked)"></th><th style="padding:6px;text-align:left;">Name</th><th style="padding:6px;text-align:center;">Qty</th><th style="padding:6px;text-align:center;">Price</th></tr>';
-                    latestInventoryOcrProducts.forEach(function(product, idx) {
-                        html += '<tr style="border-bottom:1px solid #eee;"><td style="padding:6px;"><input type="checkbox" id="invOcrCheck' + idx + '" onchange="updateInventoryOcrProductSelection(this)" ' + (product.selected ? 'checked' : '') + '></td><td style="padding:6px;max-width:200px;overflow:hidden;"><label for="invOcrCheck' + idx + '" style="cursor:pointer;">' + escapeHtml(product.name.substring(0, 40)) + '</label></td><td style="padding:6px;text-align:center;">' + escapeHtml(String(product.quantity || 0)) + '</td><td style="padding:6px;text-align:center;">' + escapeHtml(String(Number(product.purchasePrice || 0).toFixed(2))) + '</td></tr>';
-                    });
-                    html += '</table></div>';
-                    previewEl.innerHTML = html;
-                    previewEl.style.display = 'block';
-                }
-                if (applyBtn) applyBtn.style.display = 'inline-flex';
-                document.getElementById('inventoryOcrAddAllBtn').style.display = 'inline-flex';
-                updateInventoryOcrStatus('Invoice scanned successfully (' + latestInventoryOcrProducts.length + ' products found). Select which ones to add.', 'success');
-            } catch (error) {
-                updateInventoryOcrStatus('OCR failed: ' + (error && error.message ? error.message : 'Unknown error'), 'error');
-            } finally {
-                if (ocrBtn) ocrBtn.disabled = false;
-            }
-        }
-
-        function applyLatestInventoryOcrProduct() {
-            const selectedProducts = latestInventoryOcrProducts.filter(function(p) { return p.selected; });
-            if (!selectedProducts.length) {
-                updateInventoryOcrStatus('No products selected. Check at least one product.', 'error');
-                return;
-            }
-
-            if (selectedProducts.length === 1) {
-                const draft = selectedProducts[0];
-                const setVal = function(id, value) {
-                    const el = document.getElementById(id);
-                    if (el != null && value != null && String(value) !== '') {
-                        el.value = String(value);
+                        // Single product extracted
+                        const singleName = data.productName || data.name || '';
+                        if (singleName) {
+                            openModal('addProduct');
+                            setTimeout(function() {
+                                if (document.getElementById('productName')) document.getElementById('productName').value = singleName;
+                                if (document.getElementById('productBarcode') && data.barcode) document.getElementById('productBarcode').value = data.barcode;
+                                if (document.getElementById('productPurchasePrice') && data.purchasePrice) document.getElementById('productPurchasePrice').value = data.purchasePrice;
+                                if (document.getElementById('productSellingPrice') && data.sellingPrice) document.getElementById('productSellingPrice').value = data.sellingPrice;
+                                if (document.getElementById('productQuantity') && data.quantity) document.getElementById('productQuantity').value = data.quantity;
+                            }, 150);
+                        }
                     }
-                };
-                setVal('productCode', draft.code || ('PRD-' + String(getNextProductId()).padStart(3, '0')));
-                setVal('productName', draft.name);
-                ensureCategoryExists(draft.category || 'General');
-                saveInventoryCategories();
-                populateCategorySelect(draft.category || 'General');
-                setVal('productCategory', draft.category || 'General');
-                setVal('productBrand', draft.brand || '');
-                setVal('productUnit', 'piece');
-                setVal('productQuantity', draft.quantity || 0);
-                setVal('productMinStock', draft.minStock || 0);
-                setVal('productMaxStock', draft.maxStock || 0);
-                setVal('productPurchasePrice', draft.purchasePrice || 0);
-                setVal('productSellingPrice', draft.price || draft.purchasePrice || 0);
-                setVal('productTaxRate', draft.taxRate || 0);
-                setVal('productBarcode', draft.barcode || '');
-                setVal('productDescription', draft.description || '');
-                updateInventoryOcrStatus('OCR data applied to the form. Click Save Product to add it.', 'success');
-            } else {
-                addAllSelectedInventoryOcrProducts();
-            }
+                }
+            });
         }
 
         async function suggestSellingPriceAI() {

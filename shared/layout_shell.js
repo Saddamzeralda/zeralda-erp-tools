@@ -838,6 +838,35 @@
     } catch (_) {}
   });
 
+  // Universal OCR dynamic loader for header button
+  window.openUniversalOcrModal = function (opts) {
+    if (window.ZeraldaOCR) {
+      window.ZeraldaOCR.open(opts || { mode: 'universal' });
+      return;
+    }
+    if (!document.querySelector('link[href*="ocr_unified.css"]')) {
+      var link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = 'styles/ocr_unified.css?v=20261012d';
+      document.head.appendChild(link);
+    }
+    var existingScript = document.querySelector('script[src*="ocr.js"]');
+    if (!existingScript) {
+      var script = document.createElement('script');
+      script.src = 'shared/ocr.js?v=20261012d';
+      script.onload = function () {
+        if (window.ZeraldaOCR) {
+          window.ZeraldaOCR.open(opts || { mode: 'universal' });
+        }
+      };
+      document.body.appendChild(script);
+    } else {
+      setTimeout(function () {
+        if (window.ZeraldaOCR) window.ZeraldaOCR.open(opts || { mode: 'universal' });
+      }, 500);
+    }
+  };
+
   if (window.ZDB && window.ZDB.ready) {
     window.ZDB.ready().then(startInit).catch(startInit);
   } else {

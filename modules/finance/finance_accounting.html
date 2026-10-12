@@ -13,9 +13,11 @@
     <link rel="stylesheet" href="styles/design_tokens.css">
     <link rel="stylesheet" href="styles/responsive_global.css">
     <link rel="stylesheet" href="styles/animated_icons.css">
+    <link rel="stylesheet" href="styles/ocr_unified.css?v=20261012d">
     <script src="shared/print_engine.js" defer></script>
     <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js" defer></script>
+    <script defer src="shared/ocr.js?v=20261012d"></script>
     <style>
         * {
             margin: 0;
@@ -1548,6 +1550,10 @@
                             <i class="fas fa-plus"></i>
                             <span data-en="New Journal Entry" data-ar="قيد جديد" data-fr="Nouvelle Écriture">New Journal Entry</span>
                         </button>
+                        <button class="btn btn-info" onclick="openFinanceOcrModal('journal')" title="Scan document to create journal entry">
+                            <i class="fas fa-camera"></i>
+                            <span data-en="Scan IA" data-ar="مسح وقيد ذكي (Scan IA)" data-fr="Scan IA">مسح وقيد ذكي (Scan IA)</span>
+                        </button>
                         <button class="btn btn-secondary">
                             <i class="fas fa-file-export"></i>
                             <span data-en="Export" data-ar="تصدير" data-fr="Exporter">Export</span>
@@ -1759,6 +1765,10 @@
                         <button class="btn btn-success" onclick="openModal('addBank')">
                             <i class="fas fa-plus"></i>
                             <span data-en="Add Bank Account" data-ar="إضافة حساب بنكي" data-fr="Ajouter Compte">Add Bank Account</span>
+                        </button>
+                        <button class="btn btn-info" onclick="openFinanceOcrModal('bank')" title="Scan RIB, check or bank statement">
+                            <i class="fas fa-camera"></i>
+                            <span data-en="Scan RIB" data-ar="مسح RIB / كشف حساب" data-fr="Scanner RIB">مسح RIB / كشف حساب</span>
                         </button>
                         <button class="btn btn-primary" onclick="openModal('bankTransfer')">
                             <i class="fas fa-exchange-alt"></i>
@@ -2281,6 +2291,16 @@
             </div>
             <div class="modal-body">
                 <form id="journalForm">
+                    <div style="background:#f8fafc;padding:12px 16px;border-radius:10px;margin-bottom:15px;border:1px dashed #cbd5e1;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+                        <div>
+                            <strong style="font-size:13px;color:#1e293b;"><i class="fas fa-camera text-primary"></i> مسح الفاتورة أو السند ضوئياً (Scan IA)</strong>
+                            <p style="font-size:11px;color:#64748b;margin:2px 0 0;">استخراج التاريخ، المرجع، والوصف تلقائياً بالكاميرا أو الملف</p>
+                        </div>
+                        <button type="button" class="btn btn-info" onclick="openFinanceOcrModal('journal')" style="display:inline-flex;align-items:center;gap:6px;">
+                            <i class="fas fa-camera"></i>
+                            <span>مسح ضوئي ذكي</span>
+                        </button>
+                    </div>
                     <div class="form-grid">
                         <div class="form-group">
                             <label data-en="Entry Number *" data-ar="رقم القيد *" data-fr="N° Écriture *">Entry Number *</label>
@@ -2410,6 +2430,16 @@
             </div>
             <div class="modal-body">
                 <form id="bankForm">
+                    <div style="background:#f8fafc;padding:12px 16px;border-radius:10px;margin-bottom:15px;border:1px dashed #cbd5e1;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+                        <div>
+                            <strong style="font-size:13px;color:#1e293b;"><i class="fas fa-camera text-primary"></i> مسح صك أو شهادة RIB ضوئياً (Scan IA)</strong>
+                            <p style="font-size:11px;color:#64748b;margin:2px 0 0;">استخراج رقم الحساب، الـ RIB، والبنك فورياً بالكاميرا أو الملف</p>
+                        </div>
+                        <button type="button" class="btn btn-info" onclick="openFinanceOcrModal('bank')" style="display:inline-flex;align-items:center;gap:6px;">
+                            <i class="fas fa-camera"></i>
+                            <span>مسح ضوئي ذكي</span>
+                        </button>
+                    </div>
                     <div class="form-grid">
                         <div class="form-group">
                             <label data-en="Bank Name *" data-ar="اسم البنك *" data-fr="Nom Banque *">Bank Name *</label>
@@ -4575,6 +4605,59 @@
             });
             updateCheckPreview();
         });
+
+        function openFinanceOcrModal(type) {
+            if (!window.ZeraldaOCR) {
+                alert('جاري تحميل محرك المسح الضوئي...');
+                return;
+            }
+            const mode = type === 'bank' ? 'bank' : 'journal';
+            window.ZeraldaOCR.open({
+                mode: mode,
+                onApply: function(data) {
+                    if (mode === 'bank') {
+                        const addBankModal = document.getElementById('addBank');
+                        if (!addBankModal || !addBankModal.classList.contains('active')) {
+                            openModal('addBank');
+                        }
+                        setTimeout(function() {
+                            if (data.bankName && document.getElementById('bankNameSelect')) {
+                                const sel = document.getElementById('bankNameSelect');
+                                const val = String(data.bankName).toUpperCase();
+                                for (let i = 0; i < sel.options.length; i++) {
+                                    if (sel.options[i].value === val || sel.options[i].text.toUpperCase().includes(val)) {
+                                        sel.selectedIndex = i;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (data.rib && document.getElementById('bankRib')) document.getElementById('bankRib').value = data.rib;
+                            if (data.accountNumber && document.getElementById('bankAccountNumber')) document.getElementById('bankAccountNumber').value = data.accountNumber;
+                            if (data.accountHolder && document.getElementById('bankHolderName')) document.getElementById('bankHolderName').value = data.accountHolder;
+                            if (data.branch && document.getElementById('bankBranch')) document.getElementById('bankBranch').value = data.branch;
+                        }, 150);
+                    } else {
+                        const addJournalModal = document.getElementById('addJournal');
+                        if (!addJournalModal || !addJournalModal.classList.contains('active')) {
+                            openModal('addJournal');
+                        }
+                        setTimeout(function() {
+                            const form = document.getElementById('journalForm');
+                            if (form) {
+                                const dateInput = form.querySelector('input[type="date"]');
+                                if (dateInput && data.date) dateInput.value = data.date;
+                                const textInputs = form.querySelectorAll('input[type="text"]');
+                                if (textInputs[1] && data.reference) textInputs[1].value = data.reference;
+                                const desc = form.querySelector('textarea');
+                                if (desc && (data.description || data.supplier)) {
+                                    desc.value = data.description || ('فاتورة ' + (data.supplier || ''));
+                                }
+                            }
+                        }, 150);
+                    }
+                }
+            });
+        }
 
         window.addEventListener('storage', function(event){
             if (event && event.key === 'preferred-language') {

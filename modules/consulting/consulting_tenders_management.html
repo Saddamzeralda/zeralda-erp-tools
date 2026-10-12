@@ -24,7 +24,8 @@
   <script src="shared/role_access_control.js" defer></script>
   <script src="shared/header_company_switcher.js?v=20261012a" defer></script>
   <script src="shared/header_language_switcher.js" defer></script>
-  <script src="shared/ocr.js?v=20261012c"></script>
+  <link rel="stylesheet" href="styles/ocr_unified.css?v=20261012d">
+  <script src="shared/ocr.js?v=20261012d"></script>
   <script src="shared/professional_display_mode.js?v=20260327a" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
   <script src="shared/print_engine.js" defer></script>
@@ -745,49 +746,7 @@
     </div>
   </div>
 
-  <!-- ── Tender OCR Modal ── -->
-  <div id="tenderOcrModal" class="modal-overlay" aria-hidden="true">
-    <div class="modal-card" role="dialog" aria-modal="true">
-      <div class="modal-header">
-        <h3><i class="fas fa-robot"></i> <span data-en="AI Scan Tender Document" data-ar="مسح وثيقة المناقصة بالذكاء الاصطناعي" data-fr="Scan IA Document AO">AI Scan Tender Document</span></h3>
-        <button class="close-modal" onclick="closeTenderOcrModal()"><i class="fas fa-times"></i></button>
-      </div>
-      <div class="modal-body">
-        <div class="form-group">
-          <label data-en="Upload tender document (PDF, image, Excel, Word, TXT)" data-ar="ارفع وثيقة المناقصة (PDF، صورة، Excel، Word، TXT)" data-fr="Télécharger le document (PDF, image, Excel, Word, TXT)">Upload tender document (PDF, image, Excel, Word, TXT)</label>
-          <input id="tenderOcrFile" type="file" accept="image/*,application/pdf,.xlsx,.xls,.csv,.doc,.docx,.txt" class="form-input" style="padding:10px;border:2px dashed var(--primary-color);border-radius:10px;cursor:pointer;">
-        </div>
-        <div id="tenderOcrStatus" class="ocr-status"></div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="closeTenderOcrModal()"><i class="fas fa-times"></i> <span data-en="Close" data-ar="إغلاق" data-fr="Fermer">Close</span></button>
-        <button class="btn btn-info" id="tenderOcrBtn" onclick="runTenderOcrExtraction()"><i class="fas fa-magic"></i> <span data-en="Extract" data-ar="استخراج" data-fr="Extraire">Extract</span></button>
-        <button class="btn btn-success" id="tenderOcrCreateBtn" onclick="createTenderFromOcrData()" style="display:none;"><i class="fas fa-check"></i> <span data-en="Create Tender" data-ar="إنشاء مناقصة" data-fr="Créer AO">Create Tender</span></button>
-      </div>
-    </div>
-  </div>
 
-  <!-- ── Consultation OCR Modal ── -->
-  <div id="consultOcrModal" class="modal-overlay" aria-hidden="true">
-    <div class="modal-card" role="dialog" aria-modal="true">
-      <div class="modal-header">
-        <h3><i class="fas fa-robot"></i> <span data-en="AI Scan Consultation Document" data-ar="مسح وثيقة الاستشارة بالذكاء الاصطناعي" data-fr="Scan IA Document Consultation">AI Scan Consultation Document</span></h3>
-        <button class="close-modal" onclick="closeConsultOcrModal()"><i class="fas fa-times"></i></button>
-      </div>
-      <div class="modal-body">
-        <div class="form-group">
-          <label data-en="Upload consultation document (PDF, image, Excel, Word, TXT)" data-ar="ارفع وثيقة الاستشارة (PDF، صورة، Excel، Word، TXT)" data-fr="Télécharger le document (PDF, image, Excel, Word, TXT)">Upload consultation document (PDF, image, Excel, Word, TXT)</label>
-          <input id="consultOcrFile" type="file" accept="image/*,application/pdf,.xlsx,.xls,.csv,.doc,.docx,.txt" class="form-input" style="padding:10px;border:2px dashed var(--primary-color);border-radius:10px;cursor:pointer;">
-        </div>
-        <div id="consultOcrStatus" class="ocr-status"></div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="closeConsultOcrModal()"><i class="fas fa-times"></i> <span data-en="Close" data-ar="إغلاق" data-fr="Fermer">Close</span></button>
-        <button class="btn btn-info" id="consultOcrBtn" onclick="runConsultOcrExtraction()"><i class="fas fa-magic"></i> <span data-en="Extract" data-ar="استخراج" data-fr="Extraire">Extract</span></button>
-        <button class="btn btn-success" id="consultOcrCreateBtn" onclick="createConsultFromOcrData()" style="display:none;"><i class="fas fa-check"></i> <span data-en="Create Consultation" data-ar="إنشاء استشارة" data-fr="Créer consultation">Create Consultation</span></button>
-      </div>
-    </div>
-  </div>
 
   <!-- ── Risk Analysis Modal ── -->
   <div id="riskModal" class="modal-overlay" aria-hidden="true">
@@ -1842,130 +1801,35 @@
       showToast(tr('tender_to_quote_success', 'Success! Tender converted to Sales Quotation in Sales module.').replace('{ref}', t.reference || ''), 'success');
     };
 
-    // ── Tender OCR Handlers (Unified to Copilote IA) ──
+    // ── Tender & Consultation OCR Handlers (Unified to ZeraldaOCR IA) ──
     function openTenderOcrModal(tenderIdx){
-      if(typeof window.openSmartPricingForTender === 'function'){
-        window.openSmartPricingForTender(tenderIdx != null ? tenderIdx : null, 'audit');
-      } else {
-        openModal('tenderOcrModal');
+      if (window.ZeraldaOCR) {
+        window.ZeraldaOCR.open({
+          mode: 'tender',
+          title: (window.currentLanguage === 'fr' ? 'Scan & Analyse Appel d\'Offres (IA)' : (window.currentLanguage === 'en' ? 'Tender Document Scan & Analysis (AI)' : 'مسح وتحليل وثيقة المناقصة (Scan IA)')),
+          subtitle: (window.currentLanguage === 'fr' ? 'Scannez un cahier des charges ou avis d\'appel d\'offres pour extraire les données' : (window.currentLanguage === 'en' ? 'Scan tender notice or specs to extract reference, authority, and deadline' : 'ارفع إعلان أو دفتر شروط المناقصة لاستخراج المرجع، الإدارة، وآخر أجل')),
+          icon: 'fas fa-gavel',
+          onApply: function(data) {
+            openTenderModal();
+            var setVal = function(id, val) {
+              var el = document.getElementById(id);
+              if (el && val != null && String(val).trim()) el.value = String(val).trim();
+            };
+            setVal('tenderRef', data.tenderRef || data.reference);
+            setVal('tenderTitle', data.tenderTitle || data.subject);
+            setVal('tenderAuthority', data.authority || data.customerName);
+            setVal('tenderDeadline', data.deadline);
+            if (data.totals && data.totals.total > 0) setVal('tenderAmount', data.totals.total.toFixed(2));
+            if (data.rawText) setVal('tenderNotes', data.rawText.slice(0, 300));
+            showToast(tr('ocr_done', 'Data extracted successfully!'), 'success');
+          }
+        });
+        return;
       }
+      openModal('tenderModal');
     }
     window.openTenderOcrModal = openTenderOcrModal;
 
-    function closeTenderOcrModal(){ closeModal('tenderOcrModal'); }
-    window.closeTenderOcrModal = closeTenderOcrModal;
-
-    async function runTenderOcrExtraction() {
-      var fileInput = document.getElementById('tenderOcrFile');
-      var statusEl = document.getElementById('tenderOcrStatus');
-      var btn = document.getElementById('tenderOcrBtn');
-      var createBtn = document.getElementById('tenderOcrCreateBtn');
-      var file = fileInput && fileInput.files ? fileInput.files[0] : null;
-
-      function setStatus(msg, color) {
-        if (statusEl) {
-          statusEl.style.display = 'block';
-          statusEl.textContent = msg;
-          statusEl.style.color = color || '#6b7280';
-          statusEl.style.background = color ? '#eff6ff' : '#f8fafc';
-        }
-      }
-
-      var lang = getLang();
-      var isAr = lang === 'ar';
-      if (!file) {
-        setStatus(tr('ocr_select_file'), '#d97706');
-        return;
-      }
-      if (btn) btn.disabled = true;
-      if (createBtn) createBtn.style.display = 'none';
-      setStatus(tr('ocr_extracting'), '#2563eb');
-
-      try {
-        var ocrResult = await UnifiedOCR.extract(file, {
-          endpoint: '/api/ocr/extract',
-          allowImage: true, allowPdf: true, allowExcel: true, allowWordTxt: true,
-          unsupportedTypeMessage: tr('ocr_unsupported'),
-          extraBody: { lang: 'ara+fra+eng' }
-        });
-        var ocrText = String(ocrResult.text || '').trim();
-        if (!ocrText) {
-          setStatus(tr('ocr_no_text'), '#d97706');
-          if (btn) btn.disabled = false;
-          return;
-        }
-
-        setStatus(tr('ocr_analyzing'), '#7c3aed');
-        var tok = ZS.getItem('zeralda-auth-token') || '';
-        var headers = { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' };
-        if (tok) { headers['Authorization'] = 'Bearer ' + tok; }
-
-        var prompt = 'Extract structured data from this tender/bid document text. '
-          + 'Return ONLY a valid JSON object with these exact fields (use null if not found):\n'
-          + '{"reference":"...","title":"...","authority":"...","deadline":"YYYY-MM-DD","amount":0.00,"description":"..."}\n\n'
-          + 'Document text:\n' + ocrText.slice(0, 4500);
-
-        var response = await fetch('/api/ai/chat', {
-          method: 'POST',
-          headers: headers,
-          body: JSON.stringify({ messages: [{ role: 'user', content: prompt }], type: 'general' })
-        });
-
-        if (!response.ok) throw new Error('AI analysis failed: ' + response.status);
-        var data = await response.json();
-        var aiText = String((data && (data.text || data.content || data.response || data.result)) || '').trim();
-
-        var parsed = {};
-        try {
-          var jsonMatch = aiText.match(/\{[\s\S]*\}/);
-          if (jsonMatch) parsed = JSON.parse(jsonMatch[0]);
-        } catch(e) { parsed = {}; }
-
-        tenderOcrExtractedData = {
-          reference: String(parsed.reference || '').trim(),
-          title: String(parsed.title || '').trim(),
-          authority: String(parsed.authority || '').trim(),
-          deadline: String(parsed.deadline || '').trim(),
-          amount: parseFloat(parsed.amount) || 0,
-          notes: String(parsed.description || '').trim()
-        };
-
-        var previewLines = [];
-        if (tenderOcrExtractedData.reference) previewLines.push('• ' + tr('label_reference') + ': ' + tenderOcrExtractedData.reference);
-        if (tenderOcrExtractedData.title) previewLines.push('• ' + tr('label_title') + ': ' + tenderOcrExtractedData.title);
-        if (tenderOcrExtractedData.authority) previewLines.push('• ' + tr('label_authority') + ': ' + tenderOcrExtractedData.authority);
-        if (tenderOcrExtractedData.deadline) previewLines.push('• ' + tr('label_deadline') + ': ' + tenderOcrExtractedData.deadline);
-        if (tenderOcrExtractedData.amount > 0) previewLines.push('• ' + tr('label_amount') + ': ' + formatMoney(tenderOcrExtractedData.amount));
-        if (tenderOcrExtractedData.notes) previewLines.push('• ' + tr('label_notes') + ': ' + tenderOcrExtractedData.notes.slice(0, 80));
-
-        if (previewLines.length) {
-          setStatus('✅ ' + tr('ocr_done') + '\n\n' + previewLines.join('\n'), '#059669');
-          if (createBtn) createBtn.style.display = 'inline-flex';
-        } else {
-          setStatus(tr('ocr_no_fields'), '#d97706');
-        }
-      } catch (err) {
-        setStatus(tr('ocr_error') + ': ' + (err && err.message || 'Unknown error'), '#dc2626');
-      } finally {
-        if (btn) btn.disabled = false;
-      }
-    }
-    window.runTenderOcrExtraction = runTenderOcrExtraction;
-
-    function createTenderFromOcrData(){
-      if (!tenderOcrExtractedData) return;
-      openTenderModal();
-      document.getElementById('tenderRef').value = tenderOcrExtractedData.reference || '';
-      document.getElementById('tenderTitle').value = tenderOcrExtractedData.title || '';
-      document.getElementById('tenderAuthority').value = tenderOcrExtractedData.authority || '';
-      document.getElementById('tenderDeadline').value = tenderOcrExtractedData.deadline || '';
-      document.getElementById('tenderAmount').value = tenderOcrExtractedData.amount > 0 ? tenderOcrExtractedData.amount.toFixed(2) : '';
-      document.getElementById('tenderNotes').value = tenderOcrExtractedData.notes || '';
-      closeTenderOcrModal();
-    }
-    window.createTenderFromOcrData = createTenderFromOcrData;
-
-    // ── Consultation OCR Handlers ──
     function openConsultOcrModal(){
       if (window.ZeraldaOCR) {
         window.ZeraldaOCR.open({
@@ -1982,118 +1846,15 @@
             setVal('consultClient', data.customerName || data.client);
             setVal('consultSubject', data.subject || (data.rawText ? (data.rawText.split('\n')[0] || '').slice(0, 100) : ''));
             setVal('consultDate', data.date || new Date().toISOString().slice(0, 10));
+            showToast(tr('ocr_done', 'Data extracted successfully!'), 'success');
           }
         });
         return;
       }
-      openModal('consultOcrModal');
+      openModal('consultModal');
     }
     window.openConsultOcrModal = openConsultOcrModal;
 
-    function closeConsultOcrModal(){ closeModal('consultOcrModal'); }
-    window.closeConsultOcrModal = closeConsultOcrModal;
-
-    async function runConsultOcrExtraction(){
-      var fileInput = document.getElementById('consultOcrFile');
-      var statusEl = document.getElementById('consultOcrStatus');
-      var btn = document.getElementById('consultOcrBtn');
-      var createBtn = document.getElementById('consultOcrCreateBtn');
-      var file = fileInput && fileInput.files ? fileInput.files[0] : null;
-
-      function setStatus(msg, color){
-        if (statusEl) {
-          statusEl.style.display = 'block';
-          statusEl.textContent = msg;
-          statusEl.style.color = color || '#6b7280';
-          statusEl.style.background = color ? '#eff6ff' : '#f8fafc';
-        }
-      }
-
-      if (!file) { setStatus(tr('ocr_select_file'), '#d97706'); return; }
-      if (btn) btn.disabled = true;
-      if (createBtn) createBtn.style.display = 'none';
-      setStatus(tr('ocr_extracting'), '#2563eb');
-
-      try {
-        var ocrResult = await UnifiedOCR.extract(file, {
-          endpoint: '/api/ocr/extract',
-          allowImage: true, allowPdf: true, allowExcel: true, allowWordTxt: true,
-          unsupportedTypeMessage: tr('ocr_unsupported'),
-          extraBody: { lang: 'ara+fra+eng' }
-        });
-        var ocrText = String(ocrResult.text || '').trim();
-        if (!ocrText) {
-          setStatus(tr('ocr_no_text'), '#d97706');
-          if (btn) btn.disabled = false;
-          return;
-        }
-
-        setStatus(tr('ocr_analyzing'), '#7c3aed');
-        var tok = ZS.getItem('zeralda-auth-token') || '';
-        var headers = { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' };
-        if (tok) headers['Authorization'] = 'Bearer ' + tok;
-
-        var prompt = 'Extract structured data from this consultation document text. '
-          + 'Return ONLY a valid JSON object with these exact fields (use null if not found):\n'
-          + '{"client":"...","consultant":"...","date":"YYYY-MM-DD","subject":"...","category":"Legal|Financial|Technical|HR|Strategic|Other","notes":"..."}\n\n'
-          + 'Document text:\n' + ocrText.slice(0, 4500);
-
-        var response = await fetch('/api/ai/chat', {
-          method: 'POST',
-          headers: headers,
-          body: JSON.stringify({ messages: [{ role: 'user', content: prompt }], type: 'general' })
-        });
-
-        if (!response.ok) throw new Error('AI analysis failed: ' + response.status);
-        var data = await response.json();
-        var aiText = String((data && (data.text || data.content || data.response || data.result)) || '').trim();
-
-        var parsed = {};
-        try {
-          var jsonMatch = aiText.match(/\{[\s\S]*\}/);
-          if (jsonMatch) parsed = JSON.parse(jsonMatch[0]);
-        } catch(e) { parsed = {}; }
-
-        consultOcrExtractedData = {
-          client: String(parsed.client || '').trim(),
-          consultant: String(parsed.consultant || '').trim(),
-          date: String(parsed.date || '').trim(),
-          subject: String(parsed.subject || '').trim(),
-          category: String(parsed.category || 'Other').trim(),
-          notes: String(parsed.notes || '').trim()
-        };
-
-        var previewLines = [];
-        if (consultOcrExtractedData.client) previewLines.push('• Client: ' + consultOcrExtractedData.client);
-        if (consultOcrExtractedData.consultant) previewLines.push('• Consultant: ' + consultOcrExtractedData.consultant);
-        if (consultOcrExtractedData.subject) previewLines.push('• Subject: ' + consultOcrExtractedData.subject);
-        if (consultOcrExtractedData.category) previewLines.push('• Category: ' + consultOcrExtractedData.category);
-
-        if (previewLines.length) {
-          setStatus('✅ ' + tr('ocr_done') + '\n\n' + previewLines.join('\n'), '#059669');
-          if (createBtn) createBtn.style.display = 'inline-flex';
-        } else {
-          setStatus(tr('ocr_no_fields'), '#d97706');
-        }
-      } catch (err) {
-        setStatus(tr('ocr_error') + ': ' + (err && err.message || 'Unknown error'), '#dc2626');
-      } finally {
-        if (btn) btn.disabled = false;
-      }
-    }
-    window.runConsultOcrExtraction = runConsultOcrExtraction;
-
-    function createConsultFromOcrData(){
-      if (!consultOcrExtractedData) return;
-      openConsultModal();
-      document.getElementById('consultClient').value = consultOcrExtractedData.client || '';
-      document.getElementById('consultConsultant').value = consultOcrExtractedData.consultant || '';
-      document.getElementById('consultDate').value = consultOcrExtractedData.date || new Date().toISOString().slice(0,10);
-      document.getElementById('consultSubject').value = consultOcrExtractedData.subject || '';
-      document.getElementById('consultCategory').value = consultOcrExtractedData.category || 'Legal';
-      closeConsultOcrModal();
-    }
-    window.createConsultFromOcrData = createConsultFromOcrData;
 
     // ── AI Risk Analysis Handlers ──
     function closeRiskModal(){ closeModal('riskModal'); }

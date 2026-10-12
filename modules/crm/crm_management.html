@@ -13,8 +13,10 @@
     <link rel="stylesheet" href="styles/design_tokens.css">
     <link rel="stylesheet" href="styles/responsive_global.css">
     <link rel="stylesheet" href="styles/animated_icons.css">
+    <link rel="stylesheet" href="styles/ocr_unified.css?v=20261012d">
     <script src="shared/print_engine.js" defer></script>
     <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script defer src="shared/ocr.js?v=20261012d"></script>
     <style>
         * {
             margin: 0;
@@ -1027,6 +1029,10 @@
                             <i class="fas fa-plus"></i>
                             <span data-en="Add Customer" data-ar="إضافة عميل" data-fr="Ajouter Client">Add Customer</span>
                         </button>
+                        <button class="btn btn-info" onclick="openCrmOcrModal('customer')" title="Scan business card / commercial register">
+                            <i class="fas fa-camera"></i>
+                            <span data-en="Scan Card/Doc" data-ar="مسح بطاقة / سجل" data-fr="Scanner Carte/Doc">مسح بطاقة / سجل</span>
+                        </button>
                         <button class="btn btn-secondary">
                             <i class="fas fa-file-export"></i>
                             <span data-en="Export" data-ar="تصدير" data-fr="Exporter">Export</span>
@@ -1050,6 +1056,10 @@
                         <button class="btn btn-success" onclick="openModal('addLead')">
                             <i class="fas fa-plus"></i>
                             <span data-en="Add Lead" data-ar="إضافة عميل محتمل" data-fr="Ajouter Prospect">Add Lead</span>
+                        </button>
+                        <button class="btn btn-info" onclick="openCrmOcrModal('lead')" title="Scan business card for new lead">
+                            <i class="fas fa-camera"></i>
+                            <span data-en="Scan Card" data-ar="مسح بطاقة عمل" data-fr="Scanner Carte">مسح بطاقة عمل</span>
                         </button>
                         <button class="btn btn-secondary">
                             <i class="fas fa-file-export"></i>
@@ -1201,6 +1211,16 @@
             </div>
             <div class="modal-body">
                 <form id="customerForm">
+                    <div style="background:#f8fafc;padding:12px 16px;border-radius:10px;margin-bottom:15px;border:1px dashed #cbd5e1;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+                        <div>
+                            <strong style="font-size:13px;color:#1e293b;"><i class="fas fa-camera text-primary"></i> مسح بطاقة العمل أو السجل التجاري (Scan IA)</strong>
+                            <p style="font-size:11px;color:#64748b;margin:2px 0 0;">استخراج اسم العميل، الشركة، الهاتف، والبريد تلقائياً</p>
+                        </div>
+                        <button type="button" class="btn btn-info" onclick="openCrmOcrModal('customer')" style="display:inline-flex;align-items:center;gap:6px;">
+                            <i class="fas fa-camera"></i>
+                            <span>مسح ضوئي ذكي</span>
+                        </button>
+                    </div>
                     <h3 style="margin-bottom: 15px;" data-en="Basic Information" data-ar="المعلومات الأساسية" data-fr="Informations de Base">Basic Information</h3>
                     <div class="form-grid">
                         <div class="form-group">
@@ -1291,6 +1311,16 @@
             </div>
             <div class="modal-body">
                 <form id="leadForm">
+                    <div style="background:#f8fafc;padding:12px 16px;border-radius:10px;margin-bottom:15px;border:1px dashed #cbd5e1;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+                        <div>
+                            <strong style="font-size:13px;color:#1e293b;"><i class="fas fa-camera text-primary"></i> مسح بطاقة العمل لاستخراج بيانات العميل المحتمل (Scan IA)</strong>
+                            <p style="font-size:11px;color:#64748b;margin:2px 0 0;">استخراج الاسم، الشركة، الهاتف، والبريد تلقائياً</p>
+                        </div>
+                        <button type="button" class="btn btn-info" onclick="openCrmOcrModal('lead')" style="display:inline-flex;align-items:center;gap:6px;">
+                            <i class="fas fa-camera"></i>
+                            <span>مسح ضوئي ذكي</span>
+                        </button>
+                    </div>
                     <div class="form-grid">
                         <div class="form-group">
                             <label data-en="Lead Name *" data-ar="اسم العميل المحتمل *" data-fr="Nom Prospect *">Lead Name *</label>
@@ -2051,6 +2081,48 @@
                 }
             });
         };
+
+        function openCrmOcrModal(target) {
+            if (!window.ZeraldaOCR) {
+                alert('جاري تحميل محرك المسح الضوئي...');
+                return;
+            }
+            const mode = target === 'lead' ? 'crm' : 'customer';
+            window.ZeraldaOCR.open({
+                mode: mode,
+                onApply: function(data) {
+                    const modalId = target === 'lead' ? 'addLead' : 'addCustomer';
+                    const modal = document.getElementById(modalId);
+                    if (!modal || !modal.classList.contains('active')) {
+                        openModal(modalId);
+                    }
+                    setTimeout(function() {
+                        const formId = target === 'lead' ? 'leadForm' : 'customerForm';
+                        const form = document.getElementById(formId);
+                        if (!form) return;
+                        const textInputs = form.querySelectorAll('input');
+                        const name = data.name || data.customerName || data.contactPerson || '';
+                        const company = data.company || data.companyName || '';
+                        const email = data.email || '';
+                        const phone = data.phone || '';
+
+                        if (target === 'lead') {
+                            if (name && textInputs[0]) textInputs[0].value = name;
+                            if (company && textInputs[1]) textInputs[1].value = company;
+                            if (email && textInputs[2]) textInputs[2].value = email;
+                            if (phone && textInputs[3]) textInputs[3].value = phone;
+                        } else {
+                            if (name && textInputs[0]) textInputs[0].value = name;
+                            if (company && textInputs[1]) textInputs[1].value = company;
+                            if (email && textInputs[2]) textInputs[2].value = email;
+                            if (phone && textInputs[3]) textInputs[3].value = phone;
+                            if (data.address && textInputs[4]) textInputs[4].value = data.address;
+                            if (data.city && textInputs[5]) textInputs[5].value = data.city;
+                        }
+                    }, 150);
+                }
+            });
+        }
 
         window.addEventListener('storage', function(event){
             if(event && event.key === 'preferred-language'){

@@ -479,7 +479,21 @@
         nin: "الرقم التعريفي الوطني (NIN)",
         birthDate: "تاريخ الميلاد",
         jobTitle: "المنصب / التخصص",
-        education: "المؤهل الدراسي"
+        education: "المؤهل الدراسي",
+        takePhoto: "التقاط صورة بالكاميرا",
+        productName: "اسم المنتج",
+        productPrice: "سعر البيع",
+        productCost: "سعر الشراء",
+        productBarcode: "الباركود",
+        productQty: "الكمية",
+        category: "الفئة",
+        journalRef: "مرجع القيد / الفاتورة",
+        journalDesc: "بيان / وصف القيد",
+        journalDate: "التاريخ",
+        bankName: "اسم البنك",
+        bankRib: "رقم الحساب / RIB",
+        accountHolder: "صاحب الحساب",
+        companyName: "اسم الشركة / المؤسسة"
       },
       fr: {
         modalTitle: "Copilote IA : Scan et extraction intelligente",
@@ -521,7 +535,21 @@
         nin: "Numéro National (NIN)",
         birthDate: "Date de Naissance",
         jobTitle: "Poste / Spécialité",
-        education: "Diplôme / Formation"
+        education: "Diplôme / Formation",
+        takePhoto: "Prendre une photo (Caméra)",
+        productName: "Nom Produit",
+        productPrice: "Prix de Vente",
+        productCost: "Prix d'Achat",
+        productBarcode: "Code-barres",
+        productQty: "Quantité",
+        category: "Catégorie",
+        journalRef: "Réf Écriture / Facture",
+        journalDesc: "Libellé de l'Écriture",
+        journalDate: "Date",
+        bankName: "Nom Banque",
+        bankRib: "RIB / Compte",
+        accountHolder: "Titulaire Compte",
+        companyName: "Société / Entreprise"
       },
       en: {
         modalTitle: "AI Copilot: Smart Scan & Extraction",
@@ -563,7 +591,21 @@
         nin: "National ID (NIN)",
         birthDate: "Date of Birth",
         jobTitle: "Position / Specialization",
-        education: "Education / Degree"
+        education: "Education / Degree",
+        takePhoto: "Take a Photo (Camera)",
+        productName: "Product Name",
+        productPrice: "Selling Price",
+        productCost: "Purchase Price",
+        productBarcode: "Barcode",
+        productQty: "Quantity",
+        category: "Category",
+        journalRef: "Entry Ref / Invoice",
+        journalDesc: "Entry Description",
+        journalDate: "Date",
+        bankName: "Bank Name",
+        bankRib: "RIB / Account No",
+        accountHolder: "Account Holder",
+        companyName: "Company / Organization"
       }
     },
 
@@ -653,6 +695,7 @@
             '<!-- Dropzone -->' +
             '<div class="ocr-dropzone" id="ocrDropzone">' +
               '<input type="file" id="ocrUnifiedFileInput" class="ocr-dropzone-input" accept="image/*,.pdf,.xlsx,.xls,.csv,.doc,.docx,.txt,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain">' +
+              '<input type="file" id="ocrUnifiedCameraInput" accept="image/*" capture="environment" style="display:none;">' +
               '<div class="ocr-dropzone-icon"><i class="fas fa-cloud-upload-alt"></i></div>' +
               '<div class="ocr-dropzone-title">' + this.t('dropzoneTitle') + '</div>' +
               '<div class="ocr-dropzone-subtitle">' + this.t('dropzoneSubtitle') + '</div>' +
@@ -661,6 +704,9 @@
                 '<span class="ocr-format-badge"><i class="fas fa-file-image"></i> JPG / PNG</span>' +
                 '<span class="ocr-format-badge"><i class="fas fa-file-excel"></i> Excel / CSV</span>' +
                 '<span class="ocr-format-badge"><i class="fas fa-file-word"></i> Word / TXT</span>' +
+              '</div>' +
+              '<div class="ocr-dropzone-actions">' +
+                '<button type="button" class="ocr-camera-btn" id="ocrCameraTriggerBtn"><i class="fas fa-camera"></i> <span>' + this.t('takePhoto') + '</span></button>' +
               '</div>' +
             '</div>' +
 
@@ -705,6 +751,8 @@
       var self = this;
       var dropzone = modal.querySelector('#ocrDropzone');
       var fileInput = modal.querySelector('#ocrUnifiedFileInput');
+      var cameraInput = modal.querySelector('#ocrUnifiedCameraInput');
+      var cameraBtn = modal.querySelector('#ocrCameraTriggerBtn');
       var fileCard = modal.querySelector('#ocrFileCard');
       var removeBtn = modal.querySelector('#ocrFileRemoveBtn');
       var closeBtn = modal.querySelector('#ocrModalCloseBtn');
@@ -718,6 +766,21 @@
       modal.onclick = function(e) {
         if (e.target === modal) self.close();
       };
+
+      if (cameraBtn && cameraInput) {
+        cameraBtn.onclick = function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          cameraInput.click();
+        };
+      }
+      if (cameraInput) {
+        cameraInput.addEventListener('change', function(e) {
+          if (e.target.files && e.target.files.length) {
+            self.handleFileSelect(e.target.files[0], modal);
+          }
+        });
+      }
 
       // Drag & Drop
       ['dragenter', 'dragover'].forEach(function(evt) {
@@ -753,6 +816,7 @@
           self.state.file = null;
           self.state.extracted = null;
           fileInput.value = '';
+          if (cameraInput) cameraInput.value = '';
           fileCard.classList.remove('is-active');
           dropzone.style.display = 'flex';
           self.hideScanning(modal);
@@ -1001,6 +1065,33 @@
         if (dm) deadline = dm[1].trim();
       }
 
+      // Inventory & Product extraction
+      var productName = payload.productName || fields.product_name || (items[0] && items[0].description) || '';
+      var barcode = payload.barcode || fields.barcode || '';
+      if (!barcode && raw) {
+        var bcM = raw.match(/\b([0-9]{8,14})\b/);
+        if (bcM) barcode = bcM[1];
+      }
+      var purchasePrice = parseFloat(String(payload.purchasePrice || (items[0] && items[0].unitPrice) || 0).replace(',', '.')) || 0;
+      var sellingPrice = parseFloat(String(payload.sellingPrice || (payload.purchasePrice ? (payload.purchasePrice * 1.25).toFixed(2) : (items[0] && items[0].unitPrice ? (items[0].unitPrice * 1.25).toFixed(2) : 0))).replace(',', '.')) || 0;
+      var quantity = parseFloat(String(payload.quantity || (items[0] && items[0].quantity) || 1).replace(',', '.')) || 1;
+      var category = payload.category || fields.category || 'General';
+
+      // Finance, Journal & Bank extraction
+      var journalDate = payload.date || fields.date || new Date().toISOString().slice(0, 10);
+      var invoiceNumber = payload.invoiceNumber || payload.number || fields.invoice_number || '';
+      if (!invoiceNumber && raw) {
+        var invM = raw.match(/(?:(?:n[°º]|réf|ref|facture|quittance|reçu|رقم|مرجع)\s*[:\/\-]?\s*([A-Za-z0-9\/\-_]{3,30}))/i);
+        if (invM) invoiceNumber = invM[1].trim();
+      }
+      var bankName = payload.bankName || '';
+      if (!bankName && raw) {
+        var bnkM = raw.match(/\b(BEA|BNA|CPA|BADR|BDL|CNEP|SGA|AGB|BARAKA|NATIXIS|FRANSABANK)\b/i);
+        if (bnkM) bankName = bnkM[1].toUpperCase();
+      }
+      var accountHolder = customerName || supplierName || empName || '';
+      var company = payload.company || customerName || supplierName || '';
+
       return {
         customerName: customerName,
         supplierName: supplierName,
@@ -1026,8 +1117,20 @@
         city: city,
         items: items,
         totals: { subtotal: subtotal, vat: vat, total: total },
-        date: payload.date || fields.date || '',
-        invoiceNumber: payload.invoiceNumber || payload.number || fields.invoice_number || '',
+        date: journalDate,
+        invoiceNumber: invoiceNumber,
+        productName: productName,
+        barcode: barcode,
+        purchasePrice: purchasePrice,
+        sellingPrice: sellingPrice,
+        quantity: quantity,
+        category: category,
+        reference: invoiceNumber,
+        journalDate: journalDate,
+        journalDesc: supplierName || customerName || (raw ? raw.split('\n')[0].slice(0, 80) : 'قيد مستند'),
+        bankName: bankName,
+        accountHolder: accountHolder,
+        company: company,
         rawText: raw,
         payload: payload
       };
@@ -1066,6 +1169,37 @@
       if (mode === 'consultation') {
         if (data.customerName || data.client) fieldsList.push({ label: this.t('customerName'), val: data.customerName || data.client });
         if (data.subject) fieldsList.push({ label: this.t('tenderTitle'), val: data.subject });
+      }
+      if (mode === 'inventory' || mode === 'product') {
+        if (data.productName) fieldsList.push({ label: this.t('productName'), val: data.productName });
+        if (data.barcode) fieldsList.push({ label: this.t('productBarcode'), val: data.barcode });
+        if (data.purchasePrice > 0) fieldsList.push({ label: this.t('productCost'), val: data.purchasePrice.toFixed(2) + ' DZD' });
+        if (data.sellingPrice > 0) fieldsList.push({ label: this.t('productPrice'), val: data.sellingPrice.toFixed(2) + ' DZD' });
+        if (data.quantity > 0) fieldsList.push({ label: this.t('productQty'), val: String(data.quantity) });
+        if (data.category) fieldsList.push({ label: this.t('category'), val: data.category });
+      }
+      if (mode === 'journal' || mode === 'finance') {
+        if (data.journalDate || data.date) fieldsList.push({ label: this.t('journalDate'), val: data.journalDate || data.date });
+        if (data.reference || data.invoiceNumber) fieldsList.push({ label: this.t('journalRef'), val: data.reference || data.invoiceNumber });
+        if (data.supplierName || data.customerName) fieldsList.push({ label: this.t('journalDesc'), val: data.supplierName || data.customerName });
+      }
+      if (mode === 'bank') {
+        if (data.bankName) fieldsList.push({ label: this.t('bankName'), val: data.bankName });
+        if (data.rib) fieldsList.push({ label: this.t('bankRib'), val: data.rib });
+        if (data.accountHolder) fieldsList.push({ label: this.t('accountHolder'), val: data.accountHolder });
+      }
+      if (mode === 'crm' || mode === 'lead') {
+        if (data.customerName) fieldsList.push({ label: this.t('customerName'), val: data.customerName });
+        if (data.company) fieldsList.push({ label: this.t('companyName'), val: data.company });
+      }
+      if (mode === 'universal') {
+        if (data.customerName) fieldsList.push({ label: this.t('customerName'), val: data.customerName });
+        if (data.supplierName) fieldsList.push({ label: this.t('supplierName'), val: data.supplierName });
+        if (data.productName) fieldsList.push({ label: this.t('productName'), val: data.productName });
+        if (data.barcode) fieldsList.push({ label: this.t('productBarcode'), val: data.barcode });
+        if (data.reference || data.invoiceNumber) fieldsList.push({ label: this.t('journalRef'), val: data.reference || data.invoiceNumber });
+        if (data.bankName) fieldsList.push({ label: this.t('bankName'), val: data.bankName });
+        if (data.rib) fieldsList.push({ label: this.t('bankRib'), val: data.rib });
       }
       if (data.nif) fieldsList.push({ label: this.t('nif'), val: data.nif });
       if (data.rc) fieldsList.push({ label: this.t('rc'), val: data.rc });
@@ -1162,26 +1296,22 @@
     },
 
     defaultApply: function(mode, data) {
+      var setVal = function(id, val) {
+        var el = document.getElementById(id);
+        if (el && val != null && String(val).trim() !== '') el.value = String(val).trim();
+      };
+
       if (mode === 'customer') {
         // Populate customer fields if present
-        var nameInput = document.getElementById('newCustomerName');
-        if (nameInput && data.customerName) nameInput.value = data.customerName;
-        var rcInput = document.getElementById('newCustomerRC');
-        if (rcInput && data.rc) rcInput.value = data.rc;
-        var nifInput = document.getElementById('newCustomerNIF');
-        if (nifInput && data.nif) nifInput.value = data.nif;
-        var nisInput = document.getElementById('newCustomerNIS');
-        if (nisInput && data.nis) nisInput.value = data.nis;
-        var aiInput = document.getElementById('newCustomerAI');
-        if (aiInput && data.ai) aiInput.value = data.ai;
-        var artInput = document.getElementById('newCustomerART');
-        if (artInput && data.art) artInput.value = data.art;
-        var phoneInput = document.getElementById('newCustomerPhone');
-        if (phoneInput && data.phone) phoneInput.value = data.phone;
-        var emailInput = document.getElementById('newCustomerEmail');
-        if (emailInput && data.email) emailInput.value = data.email;
-        var cityInput = document.getElementById('newCustomerCity');
-        if (cityInput && data.city) cityInput.value = data.city;
+        setVal('newCustomerName', data.customerName);
+        setVal('newCustomerRC', data.rc);
+        setVal('newCustomerNIF', data.nif);
+        setVal('newCustomerNIS', data.nis);
+        setVal('newCustomerAI', data.ai);
+        setVal('newCustomerART', data.art);
+        setVal('newCustomerPhone', data.phone);
+        setVal('newCustomerEmail', data.email);
+        setVal('newCustomerCity', data.city);
 
         var typeSelect = document.getElementById('newCustomerType');
         if (typeSelect && (data.rc || data.nif)) {
@@ -1206,36 +1336,106 @@
         var sAddr = document.getElementById('supplierAddress') || document.getElementById('newSupplierAddress');
         if (sAddr && (data.address || data.city)) sAddr.value = data.address || data.city;
       } else if (mode === 'employee' || mode === 'cv') {
-        var eName = document.getElementById('employeeName');
-        if (eName && data.empName) eName.value = data.empName;
-        var eNin = document.getElementById('employeeNationalId');
-        if (eNin && data.nin) eNin.value = data.nin;
-        var eDob = document.getElementById('employeeDob');
-        if (eDob && data.birthDate) eDob.value = data.birthDate;
-        var ePhone = document.getElementById('employeePhone');
-        if (ePhone && data.phone) ePhone.value = data.phone;
-        var eEmail = document.getElementById('employeeEmail');
-        if (eEmail && data.email) eEmail.value = data.email;
-        var eAddr = document.getElementById('employeeAddress');
-        if (eAddr && (data.address || data.city)) eAddr.value = data.address || data.city;
-        var ePos = document.getElementById('employeePosition');
-        if (ePos && data.jobTitle) ePos.value = data.jobTitle;
+        setVal('employeeName', data.empName);
+        setVal('employeeNationalId', data.nin);
+        setVal('employeeDob', data.birthDate);
+        setVal('employeePhone', data.phone);
+        setVal('employeeEmail', data.email);
+        setVal('employeeAddress', data.address || data.city);
+        setVal('employeePosition', data.jobTitle);
       } else if (mode === 'consultation') {
-        var cClient = document.getElementById('consultClient');
-        if (cClient && (data.customerName || data.client)) cClient.value = data.customerName || data.client;
-        var cSubj = document.getElementById('consultSubject');
-        if (cSubj && (data.subject || data.tenderTitle)) cSubj.value = data.subject || data.tenderTitle;
-        var cDate = document.getElementById('consultDate');
-        if (cDate && data.date) cDate.value = data.date;
+        setVal('consultClient', data.customerName || data.client);
+        setVal('consultSubject', data.subject || data.tenderTitle);
+        setVal('consultDate', data.date);
       } else if (mode === 'tender') {
-        var tRef = document.getElementById('tenderRef');
-        if (tRef && data.tenderRef) tRef.value = data.tenderRef;
-        var tTitle = document.getElementById('tenderTitle');
-        if (tTitle && data.tenderTitle) tTitle.value = data.tenderTitle;
-        var tAuth = document.getElementById('tenderAuthority');
-        if (tAuth && data.authority) tAuth.value = data.authority;
-        var tDead = document.getElementById('tenderDeadline');
-        if (tDead && data.deadline) tDead.value = data.deadline;
+        setVal('tenderRef', data.tenderRef);
+        setVal('tenderTitle', data.tenderTitle);
+        setVal('tenderAuthority', data.authority);
+        setVal('tenderDeadline', data.deadline);
+        if (data.totals && data.totals.total > 0) setVal('tenderAmount', data.totals.total.toFixed(2));
+      } else if (mode === 'inventory' || mode === 'product') {
+        var pName = data.productName || (data.items && data.items[0] && data.items[0].description) || '';
+        setVal('productName', pName);
+        setVal('productBarcode', data.barcode);
+        if (data.purchasePrice > 0) setVal('productPurchasePrice', data.purchasePrice.toFixed(2));
+        else if (data.items && data.items[0] && data.items[0].unitPrice > 0) setVal('productPurchasePrice', data.items[0].unitPrice.toFixed(2));
+        if (data.sellingPrice > 0) setVal('productSellingPrice', data.sellingPrice.toFixed(2));
+        if (data.quantity > 0) setVal('productQuantity', data.quantity);
+        if (data.category && typeof window.ensureCategoryExists === 'function') {
+          window.ensureCategoryExists(data.category);
+          setVal('productCategory', data.category);
+        }
+        if (typeof window.showToast === 'function') {
+          window.showToast('تم تطبيق بيانات المنتج المستخرجة بنجاح!', 'success');
+        }
+      } else if (mode === 'journal' || mode === 'finance') {
+        var jForm = document.getElementById('journalForm');
+        if (jForm) {
+          var dateInput = jForm.querySelector('input[type="date"]');
+          if (dateInput && (data.journalDate || data.date)) dateInput.value = data.journalDate || data.date;
+          var refInput = jForm.querySelector('input[placeholder*="reference"], input[placeholder*="مرجع"]');
+          if (refInput && (data.reference || data.invoiceNumber)) refInput.value = data.reference || data.invoiceNumber;
+          var descInput = jForm.querySelector('textarea');
+          if (descInput) descInput.value = data.journalDesc || ('فاتورة ' + (data.supplierName || data.customerName || data.reference || ''));
+          if (data.items && data.items.length && typeof window.addJournalLine === 'function') {
+            var tbody = document.getElementById('journalLinesTable');
+            if (tbody) {
+              tbody.innerHTML = '';
+              data.items.filter(function(i){ return i.selected; }).forEach(function(it) {
+                window.addJournalLine();
+                var rows = tbody.querySelectorAll('tr');
+                var lastRow = rows[rows.length - 1];
+                if (lastRow) {
+                  var descInp = lastRow.querySelector('input[type="text"]');
+                  if (descInp) descInp.value = it.description;
+                  var numInps = lastRow.querySelectorAll('input[type="number"]');
+                  if (numInps.length >= 2) {
+                    numInps[0].value = (it.total || (it.quantity * it.unitPrice)).toFixed(2);
+                    numInps[1].value = '0.00';
+                  }
+                }
+              });
+              if (typeof window.calculateJournalBalance === 'function') window.calculateJournalBalance();
+            }
+          }
+          if (typeof window.showToast === 'function') {
+            window.showToast('تم تعبئة سطور القيد المحاسبي بنجاح!', 'success');
+          }
+        }
+      } else if (mode === 'bank') {
+        if (data.bankName) {
+          var bSel = document.getElementById('bankNameSelect');
+          if (bSel) {
+            for (var bi = 0; bi < bSel.options.length; bi++) {
+              if (bSel.options[bi].value === data.bankName || bSel.options[bi].text.indexOf(data.bankName) !== -1) {
+                bSel.selectedIndex = bi;
+                break;
+              }
+            }
+          }
+        }
+        setVal('bankRib', data.rib);
+        setVal('bankAccountNumber', data.accountNumber || (data.rib ? data.rib.replace(/\s+/g, '') : ''));
+        setVal('bankHolderName', data.accountHolder);
+      } else if (mode === 'crm' || mode === 'lead') {
+        var cForm = document.getElementById('customerForm') || document.getElementById('leadForm');
+        if (cForm) {
+          var inputs = cForm.querySelectorAll('input');
+          inputs.forEach(function(inp) {
+            var ph = (inp.placeholder || '').toLowerCase();
+            var lbl = inp.parentElement ? (inp.parentElement.textContent || '').toLowerCase() : '';
+            if ((ph.indexOf('name') !== -1 || lbl.indexOf('اسم') !== -1) && data.customerName && !inp.value) inp.value = data.customerName;
+            if ((ph.indexOf('company') !== -1 || lbl.indexOf('شركة') !== -1) && (data.company || data.customerName) && !inp.value) inp.value = data.company || data.customerName;
+            if (inp.type === 'email' && data.email && !inp.value) inp.value = data.email;
+            if (inp.type === 'tel' && data.phone && !inp.value) inp.value = data.phone;
+            if ((ph.indexOf('street') !== -1 || ph.indexOf('address') !== -1 || lbl.indexOf('عنوان') !== -1) && data.address && !inp.value) inp.value = data.address;
+            if ((ph.indexOf('city') !== -1 || lbl.indexOf('مدينة') !== -1) && data.city && !inp.value) inp.value = data.city;
+          });
+        }
+      } else if (mode === 'universal') {
+        if (typeof window.showToast === 'function') {
+          window.showToast('تم الاستخراج بنجاح! يمكنك نسخ البيانات أو استخدامها.', 'success');
+        }
       }
     },
 
@@ -1290,12 +1490,25 @@
     }
   };
 
+  function openUniversalOcrModal(options) {
+    var isAr = ZeraldaOCR.getLang() === 'ar';
+    var isFr = ZeraldaOCR.getLang() === 'fr';
+    var opts = options || {};
+    opts.mode = opts.mode || 'universal';
+    opts.title = opts.title || (isAr ? 'المسح الضوئي الذكي الشامل (Scan IA)' : (isFr ? 'Scan Intelligent Universel (IA)' : 'Universal AI Smart Scan'));
+    opts.subtitle = opts.subtitle || (isAr ? 'امسح أي فاتورة، إيصال، كشف بنكي، بطاقة عمل، أو ملصق منتج' : (isFr ? 'Scannez factures, reçus, chèques, cartes de visite ou articles' : 'Scan any invoice, receipt, check, business card, or product label'));
+    opts.icon = opts.icon || 'fas fa-camera';
+    return ZeraldaOCR.open(opts);
+  }
+
   global.ZeraldaOCR = ZeraldaOCR;
+  global.openUniversalOcrModal = openUniversalOcrModal;
   if (typeof window !== 'undefined') {
     window.ZeraldaOCR = ZeraldaOCR;
     window.openOcrModal = function(options) {
       return ZeraldaOCR.open(options);
     };
+    window.openUniversalOcrModal = openUniversalOcrModal;
   }
 
 })(typeof window !== 'undefined' ? window : this);
