@@ -320,7 +320,7 @@ async def delete_store(request: Request, key: str = Query(...), expected_version
     with storage._lock:
         store = storage.read_store()
         if key not in store:
-            raise HTTPException(404, detail={"ok": False, "error": "key not found"})
+            return {"ok": True, "deleted": False}
         hist = storage.read_history()
         current_version = storage.current_key_version(hist, key)
         # FIX P1: convert expected_version to int for consistent comparison
