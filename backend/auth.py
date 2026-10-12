@@ -233,44 +233,59 @@ def get_user(email: str) -> Optional[Dict]:
 def initialize_default_users():
     """
     Ensure default admin user exists.
-    - Creates the admin on fresh install (empty users.json).
-    - Resets password only when AUTH_RESET_DEFAULT_ADMIN_ON_STARTUP=true.
-    - Skips entirely if env vars are not configured.
+    - Creates default admins on fresh install or if missing.
+    - Resets password when AUTH_RESET_DEFAULT_ADMIN_ON_STARTUP=true.
     """
     users = load_users()
-    admin_email = os.getenv('DEFAULT_ADMIN_EMAIL', '').strip().lower()
-    admin_password = os.getenv('DEFAULT_ADMIN_PASSWORD', '').strip()
+    admin_email = os.getenv('DEFAULT_ADMIN_EMAIL', 'admin@zeralda.dz').strip().lower()
+    admin_password = os.getenv('DEFAULT_ADMIN_PASSWORD', 'Admin@2026!').strip()
     admin_username = os.getenv('DEFAULT_ADMIN_USERNAME', 'Admin').strip()
     force_reset = os.getenv('AUTH_RESET_DEFAULT_ADMIN_ON_STARTUP', 'false').strip().lower() == 'true'
 
-    if not admin_email or not admin_password:
-        if users:
-            return
-        print("[AUTH] [WARN] DEFAULT_ADMIN_EMAIL or DEFAULT_ADMIN_PASSWORD not set in .env — skipping auto-init")
-        return
+    changed = False
 
-    existing = users.get(admin_email)
+    # 1. Primary admin (default: admin@zeralda.dz / Admin@2026!)
+    if admin_email and admin_password:
+        existing = users.get(admin_email)
+        if not existing or force_reset:
+            created_at = (existing or {}).get('created_at') or datetime.now().isoformat()
+            hashed_password, salt = hash_password(admin_password)
+            users[admin_email] = {
+                'username': admin_username,
+                'email': admin_email,
+                'password': hashed_password,
+                'salt': salt,
+                'role': 'admin',
+                'created_at': created_at,
+                'active': True,
+                'failed_attempts': 0,
+                'locked_until': None
+            }
+            changed = True
+            print(f"[AUTH] [OK] Admin user ready: {admin_email}")
 
-    if existing and not force_reset:
-        return
+    # 2. Owner admin (saddamzeralda@gmail.com / Admin@2026!)
+    owner_email = 'saddamzeralda@gmail.com'
+    existing_owner = users.get(owner_email)
+    if not existing_owner or force_reset:
+        created_at = (existing_owner or {}).get('created_at') or datetime.now().isoformat()
+        hashed_password, salt = hash_password('Admin@2026!')
+        users[owner_email] = {
+            'username': 'Admin',
+            'email': owner_email,
+            'password': hashed_password,
+            'salt': salt,
+            'role': 'admin',
+            'created_at': created_at,
+            'active': True,
+            'failed_attempts': 0,
+            'locked_until': None
+        }
+        changed = True
+        print(f"[AUTH] [OK] Owner user ready: {owner_email}")
 
-    created_at = (existing or {}).get('created_at') or datetime.now().isoformat()
-
-    print(f"[AUTH] {'Resetting' if existing else 'Creating'} default admin user: {admin_email}")
-    hashed_password, salt = hash_password(admin_password)
-    users[admin_email] = {
-        'username': admin_username,
-        'email': admin_email,
-        'password': hashed_password,
-        'salt': salt,
-        'role': 'admin',
-        'created_at': created_at,
-        'active': True,
-        'failed_attempts': 0,
-        'locked_until': None
-    }
-    save_users(users)
-    print(f"[AUTH] [OK] Default admin is active. Login with: {admin_email}")
+    if changed:
+        save_users(users)
 
 
 # ══════════════════════════════════════════════════════════

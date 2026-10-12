@@ -309,6 +309,11 @@ def create_app() -> FastAPI:
     async def _startup():
         log_structured("INFO", "Zeralda ERP starting", action="server_start",
                        environment=ENVIRONMENT, auth_required=True)
+        try:
+            from backend import auth
+            auth.initialize_default_users()
+        except Exception as e:
+            log_structured("WARN", "Default users init failed", error=str(e))
 
     @app.on_event("shutdown")
     async def _shutdown():
