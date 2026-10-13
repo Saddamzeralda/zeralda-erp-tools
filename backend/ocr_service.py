@@ -646,8 +646,8 @@ def _extract_from_pdf_bytes(pdf_bytes: bytes, lang: str, max_pages: int = 35) ->
         import pytesseract as _tess_mod
         _tess = _tess_mod
         _configure_tesseract_cmd()
-    except Exception:
-        pass
+    except Exception as tess_init_err:
+        _logger.warning("pytesseract could not be imported or configured: %s", tess_init_err)
 
     out_parts = []
     try:
@@ -672,6 +672,7 @@ def _extract_from_pdf_bytes(pdf_bytes: bytes, lang: str, max_pages: int = 35) ->
         # Pass 2: Scanned document OCR fallback (only if pytesseract is available)
         if not _tess:
             doc.close()
+            _logger.warning("Scanned PDF OCR skipped: pytesseract is not installed in the environment")
             return ""
 
         from PIL import Image, ImageEnhance
@@ -845,13 +846,21 @@ def extract_text_from_payload(file_base64: str, mime_type: Optional[str], lang: 
 
     if _looks_like_pdf(normalized_mime, fname):
         text = _extract_from_pdf_bytes(payload, lang=lang)
+        err_msg = ""
+        if not (text and text.strip()):
+            try:
+                import pytesseract
+            except Exception:
+                err_msg = "Tesseract OCR engine (pytesseract) is not installed on the server"
+            if not err_msg:
+                err_msg = "PDF text extraction returned no text"
         return {
             "ok": bool(text and text.strip()),
             "mimeType": normalized_mime,
             "text": text,
             "textLength": len(text),
             "engine": "tesseract",
-            "error": "" if text and text.strip() else "PDF text extraction returned no text",
+            "error": err_msg,
         }
 
     if _looks_like_spreadsheet(normalized_mime, str(file_name or "")):
