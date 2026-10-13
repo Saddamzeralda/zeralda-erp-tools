@@ -211,13 +211,13 @@ async def invoice_extract(request: Request):
             import asyncio
             from app.services import storage as _storage
             ai_settings_file = os.path.join(_storage.DATA_DIR, "ai_settings.json")
-            ocr_engine = "auto"
+            ocr_engine = "ai"
             try:
                 with open(ai_settings_file, "r", encoding="utf-8-sig") as f:
                     _ai_cfg = json.load(f)
-                ocr_engine = str(_ai_cfg.get("ocr_engine", "auto")).strip().lower()
+                ocr_engine = str(_ai_cfg.get("ocr_engine", "ai")).strip().lower()
                 if ocr_engine not in ("auto", "tesseract", "ai"):
-                    ocr_engine = "auto"
+                    ocr_engine = "ai"
             except Exception:
                 pass
             # Run CPU-bound file processing in a thread pool
@@ -460,14 +460,14 @@ async def analyze_file(request: Request):
         data = await read_json_body(request)
         if not data.get("fileBase64"):
             raise HTTPException(400, detail={"ok": False, "error": "fileBase64 is required"})
-        ocr_engine = "auto"
+        ocr_engine = "ai"
         try:
             ai_settings_file = os.path.join(storage.DATA_DIR, "ai_settings.json")
             with open(ai_settings_file, "r", encoding="utf-8-sig") as f:
                 _ai_cfg = json.load(f)
-            ocr_engine = str(_ai_cfg.get("ocr_engine", "auto")).strip().lower()
+            ocr_engine = str(_ai_cfg.get("ocr_engine", "ai")).strip().lower()
             if ocr_engine not in ("auto", "tesseract", "ai"):
-                ocr_engine = "auto"
+                ocr_engine = "ai"
         except Exception:
             pass
         loop = asyncio.get_event_loop()

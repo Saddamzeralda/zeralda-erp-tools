@@ -325,7 +325,7 @@ def process_file_for_analysis(
     file_name: str = "",
     analysis_type: str = "general",
     language: str = "ara+fra+eng",
-    ocr_engine: str = "auto"
+    ocr_engine: str = "ai"
 ) -> Dict[str, Any]:
     """
     Process file with OCR and AI for various analysis types.

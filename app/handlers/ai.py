@@ -197,7 +197,8 @@ async def get_settings(request: Request):
         provider = "gemini"
         ai_cfg["provider"] = "gemini"
     defaults = {"provider": "gemini",
-                "features": {"web_search": True, "exec_actions": True, "file_analysis": True}}
+                "features": {"web_search": True, "exec_actions": True, "file_analysis": True},
+                "ocr_engine": "ai"}
     for pname, pcfg in PROVIDER_CONFIGS.items():
         if pcfg.get("api_key_field"):
             defaults[pcfg["api_key_field"]] = ai_cfg.get(pcfg["api_key_field"], "")

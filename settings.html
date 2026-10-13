@@ -1331,9 +1331,9 @@
                     <div>
                         <label style="display:block;font-weight:600;margin-bottom:6px;color:#374151;" data-en="OCR Engine" data-ar="محرك OCR" data-fr="Moteur OCR">OCR Engine</label>
                         <select id="ocrEngine" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;background:white;">
+                            <option value="ai" selected data-en="AI Vision (cloud)" data-ar="رؤية AI (سحابي)" data-fr="Vision IA (cloud)">AI Vision (cloud)</option>
                             <option value="auto" data-en="Auto (Tesseract first, then AI)" data-ar="تلقائي (Tesseract أولاً، ثم AI)" data-fr="Auto (Tesseract d'abord, puis IA)">Auto (Tesseract first, then AI)</option>
                             <option value="tesseract" data-en="Tesseract (local)" data-ar="Tesseract (محلي)" data-fr="Tesseract (local)">Tesseract (local)</option>
-                            <option value="ai" data-en="AI Vision (cloud)" data-ar="رؤية AI (سحابي)" data-fr="Vision IA (cloud)">AI Vision (cloud)</option>
                         </select>
                         <small style="color:#6b7280;display:block;margin-top:4px;" data-en="Choose how to extract text from images/PDFs. AI Vision uses your cloud AI provider (no Tesseract needed)." data-ar="اختر كيفية استخراج النص من الصور/PDF. رؤية AI تستخدم مزود السحابة (بدون الحاجة لـ Tesseract)." data-fr="Choisissez comment extraire le texte des images/PDF. La vision IA utilise votre fournisseur cloud (sans Tesseract).">Choose how to extract text from images/PDFs. AI Vision uses your cloud AI provider (no Tesseract needed).</small>
                         <div id="ocrEngineWarning" style="display:none;margin-top:6px;padding:8px 12px;background:#fef3c7;border:1px solid #f59e0b;border-radius:6px;color:#92400e;font-size:12px;">
@@ -2508,7 +2508,7 @@
                 }
                 var ocrEngineEl = document.getElementById('ocrEngine');
                 if (ocrEngineEl) {
-                    var ocrVal = settings.ocr_engine || 'auto';
+                    var ocrVal = settings.ocr_engine || 'ai';
                     ocrEngineEl.value = ocrVal;
                     checkOcrEngineWarning(provider, ocrVal);
                     ocrEngineEl.onchange = function() { checkOcrEngineWarning(providerEl ? providerEl.value : 'disabled', this.value); };

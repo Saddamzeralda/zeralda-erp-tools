@@ -2150,6 +2150,7 @@ class EnhancedHandler(http.server.SimpleHTTPRequestHandler):
                 defaults = {
                     'provider': 'gemini',
                     'features': {'web_search': True, 'exec_actions': True, 'file_analysis': True},
+                    'ocr_engine': 'ai',
                 }
                 for pname, pcfg in PROVIDER_CONFIGS.items():
                     if pcfg.get('api_key_field'):
@@ -3312,14 +3313,14 @@ class EnhancedHandler(http.server.SimpleHTTPRequestHandler):
             if file_b64 and not bill_text:
                 try:
                     from backend.ai_file_processor import process_file_for_analysis
-                    ocr_engine = 'auto'
+                    ocr_engine = 'ai'
                     try:
                         _ai_cfg_path = os.path.join(DATA_DIR, 'ai_settings.json')
                         with open(_ai_cfg_path, 'r', encoding='utf-8-sig') as f:
                             _ai_cfg = json.load(f)
-                        ocr_engine = str(_ai_cfg.get('ocr_engine', 'auto')).strip().lower()
+                        ocr_engine = str(_ai_cfg.get('ocr_engine', 'ai')).strip().lower()
                         if ocr_engine not in ('auto', 'tesseract', 'ai'):
-                            ocr_engine = 'auto'
+                            ocr_engine = 'ai'
                     except Exception:
                         pass
                     extract_result = process_file_for_analysis(
@@ -3471,14 +3472,14 @@ class EnhancedHandler(http.server.SimpleHTTPRequestHandler):
                         try:
                             from backend.ai_file_processor import process_file_for_analysis
                             # Read OCR engine setting
-                            _ocr_engine = 'auto'
+                            _ocr_engine = 'ai'
                             try:
                                 _ai_settings_path = os.path.join(DATA_DIR, 'ai_settings.json')
                                 with open(_ai_settings_path, 'r', encoding='utf-8-sig') as f:
                                     _ai_cfg = json.load(f)
-                                _ocr_engine = str(_ai_cfg.get('ocr_engine', 'auto')).strip().lower()
+                                _ocr_engine = str(_ai_cfg.get('ocr_engine', 'ai')).strip().lower()
                                 if _ocr_engine not in ('auto', 'tesseract', 'ai'):
-                                    _ocr_engine = 'auto'
+                                    _ocr_engine = 'ai'
                             except Exception:
                                 pass
 
@@ -3938,14 +3939,14 @@ class EnhancedHandler(http.server.SimpleHTTPRequestHandler):
                 language = data.get('language', 'ara+fra+eng')
                 
                 # Read OCR engine setting (auto, tesseract, or ai)
-                ocr_engine = 'auto'
+                ocr_engine = 'ai'
                 try:
                     ai_settings_file = os.path.join(DATA_DIR, 'ai_settings.json')
                     with open(ai_settings_file, 'r', encoding='utf-8-sig') as f:
                         _ai_cfg = json.load(f)
-                    ocr_engine = str(_ai_cfg.get('ocr_engine', 'auto')).strip().lower()
+                    ocr_engine = str(_ai_cfg.get('ocr_engine', 'ai')).strip().lower()
                     if ocr_engine not in ('auto', 'tesseract', 'ai'):
-                        ocr_engine = 'auto'
+                        ocr_engine = 'ai'
                 except Exception:
                     pass
                 
