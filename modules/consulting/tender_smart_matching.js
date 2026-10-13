@@ -242,16 +242,45 @@ Document text:
                 var jsonMatch = cleanJson.match(/\{[\s\S]*\}/);
                 if (jsonMatch) {
                     var parsed = JSON.parse(jsonMatch[0]);
+                    var heuristicRef = extractReferenceHeuristic(documentText);
+                    var candidateRef = (parsed.reference && typeof parsed.reference === 'string') ? parsed.reference.trim() : '';
+                    if (!candidateRef || /^(66-156|03-03|15-247)$/.test(candidateRef) || /ordonnance|code\s*p[eé]nal|registre/i.test(candidateRef)) {
+                        candidateRef = heuristicRef;
+                    }
+
+                    var heuristicTitle = extractTitleHeuristic(documentText);
+                    var cleanTitle = (parsed.title && typeof parsed.title === 'string') ? parsed.title.trim() : heuristicTitle;
+                    if (!cleanTitle || /^(d[eé]claration|candidature|probit[eé]|soumission|march[eé]\s+public)$/i.test(cleanTitle)) {
+                        if (heuristicTitle) cleanTitle = heuristicTitle;
+                    }
+
+                    var heuristicAuth = extractAuthorityHeuristic(documentText);
+                    var cleanAuth = (parsed.authority && typeof parsed.authority === 'string') ? parsed.authority.trim() : heuristicAuth;
+                    cleanAuth = cleanAuth.replace(/Staoug[eé]/gi, 'Staoueli').replace(/Staqueli/gi, 'Staoueli');
+                    var mWil = documentText.match(/(?:Wilaya\s+d[e\'’]\s*[A-Za-zÀ-ÿ\-]+|ولاية\s+[\u0621-\u064A\-]+)/i);
+                    if (mWil && !cleanAuth.toLowerCase().includes('wilaya') && !cleanAuth.toLowerCase().includes('alger')) {
+                        cleanAuth += ' (' + mWil[0].trim() + ')';
+                    }
+
+                    var detectedDocs = getDetectedChecklist(documentText, activeLang);
+                    var finalDocs = (Array.isArray(parsed.requiredDocuments) && parsed.requiredDocuments.length) 
+                        ? parsed.requiredDocuments 
+                        : detectedDocs;
+
                     return {
-                        reference: parsed.reference || extractReferenceHeuristic(documentText),
-                        title: parsed.title || extractTitleHeuristic(documentText),
-                        authority: parsed.authority || extractAuthorityHeuristic(documentText),
+                        reference: candidateRef,
+                        title: cleanTitle,
+                        authority: cleanAuth,
                         deadline: parsed.deadline || extractDeadlineHeuristic(documentText),
                         estimatedBudget: parseFloat(parsed.estimatedBudget) || 0,
                         executionPeriod: parsed.executionPeriod || '',
-                        items: (Array.isArray(parsed.items) && parsed.items.length) ? parsed.items : parseItemsFromTextHeuristic(documentText),
-                        requiredDocuments: (Array.isArray(parsed.requiredDocuments) && parsed.requiredDocuments.length) ? parsed.requiredDocuments : getDefaultChecklist(activeLang),
-                        keyClauses: Array.isArray(parsed.keyClauses) ? parsed.keyClauses : []
+                        items: (Array.isArray(parsed.items) && parsed.items.length) ? parsed.items : parseItemsFromTextHeuristic(documentText, cleanTitle),
+                        requiredDocuments: finalDocs,
+                        keyClauses: (Array.isArray(parsed.keyClauses) && parsed.keyClauses.length) ? parsed.keyClauses : [
+                            activeLang === 'ar' ? "الشروط الجزائية للتأخير: 1/1000 عن كل يوم تأخير بحد أقصى 10% من مبلغ الصفقة" : "Pénalités de retard : 1/1000 par jour plafonnées à 10% du marché",
+                            activeLang === 'ar' ? "اقتطاع الضمان: 5% من كل كشف حساب تسترجع عند التسليم النهائي (بعد سنة)" : "Retenue de garantie : 5% libérable à la réception définitive (1 an)",
+                            activeLang === 'ar' ? "فترة صلاحية العروض: مدة تحضير العروض + 3 أشهر" : "Délai de validité des offres : délai de préparation + 3 mois"
+                        ]
                     };
                 }
             }
@@ -264,15 +293,17 @@ Document text:
     }
 
     function extractAlgerianTenderHeuristics(documentText, activeLang) {
+        var title = extractTitleHeuristic(documentText);
         return {
             reference: extractReferenceHeuristic(documentText),
-            title: extractTitleHeuristic(documentText),
+            title: title,
             authority: extractAuthorityHeuristic(documentText),
             deadline: extractDeadlineHeuristic(documentText),
+            candidate: extractCandidateHeuristic(documentText),
             estimatedBudget: 0,
             executionPeriod: '',
-            items: parseItemsFromTextHeuristic(documentText),
-            requiredDocuments: getDefaultChecklist(activeLang),
+            items: parseItemsFromTextHeuristic(documentText, title),
+            requiredDocuments: getDetectedChecklist(documentText, activeLang),
             keyClauses: [
                 activeLang === 'ar' ? "الشروط الجزائية للتأخير: 1/1000 عن كل يوم تأخير بحد أقصى 10% من مبلغ الصفقة" : "Pénalités de retard : 1/1000 par jour plafonnées à 10% du marché",
                 activeLang === 'ar' ? "اقتطاع الضمان: 5% من كل كشف حساب تسترجع عند التسليم النهائي (بعد سنة)" : "Retenue de garantie : 5% libérable à la réception définitive (1 an)",
@@ -281,74 +312,105 @@ Document text:
         };
     }
 
-    function getDefaultChecklist(lang) {
-        if (lang === 'fr') {
-            return [
-                "Déclaration de candidature (renseignée et signée)",
-                "Déclaration de probité (signée et datée)",
-                "Déclaration à souscrire (complétée)",
-                "Statuts de l'entreprise & pouvoirs de signature",
-                "Registre de commerce électronique (code d'activité conforme)",
-                "Extrait de rôle apuré (moins de 3 mois)",
-                "Attestation d'affiliation et mise à jour CNAS / CASNOS",
-                "Bilans financiers certifiés des 3 dernières années (commissaire aux comptes)",
-                "Références professionnelles similaires (Attestations de bonne exécution)",
-                "Bordereau des Prix Unitaires (BPU) & Devis Quantitatif Estimatif (DQE)",
-                "Lettre de soumission (signée, datée et cachetée)",
-                "Caution de soumission bancaire (si exigée par le cahier des charges)"
-            ];
-        } else if (lang === 'en') {
-            return [
-                "Application declaration (signed and stamped)",
-                "Integrity declaration (signed and dated)",
-                "Commitment declaration / Bid submission letter",
-                "Company statutes & signing authority powers",
-                "Commercial register certificate (valid activity code)",
-                "Tax clearance certificate (under 3 months)",
-                "Social security clearance certificate (CNAS / CASNOS)",
-                "Audited financial statements for last 3 years",
-                "Proof of past similar project experience (certificates of good execution)",
-                "Price schedule (BPU) & Estimated bill of quantities (DQE)",
-                "Bid bond / Bank guarantee (if applicable)"
-            ];
+    function getDetectedChecklist(text, lang) {
+        var str = String(text || '').toLowerCase();
+        var isFr = lang === 'fr';
+        var isEn = lang === 'en';
+
+        var list = [];
+        // Check for specific declarations present in the uploaded scan
+        var hasProbite = /probit[eé]|نزاهة/i.test(str);
+        var hasCandidature = /candidature|ترشح/i.test(str);
+        var hasSoumission = /lettre\s+de\s+soumission|تعهد|تقديم\s+العرض/i.test(str);
+        var hasRC = /registre\s+d[ue]\s+commerce|سجل\s+تجاري/i.test(str);
+        var hasRole = /extrait\s+de\s+r[oô]le|ضرائب|جدول\s+الضرائب/i.test(str);
+        var hasCnas = /cnas|casnos|ضمان\s+اجتماعي/i.test(str);
+        var hasCasier = /casier\s+judiciaire|سوابق\s+قضائية/i.test(str);
+
+        if (isFr) {
+            list.push((hasCandidature ? "✓ " : "") + "Déclaration de candidature (renseignée et signée)" + (hasCandidature ? " [Détectée dans le fichier]" : ""));
+            list.push((hasProbite ? "✓ " : "") + "Déclaration de probité (signée et datée)" + (hasProbite ? " [Détectée dans le fichier]" : ""));
+            list.push((hasSoumission ? "✓ " : "") + "Lettre de soumission (signée et cachetée)");
+            list.push((hasRC ? "✓ " : "") + "Registre de commerce électronique (code d'activité conforme)");
+            list.push("Statuts de l'entreprise & pouvoirs de signature du gérant");
+            list.push((hasRole ? "✓ " : "") + "Extrait de rôle apuré (moins de 3 mois)");
+            list.push((hasCnas ? "✓ " : "") + "Attestation d'affiliation et mise à jour CNAS / CASNOS");
+            list.push((hasCasier ? "✓ " : "") + "Casier judiciaire du gérant (bulletin N° 3)");
+            list.push("Bordereau des Prix Unitaires (BPU) & Devis Quantitatif Estimatif (DQE)");
+            list.push("Mémoire technique justificatif et méthodologie d'exécution");
+            list.push("Bilans financiers certifiés des 3 dernières années");
+            list.push("Attestations de bonne exécution pour projets similaires");
+        } else if (isEn) {
+            list.push((hasCandidature ? "✓ " : "") + "Candidate Application Declaration [Found in document]");
+            list.push((hasProbite ? "✓ " : "") + "Integrity Declaration [Found in document]");
+            list.push("Bid Submission Letter (signed and stamped)");
+            list.push("Commercial Register (Electronic RC certificate)");
+            list.push("Company Statutes & Manager Authority");
+            list.push("Tax Clearance Certificate (Extrait de rôle)");
+            list.push("Social Security Clearance (CNAS / CASNOS)");
+            list.push("Criminal Record Certificate (N° 3)");
+            list.push("Price Schedule (BPU) & Quantity Bill (DQE)");
+            list.push("Technical Justification Proposal & Execution Methodology");
+        } else {
+            list.push((hasCandidature ? "✓ " : "") + "تصريح بالترشح (مملوء وموقع من المسير)" + (hasCandidature ? " [تم العثور عليه في الملف]" : ""));
+            list.push((hasProbite ? "✓ " : "") + "تصريح بالنزاهة (موقع ومؤرخ)" + (hasProbite ? " [تم العثور عليه في الملف]" : ""));
+            list.push((hasSoumission ? "✓ " : "") + "خطاب تقديم العرض والتعهد (Lettre de soumission)");
+            list.push((hasRC ? "✓ " : "") + "مستخرج السجل التجاري الإلكتروني (برمز النشاط المناسب)");
+            list.push("القانون الأساسي للشركة ومحضر تفويض المسير للتوقيع");
+            list.push((hasRole ? "✓ " : "") + "مستخرج جدول الضرائب مصفى (أقل من 3 أشهر)");
+            list.push((hasCnas ? "✓ " : "") + "شهادة أداء المستحقات وتحديث الاشتراك (CNAS / CASNOS)");
+            list.push((hasCasier ? "✓ " : "") + "صحيفة السوابق القضائية للمسير (أقل من 3 أشهر)");
+            list.push("جدول الأسعار الأحادية (BPU) والتفصيل الكمي والتقديري (DQE)");
+            list.push("المذكرة التقنية التبريرية ومنهجية الإنجاز");
+            list.push("الحصائل المالية للسنوات الثلاث الأخيرة (محافظ الحسابات)");
+            list.push("شهادات حسن الإنجاز لمشاريع مماثلة سابقة");
         }
-        return [
-            "تصريح بالترشح (مملوء وموقع من المسير)",
-            "تصريح بالنزاهة (موقع ومؤرخ)",
-            "تصريح بالاكتتاب (Déclaration à souscrire)",
-            "القانون الأساسي للشركة والوثائق المفوضة للتوقيع",
-            "مستخرج السجل التجاري الإلكتروني (برمز النشاط المناسب)",
-            "مستخرج جدول الضرائب مصفى (أقل من 3 أشهر)",
-            "شهادة أداء المستحقات وتحديث الاشتراك (CNAS / CASNOS)",
-            "الحصائل المالية المعتمدة للسنوات الثلاث الأخيرة (محافظ الحسابات)",
-            "شهادات حسن الإنجاز لمشاريع مماثلة سابقة مسلّمة من المصالح المتعاقدة",
-            "جدول الأسعار الأحادية (BPU) والتفصيل الكمي والتقديري (DQE)",
-            "خطاب تقديم العرض (Lettre de soumission) موقع ومختوم",
-            "كفالة التعهد البنكية (إن نص دفتر الشروط عليها)"
-        ];
+        return list;
+    }
+
+    function getDefaultChecklist(lang) {
+        return getDetectedChecklist('', lang);
     }
 
     function extractReferenceHeuristic(text) {
         var str = String(text || '');
-        var m = str.match(/(?:N[°oº]|R[eé]f(?:\.|erence)?|AO|رقم|مرجع)\s*[:\/\-\s#№]+\s*([0-9]{1,4}\s*[\/\-]\s*[0-9]{2,4}|[A-Za-z0-9\/\-_]{2,35})/i);
-        if (m) return m[1].replace(/\s+/g, '').trim();
-        var m2 = str.match(/(?:AO[N|I]?|Appel\s+d['’]offres|مناقصة|استشارة)\s*[:№#\s-]*([A-Z0-9\/\-_]{2,35})/i);
-        return m2 ? m2[1].trim() : '';
+        // Strip penal code / legal ordinance references to avoid false matches (e.g. 66-156, 03-03, 15-247)
+        var cleanStr = str.replace(/(?:ordonnance|d[eé]cret|loi|article|code\s+p[eé]nal|registre(?:\s+du\s+commerce)?)\s*(?:n[°oº]|r[eé]f)?\s*[:\.\s]*[0-9\-\/]+/gi, '');
+
+        // 1. Explicit tender reference with keywords
+        var m = cleanStr.match(/(?:AON?|AOI?|Consultation|Avis\s+d['’]appel\s+d['’]offres|Appel\s+d['’]offres|الصفقة|المناقصة|الاستشارة)\s*(?:N[°oº]|R[eé]f(?:\.|erence)?|رقم|مرجع)?\s*[:\/\-\s#№]+\s*([0-9]{1,4}\s*[\/\-]\s*[0-9]{2,4}|[A-Za-z0-9\/\-_]{2,30})/i);
+        if (m) {
+            var candidateRef = m[1].replace(/\s+/g, '').trim();
+            if (!/^(66-156|03-03|15-247)$/.test(candidateRef)) return candidateRef;
+        }
+
+        // 2. Generic N° X/YYYY pattern
+        var m2 = cleanStr.match(/(?:N[°oº]|R[eé]f(?:\.|erence)?|مرجع|رقم)\s*[:\/\-\s#№]+\s*([0-9]{1,4}\s*[\/\-]\s*20[2-3][0-9])/i);
+        if (m2) {
+            var candidateRef2 = m2[1].replace(/\s+/g, '').trim();
+            if (!/^(66-156|03-03|15-247)$/.test(candidateRef2)) return candidateRef2;
+        }
+
+        return '';
     }
 
     function extractTitleHeuristic(text) {
         var str = String(text || '');
-        var m = str.match(/(?:portant\s+sur|portant|objet|relatif\s+[aà]|يتضمن|موضوع|مشروع)\s*[:\-]\s*([^\n\r]+(?:\r?\n[^\n\r]+)?)/i);
+        // 1. Check for 'Objet du marché public :' or 'Objet :' or 'portant sur :'
+        var m = str.match(/(?:Objet(?:\s+du\s+march[eé](?:\s+public)?|\s+de\s+la\s+consultation|\s+de\s+l['’]appel\s+d['’]offres|\s+de\s+la\s+prestation)?|portant(?:\s+sur)?|relatif\s+[aà]|intitul[eé]|موضوع(?:\s+الصفقة|\s+المناقصة|\s+الاستشارة)?|يتضمن|مشروع)\s*[:\-]\s*([^\n\r]+)/i);
         if (m) {
-            var t = m[1].replace(/\s+/g, ' ').trim();
-            return t.replace(/[.;,]+$/, '').trim();
+            var t = m[1].replace(/\s+/g, ' ').replace(/^[0-9\/\-.:\s]+/, '').replace(/[.;,]+$/, '').trim();
+            if (t.length > 3) return t;
         }
+
+        // 2. Scan lines
         var lines = str.split(/\r?\n/).map(function(l){ return l.trim(); }).filter(Boolean);
-        for (var i = 0; i < Math.min(lines.length, 10); i++) {
+        for (var i = 0; i < Math.min(lines.length, 12); i++) {
             if (/^(objet|titre|موضوع|مشروع|projet)\s*[:\-]/i.test(lines[i])) {
-                return lines[i].replace(/^(objet|titre|موضوع|مشروع|projet)\s*[:\-]\s*/i, '').trim();
+                var clean = lines[i].replace(/^(objet|titre|موضوع|مشروع|projet)\s*[:\-]\s*/i, '').trim();
+                if (clean.length > 3) return clean;
             }
-            if (/^(avis\s+d['’]appel|إعلان\s+عن|استشارة)/i.test(lines[i]) && lines[i+1] && lines[i+1].length > 10) {
+            if (/^(avis\s+d['’]appel|إعلان\s+عن|استشارة)/i.test(lines[i]) && lines[i+1] && lines[i+1].length > 6) {
                 return lines[i+1].slice(0, 120);
             }
         }
@@ -357,16 +419,47 @@ Document text:
 
     function extractAuthorityHeuristic(text) {
         var str = String(text || '');
-        var m = str.match(/(?:Commune\s+d[e\'’]\s*[A-Za-zÀ-ÿ\-]+|بلدية\s+[\u0621-\u064A\-]+)/i);
-        if (m) return m[0].trim();
+        // 1. Check for 'Désignation du service contractant :'
+        var mService = str.match(/(?:D[eé]signation\s+du\s+service\s+contractant|l['’]Assembl[eé]e\s+Populaire\s+Communale\s+d[e\'’]\s*[A-Za-zÀ-ÿ\-]+|المجلس\s+الشعبي\s+البلدي\s+ل?[^\n\r]+)\s*[:\-]?\s*([^\n\r]+)?/i);
+        if (mService) {
+            var auth = (mService[1] || mService[0]).replace(/\s+/g, ' ').replace(/^[0-9\/\-.:\s]+/, '').replace(/[.;,]+$/, '').trim();
+            auth = auth.replace(/Staoug[eé]/gi, 'Staoueli').replace(/Staqueli/gi, 'Staoueli');
+            if (auth.length > 4 && !auth.match(/^[0-9]+$/)) {
+                // Append Wilaya if found
+                var mWil = str.match(/(?:Wilaya\s+d[e\'’]\s*[A-Za-zÀ-ÿ\-]+|ولاية\s+[\u0621-\u064A\-]+)/i);
+                if (mWil && !auth.toLowerCase().includes('wilaya') && !auth.toLowerCase().includes('alger')) {
+                    auth += ' (' + mWil[0].trim() + ')';
+                }
+                return auth;
+            }
+        }
+
+        // 2. Commune de ...
+        var mCommune = str.match(/(?:Commune\s+d[e\'’]\s*[A-Za-zÀ-ÿ\-]+|بلدية\s+[\u0621-\u064A\-]+)/i);
+        if (mCommune) {
+            var c = mCommune[0].trim().replace(/Staqueli/gi, 'Staoueli');
+            return c;
+        }
+
+        // 3. Wilaya / Ministère / Direction
         var m2 = str.match(/(?:Wilaya\s+d[e\'’]\s*[A-Za-zÀ-ÿ\-]+|ولاية\s+[\u0621-\u064A\-]+)/i);
         if (m2) return m2[0].trim();
         var m3 = str.match(/(?:Minist[eè]re\s+d[e\'’]\s*[A-Za-zÀ-ÿ\s\-]+|وزارة\s+[\u0621-\u064A\s\-]+)/i);
         if (m3) return m3[0].trim();
         var m4 = str.match(/(?:Direction\s+d[e\'’]\s*[A-Za-zÀ-ÿ\s\-]+|مديرية\s+[\u0621-\u064A\s\-]+)/i);
         if (m4) return m4[0].trim();
-        var m5 = str.match(/(?:ma[iî]tre\s+d['’]ouvrage|client|administration|acheteur|المصلحة\s+المتعاقدة|المشتري|الإدارة)\s*[:\-]\s*([^\n\r,]{3,80})/i);
-        if (m5) return m5[1].trim();
+        var m5 = str.match(/(?:ma[iî]tre\s+d['’]ouvrage|client|administration|acheteur|المصلحة\s+المتعاقدة|المشتري|الإدارة)\s*[:\-]\s*([^\n\r,]{4,80})/i);
+        if (m5 && !m5[1].trim().match(/^[0-9]+$/)) return m5[1].trim();
+
+        return '';
+    }
+
+    function extractCandidateHeuristic(text) {
+        var str = String(text || '');
+        var mCompany = str.match(/\b(SARL|EURL|SPA|SNC|ETS)\s+[A-Z0-9\s\-]{3,35}\b/);
+        if (mCompany) return mCompany[0].trim();
+        var mDenom = str.match(/(?:D[eé]nomination\s+de\s+la\s+soci[eé]t[eé]|Raison\s+sociale|تسمية\s+الشركة|المؤسسة)\s*[:\-]?\s*([^\n\r]{3,40})/i);
+        if (mDenom && mDenom[1].trim().length > 3) return mDenom[1].trim();
         return '';
     }
 
@@ -378,9 +471,11 @@ Document text:
         return mDate ? mDate[0] : '';
     }
 
-    function parseItemsFromTextHeuristic(text) {
+    function parseItemsFromTextHeuristic(text, tenderTitle) {
         var str = String(text || '');
         var detected = [];
+
+        // 1. Look for numbered lots (Lot N° 01: ...)
         var lotRegex = /(?:Lot|Poste|Article|بند|حصة)\s*N?[°oº]?\s*(\d+)\s*[:\-]\s*([^\n\r]+)/gi;
         var lm;
         while ((lm = lotRegex.exec(str)) !== null) {
@@ -394,6 +489,18 @@ Document text:
         }
         if (detected.length) return detected.slice(0, 25);
 
+        // 2. If tenderTitle is known (e.g. "Acquisition Bourses et Prix"), use it as the main item!
+        if (tenderTitle && tenderTitle.length > 3 && !tenderTitle.toLowerCase().includes('cahier') && !tenderTitle.toLowerCase().includes('avis')) {
+            return [
+                {
+                    name: tenderTitle,
+                    qty: 1,
+                    category: (/fourniture|acquisition|équipement|bourses|prix/i.test(tenderTitle) ? 'Fournitures' : 'Services')
+                }
+            ];
+        }
+
+        // 3. Fallback to generic line search
         var lines = str.split(/\r?\n/);
         lines.forEach(function(l) {
             var trimmed = l.trim();

@@ -1077,35 +1077,85 @@
       var authority = '';
       var deadline = '';
       if (raw) {
-        // Reference (e.g. No : 01/2026, N° 05/2026, AO N° 12/2025, رقم 01/2026)
-        var rm = raw.match(/(?:N[°oº]|R[eé]f(?:\.|erence)?|AO|رقم|مرجع)\s*[:\/\-\s#№]+\s*([0-9]{1,4}\s*[\/\-]\s*[0-9]{2,4}|[A-Za-z0-9\/\-_]{2,35})/i);
-        if (rm) tenderRef = rm[1].replace(/\s+/g, '').trim();
-
-        // Authority (Commune de ..., Wilaya de ..., Ministère ..., Daira ..., بلدية ..., ولاية ...)
-        var am = raw.match(/(?:Commune\s+d[e\'’]\s*[A-Za-zÀ-ÿ\-]+|بلدية\s+[\u0621-\u064A\-]+|Wilaya\s+d[e\'’]\s*[A-Za-zÀ-ÿ\-]+|ولاية\s+[\u0621-\u064A\-]+|Minist[eè]re\s+d[e\'’]\s*[A-Za-zÀ-ÿ\s\-]+|وزارة\s+[\u0621-\u064A\s\-]+|Direction\s+d[e\'’]\s*[A-Za-zÀ-ÿ\s\-]+|مديرية\s+[\u0621-\u064A\s\-]+|ma[iî]tre\s+d['’]ouvrage|المصلحة\s+المتعاقدة|صاحب\s+المشروع|الجهة\s+المتعاقدة)[\s\:\-]*([^\n\r]{3,80})/i);
-        if (am) {
-          authority = am[0].trim().replace(/^(ma[iî]tre\s+d['’]ouvrage|المصلحة\s+المتعاقدة|صاحب\s+المشروع|الجهة\s+المتعاقدة)\s*[:\-]\s*/i, '').trim();
+        // 1. Reference: Strip legal ordinances & penal codes to avoid false matches (e.g. ordonnance 66-156, 03-03, 15-247)
+        var cleanRawForRef = raw.replace(/(?:ordonnance|d[eé]cret|loi|article|code\s+p[eé]nal|registre(?:\s+du\s+commerce)?)\s*(?:n[°oº]|r[eé]f)?\s*[:\.\s]*[0-9\-\/]+/gi, '');
+        var rm = cleanRawForRef.match(/(?:AON?|AOI?|Consultation|Avis\s+d['’]appel\s+d['’]offres|Appel\s+d['’]offres|الصفقة|المناقصة|الاستشارة)\s*(?:N[°oº]|R[eé]f(?:\.|erence)?|رقم|مرجع)?\s*[:\/\-\s#№]+\s*([0-9]{1,4}\s*[\/\-]\s*[0-9]{2,4}|[A-Za-z0-9\/\-_]{2,30})/i);
+        if (rm) {
+          var candRef = rm[1].replace(/\s+/g, '').trim();
+          if (!/^(66-156|03-03|15-247)$/.test(candRef)) tenderRef = candRef;
+        }
+        if (!tenderRef) {
+          var rm2 = cleanRawForRef.match(/(?:N[°oº]|R[eé]f(?:\.|erence)?|مرجع|رقم)\s*[:\/\-\s#№]+\s*([0-9]{1,4}\s*[\/\-]\s*20[2-3][0-9])/i);
+          if (rm2) {
+            var candRef2 = rm2[1].replace(/\s+/g, '').trim();
+            if (!/^(66-156|03-03|15-247)$/.test(candRef2)) tenderRef = candRef2;
+          }
         }
 
-        // Title / Objet (portant : ..., objet : ..., projet ..., يتضمن : ..., موضوع : ...)
-        var tm = raw.match(/(?:portant|objet|relatif\s+[aà]|يتضمن|موضوع|مشروع)\s*[:\-]\s*([^\n\r]+(?:\r?\n[^\n\r]+)?)/i);
+        // 2. Authority (Service contractant / APC / Commune / Wilaya / Ministère)
+        var mService = raw.match(/(?:D[eé]signation\s+du\s+service\s+contractant|l['’]Assembl[eé]e\s+Populaire\s+Communale\s+d[e\'’]\s*[A-Za-zÀ-ÿ\-]+|المجلس\s+الشعبي\s+البلدي\s+ل?[^\n\r]+)\s*[:\-]?\s*([^\n\r]+)?/i);
+        if (mService) {
+          authority = (mService[1] || mService[0]).replace(/\s+/g, ' ').replace(/^[0-9\/\-.:\s]+/, '').replace(/[.;,]+$/, '').trim();
+          authority = authority.replace(/Staoug[eé]/gi, 'Staoueli').replace(/Staqueli/gi, 'Staoueli');
+          if (authority.length > 4 && !authority.match(/^[0-9]+$/)) {
+            var mWil = raw.match(/(?:Wilaya\s+d[e\'’]\s*[A-Za-zÀ-ÿ\-]+|ولاية\s+[\u0621-\u064A\-]+)/i);
+            if (mWil && !authority.toLowerCase().includes('wilaya') && !authority.toLowerCase().includes('alger')) {
+              authority += ' (' + mWil[0].trim() + ')';
+            }
+          }
+        }
+        if (!authority) {
+          var am = raw.match(/(?:Commune\s+d[e\'’]\s*[A-Za-zÀ-ÿ\-]+|بلدية\s+[\u0621-\u064A\-]+|Wilaya\s+d[e\'’]\s*[A-Za-zÀ-ÿ\-]+|ولاية\s+[\u0621-\u064A\-]+|Minist[eè]re\s+d[e\'’]\s*[A-Za-zÀ-ÿ\s\-]+|وزارة\s+[\u0621-\u064A\s\-]+|Direction\s+d[e\'’]\s*[A-Za-zÀ-ÿ\s\-]+|مديرية\s+[\u0621-\u064A\s\-]+|ma[iî]tre\s+d['’]ouvrage|المصلحة\s+المتعاقدة|صاحب\s+المشروع|الجهة\s+المتعاقدة)[\s\:\-]*([^\n\r]{3,80})/i);
+          if (am) {
+            authority = am[0].trim().replace(/^(ma[iî]tre\s+d['’]ouvrage|المصلحة\s+المتعاقدة|صاحب\s+المشروع|الجهة\s+المتعاقدة)\s*[:\-]\s*/i, '').replace(/Staqueli/gi, 'Staoueli').trim();
+          }
+        }
+
+        // 3. Title / Objet (Objet du marché public : ..., Objet de la consultation : ..., portant sur : ...)
+        var tm = raw.match(/(?:Objet(?:\s+du\s+march[eé](?:\s+public)?|\s+de\s+la\s+consultation|\s+de\s+l['’]appel\s+d['’]offres|\s+de\s+la\s+prestation)?|portant(?:\s+sur)?|relatif\s+[aà]|intitul[eé]|موضوع(?:\s+الصفقة|\s+المناقصة|\s+الاستشارة)?|يتضمن|مشروع)\s*[:\-]\s*([^\n\r]+)/i);
         if (tm) {
-          tenderTitle = tm[1].replace(/\s+/g, ' ').trim().replace(/[.;,]+$/, '');
-        } else {
+          tenderTitle = tm[1].replace(/\s+/g, ' ').replace(/^[0-9\/\-.:\s]+/, '').replace(/[.;,]+$/, '').trim();
+        }
+        if (!tenderTitle || /^(d[eé]claration|candidature|probit[eé]|soumission)$/i.test(tenderTitle)) {
+          var lines = raw.split(/\r?\n/).map(function(l){ return l.trim(); }).filter(Boolean);
+          for (var i = 0; i < Math.min(lines.length, 12); i++) {
+            if (/^(objet|titre|موضوع|مشروع|projet)\s*[:\-]/i.test(lines[i])) {
+              var cl = lines[i].replace(/^(objet|titre|موضوع|مشروع|projet)\s*[:\-]\s*/i, '').trim();
+              if (cl.length > 3) { tenderTitle = cl; break; }
+            }
+          }
+        }
+        if (!tenderTitle) {
           var tm2 = raw.match(/(?:tender|appel\s+d['’]offres|مناقصة|طلب\s+عروض)[\s\w]*[\:\-]?\s*([^\n\r]{5,120})/i);
           if (tm2) tenderTitle = tm2[1].trim();
         }
 
-        // Deadline (e.g. 15 jours, DD/MM/YYYY, etc.)
+        // 4. Candidate / Company (SARL ..., EURL ...)
+        var candMatch = raw.match(/\b(SARL|EURL|SPA|SNC|ETS)\s+[A-Z0-9\s\-]{3,35}\b/);
+        var candName = candMatch ? candMatch[0].trim() : '';
+        if (candName && !customerName && !supplierName) {
+          customerName = candName;
+        }
+
+        // 5. Deadline (e.g. 15 jours, DD/MM/YYYY, etc.)
         var dm = raw.match(/(?:d[eé]lai\s+de\s+pr[eé]paration[^\n\r:]*[:\-]\s*([^\n\r.]{3,40})|deadline|échéance|date\s+limite|آخر\s+أجل|تاريخ\s+الإيداع|مدة\s+التحضير)\s*[:\-]?\s*(\d{1,2}[\/-]\d{1,2}[\/-]\d{2,4}|[^\n\r,.;]{3,35})/i);
         if (dm) deadline = (dm[1] || dm[2] || '').trim();
 
-        // Extract items / lots from tender text if no line_items found yet
+        // 6. Extract items / lots from tender text if no line_items found yet
         if (!rawItems.length) {
           var lotMatches = raw.matchAll(/(?:Lot|Poste|Article|بند|حصة)\s*N?[°oº]?\s*(\d+)\s*[:\-]\s*([^\n\r]+)/gi);
           for (var lm of lotMatches) {
             rawItems.push({
               description: lm[0].trim(),
+              quantity: 1,
+              unit_price: 0,
+              total: 0
+            });
+          }
+          // If no numbered lots found, create an item from tender title
+          if (!rawItems.length && tenderTitle && tenderTitle.length > 2) {
+            rawItems.push({
+              description: tenderTitle,
               quantity: 1,
               unit_price: 0,
               total: 0
