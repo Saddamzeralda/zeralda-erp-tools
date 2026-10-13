@@ -554,7 +554,7 @@ PROVIDER_CONFIGS: Dict[str, Dict[str, Any]] = {
         'name': 'Google Gemini',
         'api_key_field': 'gemini_api_key',
         'model_field': 'gemini_model',
-        'default_model': 'gemini-3.5-flash',
+        'default_model': 'gemini-3.8-flash',
         'base_url': 'https://generativelanguage.googleapis.com/v1beta',
         'requires_api_key': True,
         'openai_compatible': False,
@@ -1052,7 +1052,7 @@ def chat_with_assistant_ai(messages: List[Dict], system_prompt: Optional[str] = 
 
 
 VISION_MODELS = {
-    'gemini': 'gemini-3.5-flash',
+    'gemini': 'gemini-3.8-flash',
     'groq': 'llama-3.2-11b-vision-preview',
 }
 
@@ -1088,7 +1088,7 @@ def chat_with_vision(image_base64: str, mime_type: str, prompt: str, system_prom
     if _user_model:
         vision_model = _user_model
     if not vision_model:
-        vision_model = VISION_MODELS.get('gemini', 'gemini-3.5-flash')
+        vision_model = VISION_MODELS.get('gemini', 'gemini-3.8-flash')
 
     # Strip data URL prefix if present
     raw_b64 = image_base64
@@ -1205,7 +1205,7 @@ def _gemini_vision(api_key: str, model: str, image_b64: str, mime_type: str, pro
 
     payload = json.dumps(payload_dict, ensure_ascii=False).encode('utf-8')
 
-    active_model = model or 'gemini-3.5-flash'
+    active_model = model or 'gemini-3.8-flash'
     url = f'https://generativelanguage.googleapis.com/v1beta/models/{active_model}:generateContent?key={api_key}'
     req = urllib.request.Request(url, data=payload, headers={
         'Content-Type': 'application/json',
@@ -1228,16 +1228,17 @@ def _gemini_vision(api_key: str, model: str, image_b64: str, mime_type: str, pro
             body = ''
             try: body = e.read().decode('utf-8', errors='replace')
             except Exception: pass
-            if e.code in (429, 500, 503) and attempt < max_retries - 1:
+            if e.code in (429, 500, 503, 404) and attempt < max_retries - 1:
                 wait = (attempt + 1) * 2
                 time.sleep(wait)
-                req = urllib.request.Request(url, data=payload, headers={
-                    'Content-Type': 'application/json',
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) ZeraldaERP/1.0'
-                }, method='POST')
-                continue
-            if e.code == 404 and attempt < max_retries - 1:
-                active_model = 'gemini-3.5-flash' if active_model != 'gemini-3.5-flash' else 'gemini-3.1-flash-lite'
+                # Rotate through available vision models on quota exhaustion or error
+                _rot = ['gemini-3.1-flash-lite', 'gemini-3.7-flash', 'gemini-3.8-flash', 'gemini-flash-latest']
+                try:
+                    _curr_idx = _rot.index(active_model)
+                    active_model = _rot[(_curr_idx + 1) % len(_rot)]
+                except ValueError:
+                    active_model = 'gemini-3.1-flash-lite'
+                print(f'[VISION] Switching to model {active_model} after HTTP {e.code}')
                 url = f'https://generativelanguage.googleapis.com/v1beta/models/{active_model}:generateContent?key={api_key}'
                 req = urllib.request.Request(url, data=payload, headers={
                     'Content-Type': 'application/json',
