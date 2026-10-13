@@ -265,8 +265,8 @@ async def invoice_extract(request: Request):
 
                     if not source_text:
                         proc_error = str(proc_result.get("error") or "OCR returned no text.")
-                        if "tesseract" in proc_error.lower() or "pytesseract" in proc_error.lower():
-                            proc_error += " Install Tesseract OCR engine from https://github.com/UB-Mannheim/tesseract/wiki"
+                        if sys.platform.startswith("win") and ("tesseract" in proc_error.lower() or "pytesseract" in proc_error.lower()):
+                            proc_error += " (Windows: Install Tesseract OCR engine from https://github.com/UB-Mannheim/tesseract/wiki)"
                         return JSONResponse(status_code=400, content={"ok": False, "error": proc_error})
 
             fields = analysis.get("fields") or {}

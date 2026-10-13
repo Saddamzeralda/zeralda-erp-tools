@@ -325,7 +325,15 @@
 
     var userPrefLang = '';
     try {
-      if (typeof localStorage !== 'undefined' && localStorage) userPrefLang = localStorage.getItem('preferredLanguage') || '';
+      if (typeof window !== 'undefined' && window.UnifiedI18N && typeof window.UnifiedI18N.getCurrentLang === 'function') {
+        userPrefLang = window.UnifiedI18N.getCurrentLang();
+      } else if (typeof localStorage !== 'undefined' && localStorage) {
+        var _s = localStorage.getItem('zeralda-settings');
+        if (_s) {
+          try { var _sp = JSON.parse(_s); if (_sp && _sp.preferredLanguage) userPrefLang = _sp.preferredLanguage; } catch (_) {}
+        }
+        if (!userPrefLang) userPrefLang = localStorage.getItem('preferred-language') || localStorage.getItem('language') || localStorage.getItem('preferredLanguage') || '';
+      }
     } catch(e) {}
     var lang = ((typeof window !== 'undefined' && window.currentLanguage) || userPrefLang || (typeof document !== 'undefined' && document.documentElement && document.documentElement.lang) || 'ar').toLowerCase();
     var isAr = lang.indexOf('ar') === 0;
@@ -440,12 +448,12 @@
 
     translations: {
       ar: {
-        modalTitle: "المساعد الذكي (Copilote IA) : المسح واستخراج البيانات",
+        modalTitle: "المساعد الذكي: المسح واستخراج البيانات",
         dropzoneTitle: "اسحب وأفلت المستند هنا، أو اضغط للاستعراض",
         dropzoneSubtitle: "يدعم الصور، PDF، ملفات Excel و Word",
         removeFile: "إزالة",
-        scanning: "جاري قراءة وتحليل المستند بالمساعد الذكي (Copilote IA)...",
-        extractBtn: "مسح واستخراج ذكي (Scan IA)",
+        scanning: "جاري قراءة وتحليل المستند بالمساعد الذكي...",
+        extractBtn: "مسح واستخراج ذكي",
         applyBtn: "تطبيق في النموذج",
         cancelBtn: "إلغاء",
         reScanBtn: "إعادة المسح",
@@ -610,15 +618,29 @@
     },
 
     getLang: function() {
-      var storedLang = '';
       try {
+        if (typeof window !== 'undefined' && window.UnifiedI18N && typeof window.UnifiedI18N.getCurrentLang === 'function') {
+          var ul = window.UnifiedI18N.getCurrentLang();
+          if (ul === 'ar' || ul === 'fr' || ul === 'en') return ul;
+        }
         if (typeof localStorage !== 'undefined' && localStorage) {
-          storedLang = localStorage.getItem('preferredLanguage') || '';
+          var _s = localStorage.getItem('zeralda-settings');
+          if (_s) {
+            try {
+              var _sp = JSON.parse(_s);
+              if (_sp && _sp.preferredLanguage) {
+                var pl = String(_sp.preferredLanguage).toLowerCase().substring(0, 2);
+                if (pl === 'ar' || pl === 'fr' || pl === 'en') return pl;
+              }
+            } catch (_) {}
+          }
+          var l = String(localStorage.getItem('preferred-language') || localStorage.getItem('language') || localStorage.getItem('preferredLanguage') || '').toLowerCase().substring(0, 2);
+          if (l === 'ar' || l === 'fr' || l === 'en') return l;
         }
       } catch (e) {}
-      var l = ((typeof window !== 'undefined' && window.currentLanguage) || storedLang || (typeof document !== 'undefined' && document.documentElement && document.documentElement.lang) || 'ar').toLowerCase();
-      if (l.indexOf('fr') === 0) return 'fr';
-      if (l.indexOf('en') === 0) return 'en';
+      var fallback = ((typeof window !== 'undefined' && window.currentLanguage) || (typeof document !== 'undefined' && document.documentElement && document.documentElement.lang) || 'ar').toLowerCase();
+      if (fallback.indexOf('fr') === 0) return 'fr';
+      if (fallback.indexOf('en') === 0) return 'en';
       return 'ar';
     },
 

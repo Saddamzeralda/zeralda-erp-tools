@@ -386,7 +386,7 @@ def process_file_for_analysis(
                 if _fitz:
                     doc = _fitz.open(stream=pdf_bytes, filetype='pdf')
                     text_parts = []
-                    for i in range(min(len(doc), 5)):
+                    for i in range(min(len(doc), 35)):
                         page = doc.load_page(i)
                         page_text = page.get_text('text') or ''
                         stripped = page_text.strip()
@@ -394,10 +394,10 @@ def process_file_for_analysis(
                             text_parts.append(stripped)
                     doc.close()
                     fast_text = '\n\n'.join(text_parts).strip()
-                    if len(fast_text) >= 30:
+                    if len(fast_text) >= 10:
                         extracted_text = fast_text
                         ocr_engine_used = 'pdf-text-layer'
-                        print(f'[OCR] PDF text layer extracted {len(fast_text)} chars — using local text (no API call needed)')
+                        print(f'[OCR] PDF text layer extracted {len(fast_text)} chars from {min(len(doc), 35)} pages — using local text (no API call needed)')
             except Exception as fast_exc:
                 print(f'[OCR] PDF text layer extraction failed: {fast_exc}')
 

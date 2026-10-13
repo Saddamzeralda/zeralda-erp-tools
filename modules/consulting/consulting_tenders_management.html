@@ -1803,11 +1803,14 @@
 
     // ── Tender & Consultation OCR Handlers (Unified to ZeraldaOCR IA) ──
     function openTenderOcrModal(tenderIdx){
+      var lang = (typeof getLang === 'function' ? getLang() : 'ar').toLowerCase();
+      var isFr = lang.indexOf('fr') === 0;
+      var isEn = lang.indexOf('en') === 0;
       if (window.ZeraldaOCR) {
         window.ZeraldaOCR.open({
           mode: 'tender',
-          title: (window.currentLanguage === 'fr' ? 'Scan & Analyse Appel d\'Offres (IA)' : (window.currentLanguage === 'en' ? 'Tender Document Scan & Analysis (AI)' : 'مسح وتحليل وثيقة المناقصة (Scan IA)')),
-          subtitle: (window.currentLanguage === 'fr' ? 'Scannez un cahier des charges ou avis d\'appel d\'offres pour extraire les données' : (window.currentLanguage === 'en' ? 'Scan tender notice or specs to extract reference, authority, and deadline' : 'ارفع إعلان أو دفتر شروط المناقصة لاستخراج المرجع، الإدارة، وآخر أجل')),
+          title: (isFr ? 'Scan & Analyse Appel d\'Offres (IA)' : (isEn ? 'Tender Document Scan & Analysis (AI)' : 'مسح وتحليل وثيقة المناقصة (Scan IA)')),
+          subtitle: (isFr ? 'Scannez un cahier des charges ou avis d\'appel d\'offres pour extraire les données' : (isEn ? 'Scan tender notice or specs to extract reference, authority, and deadline' : 'ارفع إعلان أو دفتر شروط المناقصة لاستخراج المرجع، الإدارة، وآخر أجل')),
           icon: 'fas fa-gavel',
           onApply: function(data) {
             openTenderModal();
@@ -1831,11 +1834,14 @@
     window.openTenderOcrModal = openTenderOcrModal;
 
     function openConsultOcrModal(){
+      var lang = (typeof getLang === 'function' ? getLang() : 'ar').toLowerCase();
+      var isFr = lang.indexOf('fr') === 0;
+      var isEn = lang.indexOf('en') === 0;
       if (window.ZeraldaOCR) {
         window.ZeraldaOCR.open({
           mode: 'consultation',
-          title: (window.currentLanguage === 'fr' ? 'Scan & Extraction Consultation (IA)' : (window.currentLanguage === 'en' ? 'Consultation Document Scan (AI)' : 'مسح واستخراج بيانات الاستشارة (Scan IA)')),
-          subtitle: (window.currentLanguage === 'fr' ? 'Scannez un contrat ou document de consultation pour pré-remplir les champs' : (window.currentLanguage === 'en' ? 'Scan consultation contract or memo to extract details' : 'ارفع عقد استشارة أو مستند لاستخراج العميل والموضوع والتاريخ تلقائياً')),
+          title: (isFr ? 'Scan & Extraction Consultation (IA)' : (isEn ? 'Consultation Document Scan (AI)' : 'مسح واستخراج بيانات الاستشارة (Scan IA)')),
+          subtitle: (isFr ? 'Scannez un contrat ou document de consultation pour pré-remplir les champs' : (isEn ? 'Scan consultation contract or memo to extract details' : 'ارفع عقد استشارة أو مستند لاستخراج العميل والموضوع والتاريخ تلقائياً')),
           icon: 'fas fa-user-tie',
           onApply: function(data) {
             openConsultModal();

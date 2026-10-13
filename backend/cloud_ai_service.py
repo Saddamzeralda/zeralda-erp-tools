@@ -58,7 +58,12 @@ def _encrypt_api_key(plaintext: str) -> str:
 
 def _decrypt_api_key(ciphertext: str) -> str:
     """Decrypt a Windows DPAPI-encrypted secret. Returns as-is on failure/non-Windows."""
-    if not ciphertext or not ciphertext.startswith(_DPAPI_PREFIX) or not _is_windows():
+    if not ciphertext:
+        return ""
+    if ciphertext.startswith(_DPAPI_PREFIX) and not _is_windows():
+        # DPAPI cannot be decrypted on Linux/Docker container; clear it to allow env var fallback
+        return ""
+    if not ciphertext.startswith(_DPAPI_PREFIX) or not _is_windows():
         return ciphertext
     try:
         import ctypes
@@ -584,7 +589,18 @@ def _read_ai_settings(project_root: str) -> Dict[str, Any]:
 
 
 def _resolve_provider(ai_cfg: Dict[str, Any]) -> str:
-    provider = str(ai_cfg.get('provider', 'disabled')).strip().lower()
+    provider = str(ai_cfg.get('provider', '')).strip().lower()
+    if not provider or provider == 'disabled':
+        env_prov = os.getenv('AI_PROVIDER', '').strip().lower()
+        if env_prov in PROVIDER_CONFIGS:
+            return env_prov
+        if os.getenv('GEMINI_API_KEY'):
+            return 'gemini'
+        if os.getenv('OPENAI_API_KEY'):
+            return 'openai'
+        if os.getenv('GROQ_API_KEY'):
+            return 'groq'
+        provider = 'disabled'
     if provider not in PROVIDER_CONFIGS:
         provider = 'disabled'
     return provider

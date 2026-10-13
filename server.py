@@ -3531,8 +3531,8 @@ class EnhancedHandler(http.server.SimpleHTTPRequestHandler):
 
                         if not source_text:
                             # Both Tesseract and AI Vision failed
-                            if 'tesseract' in proc_error.lower() or 'pytesseract' in proc_error.lower():
-                                proc_error += ' Install Tesseract OCR engine from https://github.com/UB-Mannheim/tesseract/wiki'
+                            if sys.platform.startswith('win') and ('tesseract' in proc_error.lower() or 'pytesseract' in proc_error.lower()):
+                                proc_error += ' (Windows: Install Tesseract OCR engine from https://github.com/UB-Mannheim/tesseract/wiki)'
                             return self._json(400, {'ok': False, 'error': proc_error})
                     else:
                         _skip_reanalysis = False

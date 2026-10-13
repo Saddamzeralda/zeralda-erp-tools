@@ -3,39 +3,110 @@
 
     const TENDER_ANALYSIS_KEY = 'tender-analysis-data';
 
-    // ── نظام الترجمة الموحد ──
+    // ── Unified Language Detection ──
+    function getActiveLang() {
+        try {
+            if (window.UnifiedI18N && typeof window.UnifiedI18N.getCurrentLang === 'function') {
+                var l = window.UnifiedI18N.getCurrentLang();
+                if (l) return l.toLowerCase().slice(0, 2);
+            }
+            if (window.ZS && typeof window.ZS.getItem === 'function') {
+                var l2 = window.ZS.getItem('preferred-language') || window.ZS.getItem('language');
+                if (l2) return l2.toLowerCase().slice(0, 2);
+            }
+            if (typeof localStorage !== 'undefined') {
+                var s = localStorage.getItem('zeralda-settings');
+                if (s) {
+                    try {
+                        var parsed = JSON.parse(s);
+                        if (parsed && parsed.preferredLanguage) return parsed.preferredLanguage.toLowerCase().slice(0, 2);
+                    } catch (_) {}
+                }
+                var l3 = localStorage.getItem('preferred-language') || localStorage.getItem('language');
+                if (l3) return l3.toLowerCase().slice(0, 2);
+            }
+            if (document.documentElement && document.documentElement.lang) {
+                return document.documentElement.lang.toLowerCase().slice(0, 2);
+            }
+        } catch (_) {}
+        return 'ar';
+    }
+
+    // ── Comprehensive Tri-Lingual Dictionary ──
     var DICT = {
-        title:              { en: 'AI Tender Copilot & Smart Pricing', ar: 'المساعد الذكي للمناقصات والتسعير التنافسي', fr: 'Copilote IA & Tarification intelligente des AO' },
-        subtitle:           { en: 'AI-driven specification breakdown, benchmark matching, win probability & proposal drafting.', ar: 'تفكيك دفتر الشروط، مطابقة الأسعار المرجعية، تقدير احتمالية الفوز، وصياغة العروض بالذكاء الاصطناعي.', fr: 'Analyse du cahier des charges, prix de référence, probabilité de succès et rédaction d\'offres.' },
-        tabPricing:         { en: 'Smart Pricing & Benchmarks', ar: 'التسعير والمطابقة المرجعية', fr: 'Prix & Références' },
-        tabCopilot:         { en: 'AI Tender Assistant', ar: 'محادثة المساعد الذكي', fr: 'Assistant IA AO' },
-        tabProposal:        { en: 'Proposal & Letter Drafter', ar: 'صياغة العرض والخطاب الرسمي', fr: 'Rédaction d\'offres & Lettres' },
-        tabAudit:           { en: 'AI Scan & Document Audit', ar: 'المسح الذكي وتدقيق الوثائق (Scan IA)', fr: 'Scan IA & Audit Cahier des charges' },
-        upload:             { en: 'Upload Specification (PDF, Word, Excel, Image)', ar: 'رفع دفتر الشروط (PDF، Word، Excel، صورة)', fr: 'Téléverser le cahier des charges' },
-        extracted:          { en: 'Extracted Items & Benchmarks', ar: 'البنود المستخرجة والأسعار المقترحة', fr: 'Postes détectés et prix suggérés' },
-        margin:             { en: 'Target Margin %', ar: 'نسبة الهامش المستهدف %', fr: 'Marge cible %' },
-        detected:           { en: 'Item / Specification', ar: 'البند / المواصفة', fr: 'Poste / Spécification' },
-        qty:                { en: 'Qty', ar: 'الكمية', fr: 'Qté' },
-        lastSale:           { en: 'Historical Benchmark', ar: 'السعر المرجعي السابق', fr: 'Prix de référence' },
-        suggested:          { en: 'Proposed Unit Price', ar: 'سعر الوحدة المقترح', fr: 'Prix unitaire proposé' },
-        subtotal:           { en: 'Subtotal (DZD)', ar: 'المجموع الجزئي (دج)', fr: 'Sous-total (DZD)' },
-        action:             { en: 'Action', ar: 'إجراء', fr: 'Action' },
-        applyAll:           { en: 'Apply Total to Tender', ar: 'اعتماد المجموع في المناقصة', fr: 'Appliquer à l\'AO' },
-        addItem:            { en: 'Add Item', ar: 'إضافة بند مخصص', fr: 'Ajouter un poste' },
-        scanning:           { en: 'AI is analyzing document & extracting specifications...', ar: 'الذكاء الاصطناعي يحلل المستند ويفكك بنود دفتر الشروط...', fr: 'L\'IA analyse le document et extrait les spécifications...' },
-        appliedSuccess:     { en: 'Tender amount & specifications updated successfully!', ar: 'تم تحديث مبلغ وبيانات المناقصة بنجاح!', fr: 'Montant et données de l\'AO mis à jour avec succès !' },
-        winScore:           { en: 'Win Probability Index', ar: 'مؤشر احتمالية الفوز', fr: 'Indice de succès estimé' },
-        competitiveness:    { en: 'Price Competitiveness', ar: 'تنافسية العرض المالي', fr: 'Compétitivité du prix' },
-        sendQuestion:       { en: 'Ask AI assistant about this tender...', ar: 'اسأل المساعد الذكي أي شيء حول هذه المناقصة...', fr: 'Posez une question sur cet appel d\'offres...' },
-        generateDraft:      { en: 'Generate Submission Letter', ar: 'توليد خطاب التقديم الرسمي', fr: 'Générer lettre de soumission' },
-        generateBPU:        { en: 'Generate Unit Price Schedule (BPU)', ar: 'توليد جدول الأسعار الأحادية (BPU)', fr: 'Générer bordereau des prix (BPU)' },
-        generateTech:       { en: 'Generate Technical Methodology', ar: 'توليد المنهجية الفنية للمشروع', fr: 'Générer mémoire technique' },
-        copyClipboard:      { en: 'Copy to Clipboard', ar: 'نسخ للحافظة', fr: 'Copier dans le presse-papier' },
-        autoChecklist:      { en: 'Generate Submission Checklist', ar: 'استخراج وتوليد قائمة الوثائق المطلوبة', fr: 'Générer la checklist des pièces' }
+        title:              { ar: 'المساعد الذكي للمناقصات والتسعير التنافسي (Copilote IA)', fr: 'Copilote IA & Tarification Intelligente des AO', en: 'AI Tender Copilot & Smart Pricing' },
+        subtitle:           { ar: 'تفكيك دفتر الشروط، مطابقة الأسعار المرجعية، تقدير احتمالية الفوز، وصياغة العروض بالذكاء الاصطناعي.', fr: 'Analyse du cahier des charges, prix de référence, probabilité de succès et rédaction d\'offres.', en: 'AI-driven specification breakdown, benchmark matching, win probability & proposal drafting.' },
+        tabPricing:         { ar: 'التسعير والمطابقة المرجعية', fr: 'Prix & Références', en: 'Smart Pricing & Benchmarks' },
+        tabCopilot:         { ar: 'محادثة المساعد الذكي', fr: 'Assistant IA AO', en: 'AI Tender Assistant' },
+        tabProposal:        { ar: 'صياغة العرض والخطاب الرسمي', fr: 'Rédaction d\'offres & Lettres', en: 'Proposal & Letter Drafter' },
+        tabAudit:           { ar: 'المسح الذكي وتدقيق الوثائق (Scan IA)', fr: 'Scan IA & Audit Cahier des charges', en: 'AI Scan & Document Audit' },
+        winScore:           { ar: 'مؤشر احتمالية الفوز', fr: 'Indice de succès estimé', en: 'Win Probability Index' },
+        totalOffer:         { ar: 'إجمالي العرض المقترح', fr: 'Total de l\'offre proposée', en: 'Proposed Total Offer' },
+        marginIncluded:     { ar: 'يشمل هامش الربح المستهدف', fr: 'Inclut la marge bénéficiaire cible', en: 'Includes target profit margin' },
+        margin:             { ar: 'نسبة الهامش المستهدف %', fr: 'Marge cible %', en: 'Target Margin %' },
+        marginMaxComp:      { ar: '5% (أقصى تنافسية)', fr: '5% (Très compétitif)', en: '5% (Max competitive)' },
+        marginBalanced:     { ar: '20% (متوازن)', fr: '20% (Équilibré)', en: '20% (Balanced)' },
+        marginHigh:         { ar: '40% (هامش عالي)', fr: '40% (Marge élevée)', en: '40% (High margin)' },
+        addItem:            { ar: 'إضافة بند مخصص', fr: 'Ajouter un poste', en: 'Add Item' },
+        upload:             { ar: 'رفع دفتر الشروط (PDF، Word، Excel، صورة)', fr: 'Téléverser cahier des charges', en: 'Upload Specification' },
+        autoMatch:          { ar: 'تطابق تلقائي مع المبيعات', fr: 'Correspondance auto ventes', en: 'Auto-match with Sales' },
+        printBpu:           { ar: 'طباعة BPU / عرض رسمي', fr: 'Imprimer BPU / Offre officielle', en: 'Print BPU / Official Quote' },
+        applyAll:           { ar: 'اعتماد المجموع في المناقصة', fr: 'Appliquer à l\'AO', en: 'Apply Total to Tender' },
+        detected:           { ar: 'البند / المواصفة', fr: 'Poste / Spécification', en: 'Item / Specification' },
+        qty:                { ar: 'الكمية', fr: 'Qté', en: 'Qty' },
+        lastSale:           { ar: 'السعر المرجعي السابق', fr: 'Prix de référence', en: 'Historical Benchmark' },
+        suggested:          { ar: 'سعر الوحدة المقترح', fr: 'Prix unitaire proposé', en: 'Proposed Unit Price' },
+        subtotal:           { ar: 'المجموع الجزئي (دج)', fr: 'Sous-total (DZD)', en: 'Subtotal (DZD)' },
+        delete:             { ar: 'حذف', fr: 'Supprimer', en: 'Delete' },
+        benchmarkRef:       { ar: 'مرجع: ', fr: 'Réf : ', en: 'Ref: ' },
+        benchmarkEst:       { ar: 'تسعير تقديري', fr: 'Tarif estimatif', en: 'Estimated price' },
+        chipLetter:         { ar: '📝 صياغة خطاب التقديم الرسمي', fr: '📝 Rédiger lettre de soumission', en: '📝 Draft submission letter' },
+        chipStrategy:       { ar: '🎯 استراتيجية التسعير التنافسية', fr: '🎯 Stratégie de prix compétitifs', en: '🎯 Competitive pricing strategy' },
+        chipRisks:          { ar: '🛡️ فحص الثغرات والشروط الجزائية', fr: '🛡️ Analyse des risques & pénalités', en: '🛡️ Penalty & risk audit' },
+        chipDocs:           { ar: '📑 استخراج الوثائق الإدارية المطلوبة', fr: '📑 Pièces administratives requises', en: '📑 Required administrative checklist' },
+        copy:               { ar: 'نسخ', fr: 'Copier', en: 'Copy' },
+        appendToNotes:      { ar: 'إضافة لملاحظات المناقصة', fr: 'Ajouter aux notes AO', en: 'Add to tender notes' },
+        sendQuestion:       { ar: 'اسأل المساعد الذكي أي شيء حول هذه المناقصة...', fr: 'Posez une question sur cet appel d\'offres...', en: 'Ask AI assistant about this tender...' },
+        btnLetter:          { ar: 'خطاب التقديم (Lettre de soumission)', fr: 'Lettre de soumission', en: 'Submission Letter' },
+        btnBpu:             { ar: 'جدول الأسعار (BPU)', fr: 'Bordereau des prix (BPU)', en: 'Price Schedule (BPU)' },
+        btnTech:            { ar: 'المنهجية الفنية (Mémoire)', fr: 'Mémoire technique', en: 'Technical Methodology' },
+        copyClipboard:      { ar: 'نسخ للحافظة', fr: 'Copier dans le presse-papier', en: 'Copy to Clipboard' },
+        saveToNotes:        { ar: 'حفظ في ملاحظات المناقصة', fr: 'Enregistrer dans les notes', en: 'Save to Tender Notes' },
+        proposalLoader:     { ar: 'المساعد الذكي يقوم بصياغة المستند بالمعايير القانونية...', fr: 'L\'assistant IA rédige le document officiel selon les normes...', en: 'AI assistant is drafting official procurement document...' },
+        proposalPlaceholder:{ ar: 'اضغط على أحد الأزرار بالأعلى لتوليد الخطاب أو المستند المطلوب بالذكاء الاصطناعي...', fr: 'Cliquez sur un bouton ci-dessus pour générer le document souhaité via IA...', en: 'Click any button above to generate official document using AI...' },
+        auditTitle:         { ar: 'المسح الذكي وتدقيق الوثائق (Scan IA)', fr: 'Scan IA & Audit Cahier des charges', en: 'AI Scan & Document Audit' },
+        auditSubtitle:      { ar: 'ارفع وثيقة المناقصة أو دفتر الشروط (PDF، صورة، Excel، Word، TXT) لمسحه واستخراج كافة البيانات والبنود آلياً.', fr: 'Téléversez le cahier des charges (PDF, image, Excel, Word, TXT) pour extraire automatiquement les postes et exigences.', en: 'Upload tender specifications (PDF, image, Excel, Word, TXT) to automatically extract items, amounts, and checklist.' },
+        auditUploadBtn:     { ar: 'رفع المستند والمسح الذكي (Scan IA)', fr: 'Téléverser & Scan IA', en: 'Upload & AI Scan' },
+        metaCardTitle:      { ar: 'بيانات المناقصة المكتشفة بالذكاء الاصطناعي', fr: 'Données de l\'AO détectées par l\'IA', en: 'Tender Data Detected by AI' },
+        btnCreateTender:    { ar: 'إنشاء مناقصة جديدة بهذه البيانات', fr: 'Créer un nouvel AO avec ces données', en: 'Create New Tender from Data' },
+        btnUpdateTender:    { ar: 'تحديث المناقصة الحالية', fr: 'Mettre à jour l\'AO actuel', en: 'Update Active Tender' },
+        metaRef:            { ar: 'المرجع (Référence):', fr: 'Référence :', en: 'Reference:' },
+        metaTitle:          { ar: 'الموضوع (Titre):', fr: 'Titre / Objet :', en: 'Subject / Title:' },
+        metaAuthority:      { ar: 'الجهة المتعاقدة (Autorité):', fr: 'Maître d\'ouvrage :', en: 'Contracting Authority:' },
+        metaDeadline:       { ar: 'الأجل النهائي (Date limite):', fr: 'Date limite :', en: 'Submission Deadline:' },
+        metaBudget:         { ar: 'القيمة التقديرية (Montant):', fr: 'Montant estimatif :', en: 'Estimated Budget:' },
+        metaPeriod:         { ar: 'مدة الإنجاز (Délai):', fr: 'Délai d\'exécution :', en: 'Execution Period:' },
+        docTextLabel:       { ar: 'نص دفتر الشروط أو الوثيقة المستخرجة:', fr: 'Texte du cahier des charges ou document extrait :', en: 'Extracted Specification Document Text:' },
+        docTextPlaceholder: { ar: 'الصق نص دفتر الشروط هنا أو ارفع الملف بالأعلى لتحليله مباشرة...', fr: 'Collez le texte du cahier des charges ici ou téléversez un fichier ci-dessus...', en: 'Paste specification text here or upload document above to analyze directly...' },
+        startAuditBtn:      { ar: 'بدء الفحص والتحليل الذكي (Scan IA)', fr: 'Lancer le Scan & Audit IA', en: 'Run AI Scan & Audit' },
+        checklistLabel:     { ar: 'الوثائق والشروط المطلوبة المكتشفة:', fr: 'Pièces et conditions requises détectées :', en: 'Detected Required Documents & Conditions:' },
+        checklistEmpty:     { ar: 'لم يتم الفحص بعد. ارفع المستند واضغط "بدء الفحص والتحليل الذكي".', fr: 'Aucun audit effectué. Téléversez le document et cliquez sur "Lancer le Scan IA".', en: 'No audit performed yet. Upload document and click "Run AI Scan & Audit".' },
+        applyChecklistBtn:  { ar: 'تطبيق قائمة الوثائق في جاهزية الملف (Checklist)', fr: 'Appliquer à la checklist de conformité', en: 'Apply to Tender Checklist' },
+        goToPricingBtn:     { ar: 'التسعير الذكي للبنود', fr: 'Tarification intelligente', en: 'Smart Pricing Breakdown' },
+        statusExtracting:   { ar: 'جاري استخراج وقراءة نص المستند عبر المساعد الذكي (Scan IA)...', fr: 'Extraction et lecture du document en cours (Scan IA)...', en: 'Extracting and reading document text via AI Scan...' },
+        statusOcrSuccess:   { ar: 'تم استخراج النص بنجاح! جاري تحليله واستخراج الحقول بالذكاء الاصطناعي...', fr: 'Texte extrait avec succès ! Analyse IA en cours...', en: 'Text extracted successfully! Running AI analysis...' },
+        statusAuditDone:    { ar: '✅ تم اكتمال المسح واستخراج بيانات المناقصة وبنود التسعير بنجاح!', fr: '✅ Scan et audit terminés avec succès ! Postes et pièces extraits.', en: '✅ Scan & audit completed successfully! Items and documents extracted.' },
+        statusUnreadable:   { ar: 'تعذر استخراج نص مقروء من المستند المرفق (تأكد من وضوح الصورة أو أن ملف PDF يحتوي على نص قابل للقراءة). يمكنك لصق النص يدوياً أدناه.', fr: 'Impossible d\'extraire un texte lisible de ce fichier (vérifiez la netteté ou la couche texte du PDF). Vous pouvez coller le texte manuellement ci-dessous.', en: 'Could not extract readable text from this file (ensure image is sharp or PDF has text layer). You may paste text manually below.' },
+        statusError:        { ar: 'حدث خطأ أثناء قراءة المستند.', fr: 'Une erreur est survenue lors de la lecture du document.', en: 'An error occurred while reading the document.' },
+        statusAuditLoading: { ar: 'جاري استخراج البنود والوثائق المطلوبة بالذكاء الاصطناعي...', fr: 'Extraction des postes et pièces requises par l\'IA...', en: 'Extracting items and required documents with AI...' },
+        scoreExcellent:     { ar: 'تنافسي ممتاز (فرصة فوز عالية)', fr: 'Très compétitif (forte chance de succès)', en: 'Highly competitive (high win chance)' },
+        scoreBalanced:      { ar: 'متوازن ومقبول تجارياً', fr: 'Équilibré et viable commercialement', en: 'Balanced and commercially viable' },
+        scoreHigh:          { ar: 'هامش مرتفع (قد يقلل فرص الترسية)', fr: 'Marge élevée (risque de rejet sur le prix)', en: 'High margin (may reduce win rate)' },
+        appliedSuccess:     { ar: 'تم تحديث مبلغ وبيانات المناقصة بنجاح!', fr: 'Montant et données de l\'AO mis à jour avec succès !', en: 'Tender amount & specifications updated successfully!' }
     };
 
     var t = function (k, fb) {
-        var lang = (window.ZS && window.ZS.getItem('preferred-language')) || 'ar';
+        var lang = getActiveLang();
         if (DICT[k] && DICT[k][lang]) return DICT[k][lang];
         if (DICT[k] && DICT[k].ar) return DICT[k].ar;
         if (DICT[k] && DICT[k].en) return DICT[k].en;
@@ -66,9 +137,9 @@
     }
 
     /**
-     * Call ERP AI Chat endpoint with fallback handling
+     * Call ERP AI Chat endpoint with safe timeout and error handling
      */
-    async function callAIChat(messages, systemContext) {
+    async function callAIChat(messages, systemContext, timeoutMs) {
         var headers = getAuthHeaders();
         var fullMessages = [];
         if (Array.isArray(messages)) {
@@ -76,6 +147,12 @@
         } else if (typeof messages === 'string') {
             fullMessages.push({ role: 'user', content: messages });
         }
+
+        var controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+        var timeout = timeoutMs || 25000;
+        var timerId = controller ? setTimeout(function () {
+            controller.abort();
+        }, timeout) : null;
 
         try {
             var bodyPayload = {
@@ -86,11 +163,15 @@
                 bodyPayload.system_prompt = systemContext;
             }
 
-            var res = await fetch('/api/ai/chat', {
+            var fetchOpts = {
                 method: 'POST',
                 headers: headers,
                 body: JSON.stringify(bodyPayload)
-            });
+            };
+            if (controller) fetchOpts.signal = controller.signal;
+
+            var res = await fetch('/api/ai/chat', fetchOpts);
+            if (timerId) clearTimeout(timerId);
 
             if (!res.ok) {
                 var errDetail = '';
@@ -98,53 +179,60 @@
                     var errData = await res.json();
                     errDetail = (errData && (errData.detail && errData.detail.error || errData.error)) || '';
                 } catch(e) {}
-                throw new Error('AI request failed with status ' + res.status + (errDetail ? ': ' + errDetail : ''));
+                return { ok: false, error: 'AI status ' + res.status + (errDetail ? ': ' + errDetail : '') };
             }
 
             var data = await res.json();
             var text = String((data && (data.text || data.reply || data.content || data.response || data.result)) || '').trim();
             return { ok: true, text: text, data: data };
         } catch (e) {
-            console.error('[TenderAI] Error calling AI chat:', e);
-            return { ok: false, error: e.message || 'AI service unavailable' };
+            if (timerId) clearTimeout(timerId);
+            var isTimeout = (e && e.name === 'AbortError');
+            var errMsg = isTimeout ? 'AI service timed out (25s)' : (e && e.message ? e.message : 'AI unavailable');
+            console.warn('[TenderAI] Error calling AI chat:', errMsg);
+            return { ok: false, error: errMsg };
         }
     }
 
     /**
-     * Extracts items and specifications from text using LLM
+     * Extracts items and specifications from text using LLM, with guaranteed heuristic fallback
      */
     async function extractSpecificationsWithAI(documentText) {
-        if (!documentText || documentText.trim().length < 10) {
-            return { items: [], metadata: {}, checklist: [] };
+        if (!documentText || documentText.trim().length < 5) {
+            return { items: [], requiredDocuments: [], keyClauses: [] };
         }
 
-        var prompt = `أنت خبير قانوني وهندسي متخصص في الصفقات العمومية والمناقصات (Public Procurement & Tenders).
-حلل نص دفتر الشروط التالي واستخرج البيانات التالية بدقة.
-يجب أن ترجع النتيجة بصيغة JSON فقط دون أي نصوص إضافية:
+        var activeLang = getActiveLang();
+        var isFr = activeLang === 'fr';
+        var isEn = activeLang === 'en';
+
+        var prompt = `You are an expert public procurement and tenders auditor.
+Analyze the following specification text (Cahier des charges / دفتر الشروط).
+Extract the core data and respond ONLY in valid JSON format matching this schema:
 {
-  "reference": "مرجع المناقصة",
-  "title": "موضوع أو عنوان المناقصة",
-  "authority": "الجهة المتعاقدة / المشتري",
-  "deadline": "YYYY-MM-DD أو تاريخ انتهاء العروض",
+  "reference": "Tender reference code",
+  "title": "Tender subject / title",
+  "authority": "Contracting authority / client",
+  "deadline": "YYYY-MM-DD or submission deadline",
   "estimatedBudget": 0.0,
-  "executionPeriod": "مدة الإنجاز",
+  "executionPeriod": "Execution delay",
   "items": [
-    { "name": "اسم البند أو الخدمة", "qty": 1, "unit": "U / Ens / M2 / Jours", "category": "Matériel / Service / Travaux" }
+    { "name": "Item designation / spec", "qty": 1, "unit": "U / Ens / M2 / Jours", "category": "Matériel / Service / Travaux" }
   ],
   "requiredDocuments": [
-    "قائمة الوثائق الإدارية والتقنية المطلوبة (تصريح بالنزاهة، مستخرج الضرائب، السجل التجاري، الكفالة...)"
+    "List of mandatory administrative & technical documents required"
   ],
   "keyClauses": [
-    "الشروط الأساسية أو الشروط الجزائية الهامة"
+    "Key penalties or execution clauses"
   ]
 }
 
-نص المستند:
-` + documentText.slice(0, 7000);
+Document text:
+` + documentText.slice(0, 8000);
 
-        var aiRes = await callAIChat(prompt, "You are an expert public tender extraction assistant. Respond ONLY in valid JSON format.");
-        if (aiRes.ok && aiRes.text) {
-            try {
+        try {
+            var aiRes = await callAIChat(prompt, "You are an expert procurement auditor. Respond ONLY in valid JSON format.", 25000);
+            if (aiRes.ok && aiRes.text) {
                 var cleanJson = aiRes.text.replace(/```json/gi, '').replace(/```/g, '').trim();
                 var jsonMatch = cleanJson.match(/\{[\s\S]*\}/);
                 if (jsonMatch) {
@@ -156,30 +244,89 @@
                         deadline: parsed.deadline || '',
                         estimatedBudget: parseFloat(parsed.estimatedBudget) || 0,
                         executionPeriod: parsed.executionPeriod || '',
-                        items: Array.isArray(parsed.items) ? parsed.items : [],
-                        requiredDocuments: Array.isArray(parsed.requiredDocuments) ? parsed.requiredDocuments : [],
+                        items: (Array.isArray(parsed.items) && parsed.items.length) ? parsed.items : parseItemsFromTextHeuristic(documentText),
+                        requiredDocuments: (Array.isArray(parsed.requiredDocuments) && parsed.requiredDocuments.length) ? parsed.requiredDocuments : getDefaultChecklist(activeLang),
                         keyClauses: Array.isArray(parsed.keyClauses) ? parsed.keyClauses : []
                     };
                 }
-            } catch (err) {
-                console.warn('[TenderAI] Failed to parse JSON from AI response, falling back to heuristic parsing:', err);
             }
+        } catch (err) {
+            console.warn('[TenderAI] Exception in AI extraction, using heuristic parser:', err);
         }
 
-        // Fallback heuristic parsing if AI is unreachable or response invalid
+        // Guaranteed Heuristic Fallback
         return {
+            reference: extractReferenceHeuristic(documentText),
+            title: extractTitleHeuristic(documentText),
+            authority: extractAuthorityHeuristic(documentText),
+            deadline: extractDeadlineHeuristic(documentText),
+            estimatedBudget: 0,
+            executionPeriod: '',
             items: parseItemsFromTextHeuristic(documentText),
-            requiredDocuments: [
-                "Déclaration de candidature (تصريح بالترشح)",
-                "Déclaration à souscrire (تصريح بالاكتتاب)",
-                "Registre de commerce (السجل التجاري)",
-                "Extrait de rôle apuré (مستخرج جدول الضرائب)",
-                "Attestation CASNOS / CNAS (شهادة أداء المستحقات)",
-                "Bilans financiers des 3 dernières années (الحصائل المالية)",
-                "Références professionnelles similaires (شهادات حسن الإنجاز)"
-            ],
+            requiredDocuments: getDefaultChecklist(activeLang),
             keyClauses: []
         };
+    }
+
+    function getDefaultChecklist(lang) {
+        if (lang === 'fr') {
+            return [
+                "Déclaration de candidature (renseignée et signée)",
+                "Déclaration à souscrire",
+                "Registre de commerce (copie électronique)",
+                "Extrait de rôle apuré (moins de 3 mois)",
+                "Attestation CASNOS / CNAS à jour",
+                "Bilans financiers certifiés des 3 dernières années",
+                "Références professionnelles similaires (Attestations de bonne exécution)",
+                "Caution de soumission bancaire (si exigée)"
+            ];
+        } else if (lang === 'en') {
+            return [
+                "Application declaration (signed and stamped)",
+                "Commitment declaration / Bid submission letter",
+                "Commercial register certificate",
+                "Tax clearance certificate (under 3 months)",
+                "Social security clearance certificate",
+                "Audited financial statements for last 3 years",
+                "Proof of past similar project experience",
+                "Bid bond / Bank guarantee (if applicable)"
+            ];
+        }
+        return [
+            "تصريح بالترشح (مملوء وموقع)",
+            "تصريح بالاكتتاب (Déclaration à souscrire)",
+            "مستخرج السجل التجاري الإلكتروني",
+            "مستخرج جدول الضرائب مصفى (أقل من 3 أشهر)",
+            "شهادة أداء المستحقات (CASNOS / CNAS)",
+            "الحصائل المالية المعتمدة للسنوات الثلاث الأخيرة",
+            "شهادات حسن الإنجاز لمشاريع مماثلة سابقة",
+            "كفالة التعهد البنكية (إن طلبت)"
+        ];
+    }
+
+    function extractReferenceHeuristic(text) {
+        var m = String(text || '').match(/(?:AO[N|I]?|Appel\s+d['']offres|مناقصة|استشارة|R[eé]f(?:\.|erence)?)\s*[:№#\s-]*([A-Z0-9\/\-_]{3,35})/i);
+        return m ? m[1].trim() : '';
+    }
+
+    function extractTitleHeuristic(text) {
+        var lines = String(text || '').split(/\r?\n/).map(function(l){ return l.trim(); }).filter(Boolean);
+        for (var i = 0; i < Math.min(lines.length, 6); i++) {
+            if (/^(objet|titre|موضوع|مشروع|projet)\s*[:\-]/i.test(lines[i])) {
+                return lines[i].replace(/^(objet|titre|موضوع|مشروع|projet)\s*[:\-]\s*/i, '').trim();
+            }
+        }
+        return lines[0] ? lines[0].slice(0, 80) : '';
+    }
+
+    function extractAuthorityHeuristic(text) {
+        var m = String(text || '').match(/(?:ma[iî]tre\s+d['']ouvrage|client|administration|acheteur|الجهة\s+المتعاقدة|المشتري|الإدارة)\s*[:\-]\s*([^\n\r,]{3,70})/i);
+        return m ? m[1].trim() : '';
+    }
+
+    function extractDeadlineHeuristic(text) {
+        var m = String(text || '').match(/(\d{4}[-/]\d{2}[-/]\d{2})|(\d{2}[-/]\d{2}[-/]\d{4})/);
+        return m ? m[0] : '';
     }
 
     function parseItemsFromTextHeuristic(text) {
@@ -198,13 +345,28 @@
             }
         });
         if (!detected.length) {
-            detected = [
-                { name: "Services de conseil et études techniques", qty: 1, category: "Services" },
-                { name: "Fourniture et installation équipements", qty: 2, category: "Matériel" },
-                { name: "Assistance technique et formation", qty: 1, category: "Services" }
-            ];
+            var lang = getActiveLang();
+            if (lang === 'fr') {
+                detected = [
+                    { name: "Services de conseil et études techniques", qty: 1, category: "Services" },
+                    { name: "Fourniture et installation équipements", qty: 2, category: "Matériel" },
+                    { name: "Assistance technique et formation", qty: 1, category: "Services" }
+                ];
+            } else if (lang === 'en') {
+                detected = [
+                    { name: "Consulting & Technical Engineering Services", qty: 1, category: "Services" },
+                    { name: "Equipment supply and deployment", qty: 2, category: "Equipment" },
+                    { name: "Technical assistance & operational training", qty: 1, category: "Services" }
+                ];
+            } else {
+                detected = [
+                    { name: "خدمات الاستشارة والدراسات التقنية", qty: 1, category: "خدمات" },
+                    { name: "توريد وتركيب التجهيزات والمعدات", qty: 2, category: "عتاد" },
+                    { name: "المساعدة الفنية والتدريب التشغيلي", qty: 1, category: "خدمات" }
+                ];
+            }
         }
-        return detected.slice(0, 20);
+        return detected.slice(0, 25);
     }
 
     /**
@@ -237,7 +399,7 @@
                                 price: p,
                                 date: inv.date || inv.createdAt || '',
                                 customer: (inv.customer && (inv.customer.name || inv.customer.company)) || inv.client || 'Client',
-                                source: 'Vente (Sales)',
+                                source: 'Vente',
                                 rawName: itName
                             });
                         }
@@ -261,7 +423,7 @@
                             price: p,
                             date: po.date || '',
                             customer: po.supplier || 'Fournisseur',
-                            source: 'Achat (Supplier Cost)',
+                            source: 'Achat',
                             rawName: it.name || 'PO'
                         });
                     }
@@ -278,7 +440,7 @@
     var currentCopilotMessages = [];
 
     /**
-     * Opens AI Tender Copilot modal
+     * Opens AI Tender Copilot modal with active language support
      */
     window.openSmartPricingForTender = function(tenderIdx, initialTab) {
         currentActiveTenderIdx = (tenderIdx !== null && tenderIdx !== undefined) ? tenderIdx : null;
@@ -290,7 +452,14 @@
             }
         }
 
+        var curLang = getActiveLang();
         var modal = document.getElementById('smartPricingModal');
+        // If modal was created in a different language, re-create it so all labels are localized
+        if (modal && modal.dataset.renderedLang !== curLang) {
+            modal.remove();
+            modal = null;
+        }
+
         if (!modal) {
             createSmartPricingModal();
             modal = document.getElementById('smartPricingModal');
@@ -301,7 +470,7 @@
             if (tObj) {
                 titleEl.textContent = (tObj.reference ? tObj.reference + ' - ' : '') + (tObj.title || 'Tender');
             } else {
-                titleEl.textContent = t('title', 'مساعد تحليل وتسعير المناقصات');
+                titleEl.textContent = t('title');
             }
         }
 
@@ -324,20 +493,37 @@
         }
 
         if (!currentAnalysisItems.length) {
-            currentAnalysisItems = [
-                { name: "Services de conseil et assistance technique", qty: 1, category: 'Service' },
-                { name: "Fourniture matériel et déploiement", qty: 1, category: 'Matériel' }
-            ];
+            var lang = getActiveLang();
+            if (lang === 'fr') {
+                currentAnalysisItems = [
+                    { name: "Services de conseil et assistance technique", qty: 1, category: 'Service' },
+                    { name: "Fourniture matériel et déploiement", qty: 1, category: 'Matériel' }
+                ];
+            } else if (lang === 'en') {
+                currentAnalysisItems = [
+                    { name: "Consulting & Technical Support Services", qty: 1, category: 'Service' },
+                    { name: "Hardware supply and deployment", qty: 1, category: 'Hardware' }
+                ];
+            } else {
+                currentAnalysisItems = [
+                    { name: "خدمات الاستشارة والدعم الفني", qty: 1, category: 'خدمات' },
+                    { name: "توريد ونشر التجهيزات", qty: 1, category: 'عتاد' }
+                ];
+            }
         }
 
-        // Reset copilot messages for this session
+        // Localized Welcome Message
+        var welcomeText = "";
+        if (curLang === 'fr') {
+            welcomeText = "Bonjour ! Je suis votre copilote IA pour les marchés et appels d'offres. Je peux analyser votre cahier des charges, optimiser vos prix avec marge, et rédiger votre lettre de soumission officielle.";
+        } else if (curLang === 'en') {
+            welcomeText = "Hello! I am your AI Tender & Procurement Copilot. I can analyze your specifications, benchmark competitive pricing, and draft your official bid submission documents.";
+        } else {
+            welcomeText = "مرحباً بك! أنا مساعدك الذكي للمناقصات والاستشارات. يمكنني مساعدتك في تفكيك دفتر الشروط، واقتراح أفضل استراتيجية تسعير تنافسية، وصياغة خطابات التقديم والعروض الفنية والمالية فورياً.";
+        }
+
         currentCopilotMessages = [
-            {
-                role: 'assistant',
-                content: (window.ZS && window.ZS.getItem('preferred-language') === 'fr')
-                    ? "Bonjour ! Je suis votre copilote IA pour les marchés et appels d'offres. Je peux analyser votre cahier des charges, optimiser vos prix avec marge, et rédiger votre lettre de soumission officielle."
-                    : "مرحباً بك! أنا مساعدك الذكي للمناقصات والاستشارات. يمكنني مساعدتك في تفكيك دفتر الشروط، واقتراح أفضل استراتيجية تسعير تنافسية، وصياغة خطابات التقديم والعروض الفنية والمالية فورياً."
-            }
+            { role: 'assistant', content: welcomeText }
         ];
 
         renderSmartPricingRows();
@@ -356,12 +542,17 @@
     };
 
     function createSmartPricingModal() {
+        var curLang = getActiveLang();
+        var isRtl = curLang === 'ar';
         var div = document.createElement('div');
         div.id = 'smartPricingModal';
         div.className = 'modal-overlay';
+        div.dataset.renderedLang = curLang;
         div.setAttribute('aria-hidden', 'true');
+        div.style.direction = isRtl ? 'rtl' : 'ltr';
+
         div.innerHTML = `
-            <div class="modal-card" role="dialog" aria-modal="true" style="width:min(1100px, 96vw); max-height:92vh; display:flex; flex-direction:column; padding:0; overflow:hidden; border-radius:14px; box-shadow:0 20px 40px rgba(0,0,0,0.2);">
+            <div class="modal-card" role="dialog" aria-modal="true" style="width:min(1120px, 96vw); max-height:92vh; display:flex; flex-direction:column; padding:0; overflow:hidden; border-radius:14px; box-shadow:0 20px 40px rgba(0,0,0,0.25);">
                 <!-- Header -->
                 <div class="modal-header" style="background: linear-gradient(135deg, #1e3a8a, #2563eb, #3b82f6); color: white; padding:16px 24px; display:flex; justify-content:space-between; align-items:center;">
                     <div style="display:flex; align-items:center; gap:12px;">
@@ -406,7 +597,7 @@
                                 <div style="font-size:11px; font-weight:700; color:#1e40af; text-transform:uppercase;">${t('winScore')}</div>
                                 <div style="display:flex; align-items:center; justify-content:space-between; margin-top:4px;">
                                     <div id="winProbabilityBadge" style="font-size:24px; font-weight:800; color:#2563eb;">78%</div>
-                                    <div id="winProbabilityStatus" style="font-size:11px; font-weight:700; padding:4px 8px; border-radius:6px; background:#dbeafe; color:#1e40af;">تنافسي ممتاز</div>
+                                    <div id="winProbabilityStatus" style="font-size:11px; font-weight:700; padding:4px 8px; border-radius:6px; background:#dbeafe; color:#1e40af;">${t('scoreBalanced')}</div>
                                 </div>
                                 <div class="progress-bar" style="height:6px; margin-top:8px; background:#bfdbfe; border-radius:3px;">
                                     <div id="winProbabilityProgress" style="height:100%; width:78%; background:#2563eb; border-radius:3px; transition:width 0.4s;"></div>
@@ -414,9 +605,9 @@
                             </div>
 
                             <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:12px 16px;">
-                                <div style="font-size:11px; font-weight:700; color:#166534; text-transform:uppercase;">إجمالي العرض المقترح</div>
+                                <div style="font-size:11px; font-weight:700; color:#166534; text-transform:uppercase;">${t('totalOffer')}</div>
                                 <div id="smartPricingTotalVal" style="font-size:22px; font-weight:800; color:#15803d; margin-top:4px;">0.00 DZD</div>
-                                <div style="font-size:11px; color:#15803d; margin-top:2px;">يشمل هامش الربح المستهدف</div>
+                                <div style="font-size:11px; color:#15803d; margin-top:2px;">${t('marginIncluded')}</div>
                             </div>
 
                             <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px 16px; display:flex; flex-direction:column; justify-content:center;">
@@ -426,9 +617,9 @@
                                 </div>
                                 <input type="range" id="smartPricingMargin" value="15" min="2" max="45" step="1" style="width:100%; margin-top:8px; accent-color:#2563eb; cursor:pointer;" oninput="onMarginSliderChange(this.value)">
                                 <div style="display:flex; justify-content:space-between; font-size:10px; color:#94a3b8; margin-top:2px;">
-                                    <span>5% (أقصى تنافسية)</span>
-                                    <span>20% (متوازن)</span>
-                                    <span>40% (هامش عالي)</span>
+                                    <span>${t('marginMaxComp')}</span>
+                                    <span>${t('marginBalanced')}</span>
+                                    <span>${t('marginHigh')}</span>
                                 </div>
                             </div>
                         </div>
@@ -441,8 +632,8 @@
                                     <i class="fas fa-file-upload"></i> <span>${t('upload')}</span>
                                     <input type="file" id="smartPricingDocFile" accept=".pdf,image/*,.xlsx,.xls,.txt,.docx" style="display:none;" onchange="handleSmartPricingFileUpload(this)">
                                 </label>
-                                <button class="btn btn-ghost btn-sm" onclick="autoSuggestAllBenchmarks()"><i class="fas fa-magic"></i> <span>تطابق تلقائي مع المبيعات</span></button>
-                                <button class="btn btn-outline-primary btn-sm" onclick="printOfficialBpuDocument()"><i class="fas fa-print"></i> <span>طباعة BPU / عرض رسمي</span></button>
+                                <button class="btn btn-ghost btn-sm" onclick="autoSuggestAllBenchmarks()"><i class="fas fa-magic"></i> <span>${t('autoMatch')}</span></button>
+                                <button class="btn btn-outline-primary btn-sm" onclick="printOfficialBpuDocument()"><i class="fas fa-print"></i> <span>${t('printBpu')}</span></button>
                             </div>
                             <button class="btn btn-success btn-sm" onclick="applySmartPricingToTender()"><i class="fas fa-check-circle"></i> <span>${t('applyAll')}</span></button>
                         </div>
@@ -452,7 +643,7 @@
                             <table style="width:100%; border-collapse:collapse; font-size:13px;">
                                 <thead>
                                     <tr style="background:#f8fafc; border-bottom:2px solid #e2e8f0;">
-                                        <th style="padding:10px 12px; text-align:left;">${t('detected')}</th>
+                                        <th style="padding:10px 12px; text-align:${isRtl ? 'right' : 'left'};">${t('detected')}</th>
                                         <th style="padding:10px 8px; text-align:center; width:65px;">${t('qty')}</th>
                                         <th style="padding:10px 12px; text-align:right;">${t('lastSale')}</th>
                                         <th style="padding:10px 12px; text-align:right;">${t('suggested')}</th>
@@ -469,10 +660,10 @@
                     <div id="copilotTabContentChat" style="display:none; flex-direction:column; height:500px;">
                         <!-- Quick Prompts Chips -->
                         <div style="display:flex; gap:6px; margin-bottom:12px; overflow-x:auto; padding-bottom:4px;">
-                            <button type="button" class="copilot-chip" onclick="askCopilotPredefined('letter')">📝 صياغة خطاب التقديم الرسمي</button>
-                            <button type="button" class="copilot-chip" onclick="askCopilotPredefined('strategy')">🎯 استراتيجية التسعير التنافسية</button>
-                            <button type="button" class="copilot-chip" onclick="askCopilotPredefined('risks')">🛡️ فحص الثغرات والشروط الجزائية</button>
-                            <button type="button" class="copilot-chip" onclick="askCopilotPredefined('docs')">📑 استخراج الوثائق الإدارية المطلوبة</button>
+                            <button type="button" class="copilot-chip" onclick="askCopilotPredefined('letter')">${t('chipLetter')}</button>
+                            <button type="button" class="copilot-chip" onclick="askCopilotPredefined('strategy')">${t('chipStrategy')}</button>
+                            <button type="button" class="copilot-chip" onclick="askCopilotPredefined('risks')">${t('chipRisks')}</button>
+                            <button type="button" class="copilot-chip" onclick="askCopilotPredefined('docs')">${t('chipDocs')}</button>
                         </div>
 
                         <!-- Chat Messages Container -->
@@ -490,24 +681,24 @@
                     <!-- ═══ TAB 3: PROPOSAL DRAFTER ═══ -->
                     <div id="copilotTabContentProposal" style="display:none;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:8px;">
-                            <div style="display:flex; gap:8px;">
-                                <button class="btn btn-primary btn-sm" onclick="generateOfficialDraft('submission_letter')"><i class="fas fa-file-alt"></i> <span>خطاب التقديم (Lettre de soumission)</span></button>
-                                <button class="btn btn-secondary btn-sm" onclick="generateOfficialDraft('bpu')"><i class="fas fa-table"></i> <span>جدول الأسعار (BPU)</span></button>
-                                <button class="btn btn-purple btn-sm" onclick="generateOfficialDraft('technical_memo')"><i class="fas fa-cogs"></i> <span>المنهجية الفنية (Mémoire)</span></button>
+                            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                                <button class="btn btn-primary btn-sm" onclick="generateOfficialDraft('submission_letter')"><i class="fas fa-file-alt"></i> <span>${t('btnLetter')}</span></button>
+                                <button class="btn btn-secondary btn-sm" onclick="generateOfficialDraft('bpu')"><i class="fas fa-table"></i> <span>${t('btnBpu')}</span></button>
+                                <button class="btn btn-purple btn-sm" onclick="generateOfficialDraft('technical_memo')"><i class="fas fa-cogs"></i> <span>${t('btnTech')}</span></button>
                             </div>
-                            <div style="display:flex; gap:8px;">
+                            <div style="display:flex; gap:8px; flex-wrap:wrap;">
                                 <button class="btn btn-ghost btn-sm" onclick="copyProposalDraft()"><i class="fas fa-copy"></i> <span>${t('copyClipboard')}</span></button>
-                                <button class="btn btn-outline-primary btn-sm" onclick="printOfficialBpuDocument()"><i class="fas fa-print"></i> <span>طباعة BPU / عرض رسمي</span></button>
-                                <button class="btn btn-success btn-sm" onclick="saveProposalToTenderNotes()"><i class="fas fa-save"></i> <span>حفظ في ملاحظات المناقصة</span></button>
+                                <button class="btn btn-outline-primary btn-sm" onclick="printOfficialBpuDocument()"><i class="fas fa-print"></i> <span>${t('printBpu')}</span></button>
+                                <button class="btn btn-success btn-sm" onclick="saveProposalToTenderNotes()"><i class="fas fa-save"></i> <span>${t('saveToNotes')}</span></button>
                             </div>
                         </div>
 
                         <div id="proposalDraftLoader" style="display:none; text-align:center; padding:30px; background:#f8fafc; border-radius:10px;">
                             <div class="fas fa-spinner fa-spin fa-2x" style="color:#2563eb;"></div>
-                            <div style="margin-top:10px; font-weight:700; color:#2563eb;">المساعد الذكي يقوم بصياغة المستند الرسمي بالمعايير القانونية...</div>
+                            <div style="margin-top:10px; font-weight:700; color:#2563eb;">${t('proposalLoader')}</div>
                         </div>
 
-                        <textarea id="proposalDraftContent" style="width:100%; height:380px; padding:16px; border:1px solid #cbd5e1; border-radius:10px; font-family:monospace, 'Segoe UI', Tahoma; font-size:13px; line-height:1.6; resize:vertical; background:#ffffff; color:#1e293b;" placeholder="اضغط على أحد الأزرار بالأعلى لتوليد الخطاب أو المستند المطلوب بالذكاء الاصطناعي..."></textarea>
+                        <textarea id="proposalDraftContent" style="width:100%; height:380px; padding:16px; border:1px solid #cbd5e1; border-radius:10px; font-family:monospace, 'Segoe UI', Tahoma; font-size:13px; line-height:1.6; resize:vertical; background:#ffffff; color:#1e293b;" placeholder="${t('proposalPlaceholder')}"></textarea>
                     </div>
 
                     <!-- ═══ TAB 4: SPECIFICATION AUDIT & OCR ═══ -->
@@ -515,12 +706,12 @@
                         <div style="background:linear-gradient(135deg, #eff6ff, #f0fdf4); border:1px solid #bfdbfe; border-radius:12px; padding:16px; margin-bottom:16px;">
                             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
                                 <div>
-                                    <h4 style="margin:0 0 4px 0; color:#1e40af; font-size:15px; font-weight:800;"><i class="fas fa-robot"></i> ${t('tabAudit')}</h4>
-                                    <p style="margin:0; font-size:12.5px; color:#475569;">ارفع وثيقة المناقصة أو دفتر الشروط (PDF، صورة، Excel، Word، TXT) لمسحه واستخراج كافة البيانات، الأسعار التقديرية، والوثائق الإلزامية آلياً.</p>
+                                    <h4 style="margin:0 0 4px 0; color:#1e40af; font-size:15px; font-weight:800;"><i class="fas fa-robot"></i> ${t('auditTitle')}</h4>
+                                    <p style="margin:0; font-size:12.5px; color:#475569;">${t('auditSubtitle')}</p>
                                 </div>
                                 <div style="display:flex; gap:8px;">
                                     <label class="btn btn-primary btn-sm" style="cursor:pointer; display:inline-flex; align-items:center; gap:6px; margin:0; box-shadow:0 2px 8px rgba(37,99,235,0.25);">
-                                        <i class="fas fa-robot"></i> <span>رفع المستند والمسح الذكي (Scan IA)</span>
+                                        <i class="fas fa-robot"></i> <span>${t('auditUploadBtn')}</span>
                                         <input type="file" id="auditDocFileInput" accept=".pdf,image/*,.xlsx,.xls,.txt,.docx" style="display:none;" onchange="handleAuditFileUpload(this)">
                                     </label>
                                 </div>
@@ -531,35 +722,35 @@
                         <!-- Extracted Tender Metadata Card -->
                         <div id="auditTenderMetaCard" style="display:none; background:#ffffff; border:1.5px solid #93c5fd; border-radius:12px; padding:14px 18px; margin-bottom:16px; box-shadow:0 4px 12px rgba(37,99,235,0.08);">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid #e2e8f0; padding-bottom:8px; flex-wrap:wrap; gap:8px;">
-                                <span style="font-size:13px; font-weight:800; color:#1e40af;"><i class="fas fa-check-circle text-success"></i> بيانات المناقصة المكتشفة بالذكاء الاصطناعي</span>
+                                <span style="font-size:13px; font-weight:800; color:#1e40af;"><i class="fas fa-check-circle text-success"></i> ${t('metaCardTitle')}</span>
                                 <div style="display:flex; gap:6px; flex-wrap:wrap;">
-                                    <button type="button" class="btn btn-success btn-sm" id="btnCreateTenderFromAudit" onclick="createTenderFromExtractedData()"><i class="fas fa-plus-circle"></i> <span>إنشاء مناقصة جديدة بهذه البيانات</span></button>
-                                    <button type="button" class="btn btn-primary btn-sm" id="btnUpdateTenderFromAudit" style="display:none;" onclick="applyExtractedMetadataToActiveTender()"><i class="fas fa-save"></i> <span>تحديث المناقصة الحالية</span></button>
+                                    <button type="button" class="btn btn-success btn-sm" id="btnCreateTenderFromAudit" onclick="createTenderFromExtractedData()"><i class="fas fa-plus-circle"></i> <span>${t('btnCreateTender')}</span></button>
+                                    <button type="button" class="btn btn-primary btn-sm" id="btnUpdateTenderFromAudit" style="display:none;" onclick="applyExtractedMetadataToActiveTender()"><i class="fas fa-save"></i> <span>${t('btnUpdateTender')}</span></button>
                                 </div>
                             </div>
                             <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px; font-size:12.5px;">
                                 <div style="background:#f8fafc; padding:8px 12px; border-radius:8px; border:1px solid #e2e8f0;">
-                                    <span style="color:#64748b; font-size:11px; font-weight:700; display:block;">المرجع (Référence):</span>
+                                    <span style="color:#64748b; font-size:11px; font-weight:700; display:block;">${t('metaRef')}</span>
                                     <strong id="auditMetaRef" style="color:#1e40af; font-size:13.5px;">-</strong>
                                 </div>
                                 <div style="background:#f8fafc; padding:8px 12px; border-radius:8px; border:1px solid #e2e8f0;">
-                                    <span style="color:#64748b; font-size:11px; font-weight:700; display:block;">الموضوع (Titre):</span>
+                                    <span style="color:#64748b; font-size:11px; font-weight:700; display:block;">${t('metaTitle')}</span>
                                     <strong id="auditMetaTitle" style="color:#0f172a; font-size:13.5px;">-</strong>
                                 </div>
                                 <div style="background:#f8fafc; padding:8px 12px; border-radius:8px; border:1px solid #e2e8f0;">
-                                    <span style="color:#64748b; font-size:11px; font-weight:700; display:block;">الجهة المتعاقدة (Autorité):</span>
+                                    <span style="color:#64748b; font-size:11px; font-weight:700; display:block;">${t('metaAuthority')}</span>
                                     <strong id="auditMetaAuth" style="color:#334155;">-</strong>
                                 </div>
                                 <div style="background:#f8fafc; padding:8px 12px; border-radius:8px; border:1px solid #e2e8f0;">
-                                    <span style="color:#64748b; font-size:11px; font-weight:700; display:block;">الأجل النهائي (Date limite):</span>
+                                    <span style="color:#64748b; font-size:11px; font-weight:700; display:block;">${t('metaDeadline')}</span>
                                     <strong id="auditMetaDeadline" style="color:#dc2626;">-</strong>
                                 </div>
                                 <div style="background:#f8fafc; padding:8px 12px; border-radius:8px; border:1px solid #e2e8f0;">
-                                    <span style="color:#64748b; font-size:11px; font-weight:700; display:block;">القيمة التقديرية (Montant):</span>
+                                    <span style="color:#64748b; font-size:11px; font-weight:700; display:block;">${t('metaBudget')}</span>
                                     <strong id="auditMetaBudget" style="color:#059669; font-size:13.5px;">-</strong>
                                 </div>
                                 <div style="background:#f8fafc; padding:8px 12px; border-radius:8px; border:1px solid #e2e8f0;">
-                                    <span style="color:#64748b; font-size:11px; font-weight:700; display:block;">مدة الإنجاز (Délai):</span>
+                                    <span style="color:#64748b; font-size:11px; font-weight:700; display:block;">${t('metaPeriod')}</span>
                                     <strong id="auditMetaPeriod" style="color:#475569;">-</strong>
                                 </div>
                             </div>
@@ -567,24 +758,24 @@
 
                         <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
                             <div>
-                                <label style="display:block; font-size:13px; font-weight:700; margin-bottom:6px;">نص دفتر الشروط أو الوثيقة المستخرجة:</label>
-                                <textarea id="auditDocTextInput" style="width:100%; height:230px; padding:12px; border:1px solid #cbd5e1; border-radius:8px; font-size:12.5px; font-family:monospace; resize:vertical;" placeholder="الصق نص دفتر الشروط هنا أو ارفع الملف بالأعلى لتحليله مباشرة..."></textarea>
+                                <label style="display:block; font-size:13px; font-weight:700; margin-bottom:6px;">${t('docTextLabel')}</label>
+                                <textarea id="auditDocTextInput" style="width:100%; height:230px; padding:12px; border:1px solid #cbd5e1; border-radius:8px; font-size:12.5px; font-family:monospace; resize:vertical;" placeholder="${t('docTextPlaceholder')}"></textarea>
                                 <div style="display:flex; gap:8px; margin-top:8px;">
-                                    <button class="btn btn-primary btn-sm" onclick="runComprehensiveAudit()"><i class="fas fa-magic"></i> <span>بدء الفحص والتحليل الذكي (Scan IA)</span></button>
+                                    <button class="btn btn-primary btn-sm" id="btnRunComprehensiveAudit" onclick="runComprehensiveAudit()"><i class="fas fa-magic"></i> <span>${t('startAuditBtn')}</span></button>
                                 </div>
                             </div>
 
                             <div>
-                                <label style="display:block; font-size:13px; font-weight:700; margin-bottom:6px;">الوثائق والشروط المطلوبة المكتشفة:</label>
+                                <label style="display:block; font-size:13px; font-weight:700; margin-bottom:6px;">${t('checklistLabel')}</label>
                                 <div id="auditChecklistOutput" style="height:230px; overflow-y:auto; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px; font-size:12.5px;">
                                     <div style="color:#94a3b8; text-align:center; padding:40px 10px;">
                                         <i class="fas fa-tasks fa-2x" style="margin-bottom:8px;"></i>
-                                        <div>لم يتم الفحص بعد. ارفع المستند واضغط "بدء الفحص والتحليل الذكي".</div>
+                                        <div>${t('checklistEmpty')}</div>
                                     </div>
                                 </div>
                                 <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
-                                    <button class="btn btn-success btn-sm" onclick="applyExtractedChecklistToTender()"><i class="fas fa-check-double"></i> <span>تطبيق قائمة الوثائق في جاهزية الملف (Checklist)</span></button>
-                                    <button class="btn btn-purple btn-sm" onclick="switchCopilotTab('pricing')"><i class="fas fa-calculator"></i> <span>التسعير الذكي للبنود</span></button>
+                                    <button class="btn btn-success btn-sm" onclick="applyExtractedChecklistToTender()"><i class="fas fa-check-double"></i> <span>${t('applyChecklistBtn')}</span></button>
+                                    <button class="btn btn-purple btn-sm" onclick="switchCopilotTab('pricing')"><i class="fas fa-calculator"></i> <span>${t('goToPricingBtn')}</span></button>
                                 </div>
                             </div>
                         </div>
@@ -594,78 +785,81 @@
             </div>
         `;
 
-        // Inject Styles
-        var style = document.createElement('style');
-        style.textContent = `
-            .copilot-tab-btn {
-                background: none;
-                border: none;
-                border-bottom: 3px solid transparent;
-                padding: 10px 16px;
-                font-size: 13px;
-                font-weight: 600;
-                color: #64748b;
-                cursor: pointer;
-                display: inline-flex;
-                align-items: center;
-                gap: 8px;
-                transition: all 0.2s;
-            }
-            .copilot-tab-btn:hover { color: #1e40af; background: rgba(37,99,235,0.05); }
-            .copilot-tab-btn.active {
-                color: #2563eb;
-                border-bottom-color: #2563eb;
-                background: white;
-                border-top-left-radius: 8px;
-                border-top-right-radius: 8px;
-            }
-            .copilot-chip {
-                background: #f1f5f9;
-                border: 1px solid #cbd5e1;
-                border-radius: 20px;
-                padding: 6px 14px;
-                font-size: 12px;
-                font-weight: 600;
-                color: #334155;
-                cursor: pointer;
-                white-space: nowrap;
-                transition: all 0.2s;
-            }
-            .copilot-chip:hover {
-                background: #e2e8f0;
-                border-color: #2563eb;
-                color: #2563eb;
-            }
-            .chat-msg-row {
-                display: flex;
-                gap: 10px;
-                max-width: 88%;
-            }
-            .chat-msg-row.user {
-                align-self: flex-end;
-                flex-direction: row-reverse;
-            }
-            .chat-msg-bubble {
-                padding: 10px 14px;
-                border-radius: 12px;
-                font-size: 13.5px;
-                line-height: 1.55;
-                word-break: break-word;
-            }
-            .chat-msg-row.user .chat-msg-bubble {
-                background: #2563eb;
-                color: white;
-                border-bottom-right-radius: 2px;
-            }
-            .chat-msg-row.assistant .chat-msg-bubble {
-                background: white;
-                color: #1e293b;
-                border: 1px solid #e2e8f0;
-                border-bottom-left-radius: 2px;
-                box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-            }
-        `;
-        document.head.appendChild(style);
+        if (!document.getElementById('smartPricingStyleDef')) {
+            var style = document.createElement('style');
+            style.id = 'smartPricingStyleDef';
+            style.textContent = `
+                .copilot-tab-btn {
+                    background: none;
+                    border: none;
+                    border-bottom: 3px solid transparent;
+                    padding: 10px 16px;
+                    font-size: 13px;
+                    font-weight: 600;
+                    color: #64748b;
+                    cursor: pointer;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 8px;
+                    transition: all 0.2s;
+                }
+                .copilot-tab-btn:hover { color: #1e40af; background: rgba(37,99,235,0.05); }
+                .copilot-tab-btn.active {
+                    color: #2563eb;
+                    border-bottom-color: #2563eb;
+                    background: white;
+                    border-top-left-radius: 8px;
+                    border-top-right-radius: 8px;
+                }
+                .copilot-chip {
+                    background: #f1f5f9;
+                    border: 1px solid #cbd5e1;
+                    border-radius: 20px;
+                    padding: 6px 14px;
+                    font-size: 12px;
+                    font-weight: 600;
+                    color: #334155;
+                    cursor: pointer;
+                    white-space: nowrap;
+                    transition: all 0.2s;
+                }
+                .copilot-chip:hover {
+                    background: #e2e8f0;
+                    border-color: #2563eb;
+                    color: #2563eb;
+                }
+                .chat-msg-row {
+                    display: flex;
+                    gap: 10px;
+                    max-width: 88%;
+                }
+                .chat-msg-row.user {
+                    align-self: flex-end;
+                    flex-direction: row-reverse;
+                }
+                .chat-msg-bubble {
+                    padding: 10px 14px;
+                    border-radius: 12px;
+                    font-size: 13.5px;
+                    line-height: 1.55;
+                    word-break: break-word;
+                }
+                .chat-msg-row.user .chat-msg-bubble {
+                    background: #2563eb;
+                    color: white;
+                    border-bottom-right-radius: 2px;
+                }
+                .chat-msg-row.assistant .chat-msg-bubble {
+                    background: white;
+                    color: #1e293b;
+                    border: 1px solid #e2e8f0;
+                    border-bottom-left-radius: 2px;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
         document.body.appendChild(div);
     }
 
@@ -716,15 +910,15 @@
         }
         if (status) {
             if (score >= 75) {
-                status.textContent = 'تنافسي ممتاز (فرصة فوز عالية)';
+                status.textContent = t('scoreExcellent');
                 status.style.background = '#dcfce7';
                 status.style.color = '#15803d';
             } else if (score >= 55) {
-                status.textContent = 'متوازن ومقبول تجارياً';
+                status.textContent = t('scoreBalanced');
                 status.style.background = '#dbeafe';
                 status.style.color = '#1e40af';
             } else {
-                status.textContent = 'هامش مرتفع (قد يقلل فرص الترسية)';
+                status.textContent = t('scoreHigh');
                 status.style.background = '#fef3c7';
                 status.style.color = '#b45309';
             }
@@ -737,6 +931,7 @@
         tbody.innerHTML = '';
         var margin = (parseFloat(document.getElementById('smartPricingMargin')?.value) || 15) / 100;
         var grandTotal = 0;
+        var curLang = getActiveLang();
 
         currentAnalysisItems.forEach(function(item, idx) {
             var benchmarks = window.getMarketPriceBenchmarks(item.name);
@@ -750,22 +945,22 @@
             tr.innerHTML = `
                 <td style="padding:8px 12px;">
                     <input type="text" class="form-input" value="${escapeHtml(item.name)}" style="padding:6px 8px; font-size:13px; width:100%; border:1px solid #cbd5e1; border-radius:6px;" onchange="updateItemName(${idx}, this.value)">
-                    ${benchmarks.length > 0 ? `<div style="font-size:11px; color:#64748b; margin-top:2px;"><i class="fas fa-history"></i> مرجع: ${benchmarks[0].customer} (${benchmarks[0].date || 'سابق'} - ${benchmarks[0].source})</div>` : '<div style="font-size:11px; color:#94a3b8; margin-top:2px;"><i class="fas fa-info-circle"></i> تسعير تقديري</div>'}
+                    ${benchmarks.length > 0 ? `<div style="font-size:11px; color:#64748b; margin-top:2px;"><i class="fas fa-history"></i> ${t('benchmarkRef')}${escapeHtml(benchmarks[0].customer)} (${benchmarks[0].date || ''} - ${escapeHtml(benchmarks[0].source)})</div>` : `<div style="font-size:11px; color:#94a3b8; margin-top:2px;"><i class="fas fa-info-circle"></i> ${t('benchmarkEst')}</div>`}
                 </td>
                 <td style="padding:8px 8px; text-align:center;">
                     <input type="number" min="1" class="form-input" value="${qty}" style="width:55px; padding:6px; font-size:13px; text-align:center; border:1px solid #cbd5e1; border-radius:6px;" onchange="updateItemQty(${idx}, this.value)">
                 </td>
                 <td style="padding:8px 12px; text-align:right; color:#64748b; font-weight:600;">
-                    ${lastPrice > 0 ? lastPrice.toLocaleString('fr-FR', {minimumFractionDigits:2, maximumFractionDigits:2}) : '<span class="text-muted">—</span>'}
+                    ${lastPrice > 0 ? lastPrice.toLocaleString(curLang === 'ar' ? 'ar-DZ' : 'fr-FR', {minimumFractionDigits:2, maximumFractionDigits:2}) : '<span class="text-muted">—</span>'}
                 </td>
                 <td style="padding:8px 12px; text-align:right;">
                     <input type="number" step="0.01" class="form-input" value="${suggestedPrice.toFixed(2)}" style="width:115px; padding:6px 8px; font-size:13px; font-weight:700; color:#1e40af; text-align:right; border:1px solid #93c5fd; border-radius:6px;" onchange="updateItemPrice(${idx}, this.value)">
                 </td>
                 <td style="padding:8px 12px; text-align:right; font-weight:700; color:#0f766e;">
-                    ${lineTotal.toLocaleString('fr-FR', {minimumFractionDigits:2, maximumFractionDigits:2})}
+                    ${lineTotal.toLocaleString(curLang === 'ar' ? 'ar-DZ' : 'fr-FR', {minimumFractionDigits:2, maximumFractionDigits:2})}
                 </td>
                 <td style="padding:8px 8px; text-align:center;">
-                    <button class="btn btn-danger btn-sm" onclick="removeSmartPricingItem(${idx})" style="padding:4px 8px; border-radius:6px;" title="حذف"><i class="fas fa-trash"></i></button>
+                    <button class="btn btn-danger btn-sm" onclick="removeSmartPricingItem(${idx})" style="padding:4px 8px; border-radius:6px;" title="${t('delete')}"><i class="fas fa-trash"></i></button>
                 </td>
             `;
             tbody.appendChild(tr);
@@ -773,7 +968,7 @@
 
         var totalEl = document.getElementById('smartPricingTotalVal');
         if (totalEl) {
-            totalEl.textContent = grandTotal.toLocaleString('fr-FR', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' DZD';
+            totalEl.textContent = grandTotal.toLocaleString(curLang === 'ar' ? 'ar-DZ' : 'fr-FR', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' DZD';
         }
     }
 
@@ -813,7 +1008,9 @@
     };
 
     window.addCustomSmartPricingItem = function() {
-        currentAnalysisItems.push({ name: "بند جديد / خدمة متخصصة", qty: 1, customPrice: 15000 });
+        var lang = getActiveLang();
+        var defaultName = (lang === 'fr') ? "Nouveau poste / Prestation spécialisée" : ((lang === 'en') ? "New item / Specialized service" : "بند جديد / خدمة متخصصة");
+        currentAnalysisItems.push({ name: defaultName, qty: 1, customPrice: 15000 });
         renderSmartPricingRows();
         updateWinProbabilityMetrics();
     };
@@ -828,7 +1025,8 @@
         });
         renderSmartPricingRows();
         updateWinProbabilityMetrics();
-        if (window.showToast) window.showToast('تمت مطابقة الأسعار مع السجلات السابقة بنجاح', 'success');
+        var msg = (getActiveLang() === 'fr') ? 'Prix synchronisés avec les références précédentes' : ((getActiveLang() === 'en') ? 'Prices synchronized with previous sales benchmarks' : 'تمت مطابقة الأسعار مع السجلات السابقة بنجاح');
+        if (window.showToast) window.showToast(msg, 'success');
     };
 
     // ── COPILOT CHAT LOGIC ──
@@ -848,8 +1046,8 @@
                     <div style="white-space:pre-wrap;">${escapeHtml(msg.content)}</div>
                     ${msg.role==='assistant' && i > 0 ? `
                         <div style="margin-top:8px; padding-top:6px; border-top:1px dashed #e2e8f0; display:flex; gap:8px;">
-                            <button type="button" class="btn btn-ghost btn-sm" style="padding:2px 8px; font-size:11px;" onclick="copyCopilotMsg(${i})"><i class="fas fa-copy"></i> نسخ</button>
-                            <button type="button" class="btn btn-ghost btn-sm" style="padding:2px 8px; font-size:11px;" onclick="appendCopilotMsgToNotes(${i})"><i class="fas fa-plus"></i> إضافة لملاحظات المناقصة</button>
+                            <button type="button" class="btn btn-ghost btn-sm" style="padding:2px 8px; font-size:11px;" onclick="copyCopilotMsg(${i})"><i class="fas fa-copy"></i> ${t('copy')}</button>
+                            <button type="button" class="btn btn-ghost btn-sm" style="padding:2px 8px; font-size:11px;" onclick="appendCopilotMsgToNotes(${i})"><i class="fas fa-plus"></i> ${t('appendToNotes')}</button>
                         </div>
                     ` : ''}
                 </div>
@@ -863,17 +1061,19 @@
     window.copyCopilotMsg = function(idx) {
         if (currentCopilotMessages[idx]) {
             navigator.clipboard.writeText(currentCopilotMessages[idx].content);
-            if (window.showToast) window.showToast('تم النسخ إلى الحافظة', 'success');
+            var msg = (getActiveLang() === 'fr') ? 'Copié dans le presse-papier' : ((getActiveLang() === 'en') ? 'Copied to clipboard' : 'تم النسخ إلى الحافظة');
+            if (window.showToast) window.showToast(msg, 'success');
         }
     };
 
     window.appendCopilotMsgToNotes = function(idx) {
         if (currentCopilotMessages[idx] && currentActiveTenderIdx !== null) {
-            var t = (typeof window.getTenderByIndex === 'function') ? window.getTenderByIndex(currentActiveTenderIdx) : null;
-            if (t) {
-                t.notes = (t.notes ? t.notes + '\n\n' : '') + '[AI Tender Copilot Note]:\n' + currentCopilotMessages[idx].content;
+            var tObj = (typeof window.getTenderByIndex === 'function') ? window.getTenderByIndex(currentActiveTenderIdx) : null;
+            if (tObj) {
+                tObj.notes = (tObj.notes ? tObj.notes + '\n\n' : '') + '[AI Tender Copilot Note]:\n' + currentCopilotMessages[idx].content;
                 if (window.saveData) window.saveData();
-                if (window.showToast) window.showToast('تمت إضافة النص إلى ملاحظات المناقصة', 'success');
+                var msg = (getActiveLang() === 'fr') ? 'Ajouté aux notes de l\'AO' : ((getActiveLang() === 'en') ? 'Added to tender notes' : 'تمت إضافة النص إلى ملاحظات المناقصة');
+                if (window.showToast) window.showToast(msg, 'success');
             }
         }
     };
@@ -882,21 +1082,54 @@
         var input = document.getElementById('copilotChatInput');
         var promptText = '';
         var tObj = (currentActiveTenderIdx !== null && typeof window.getTenderByIndex === 'function') ? window.getTenderByIndex(currentActiveTenderIdx) : null;
-        var tenderInfo = tObj ? `(المناقصة: ${tObj.reference || ''} - ${tObj.title || ''})` : '';
+        var tenderInfo = tObj ? `(${tObj.reference || ''} - ${tObj.title || ''})` : '';
+        var lang = getActiveLang();
 
-        switch(type) {
-            case 'letter':
-                promptText = `قم بصياغة خطاب تقديم عرض رسمي (Lettre de soumission) احترافي لهذه المناقصة ${tenderInfo} مع التعهد بكامل الشروط ومدة الإنجاز.`;
-                break;
-            case 'strategy':
-                promptText = `ما هي أفضل استراتيجية تسعير تنافسية للفوز بهذه المناقصة ${tenderInfo} مع الحفاظ على هامش ربح ممتاز وبأقل قدر من المخاطر؟`;
-                break;
-            case 'risks':
-                promptText = `حلل أهم الثغرات والشروط الجزائية ومخاطر التأخير المحتملة في هذه المناقصة ${tenderInfo}، وكيفية التحوط منها قانونياً.`;
-                break;
-            case 'docs':
-                promptText = `استخرج ولخص قائمة الوثائق الإدارية والجبائية والتقنية الإلزامية لتأهيل ملف هذه المناقصة ${tenderInfo} وفق القانون الجزائري للصفقات العمومية.`;
-                break;
+        if (lang === 'fr') {
+            switch(type) {
+                case 'letter':
+                    promptText = `Rédigez une lettre de soumission officielle professionnelle pour cet appel d'offres ${tenderInfo} avec engagement sur les délais et prix.`;
+                    break;
+                case 'strategy':
+                    promptText = `Quelle est la meilleure stratégie de prix compétitive pour remporter cet appel d'offres ${tenderInfo} tout en préservant une marge saine ?`;
+                    break;
+                case 'risks':
+                    promptText = `Analysez les risques juridiques, clauses pénales et pénalités de retard potentielles pour cet appel d'offres ${tenderInfo}.`;
+                    break;
+                case 'docs':
+                    promptText = `Listez l'ensemble des pièces administratives, fiscales et techniques obligatoires pour cet appel d'offres ${tenderInfo} selon la réglementation des marchés.`;
+                    break;
+            }
+        } else if (lang === 'en') {
+            switch(type) {
+                case 'letter':
+                    promptText = `Draft a professional official bid submission letter for this tender ${tenderInfo} committing to all terms and deadlines.`;
+                    break;
+                case 'strategy':
+                    promptText = `What is the most effective competitive pricing strategy to win this tender ${tenderInfo} with sustainable profit margin?`;
+                    break;
+                case 'risks':
+                    promptText = `Identify key risks, penalty clauses, and execution liabilities for this tender ${tenderInfo}.`;
+                    break;
+                case 'docs':
+                    promptText = `Extract and list all mandatory administrative, fiscal, and technical documents required to qualify for tender ${tenderInfo}.`;
+                    break;
+            }
+        } else {
+            switch(type) {
+                case 'letter':
+                    promptText = `قم بصياغة خطاب تقديم عرض رسمي (Lettre de soumission) احترافي لهذه المناقصة ${tenderInfo} مع التعهد بكامل الشروط ومدة الإنجاز.`;
+                    break;
+                case 'strategy':
+                    promptText = `ما هي أفضل استراتيجية تسعير تنافسية للفوز بهذه المناقصة ${tenderInfo} مع الحفاظ على هامش ربح ممتاز وبأقل قدر من المخاطر؟`;
+                    break;
+                case 'risks':
+                    promptText = `حلل أهم الثغرات والشروط الجزائية ومخاطر التأخير المحتملة في هذه المناقصة ${tenderInfo}، وكيفية التحوط منها قانونياً.`;
+                    break;
+                case 'docs':
+                    promptText = `استخرج ولخص قائمة الوثائق الإدارية والجبائية والتقنية الإلزامية لتأهيل ملف هذه المناقصة ${tenderInfo} وفق القانون الجزائري للصفقات العمومية.`;
+                    break;
+            }
         }
 
         if (input) {
@@ -916,10 +1149,33 @@
         currentCopilotMessages.push({ role: 'user', content: text });
         renderCopilotMessages();
 
-        // Context regarding current tender
         var tObj = (currentActiveTenderIdx !== null && typeof window.getTenderByIndex === 'function') ? window.getTenderByIndex(currentActiveTenderIdx) : null;
         var itemsSummary = currentAnalysisItems.map(function(i){ return `- ${i.qty}x ${i.name} (Catégorie: ${i.category||'Général'})`; }).join('\n');
-        var systemContext = `أنت المساعد الذكي المتخصص في الصفقات والمناقصات لبرنامج Zeralda ERP.
+        var curLang = getActiveLang();
+
+        var systemContext = (curLang === 'fr')
+            ? `Vous êtes le copilote IA spécialisé dans les appels d'offres et marchés pour Zeralda ERP.
+Données de l'AO:
+Titre: ${tObj ? (tObj.title || 'N/A') : 'Général'}
+Référence: ${tObj ? (tObj.reference || 'N/A') : 'N/A'}
+Maître d'ouvrage: ${tObj ? (tObj.authority || 'N/A') : 'N/A'}
+Date limite: ${tObj ? (tObj.deadline || 'N/A') : 'N/A'}
+Montant estimé: ${tObj ? (tObj.amount || 0) : 0} DZD
+Postes:
+${itemsSummary}
+Répondez avec précision professionnelle en français.`
+            : (curLang === 'en'
+            ? `You are the AI Tender and Public Procurement Copilot for Zeralda ERP.
+Tender details:
+Title: ${tObj ? (tObj.title || 'N/A') : 'General'}
+Reference: ${tObj ? (tObj.reference || 'N/A') : 'N/A'}
+Contracting Authority: ${tObj ? (tObj.authority || 'N/A') : 'N/A'}
+Deadline: ${tObj ? (tObj.deadline || 'N/A') : 'N/A'}
+Estimated Amount: ${tObj ? (tObj.amount || 0) : 0} DZD
+Items:
+${itemsSummary}
+Respond accurately in English with standard procurement terminology.`
+            : `أنت المساعد الذكي المتخصص في الصفقات والمناقصات لبرنامج Zeralda ERP.
 بيانات المناقصة الحالية:
 العنوان: ${tObj ? (tObj.title || 'N/A') : 'عام'}
 المرجع: ${tObj ? (tObj.reference || 'N/A') : 'N/A'}
@@ -928,18 +1184,19 @@
 المبلغ المقترح: ${tObj ? (tObj.amount || 0) : 0} DZD
 البنود المسجلة:
 ${itemsSummary}
-أجب باحترافية عالية باللغة العربية مع المصطلحات الرسمية المعمول بها في الصفقات العمومية.`;
+أجب باحترافية عالية باللغة العربية مع المصطلحات الرسمية المعمول بها في الصفقات العمومية.`);
 
         if (btn) btn.disabled = true;
         try {
-            var res = await callAIChat(currentCopilotMessages, systemContext);
+            var res = await callAIChat(currentCopilotMessages, systemContext, 25000);
             if (res.ok && res.text) {
                 currentCopilotMessages.push({ role: 'assistant', content: res.text });
             } else {
-                currentCopilotMessages.push({ role: 'assistant', content: 'عذراً، حدث خطأ أثناء الاتصال بالذكاء الاصطناعي: ' + (res.error || 'يرجى المحاولة ثانية') });
+                var errTxt = (curLang === 'fr') ? "Désolé, une erreur est survenue lors de la communication avec l'IA." : ((curLang === 'en') ? "Sorry, an error occurred while connecting to AI." : "عذراً، حدث خطأ أثناء الاتصال بالذكاء الاصطناعي.");
+                currentCopilotMessages.push({ role: 'assistant', content: errTxt + (res.error ? ' (' + res.error + ')' : '') });
             }
         } catch(e) {
-            currentCopilotMessages.push({ role: 'assistant', content: 'حدث خطأ في الشبكة.' });
+            currentCopilotMessages.push({ role: 'assistant', content: (curLang === 'fr') ? 'Erreur de connexion réseau.' : 'حدث خطأ في الشبكة.' });
         } finally {
             if (btn) btn.disabled = false;
             renderCopilotMessages();
@@ -954,38 +1211,49 @@ ${itemsSummary}
 
         var tObj = (currentActiveTenderIdx !== null && typeof window.getTenderByIndex === 'function') ? window.getTenderByIndex(currentActiveTenderIdx) : null;
         var totalAmount = (parseFloat(document.getElementById('smartPricingTotalVal')?.textContent) || 0);
+        var curLang = getActiveLang();
 
         var prompt = '';
         if (docType === 'submission_letter') {
-            prompt = `قم بصياغة خطاب تقديم رسمي (Lettre de Soumission) كامل وجاهز للطباعة والتوقيع لمناقصة:
+            prompt = (curLang === 'fr')
+                ? `Rédigez une lettre de soumission officielle complète et prête pour signature pour le marché suivant :
+Titre: ${tObj ? tObj.title : 'Marché de prestations'}
+Référence: ${tObj ? tObj.reference : 'AO-2026/01'}
+Maître d'ouvrage: ${tObj ? tObj.authority : 'Administration contractante'}
+Montant total de l'offre: ${totalAmount} DZD. Formule juridique formelle.`
+                : `قم بصياغة خطاب تقديم رسمي (Lettre de Soumission) كامل وجاهز للطباعة والتوقيع لمناقصة:
 العنوان: ${tObj ? tObj.title : 'صفقة خدمات وتجهيزات'}
 المرجع: ${tObj ? tObj.reference : 'AO-2026/01'}
 الجهة المتعاقدة: ${tObj ? tObj.authority : 'المؤسسة الوطنية / الإدارة'}
 المبلغ الإجمالي للعرض: ${totalAmount} دج
-الصيغة تكون رسمية وقانونية وفق النموذج الجزائري للصفقات العمومية باللغة الفرنسية مع الترجمة العربية الموازية.`;
+الصيغة تكون رسمية وقانونية وفق النموذج المعمول به في الصفقات العمومية.`;
         } else if (docType === 'bpu') {
             var itemsList = currentAnalysisItems.map(function(it, i){
-                return `بند ${i+1}: ${it.name} | الكمية: ${it.qty} | سعر الوحدة التقديري: ${it.customPrice || 10000} DZD`;
+                return `Item ${i+1}: ${it.name} | Qty: ${it.qty} | Prix: ${it.customPrice || 10000} DZD`;
             }).join('\n');
-            prompt = `قم بتوليد جدول الأسعار الأحادية والتفصيلية (Bordereau des Prix Unitaires & Devis Quantitatif Estimatif) بنسق جدولي منظم:
+            prompt = `Générez un Bordereau des Prix Unitaires et Devis Quantitatif Estimatif (BPU & DQE) structuré sous forme de tableau texte clair :
 ${itemsList}
-المجموع العام: ${totalAmount} DZD.`;
+Total général : ${totalAmount} DZD.`;
         } else {
-            prompt = `قم بصياغة مذكرة تقنية ومنهجية تنفيذ (Mémoire Technique) لمناقصة:
-${tObj ? tObj.title : 'المشروع'}
-تشمل: منهجية العمل، الخطة الزمنية المقترحة، فريق العمل، وإجراءات ضمان الجودة والسلامة.`;
+            prompt = `Rédigez un Mémoire Technique et méthodologie d'exécution pour :
+${tObj ? tObj.title : 'Marché'}
+Comprenant: Méthodologie, planning prévisionnel, moyens humains et matériels, démarche qualité et sécurité.`;
         }
 
         if (loader) loader.style.display = 'block';
-        textarea.value = 'جاري التوليد بالذكاء الاصطناعي...';
+        textarea.value = (curLang === 'fr') ? 'Génération IA en cours...' : ((curLang === 'en') ? 'AI generation in progress...' : 'جاري التوليد بالذكاء الاصطناعي...');
 
-        var aiRes = await callAIChat(prompt, "You are an executive procurement documentation officer. Provide clean, production-ready legal and technical tender documentation.");
-        if (loader) loader.style.display = 'none';
-
-        if (aiRes.ok && aiRes.text) {
-            textarea.value = aiRes.text;
-        } else {
-            textarea.value = 'فشل في توليد المستند: ' + (aiRes.error || 'حاول مجدداً.');
+        try {
+            var aiRes = await callAIChat(prompt, "You are an executive procurement documentation officer. Provide clean, production-ready legal and technical tender documentation.", 25000);
+            if (aiRes.ok && aiRes.text) {
+                textarea.value = aiRes.text;
+            } else {
+                textarea.value = (curLang === 'fr' ? 'Échec de la génération : ' : 'فشل في توليد المستند: ') + (aiRes.error || 'Veuillez réessayer.');
+            }
+        } catch (e) {
+            textarea.value = 'Error: ' + e.message;
+        } finally {
+            if (loader) loader.style.display = 'none';
         }
     };
 
@@ -993,18 +1261,20 @@ ${tObj ? tObj.title : 'المشروع'}
         var textarea = document.getElementById('proposalDraftContent');
         if (textarea && textarea.value) {
             navigator.clipboard.writeText(textarea.value);
-            if (window.showToast) window.showToast('تم نسخ مسودة العرض بالكامل للحافظة', 'success');
+            var msg = (getActiveLang() === 'fr') ? 'Projet d\'offre copié dans le presse-papier' : ((getActiveLang() === 'en') ? 'Draft proposal copied to clipboard' : 'تم نسخ مسودة العرض بالكامل للحافظة');
+            if (window.showToast) window.showToast(msg, 'success');
         }
     };
 
     window.saveProposalToTenderNotes = function() {
         var textarea = document.getElementById('proposalDraftContent');
         if (textarea && textarea.value && currentActiveTenderIdx !== null) {
-            var t = (typeof window.getTenderByIndex === 'function') ? window.getTenderByIndex(currentActiveTenderIdx) : null;
-            if (t) {
-                t.notes = (t.notes ? t.notes + '\n\n' : '') + '[AI Tender Proposal Draft]:\n' + textarea.value;
+            var tObj = (typeof window.getTenderByIndex === 'function') ? window.getTenderByIndex(currentActiveTenderIdx) : null;
+            if (tObj) {
+                tObj.notes = (tObj.notes ? tObj.notes + '\n\n' : '') + '[AI Tender Proposal Draft]:\n' + textarea.value;
                 if (window.saveData) window.saveData();
-                if (window.showToast) window.showToast('تم حفظ المستند في ملاحظات المناقصة', 'success');
+                var msg = (getActiveLang() === 'fr') ? 'Document enregistré dans les notes de l\'AO' : ((getActiveLang() === 'en') ? 'Document saved in tender notes' : 'تم حفظ المستند في ملاحظات المناقصة');
+                if (window.showToast) window.showToast(msg, 'success');
             }
         }
     };
@@ -1028,7 +1298,8 @@ ${tObj ? tObj.title : 'المشروع'}
         });
 
         if (items.length === 0) {
-            if (window.showToast) window.showToast('لا توجد بنود لطباعة جدول الأسعار BPU', 'warning');
+            var warnMsg = (getActiveLang() === 'fr') ? 'Aucun poste à imprimer pour le BPU' : 'لا توجد بنود لطباعة جدول الأسعار BPU';
+            if (window.showToast) window.showToast(warnMsg, 'warning');
             return;
         }
 
@@ -1040,7 +1311,7 @@ ${tObj ? tObj.title : 'المشروع'}
             subject: tObj ? (tObj.title || 'Bordereau des Prix Unitaires & Devis Quantitatif Estimatif') : 'Offre Financière et Bordereau des Prix Unitaires',
             tenderTitle: tObj ? tObj.title : '',
             client: {
-                name: tObj ? (tObj.authority || tObj.client || 'Maître de l\'Ouvrage') : 'Maître de l\'Ouvrage / الإدارة المتعاقدة',
+                name: tObj ? (tObj.authority || tObj.client || 'Maître de l\'Ouvrage') : 'Maître de l\'Ouvrage',
                 address: tObj ? (tObj.location || 'Algérie') : 'Algérie'
             },
             items: items,
@@ -1049,7 +1320,7 @@ ${tObj ? tObj.title : 'المشروع'}
         };
 
         if (window.UnifiedDocumentPrinter && typeof window.UnifiedDocumentPrinter.printDocument === 'function') {
-            window.UnifiedDocumentPrinter.printDocument(docData, { lang: 'fr' });
+            window.UnifiedDocumentPrinter.printDocument(docData, { lang: getActiveLang() === 'ar' ? 'ar' : 'fr' });
         } else if (window.ZeraldaPrintEngine && typeof window.ZeraldaPrintEngine.printHtml === 'function') {
             window.print();
         } else {
@@ -1058,7 +1329,7 @@ ${tObj ? tObj.title : 'المشروع'}
     };
 
 
-    // ── AUDIT & OCR SPECIFICATION LOGIC ──
+    // ── AUDIT & OCR SPECIFICATION LOGIC (Crash & Hang Protected) ──
     window.handleAuditFileUpload = async function(input) {
         if (!input.files || !input.files.length) return;
         var file = input.files[0];
@@ -1074,116 +1345,165 @@ ${tObj ? tObj.title : 'المشروع'}
             }
         }
 
-        setStatus('جاري استخراج وقراءة نص المستند عبر المساعد الذكي (Copilote IA)...', '#2563eb', '#eff6ff');
-        if (textarea) textarea.value = 'جاري قراءة واستخراج نص المستند عبر المساعد الذكي (Copilote IA)...';
+        setStatus(t('statusExtracting'), '#2563eb', '#eff6ff');
+        if (textarea) textarea.value = t('statusExtracting');
 
+        var isTextFile = /\.(txt|csv|tsv|json|xml)$/i.test(file.name) || (file.type && file.type.indexOf('text/') === 0);
+        var extractedText = '';
+
+        // 1. Try UnifiedOCR for PDF / Images / Excel / Word
         if (window.UnifiedOCR && typeof window.UnifiedOCR.extract === 'function') {
             try {
                 var ocr = await window.UnifiedOCR.extract(file, {
                     endpoint: '/api/ocr/extract',
-                    allowImage: true, allowPdf: true, allowExcel: true, allowWordTxt: true,
+                    allowImage: true,
+                    allowPdf: true,
+                    allowExcel: true,
+                    allowWordTxt: true,
                     extraBody: { lang: 'ara+fra+eng' }
                 });
-                if (ocr && ocr.text) {
-                    if (textarea) textarea.value = ocr.text;
-                    setStatus('تم استخراج النص بنجاح! جاري تحليله واستخراج الحقول بالذكاء الاصطناعي...', '#15803d', '#f0fdf4');
-                    await runComprehensiveAudit();
-                    return;
+                if (ocr && ocr.text && ocr.text.trim().length > 0) {
+                    extractedText = ocr.text.trim();
                 }
             } catch(e) {
-                console.warn('[Audit] UnifiedOCR error:', e);
-                setStatus('تنبيه: تعذر إكمال القراءة الذكية، جاري محاولة القراءة المباشرة...', '#b45309', '#fffbeb');
+                console.warn('[Audit] UnifiedOCR extraction error:', e);
             }
         }
 
-        // Fallback text reader
-        var reader = new FileReader();
-        reader.onload = async function(evt) {
+        // 2. If it is a text-based format and OCR was skipped or empty, read as UTF-8
+        if (!extractedText && isTextFile) {
             try {
-                var decoder = new TextDecoder('utf-8');
-                var text = decoder.decode(evt.target.result);
-                if (textarea) textarea.value = text;
-                setStatus('تم تحميل النص. جاري التحليل الذكي...', '#15803d', '#f0fdf4');
-                await runComprehensiveAudit();
-            } catch(e) {
-                setStatus('تعذر قراءة الملف. يرجى تجربة مستند نصي أو صورة واضحة.', '#b91c1c', '#fef2f2');
+                extractedText = await new Promise(function(resolve, reject) {
+                    var reader = new FileReader();
+                    reader.onload = function(evt) { resolve(String(evt.target.result || '').trim()); };
+                    reader.onerror = reject;
+                    reader.readAsText(file, 'utf-8');
+                });
+            } catch (readErr) {
+                console.warn('[Audit] FileReader text decode failed:', readErr);
             }
-        };
-        reader.readAsArrayBuffer(file);
+        }
+
+        // Reset file input so user can re-upload same file or another
+        try { input.value = ''; } catch(_) {}
+
+        // 3. Process result safely without freezing
+        if (extractedText && extractedText.length > 5) {
+            if (textarea) textarea.value = extractedText;
+            setStatus(t('statusOcrSuccess'), '#15803d', '#f0fdf4');
+            await runComprehensiveAudit();
+        } else {
+            // Document was binary (or OCR failed) and returned no readable text:
+            // NEVER decode binary as UTF-8 garbage into textarea!
+            if (textarea) textarea.value = '';
+            setStatus(t('statusUnreadable'), '#b45309', '#fffbeb');
+            if (window.showToast) window.showToast(t('statusUnreadable'), 'warning');
+        }
     };
 
     window.runComprehensiveAudit = async function() {
         var text = (document.getElementById('auditDocTextInput')?.value || '').trim();
         var out = document.getElementById('auditChecklistOutput');
         var statusEl = document.getElementById('auditOcrStatus');
+        var btn = document.getElementById('btnRunComprehensiveAudit');
+
         if (!text) {
-            if (window.showToast) window.showToast('يرجى كتابة أو رفع نص دفتر الشروط أولاً', 'warning');
+            var warnMsg = (getActiveLang() === 'fr') ? 'Veuillez coller ou téléverser le texte du cahier des charges' : 'يرجى كتابة أو رفع نص دفتر الشروط أولاً';
+            if (window.showToast) window.showToast(warnMsg, 'warning');
             return;
         }
 
-        if (out) out.innerHTML = '<div style="text-align:center; padding:30px;"><i class="fas fa-spinner fa-spin fa-2x" style="color:#2563eb;"></i><div style="margin-top:8px; font-weight:700; color:#2563eb;">جاري استخراج البنود والوثائق المطلوبة بالذكاء الاصطناعي...</div></div>';
-
-        var extracted = await extractSpecificationsWithAI(text);
-        currentExtractedMetadata = extracted;
-
-        if (extracted.items && extracted.items.length) {
-            currentAnalysisItems = extracted.items;
-            renderSmartPricingRows();
-            updateWinProbabilityMetrics();
-        }
-
-        // Update Extracted Metadata display card
-        var metaCard = document.getElementById('auditTenderMetaCard');
-        var metaRef = document.getElementById('auditMetaRef');
-        var metaTitle = document.getElementById('auditMetaTitle');
-        var metaAuth = document.getElementById('auditMetaAuth');
-        var metaDeadline = document.getElementById('auditMetaDeadline');
-        var metaBudget = document.getElementById('auditMetaBudget');
-        var metaPeriod = document.getElementById('auditMetaPeriod');
-
-        if (metaCard) metaCard.style.display = 'block';
-        if (metaRef) metaRef.textContent = extracted.reference || '-';
-        if (metaTitle) metaTitle.textContent = extracted.title || '-';
-        if (metaAuth) metaAuth.textContent = extracted.authority || '-';
-        if (metaDeadline) metaDeadline.textContent = extracted.deadline || '-';
-        if (metaBudget) metaBudget.textContent = (extracted.estimatedBudget > 0) ? (extracted.estimatedBudget.toLocaleString('fr-FR') + ' DZD') : '-';
-        if (metaPeriod) metaPeriod.textContent = extracted.executionPeriod || '-';
-
-        // Update button visibility
-        var btnCreate = document.getElementById('btnCreateTenderFromAudit');
-        var btnUpdate = document.getElementById('btnUpdateTenderFromAudit');
-        if (btnCreate) btnCreate.style.display = 'inline-flex';
-        if (btnUpdate) btnUpdate.style.display = (currentActiveTenderIdx !== null) ? 'inline-flex' : 'none';
-
-        if (statusEl) {
-            statusEl.style.display = 'block';
-            statusEl.textContent = '✅ تم اكتمال المسح واستخراج بيانات المناقصة وبنود التسعير بنجاح!';
-            statusEl.style.color = '#15803d';
-            statusEl.style.background = '#f0fdf4';
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>' + t('startAuditBtn') + '</span>';
         }
 
         if (out) {
-            var html = '';
-            var docs = extracted.requiredDocuments || [];
-            if (docs.length) {
-                html += '<div style="font-weight:700; color:#1e40af; margin-bottom:8px;"><i class="fas fa-clipboard-check"></i> الوثائق الإلزامية المستخرجة (' + docs.length + '):</div>';
-                docs.forEach(function(d) {
-                    html += '<div style="padding:6px 10px; background:white; border:1px solid #cbd5e1; border-radius:6px; margin-bottom:6px; display:flex; align-items:center; gap:8px;">';
-                    html += '<i class="fas fa-check-circle" style="color:#16a34a;"></i> <span>' + escapeHtml(d) + '</span>';
-                    html += '</div>';
-                });
-            } else {
-                html = '<div style="color:#64748b;">لم يتم العثور على وثائق إضافية.</div>';
-            }
-            out.innerHTML = html;
+            out.innerHTML = '<div style="text-align:center; padding:30px;"><i class="fas fa-spinner fa-spin fa-2x" style="color:#2563eb;"></i><div style="margin-top:8px; font-weight:700; color:#2563eb;">' + t('statusAuditLoading') + '</div></div>';
         }
 
-        if (window.showToast) window.showToast('تم استخراج بنود المناقصة والوثائق بنجاح!', 'success');
+        try {
+            var extracted = await extractSpecificationsWithAI(text);
+            currentExtractedMetadata = extracted || {};
+
+            if (extracted.items && extracted.items.length) {
+                currentAnalysisItems = extracted.items;
+                renderSmartPricingRows();
+                updateWinProbabilityMetrics();
+            }
+
+            // Update Extracted Metadata display card
+            var metaCard = document.getElementById('auditTenderMetaCard');
+            var metaRef = document.getElementById('auditMetaRef');
+            var metaTitle = document.getElementById('auditMetaTitle');
+            var metaAuth = document.getElementById('auditMetaAuth');
+            var metaDeadline = document.getElementById('auditMetaDeadline');
+            var metaBudget = document.getElementById('auditMetaBudget');
+            var metaPeriod = document.getElementById('auditMetaPeriod');
+
+            if (metaCard) metaCard.style.display = 'block';
+            if (metaRef) metaRef.textContent = extracted.reference || '-';
+            if (metaTitle) metaTitle.textContent = extracted.title || '-';
+            if (metaAuth) metaAuth.textContent = extracted.authority || '-';
+            if (metaDeadline) metaDeadline.textContent = extracted.deadline || '-';
+            if (metaBudget) metaBudget.textContent = (extracted.estimatedBudget > 0) ? (extracted.estimatedBudget.toLocaleString('fr-FR') + ' DZD') : '-';
+            if (metaPeriod) metaPeriod.textContent = extracted.executionPeriod || '-';
+
+            // Update button visibility
+            var btnCreate = document.getElementById('btnCreateTenderFromAudit');
+            var btnUpdate = document.getElementById('btnUpdateTenderFromAudit');
+            if (btnCreate) btnCreate.style.display = 'inline-flex';
+            if (btnUpdate) btnUpdate.style.display = (currentActiveTenderIdx !== null) ? 'inline-flex' : 'none';
+
+            if (statusEl) {
+                statusEl.style.display = 'block';
+                statusEl.textContent = t('statusAuditDone');
+                statusEl.style.color = '#15803d';
+                statusEl.style.background = '#f0fdf4';
+            }
+
+            if (out) {
+                var html = '';
+                var docs = extracted.requiredDocuments || [];
+                if (docs.length) {
+                    var reqTitle = (getActiveLang() === 'fr') ? `Pièces obligatoires détectées (${docs.length}) :` : ((getActiveLang() === 'en') ? `Mandatory Documents Detected (${docs.length}):` : `الوثائق الإلزامية المستخرجة (${docs.length}):`);
+                    html += `<div style="font-weight:700; color:#1e40af; margin-bottom:8px;"><i class="fas fa-clipboard-check"></i> ${reqTitle}</div>`;
+                    docs.forEach(function(d) {
+                        html += '<div style="padding:6px 10px; background:white; border:1px solid #cbd5e1; border-radius:6px; margin-bottom:6px; display:flex; align-items:center; gap:8px;">';
+                        html += '<i class="fas fa-check-circle" style="color:#16a34a;"></i> <span>' + escapeHtml(d) + '</span>';
+                        html += '</div>';
+                    });
+                } else {
+                    html = '<div style="color:#64748b;">Aucune pièce supplémentaire détectée.</div>';
+                }
+                out.innerHTML = html;
+            }
+
+            var toastMsg = (getActiveLang() === 'fr') ? 'Spécifications et documents extraits avec succès !' : 'تم استخراج بنود المناقصة والوثائق بنجاح!';
+            if (window.showToast) window.showToast(toastMsg, 'success');
+        } catch (auditErr) {
+            console.error('[TenderAI] Error in runComprehensiveAudit:', auditErr);
+            if (statusEl) {
+                statusEl.style.display = 'block';
+                statusEl.textContent = t('statusError');
+                statusEl.style.color = '#b91c1c';
+                statusEl.style.background = '#fef2f2';
+            }
+            if (out) {
+                out.innerHTML = '<div style="color:#b91c1c; text-align:center; padding:20px;">' + t('statusError') + '</div>';
+            }
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-magic"></i> <span>' + t('startAuditBtn') + '</span>';
+            }
+        }
     };
 
     window.createTenderFromExtractedData = function() {
         if (!currentExtractedMetadata) {
-            if (window.showToast) window.showToast('لا توجد بيانات مستخرجة لإنشاء مناقصة', 'warning');
+            var msg = (getActiveLang() === 'fr') ? 'Aucune donnée extraite pour créer un AO' : 'لا توجد بيانات مستخرجة لإنشاء مناقصة';
+            if (window.showToast) window.showToast(msg, 'warning');
             return;
         }
         closeSmartPricingModal();
@@ -1236,9 +1556,8 @@ ${tObj ? tObj.title : 'المشروع'}
                     return { text: d, done: false };
                 });
             }
-            if (window.showToast) {
-                window.showToast('تم استيراد كافة بيانات المناقصة من المسح الذكي. راجع الحقول واضغط حفظ.', 'success');
-            }
+            var succMsg = (getActiveLang() === 'fr') ? 'Données importées depuis le Scan IA. Vérifiez les champs et enregistrez.' : 'تم استيراد كافة بيانات المناقصة من المسح الذكي. راجع الحقول واضغط حفظ.';
+            if (window.showToast) window.showToast(succMsg, 'success');
         } else if (typeof window.openModal === 'function' && document.getElementById('createProformaModal')) {
             window.openModal('createProformaModal');
             var title = (currentExtractedMetadata.title || 'Tender Quote');
@@ -1258,7 +1577,6 @@ ${tObj ? tObj.title : 'المشروع'}
             }
             if (notesEl && notesParts.length) notesEl.value = notesParts.join('\n\n');
 
-            // Populate proforma items if addProformaItem is available
             if (typeof window.addProformaItem === 'function' && currentAnalysisItems && currentAnalysisItems.length) {
                 var itemsContainer = document.getElementById('proformaItems');
                 if (itemsContainer) itemsContainer.innerHTML = '';
@@ -1288,69 +1606,74 @@ ${tObj ? tObj.title : 'المشروع'}
             }
         } else {
             if (window.showToast) {
-                window.showToast('تم استخراج البيانات بنجاح: ' + (currentExtractedMetadata.title || ''), 'info');
+                window.showToast('Données extraites: ' + (currentExtractedMetadata.title || ''), 'info');
             }
         }
     };
 
     window.applyExtractedMetadataToActiveTender = function() {
         if (!currentExtractedMetadata || currentActiveTenderIdx === null) {
-            if (window.showToast) window.showToast('يرجى تحديد مناقصة لتحديثها أو الضغط على إنشاء مناقصة جديدة', 'warning');
+            var warnMsg = (getActiveLang() === 'fr') ? 'Sélectionnez un AO à mettre à jour ou créez-en un nouveau' : 'يرجى تحديد مناقصة لتحديثها أو الضغط على إنشاء مناقصة جديدة';
+            if (window.showToast) window.showToast(warnMsg, 'warning');
             return;
         }
-        var t = (typeof window.getTenderByIndex === 'function') ? window.getTenderByIndex(currentActiveTenderIdx) : null;
-        if (!t) return;
-        if (currentExtractedMetadata.reference) t.reference = currentExtractedMetadata.reference;
-        if (currentExtractedMetadata.title) t.title = currentExtractedMetadata.title;
-        if (currentExtractedMetadata.authority) t.authority = currentExtractedMetadata.authority;
-        if (currentExtractedMetadata.deadline) t.deadline = currentExtractedMetadata.deadline;
-        if (currentExtractedMetadata.estimatedBudget > 0) t.amount = currentExtractedMetadata.estimatedBudget;
+        var tObj = (typeof window.getTenderByIndex === 'function') ? window.getTenderByIndex(currentActiveTenderIdx) : null;
+        if (!tObj) return;
+        if (currentExtractedMetadata.reference) tObj.reference = currentExtractedMetadata.reference;
+        if (currentExtractedMetadata.title) tObj.title = currentExtractedMetadata.title;
+        if (currentExtractedMetadata.authority) tObj.authority = currentExtractedMetadata.authority;
+        if (currentExtractedMetadata.deadline) tObj.deadline = currentExtractedMetadata.deadline;
+        if (currentExtractedMetadata.estimatedBudget > 0) tObj.amount = currentExtractedMetadata.estimatedBudget;
         if (currentExtractedMetadata.requiredDocuments && currentExtractedMetadata.requiredDocuments.length) {
-            if (!Array.isArray(t.checklist)) t.checklist = [];
+            if (!Array.isArray(tObj.checklist)) tObj.checklist = [];
             currentExtractedMetadata.requiredDocuments.forEach(function(d) {
-                if (!t.checklist.some(function(c) { return c.text === d; })) {
-                    t.checklist.push({ text: d, done: false });
+                if (!tObj.checklist.some(function(c) { return c.text === d; })) {
+                    tObj.checklist.push({ text: d, done: false });
                 }
             });
         }
         if (typeof window.saveData === 'function') window.saveData();
         if (typeof window.renderAll === 'function') window.renderAll();
-        if (window.showToast) window.showToast('تم تحديث بيانات المناقصة الحالية بالبيانات المستخرجة بنجاح!', 'success');
+        var succMsg = (getActiveLang() === 'fr') ? 'AO mis à jour avec succès avec les données extraites !' : 'تم تحديث بيانات المناقصة الحالية بالبيانات المستخرجة بنجاح!';
+        if (window.showToast) window.showToast(succMsg, 'success');
         closeSmartPricingModal();
     };
 
     window.applyExtractedChecklistToTender = function() {
         if (!currentExtractedMetadata.requiredDocuments || !currentExtractedMetadata.requiredDocuments.length) {
-            if (window.showToast) window.showToast('لا توجد وثائق مستخرجة لتطبيقها', 'warning');
+            var warnMsg = (getActiveLang() === 'fr') ? 'Aucune pièce extraite à appliquer' : 'لا توجد وثائق مستخرجة لتطبيقها';
+            if (window.showToast) window.showToast(warnMsg, 'warning');
             return;
         }
 
         if (currentActiveTenderIdx !== null) {
-            var t = (typeof window.getTenderByIndex === 'function') ? window.getTenderByIndex(currentActiveTenderIdx) : null;
-            if (t) {
-                if (!Array.isArray(t.checklist)) t.checklist = [];
+            var tObj = (typeof window.getTenderByIndex === 'function') ? window.getTenderByIndex(currentActiveTenderIdx) : null;
+            if (tObj) {
+                if (!Array.isArray(tObj.checklist)) tObj.checklist = [];
                 currentExtractedMetadata.requiredDocuments.forEach(function(docName) {
-                    if (!t.checklist.some(function(c) { return c.text === docName; })) {
-                        t.checklist.push({ text: docName, done: false });
+                    if (!tObj.checklist.some(function(c) { return c.text === docName; })) {
+                        tObj.checklist.push({ text: docName, done: false });
                     }
                 });
                 if (window.saveData) window.saveData();
                 if (window.renderAll) window.renderAll();
-                if (window.showToast) window.showToast('تمت إضافة ' + currentExtractedMetadata.requiredDocuments.length + ' وثائق إلى قائمة جاهزية المناقصة!', 'success');
+                var succMsg = (getActiveLang() === 'fr') ? currentExtractedMetadata.requiredDocuments.length + ' pièces ajoutées à la checklist de l\'AO !' : 'تمت إضافة ' + currentExtractedMetadata.requiredDocuments.length + ' وثائق إلى قائمة جاهزية المناقصة!';
+                if (window.showToast) window.showToast(succMsg, 'success');
             }
         } else {
-            // Save to pending checklist for new tender
             window._pendingOcrChecklist = currentExtractedMetadata.requiredDocuments.map(function(d){
                 return { text: d, done: false };
             });
-            if (window.showToast) window.showToast('تم حفظ ' + currentExtractedMetadata.requiredDocuments.length + ' وثائق لاعتمادها في المناقصة الجديدة!', 'info');
+            var infoMsg = (getActiveLang() === 'fr') ? currentExtractedMetadata.requiredDocuments.length + ' pièces réservées pour le prochain AO !' : 'تم حفظ ' + currentExtractedMetadata.requiredDocuments.length + ' وثائق لاعتمادها في المناقصة الجديدة!';
+            if (window.showToast) window.showToast(infoMsg, 'info');
         }
     };
 
     window.handleSmartPricingFileUpload = async function(input) {
         if (!input.files || !input.files.length) return;
         var file = input.files[0];
-        if (window.showToast) window.showToast('جاري استخراج بنود المناقصة بالذكاء الاصطناعي...', 'info');
+        var infoMsg = (getActiveLang() === 'fr') ? 'Extraction des postes via IA...' : 'جاري استخراج بنود المناقصة بالذكاء الاصطناعي...';
+        if (window.showToast) window.showToast(infoMsg, 'info');
 
         var text = '';
         if (window.UnifiedOCR && typeof window.UnifiedOCR.extract === 'function') {
@@ -1359,6 +1682,8 @@ ${tObj ? tObj.title : 'المشروع'}
                 text = ocr.text || '';
             } catch(e) {}
         }
+
+        try { input.value = ''; } catch(_) {}
 
         if (text) {
             var res = await extractSpecificationsWithAI(text);
@@ -1370,7 +1695,8 @@ ${tObj ? tObj.title : 'المشروع'}
                 });
                 renderSmartPricingRows();
                 updateWinProbabilityMetrics();
-                if (window.showToast) window.showToast('تم استخراج البنود بنجاح!', 'success');
+                var succMsg = (getActiveLang() === 'fr') ? 'Postes extraits avec succès !' : 'تم استخراج البنود بنجاح!';
+                if (window.showToast) window.showToast(succMsg, 'success');
             }
         }
     };
@@ -1441,5 +1767,17 @@ ${tObj ? tObj.title : 'المشروع'}
 
         closeSmartPricingModal();
     };
+
+    // Re-render modal when user switches language in UI
+    window.addEventListener('languageChanged', function() {
+        var modal = document.getElementById('smartPricingModal');
+        if (modal) {
+            var isOpen = modal.classList.contains('active');
+            modal.remove();
+            if (isOpen) {
+                openSmartPricingForTender(currentActiveTenderIdx);
+            }
+        }
+    });
 
 })();

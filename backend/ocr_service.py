@@ -417,10 +417,27 @@ def _configure_tesseract_cmd():
         if not cmd:
             found = shutil.which('tesseract') or shutil.which('tesseract.exe')
             cmd = found or ''
+        # Standard Linux paths (Docker / Railway / Debian / Ubuntu)
+        if not cmd and not sys.platform.startswith('win'):
+            for linux_path in ['/usr/bin/tesseract', '/usr/local/bin/tesseract']:
+                if os.path.isfile(linux_path):
+                    cmd = linux_path
+                    break
+        # Local bundled tools directory
         if not cmd:
             _local = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'tools', 'tesseract', 'tesseract.exe')
             if os.path.isfile(_local):
                 cmd = _local
+        # Standard Windows installation paths
+        if not cmd and sys.platform.startswith('win'):
+            for win_path in [
+                r"C:\Program Files\Tesseract-OCR\tesseract.exe",
+                r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe",
+                os.path.expanduser(r"~\AppData\Local\Programs\Tesseract-OCR\tesseract.exe")
+            ]:
+                if os.path.isfile(win_path):
+                    cmd = win_path
+                    break
         if cmd:
             _pt.pytesseract.tesseract_cmd = cmd
     except Exception:
@@ -574,12 +591,12 @@ def _text_quality(text: str) -> int:
     return sum(1 for c in (text or '') if c.isalnum())
 
 
-def _extract_from_pdf_bytes(pdf_bytes: bytes, lang: str, max_pages: int = 5) -> str:
+def _extract_from_pdf_bytes(pdf_bytes: bytes, lang: str, max_pages: int = 35) -> str:
     """Extract text from PDF.
 
     Behavior:
-    - If PyMuPDF (`fitz`) is available, try to extract text layer from pages.
-    - If a page has no text, render it to an image and perform OCR via pytesseract.
+    - If PyMuPDF (`fitz`) is available, try to extract text layer from pages (up to 35 pages).
+    - If a page has no text, render it to an image and perform OCR via pytesseract (capped at 5 pages to prevent timeouts).
     - If pytesseract is not installed, returns whatever text was extracted from the text layer.
     """
     if not fitz:
@@ -601,6 +618,7 @@ def _extract_from_pdf_bytes(pdf_bytes: bytes, lang: str, max_pages: int = 5) -> 
         page_count = min(total_pages, max_pages)
         if total_pages > max_pages:
             _logger.info("PDF has %d pages, processing first %d only", total_pages, max_pages)
+        image_ocr_count = 0
         for i in range(page_count):
             page = doc.load_page(i)
             # Try to extract text layer first
@@ -611,10 +629,12 @@ def _extract_from_pdf_bytes(pdf_bytes: bytes, lang: str, max_pages: int = 5) -> 
                     continue
                 # Text looks garbled, fall through to OCR
 
-            # Fallback: render page to image and OCR (only if pytesseract is available)
-            if not _tess:
-                _logger.debug("PDF page %d has no text layer and pytesseract unavailable, skipping", i)
+            # Fallback: render page to image and OCR (only if pytesseract is available, max 5 pages)
+            if not _tess or image_ocr_count >= 5:
+                if not _tess:
+                    _logger.debug("PDF page %d has no text layer and pytesseract unavailable, skipping", i)
                 continue
+            image_ocr_count += 1
             try:
                 mat = fitz.Matrix(2.5, 2.5)  # higher zoom for better OCR of faint text
                 pix = page.get_pixmap(matrix=mat)

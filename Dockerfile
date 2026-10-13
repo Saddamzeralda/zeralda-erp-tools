@@ -13,11 +13,16 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# Install system dependencies (build tools, libpq, curl for healthcheck)
+# Install system dependencies (build tools, libpq, curl, and native Tesseract OCR with Arabic, French, and English)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     libpq-dev \
     curl \
+    tesseract-ocr \
+    tesseract-ocr-ara \
+    tesseract-ocr-fra \
+    tesseract-ocr-eng \
+    poppler-utils \
     && rm -rf /var/lib/apt/lists/*
 
 # Install python requirements (skipping Windows-only tray libraries like pystray)
