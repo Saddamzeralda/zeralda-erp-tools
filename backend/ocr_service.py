@@ -533,7 +533,7 @@ def _enhance_image_for_ocr(img, threshold: int = 140):
     return img
 
 
-def _correct_image_orientation(img, tess_mod) -> Image.Image:
+def _correct_image_orientation(img, tess_mod):
     """Detect and auto-correct inverted (180°) or sideways (90°/270°) document scans."""
     try:
         osd = tess_mod.image_to_osd(img)
