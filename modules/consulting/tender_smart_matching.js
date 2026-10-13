@@ -2045,9 +2045,18 @@ Comprenant: Méthodologie, planning prévisionnel, moyens humains et matériels,
         var text = '';
         if (window.UnifiedOCR && typeof window.UnifiedOCR.extract === 'function') {
             try {
-                var ocr = await window.UnifiedOCR.extract(file, { endpoint: '/api/ocr/extract', allowImage: true, allowPdf: true, allowExcel: true, allowWordTxt: true });
-                text = ocr.text || '';
-            } catch(e) {}
+                var ocr = await window.UnifiedOCR.extract(file, {
+                    endpoint: '/api/ocr/extract',
+                    allowImage: true,
+                    allowPdf: true,
+                    allowExcel: true,
+                    allowWordTxt: true,
+                    extraBody: { lang: 'ara+fra+eng' }
+                });
+                text = (ocr && ocr.text) ? ocr.text : '';
+            } catch(e) {
+                console.warn('[SmartPricing] UnifiedOCR error:', e);
+            }
         }
 
         try { input.value = ''; } catch(_) {}

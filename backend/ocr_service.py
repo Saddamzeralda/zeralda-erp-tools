@@ -603,6 +603,16 @@ def _extract_from_image_bytes(image_bytes: bytes, lang: str, mime_type: str = "i
         except Exception:
             pass
 
+        # Tertiary fallback: test 180° rotation if primary & contrast passes yielded sparse text (< 25 chars)
+        if _text_quality(text) < 25:
+            try:
+                rot180 = gray.rotate(180, expand=True)
+                rot_text = _tess.image_to_string(rot180, lang=lang, config='--psm 3').strip()
+                if _text_quality(rot_text) > _text_quality(text) + 15:
+                    text = rot_text
+            except Exception:
+                pass
+
         return text
     except Exception as exc:
         raise RuntimeError(f"Image OCR failed: {exc}") from exc
@@ -713,6 +723,20 @@ def _extract_from_pdf_bytes(pdf_bytes: bytes, lang: str, max_pages: int = 35) ->
                         alt_ocr = _tess.image_to_string(enhanced, lang=lang, config='--psm 6').strip()
                         if _text_quality(alt_ocr) > _text_quality(page_ocr):
                             page_ocr = alt_ocr
+                    except Exception:
+                        pass
+
+                # Tertiary fallback on Page 1: if still sparse (< 30 chars), test 180° rotation directly!
+                # Guarantees upside-down scans work even when tesseract-ocr-osd is missing or inconclusive.
+                if i == 0 and _text_quality(page_ocr) < 30 and (time.time() - t_start < max_ocr_duration - 5):
+                    try:
+                        rot180 = img.rotate(180, expand=True)
+                        rot_ocr = _tess.image_to_string(rot180, lang=lang, config='--psm 3').strip()
+                        if _text_quality(rot_ocr) > _text_quality(page_ocr) + 15:
+                            _logger.info("Auto-detected 180° inverted document scan via content fallback!")
+                            detected_rotation = 180
+                            page_ocr = rot_ocr
+                            img = rot180
                     except Exception:
                         pass
 
