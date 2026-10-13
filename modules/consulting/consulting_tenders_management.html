@@ -1818,8 +1818,7 @@
               var el = document.getElementById(id);
               if (el && val != null && String(val).trim()) el.value = String(val).trim();
             };
-            var cleanRef = data.tenderRef && /\d/.test(data.tenderRef) ? data.tenderRef : '';
-            if (cleanRef) setVal('tenderRef', cleanRef);
+            setVal('tenderRef', data.tenderRef || data.reference);
             setVal('tenderTitle', data.tenderTitle || data.subject);
             setVal('tenderAuthority', data.authority || data.customerName);
             setVal('tenderDeadline', data.deadline);

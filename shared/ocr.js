@@ -945,8 +945,9 @@
       this.showScanning(modal);
 
       try {
+        var isTenderOrConsult = (this.state.mode === 'tender' || this.state.mode === 'consultation');
         var result = await UnifiedOCR.extract(this.state.file, {
-          endpoint: '/api/ai/invoice-extract',
+          endpoint: isTenderOrConsult ? '/api/ocr/extract' : '/api/ai/invoice-extract',
           imageMaxWidth: 1600
         });
 
@@ -1003,17 +1004,20 @@
       var city = payload.city || fields.city || '';
 
       // Tender extraction (with specialized Algerian Public Procurement patterns)
+      var isTenderMode = (mode === 'tender' || mode === 'consultation');
       var tenderTitle = '';
       var tenderRef = '';
       var authority = '';
       var deadline = '';
+      var candName = '';
+
       if (raw) {
         // 1. Reference: Strip legal ordinances & penal codes to avoid false matches (e.g. ordonnance 66-156, 03-03, 15-247)
         var cleanRawForRef = raw.replace(/(?:ordonnance|d[eé]cret|loi|article|code\s+p[eé]nal|registre(?:\s+du\s+commerce)?)\s*(?:n[°oº]|r[eé]f)?\s*[:\.\s]*[0-9\-\/]+/gi, '');
         var rm = cleanRawForRef.match(/(?:AON?|AOI?|Consultation|Avis\s+d['’]appel\s+d['’]offres|Appel\s+d['’]offres|الصفقة|المناقصة|الاستشارة)\s*(?:N[°oº]|R[eé]f(?:\.|erence)?|رقم|مرجع)?\s*[:\/\-\s#№]+\s*([0-9]{1,4}\s*[\/\-]\s*[0-9]{2,4}|[A-Za-z0-9\/\-_]{3,30})/i);
         if (rm) {
           var candRef = rm[1].replace(/\s+/g, '').trim();
-          if (/\d/.test(candRef) && candRef.length >= 3 && !/^(66-156|03-03|15-247|ve|de|le|la|un|en)$/i.test(candRef)) {
+          if (/\d/.test(candRef) && candRef.length >= 3 && !/^(66-156|03-03|15-247)$/.test(candRef)) {
             tenderRef = candRef;
           }
         }
@@ -1021,9 +1025,7 @@
           var rm2 = cleanRawForRef.match(/(?:N[°oº]|R[eé]f(?:\.|erence)?|مرجع|رقم)\s*[:\/\-\s#№]+\s*([0-9]{1,4}\s*[\/\-]\s*20[2-3][0-9])/i);
           if (rm2) {
             var candRef2 = rm2[1].replace(/\s+/g, '').trim();
-            if (/\d/.test(candRef2) && candRef2.length >= 3 && !/^(66-156|03-03|15-247|ve)$/i.test(candRef2)) {
-              tenderRef = candRef2;
-            }
+            if (/\d/.test(candRef2) && !/^(66-156|03-03|15-247)$/.test(candRef2)) tenderRef = candRef2;
           }
         }
 
@@ -1031,7 +1033,7 @@
         var mService = raw.match(/(?:D[eé]signation\s+du\s+service\s+contractant|l['’]Assembl[eé]e\s+Populaire\s+Communale\s+d[e\'’]\s*[A-Za-zÀ-ÿ\-]+|المجلس\s+الشعبي\s+البلدي\s+ل?[^\n\r]+)\s*[:\-]?\s*([^\n\r]+)?/i);
         if (mService) {
           authority = (mService[1] || mService[0]).replace(/\s+/g, ' ').replace(/^[0-9\/\-.:\s]+/, '').replace(/[.;,]+$/, '').trim();
-          authority = authority.replace(/Sta[oq]u[eéèa-zA-Z\']*/gi, 'Staoueli');
+          authority = authority.replace(/Staou[a-zÀ-ÿ]+/gi, 'Staoueli').replace(/Staqueli/gi, 'Staoueli');
           if (authority.length > 4 && !authority.match(/^[0-9]+$/)) {
             var mWil = raw.match(/(?:Wilaya\s+d[e\'’]\s*[A-Za-zÀ-ÿ\-]+|ولاية\s+[\u0621-\u064A\-]+)/i);
             if (mWil && !authority.toLowerCase().includes('wilaya') && !authority.toLowerCase().includes('alger')) {
@@ -1042,7 +1044,7 @@
         if (!authority) {
           var am = raw.match(/(?:Commune\s+d[e\'’]\s*[A-Za-zÀ-ÿ\-]+|بلدية\s+[\u0621-\u064A\-]+|Wilaya\s+d[e\'’]\s*[A-Za-zÀ-ÿ\-]+|ولاية\s+[\u0621-\u064A\-]+|Minist[eè]re\s+d[e\'’]\s*[A-Za-zÀ-ÿ\s\-]+|وزارة\s+[\u0621-\u064A\s\-]+|Direction\s+d[e\'’]\s*[A-Za-zÀ-ÿ\s\-]+|مديرية\s+[\u0621-\u064A\s\-]+|ma[iî]tre\s+d['’]ouvrage|المصلحة\s+المتعاقدة|صاحب\s+المشروع|الجهة\s+المتعاقدة)[\s\:\-]*([^\n\r]{3,80})/i);
           if (am) {
-            authority = am[0].trim().replace(/^(ma[iî]tre\s+d['’]ouvrage|المصلحة\s+المتعاقدة|صاحب\s+المشروع|الجهة\s+المتعاقدة)\s*[:\-]\s*/i, '').replace(/Sta[oq]u[eéèa-zA-Z\']*/gi, 'Staoueli').trim();
+            authority = am[0].trim().replace(/^(ma[iî]tre\s+d['’]ouvrage|المصلحة\s+المتعاقدة|صاحب\s+المشروع|الجهة\s+المتعاقدة)\s*[:\-]\s*/i, '').replace(/Staou[a-zÀ-ÿ]+/gi, 'Staoueli').replace(/Staqueli/gi, 'Staoueli').trim();
           }
         }
 
@@ -1067,7 +1069,7 @@
 
         // 4. Candidate / Company (SARL ..., EURL ...)
         var candMatch = raw.match(/\b(SARL|EURL|SPA|SNC|ETS)\s+[A-Z0-9\s\-]{3,35}\b/);
-        var candName = candMatch ? candMatch[0].trim() : '';
+        candName = candMatch ? candMatch[0].trim() : '';
         if (candName && !customerName && !supplierName) {
           customerName = candName;
         }
@@ -1077,10 +1079,9 @@
         if (dm) deadline = (dm[1] || dm[2] || '').trim();
       }
 
-      // Line items normalization (Mode-Specific)
+      // Line items normalization (Tender mode isolates tender lots; invoice mode parses invoices)
       var rawItems = [];
-      if (mode === 'tender') {
-        // In tender mode, items must ONLY come from Lots or Tender Subject, NEVER from random lines with numbers!
+      if (isTenderMode) {
         if (raw) {
           var lotMatches = raw.matchAll(/(?:Lot|Poste|Article|بند|حصة)\s*N?[°oº]?\s*(\d+)\s*[:\-]\s*([^\n\r]+)/gi);
           for (var lm of lotMatches) {
@@ -1092,6 +1093,7 @@
             });
           }
         }
+        // If no numbered lots found, tender title is the main item
         if (!rawItems.length && tenderTitle && tenderTitle.length > 2) {
           rawItems.push({
             description: tenderTitle,
@@ -1101,19 +1103,17 @@
           });
         }
       } else {
-        // Standard invoice line items extraction for invoice/bill/po/proforma modes
-        rawItems = Array.isArray(payload.lineItems) ? payload.lineItems.slice() : (Array.isArray(payload.analysis && payload.analysis.line_items) ? payload.analysis.line_items.slice() : []);
+        rawItems = Array.isArray(payload.lineItems) ? payload.lineItems : (Array.isArray(payload.analysis && payload.analysis.line_items) ? payload.analysis.line_items : []);
         if (!rawItems.length && raw) {
           var lines = raw.split(/\r?\n/);
           for (var li = 0; li < lines.length; li++) {
             var lineTrim = lines[li].trim();
             if (!lineTrim || lineTrim.length < 5) continue;
-            // Skip headers, totals, and legal text lines
-            if (/(?:total|tva|sous-total|net|remise|montant|المجموع|الضريبة|الإجمالي|facture|client|date|condamnation|poursuites|ultérieurement|ordonnance|code\s*p[eé]nal|article\s*\d|déclaration|candidat|probit[eé])/i.test(lineTrim)) continue;
+            if (/(?:total|tva|sous-total|net|remise|montant|المجموع|الضريبة|الإجمالي|facture|client|date)/i.test(lineTrim)) continue;
             var numMatches = lineTrim.match(/([0-9]+(?:[.,][0-9]{1,2})?)/g);
             if (numMatches && numMatches.length >= 2) {
               var descPart = lineTrim.replace(/[0-9]+(?:[.,][0-9]{1,2})?/g, '').replace(/[\s\t,;:\-_|]+/g, ' ').trim();
-              if (descPart.length >= 3 && !/^(RL\.|SAS|SARL|EURL|SPA|SNC)/i.test(descPart)) {
+              if (descPart.length >= 2) {
                 var qVal = parseFloat(numMatches[0].replace(',', '.')) || 1;
                 var pVal = parseFloat(numMatches[1].replace(',', '.')) || 0;
                 var tVal = numMatches[2] ? parseFloat(numMatches[2].replace(',', '.')) : (qVal * pVal);
@@ -1141,7 +1141,7 @@
       var subtotal = parseFloat(String(payload.subtotal || payload.totalHT || 0).replace(',', '.')) || 0;
       var vat = parseFloat(String(payload.vat || payload.totalTVA || payload.tax || 0).replace(',', '.')) || 0;
       var total = parseFloat(String(payload.total || payload.totalTTC || 0).replace(',', '.')) || 0;
-      if (!total && items.length && mode !== 'tender') {
+      if (!total && items.length && !isTenderMode) {
         total = items.reduce(function(acc, i) { return acc + i.total; }, 0);
       }
 
