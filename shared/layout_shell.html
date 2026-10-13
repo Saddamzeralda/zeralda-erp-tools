@@ -3,7 +3,11 @@
   <!-- ROW 1: logo / controls -->
   <div class="header-top">
     <div class="header-left">
-      <button class="sidebar-toggle-btn" onclick="toggleSidebarCollapse()" title="Toggle Sidebar" aria-label="Toggle sidebar visibility">
+      <button class="sidebar-toggle-btn" onclick="toggleSidebarCollapse()"
+              data-en-title="Toggle Sidebar"
+              data-ar-title="تبديل القائمة الجانبية"
+              data-fr-title="Basculer le menu latéral"
+              title="Toggle Sidebar" aria-label="Toggle sidebar visibility">
         <i class="fas fa-bars" id="sidebarToggleIcon"></i>
       </button>
       <i class="fas fa-bars mobile-menu-btn" onclick="toggleSidebar()" style="display:none;"></i>
@@ -19,14 +23,22 @@
     </div>
     <div class="header-middle">
       <div class="header-row row-1">
-        <div class="company-switcher" title="Active Company">
+        <div class="company-switcher"
+             data-en-title="Active Company"
+             data-ar-title="الشركة النشطة"
+             data-fr-title="Entreprise active"
+             title="Active Company">
           <i class="fas fa-building" aria-hidden="true"></i>
           <select id="companySwitcher" onchange="onHeaderCompanySwitch(this.value)" aria-label="Switch company"></select>
         </div>
       </div>
       <div class="header-row row-2">
         <div class="lang-datetime-row">
-          <div class="language-indicator" title="Language">
+          <div class="language-indicator"
+               data-en-title="Language"
+               data-ar-title="اللغة"
+               data-fr-title="Langue"
+               title="Language">
             <i class="fas fa-language" aria-hidden="true"></i>
             <select id="headerLanguageSelect" onchange="window.onHeaderLanguageSwitch && window.onHeaderLanguageSwitch(this.value)" aria-label="Switch language">
               <option value="en">English</option>

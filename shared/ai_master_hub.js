@@ -25,7 +25,7 @@
             basedOnTrends: 'استنادًا إلى الاتجاهات',
             hrAlerts: 'تنبيهات الموارد الذكية',
             needsAttention: 'تحتاج إلى متابعة',
-            stockRisks: 'مخاطر نفاذ المخزون',
+            stockRisks: 'مخاطر نفاد المخزون',
             autoPoReady: 'أوامر الشراء التلقائية جاهزة',
             items: '{count} عنصر'
         },
@@ -115,7 +115,7 @@
             <div class="stat-card" style="border: 2px solid #f59e0b;" onclick="location.href='modules/inventory/inventory_management.html'">
                 <div class="stat-icon orange"><i class="fas fa-warehouse"></i></div>
                 <div class="stat-details">
-                    <p data-en="Stock Depletion Risks" data-ar="مخاطر نفاذ المخزون" data-fr="Risques de rupture de stock">${ui('stockRisks')}</p>
+                    <p data-en="Stock Depletion Risks" data-ar="مخاطر نفاد المخزون" data-fr="Risques de rupture de stock">${ui('stockRisks')}</p>
                     <h3>${ui('items', { count: stats.stockRisks })}</h3>
                     <div class="stat-change negative"><i class="fas fa-truck-loading"></i> ${ui('autoPoReady')}</div>
                 </div>

@@ -661,7 +661,7 @@
         try {
           if (!window.ProactiveAlerts) {
             var sa = document.createElement('script');
-            sa.src = 'shared/proactive_alerts.js?v=20261009a';
+            sa.src = 'shared/proactive_alerts.js?v=20261013a';
             sa.defer = true;
             document.head.appendChild(sa);
           }

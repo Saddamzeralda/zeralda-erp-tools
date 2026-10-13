@@ -20,7 +20,7 @@
     var t = window.createRuntimeTranslator ? window.createRuntimeTranslator(DICT) : function (k) { return k; };
 
     // 1. Stock Depletion Predictor (AI Logic)
-    // التنبؤ بموعد نفاذ المخزون بناءً على معدل المبيعات
+    // التنبؤ بموعد نفاد المخزون بناءً على معدل المبيعات
     window.predictStockDepletion = function(productId) {
         const products = JSON.parse(ZS.getItem('inventory-products') || '[]');
         const sales = JSON.parse(ZS.getItem('sales-history') || '[]');
