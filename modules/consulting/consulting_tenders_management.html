@@ -24,13 +24,13 @@
   <script src="shared/role_access_control.js" defer></script>
   <script src="shared/header_company_switcher.js?v=20261012a" defer></script>
   <script src="shared/header_language_switcher.js" defer></script>
-  <link rel="stylesheet" href="styles/ocr_unified.css?v=20261013e">
-  <script src="shared/ocr.js?v=20261013e"></script>
+  <link rel="stylesheet" href="styles/ocr_unified.css?v=20261013f">
+  <script src="shared/ocr.js?v=20261013f"></script>
   <script src="shared/professional_display_mode.js?v=20260327a" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
   <script src="shared/print_engine.js" defer></script>
   <script src="shared/unified_document_printer.js" defer></script>
-  <script src="modules/consulting/tender_smart_matching.js?v=20261013e" defer></script>
+  <script src="modules/consulting/tender_smart_matching.js?v=20261013f" defer></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
@@ -1818,7 +1818,8 @@
               var el = document.getElementById(id);
               if (el && val != null && String(val).trim()) el.value = String(val).trim();
             };
-            setVal('tenderRef', data.tenderRef || data.reference);
+            var cleanRef = data.tenderRef && /\d/.test(data.tenderRef) ? data.tenderRef : '';
+            if (cleanRef) setVal('tenderRef', cleanRef);
             setVal('tenderTitle', data.tenderTitle || data.subject);
             setVal('tenderAuthority', data.authority || data.customerName);
             setVal('tenderDeadline', data.deadline);

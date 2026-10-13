@@ -378,17 +378,17 @@ Document text:
         var cleanStr = str.replace(/(?:ordonnance|d[eé]cret|loi|article|code\s+p[eé]nal|registre(?:\s+du\s+commerce)?)\s*(?:n[°oº]|r[eé]f)?\s*[:\.\s]*[0-9\-\/]+/gi, '');
 
         // 1. Explicit tender reference with keywords
-        var m = cleanStr.match(/(?:AON?|AOI?|Consultation|Avis\s+d['’]appel\s+d['’]offres|Appel\s+d['’]offres|الصفقة|المناقصة|الاستشارة)\s*(?:N[°oº]|R[eé]f(?:\.|erence)?|رقم|مرجع)?\s*[:\/\-\s#№]+\s*([0-9]{1,4}\s*[\/\-]\s*[0-9]{2,4}|[A-Za-z0-9\/\-_]{2,30})/i);
+        var m = cleanStr.match(/(?:AON?|AOI?|Consultation|Avis\s+d['’]appel\s+d['’]offres|Appel\s+d['’]offres|الصفقة|المناقصة|الاستشارة)\s*(?:N[°oº]|R[eé]f(?:\.|erence)?|رقم|مرجع)?\s*[:\/\-\s#№]+\s*([0-9]{1,4}\s*[\/\-]\s*[0-9]{2,4}|[A-Za-z0-9\/\-_]{3,30})/i);
         if (m) {
             var candidateRef = m[1].replace(/\s+/g, '').trim();
-            if (!/^(66-156|03-03|15-247)$/.test(candidateRef)) return candidateRef;
+            if (/\d/.test(candidateRef) && candidateRef.length >= 3 && !/^(66-156|03-03|15-247|ve|de|le|la|un|en)$/i.test(candidateRef)) return candidateRef;
         }
 
         // 2. Generic N° X/YYYY pattern
         var m2 = cleanStr.match(/(?:N[°oº]|R[eé]f(?:\.|erence)?|مرجع|رقم)\s*[:\/\-\s#№]+\s*([0-9]{1,4}\s*[\/\-]\s*20[2-3][0-9])/i);
         if (m2) {
             var candidateRef2 = m2[1].replace(/\s+/g, '').trim();
-            if (!/^(66-156|03-03|15-247)$/.test(candidateRef2)) return candidateRef2;
+            if (/\d/.test(candidateRef2) && candidateRef2.length >= 3 && !/^(66-156|03-03|15-247|ve)$/i.test(candidateRef2)) return candidateRef2;
         }
 
         return '';
@@ -423,7 +423,7 @@ Document text:
         var mService = str.match(/(?:D[eé]signation\s+du\s+service\s+contractant|l['’]Assembl[eé]e\s+Populaire\s+Communale\s+d[e\'’]\s*[A-Za-zÀ-ÿ\-]+|المجلس\s+الشعبي\s+البلدي\s+ل?[^\n\r]+)\s*[:\-]?\s*([^\n\r]+)?/i);
         if (mService) {
             var auth = (mService[1] || mService[0]).replace(/\s+/g, ' ').replace(/^[0-9\/\-.:\s]+/, '').replace(/[.;,]+$/, '').trim();
-            auth = auth.replace(/Staoug[eé]/gi, 'Staoueli').replace(/Staqueli/gi, 'Staoueli');
+            auth = auth.replace(/Sta[oq]u[eéèa-zA-Z\']*/gi, 'Staoueli');
             if (auth.length > 4 && !auth.match(/^[0-9]+$/)) {
                 // Append Wilaya if found
                 var mWil = str.match(/(?:Wilaya\s+d[e\'’]\s*[A-Za-zÀ-ÿ\-]+|ولاية\s+[\u0621-\u064A\-]+)/i);
@@ -437,7 +437,7 @@ Document text:
         // 2. Commune de ...
         var mCommune = str.match(/(?:Commune\s+d[e\'’]\s*[A-Za-zÀ-ÿ\-]+|بلدية\s+[\u0621-\u064A\-]+)/i);
         if (mCommune) {
-            var c = mCommune[0].trim().replace(/Staqueli/gi, 'Staoueli');
+            var c = mCommune[0].trim().replace(/Sta[oq]u[eéèa-zA-Z\']*/gi, 'Staoueli');
             return c;
         }
 

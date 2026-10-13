@@ -1002,75 +1002,6 @@
       var address = payload.address || fields.address || '';
       var city = payload.city || fields.city || '';
 
-      // Line items normalization
-      var rawItems = Array.isArray(payload.lineItems) ? payload.lineItems : (Array.isArray(payload.analysis && payload.analysis.line_items) ? payload.analysis.line_items : []);
-      if (!rawItems.length && raw) {
-        var lines = raw.split(/\r?\n/);
-        for (var li = 0; li < lines.length; li++) {
-          var lineTrim = lines[li].trim();
-          if (!lineTrim || lineTrim.length < 5) continue;
-          if (/(?:total|tva|sous-total|net|remise|montant|المجموع|الضريبة|الإجمالي|facture|client|date)/i.test(lineTrim)) continue;
-          var numMatches = lineTrim.match(/([0-9]+(?:[.,][0-9]{1,2})?)/g);
-          if (numMatches && numMatches.length >= 2) {
-            var descPart = lineTrim.replace(/[0-9]+(?:[.,][0-9]{1,2})?/g, '').replace(/[\s\t,;:\-_|]+/g, ' ').trim();
-            if (descPart.length >= 2) {
-              var qVal = parseFloat(numMatches[0].replace(',', '.')) || 1;
-              var pVal = parseFloat(numMatches[1].replace(',', '.')) || 0;
-              var tVal = numMatches[2] ? parseFloat(numMatches[2].replace(',', '.')) : (qVal * pVal);
-              rawItems.push({ description: descPart, quantity: qVal, unit_price: pVal, total: tVal });
-            }
-          }
-        }
-      }
-      var items = rawItems.map(function(it, idx) {
-        var q = parseFloat(String(it.quantity || 1).replace(',', '.').replace(/[^0-9.]/g, '')) || 1;
-        var p = parseFloat(String(it.unit_price || it.unitPrice || it.price || 0).replace(',', '.').replace(/[^0-9.]/g, '')) || 0;
-        var t = parseFloat(String(it.total || 0).replace(',', '.').replace(/[^0-9.]/g, '')) || (q * p);
-        return {
-          id: idx,
-          description: String(it.description || it.name || ('Item #' + (idx + 1))).trim(),
-          quantity: q,
-          unitPrice: p,
-          total: t,
-          selected: true
-        };
-      });
-
-      var subtotal = parseFloat(String(payload.subtotal || payload.totalHT || 0).replace(',', '.')) || 0;
-      var vat = parseFloat(String(payload.vat || payload.totalTVA || payload.tax || 0).replace(',', '.')) || 0;
-      var total = parseFloat(String(payload.total || payload.totalTTC || 0).replace(',', '.')) || 0;
-      if (!total && items.length) {
-        total = items.reduce(function(acc, i) { return acc + i.total; }, 0);
-      }
-
-      // Fallback phone/email extraction from raw text if missing
-      if (!phone && raw) {
-        var pm = raw.match(/(?:(?:0[567][0-9]{8})|(?:\+213\s?[567][0-9]{8})|(?:0[234][0-9]{7}))/);
-        if (pm) phone = pm[0].replace(/\s+/g, '');
-      }
-      if (!email && raw) {
-        var em = raw.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
-        if (em) email = em[0];
-      }
-
-      // HR & Employee extraction
-      var empName = payload.employeeName || fields.employee_name || customerName || '';
-      var nin = payload.nin || fields.nin || '';
-      if (!nin && raw) {
-        var ninM = raw.match(/(?:(?:nin|رقم التعريف الوطني|cni)\s*[:\-]?\s*([0-9]{18}))/i);
-        if (ninM) nin = ninM[1];
-      }
-      var birthDate = payload.birthDate || fields.birth_date || '';
-      if (!birthDate && raw) {
-        var bM = raw.match(/(?:né\(e\)\s*le|تاريخ الميلاد|date\s*de\s*naissance)\s*[:\-]?\s*(\d{1,2}[\/-]\d{1,2}[\/-]\d{2,4})/i);
-        if (bM) birthDate = bM[1];
-      }
-      var jobTitle = payload.jobTitle || fields.job_title || '';
-      if (!jobTitle && raw) {
-        var jM = raw.match(/(?:poste|fonction|المنصب|مهنة|spécialité)\s*[:\-]?\s*([^\n\r]{3,60})/i);
-        if (jM) jobTitle = jM[1].trim();
-      }
-
       // Tender extraction (with specialized Algerian Public Procurement patterns)
       var tenderTitle = '';
       var tenderRef = '';
@@ -1079,16 +1010,20 @@
       if (raw) {
         // 1. Reference: Strip legal ordinances & penal codes to avoid false matches (e.g. ordonnance 66-156, 03-03, 15-247)
         var cleanRawForRef = raw.replace(/(?:ordonnance|d[eé]cret|loi|article|code\s+p[eé]nal|registre(?:\s+du\s+commerce)?)\s*(?:n[°oº]|r[eé]f)?\s*[:\.\s]*[0-9\-\/]+/gi, '');
-        var rm = cleanRawForRef.match(/(?:AON?|AOI?|Consultation|Avis\s+d['’]appel\s+d['’]offres|Appel\s+d['’]offres|الصفقة|المناقصة|الاستشارة)\s*(?:N[°oº]|R[eé]f(?:\.|erence)?|رقم|مرجع)?\s*[:\/\-\s#№]+\s*([0-9]{1,4}\s*[\/\-]\s*[0-9]{2,4}|[A-Za-z0-9\/\-_]{2,30})/i);
+        var rm = cleanRawForRef.match(/(?:AON?|AOI?|Consultation|Avis\s+d['’]appel\s+d['’]offres|Appel\s+d['’]offres|الصفقة|المناقصة|الاستشارة)\s*(?:N[°oº]|R[eé]f(?:\.|erence)?|رقم|مرجع)?\s*[:\/\-\s#№]+\s*([0-9]{1,4}\s*[\/\-]\s*[0-9]{2,4}|[A-Za-z0-9\/\-_]{3,30})/i);
         if (rm) {
           var candRef = rm[1].replace(/\s+/g, '').trim();
-          if (!/^(66-156|03-03|15-247)$/.test(candRef)) tenderRef = candRef;
+          if (/\d/.test(candRef) && candRef.length >= 3 && !/^(66-156|03-03|15-247|ve|de|le|la|un|en)$/i.test(candRef)) {
+            tenderRef = candRef;
+          }
         }
         if (!tenderRef) {
           var rm2 = cleanRawForRef.match(/(?:N[°oº]|R[eé]f(?:\.|erence)?|مرجع|رقم)\s*[:\/\-\s#№]+\s*([0-9]{1,4}\s*[\/\-]\s*20[2-3][0-9])/i);
           if (rm2) {
             var candRef2 = rm2[1].replace(/\s+/g, '').trim();
-            if (!/^(66-156|03-03|15-247)$/.test(candRef2)) tenderRef = candRef2;
+            if (/\d/.test(candRef2) && candRef2.length >= 3 && !/^(66-156|03-03|15-247|ve)$/i.test(candRef2)) {
+              tenderRef = candRef2;
+            }
           }
         }
 
@@ -1096,7 +1031,7 @@
         var mService = raw.match(/(?:D[eé]signation\s+du\s+service\s+contractant|l['’]Assembl[eé]e\s+Populaire\s+Communale\s+d[e\'’]\s*[A-Za-zÀ-ÿ\-]+|المجلس\s+الشعبي\s+البلدي\s+ل?[^\n\r]+)\s*[:\-]?\s*([^\n\r]+)?/i);
         if (mService) {
           authority = (mService[1] || mService[0]).replace(/\s+/g, ' ').replace(/^[0-9\/\-.:\s]+/, '').replace(/[.;,]+$/, '').trim();
-          authority = authority.replace(/Staoug[eé]/gi, 'Staoueli').replace(/Staqueli/gi, 'Staoueli');
+          authority = authority.replace(/Sta[oq]u[eéèa-zA-Z\']*/gi, 'Staoueli');
           if (authority.length > 4 && !authority.match(/^[0-9]+$/)) {
             var mWil = raw.match(/(?:Wilaya\s+d[e\'’]\s*[A-Za-zÀ-ÿ\-]+|ولاية\s+[\u0621-\u064A\-]+)/i);
             if (mWil && !authority.toLowerCase().includes('wilaya') && !authority.toLowerCase().includes('alger')) {
@@ -1107,7 +1042,7 @@
         if (!authority) {
           var am = raw.match(/(?:Commune\s+d[e\'’]\s*[A-Za-zÀ-ÿ\-]+|بلدية\s+[\u0621-\u064A\-]+|Wilaya\s+d[e\'’]\s*[A-Za-zÀ-ÿ\-]+|ولاية\s+[\u0621-\u064A\-]+|Minist[eè]re\s+d[e\'’]\s*[A-Za-zÀ-ÿ\s\-]+|وزارة\s+[\u0621-\u064A\s\-]+|Direction\s+d[e\'’]\s*[A-Za-zÀ-ÿ\s\-]+|مديرية\s+[\u0621-\u064A\s\-]+|ma[iî]tre\s+d['’]ouvrage|المصلحة\s+المتعاقدة|صاحب\s+المشروع|الجهة\s+المتعاقدة)[\s\:\-]*([^\n\r]{3,80})/i);
           if (am) {
-            authority = am[0].trim().replace(/^(ma[iî]tre\s+d['’]ouvrage|المصلحة\s+المتعاقدة|صاحب\s+المشروع|الجهة\s+المتعاقدة)\s*[:\-]\s*/i, '').replace(/Staqueli/gi, 'Staoueli').trim();
+            authority = am[0].trim().replace(/^(ma[iî]tre\s+d['’]ouvrage|المصلحة\s+المتعاقدة|صاحب\s+المشروع|الجهة\s+المتعاقدة)\s*[:\-]\s*/i, '').replace(/Sta[oq]u[eéèa-zA-Z\']*/gi, 'Staoueli').trim();
           }
         }
 
@@ -1140,9 +1075,13 @@
         // 5. Deadline (e.g. 15 jours, DD/MM/YYYY, etc.)
         var dm = raw.match(/(?:d[eé]lai\s+de\s+pr[eé]paration[^\n\r:]*[:\-]\s*([^\n\r.]{3,40})|deadline|échéance|date\s+limite|آخر\s+أجل|تاريخ\s+الإيداع|مدة\s+التحضير)\s*[:\-]?\s*(\d{1,2}[\/-]\d{1,2}[\/-]\d{2,4}|[^\n\r,.;]{3,35})/i);
         if (dm) deadline = (dm[1] || dm[2] || '').trim();
+      }
 
-        // 6. Extract items / lots from tender text if no line_items found yet
-        if (!rawItems.length) {
+      // Line items normalization (Mode-Specific)
+      var rawItems = [];
+      if (mode === 'tender') {
+        // In tender mode, items must ONLY come from Lots or Tender Subject, NEVER from random lines with numbers!
+        if (raw) {
           var lotMatches = raw.matchAll(/(?:Lot|Poste|Article|بند|حصة)\s*N?[°oº]?\s*(\d+)\s*[:\-]\s*([^\n\r]+)/gi);
           for (var lm of lotMatches) {
             rawItems.push({
@@ -1152,16 +1091,86 @@
               total: 0
             });
           }
-          // If no numbered lots found, create an item from tender title
-          if (!rawItems.length && tenderTitle && tenderTitle.length > 2) {
-            rawItems.push({
-              description: tenderTitle,
-              quantity: 1,
-              unit_price: 0,
-              total: 0
-            });
+        }
+        if (!rawItems.length && tenderTitle && tenderTitle.length > 2) {
+          rawItems.push({
+            description: tenderTitle,
+            quantity: 1,
+            unit_price: 0,
+            total: 0
+          });
+        }
+      } else {
+        // Standard invoice line items extraction for invoice/bill/po/proforma modes
+        rawItems = Array.isArray(payload.lineItems) ? payload.lineItems.slice() : (Array.isArray(payload.analysis && payload.analysis.line_items) ? payload.analysis.line_items.slice() : []);
+        if (!rawItems.length && raw) {
+          var lines = raw.split(/\r?\n/);
+          for (var li = 0; li < lines.length; li++) {
+            var lineTrim = lines[li].trim();
+            if (!lineTrim || lineTrim.length < 5) continue;
+            // Skip headers, totals, and legal text lines
+            if (/(?:total|tva|sous-total|net|remise|montant|المجموع|الضريبة|الإجمالي|facture|client|date|condamnation|poursuites|ultérieurement|ordonnance|code\s*p[eé]nal|article\s*\d|déclaration|candidat|probit[eé])/i.test(lineTrim)) continue;
+            var numMatches = lineTrim.match(/([0-9]+(?:[.,][0-9]{1,2})?)/g);
+            if (numMatches && numMatches.length >= 2) {
+              var descPart = lineTrim.replace(/[0-9]+(?:[.,][0-9]{1,2})?/g, '').replace(/[\s\t,;:\-_|]+/g, ' ').trim();
+              if (descPart.length >= 3 && !/^(RL\.|SAS|SARL|EURL|SPA|SNC)/i.test(descPart)) {
+                var qVal = parseFloat(numMatches[0].replace(',', '.')) || 1;
+                var pVal = parseFloat(numMatches[1].replace(',', '.')) || 0;
+                var tVal = numMatches[2] ? parseFloat(numMatches[2].replace(',', '.')) : (qVal * pVal);
+                rawItems.push({ description: descPart, quantity: qVal, unit_price: pVal, total: tVal });
+              }
+            }
           }
         }
+      }
+
+      var items = rawItems.map(function(it, idx) {
+        var q = parseFloat(String(it.quantity || 1).replace(',', '.').replace(/[^0-9.]/g, '')) || 1;
+        var p = parseFloat(String(it.unit_price || it.unitPrice || it.price || 0).replace(',', '.').replace(/[^0-9.]/g, '')) || 0;
+        var t = parseFloat(String(it.total || 0).replace(',', '.').replace(/[^0-9.]/g, '')) || (q * p);
+        return {
+          id: idx,
+          description: String(it.description || it.name || ('Item #' + (idx + 1))).trim(),
+          quantity: q,
+          unitPrice: p,
+          total: t,
+          selected: true
+        };
+      });
+
+      var subtotal = parseFloat(String(payload.subtotal || payload.totalHT || 0).replace(',', '.')) || 0;
+      var vat = parseFloat(String(payload.vat || payload.totalTVA || payload.tax || 0).replace(',', '.')) || 0;
+      var total = parseFloat(String(payload.total || payload.totalTTC || 0).replace(',', '.')) || 0;
+      if (!total && items.length && mode !== 'tender') {
+        total = items.reduce(function(acc, i) { return acc + i.total; }, 0);
+      }
+
+      // Fallback phone/email extraction from raw text if missing
+      if (!phone && raw) {
+        var pm = raw.match(/(?:(?:0[567][0-9]{8})|(?:\+213\s?[567][0-9]{8})|(?:0[234][0-9]{7}))/);
+        if (pm) phone = pm[0].replace(/\s+/g, '');
+      }
+      if (!email && raw) {
+        var em = raw.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+        if (em) email = em[0];
+      }
+
+      // HR & Employee extraction
+      var empName = payload.employeeName || fields.employee_name || customerName || '';
+      var nin = payload.nin || fields.nin || '';
+      if (!nin && raw) {
+        var ninM = raw.match(/(?:(?:nin|رقم التعريف الوطني|cni)\s*[:\-]?\s*([0-9]{18}))/i);
+        if (ninM) nin = ninM[1];
+      }
+      var birthDate = payload.birthDate || fields.birth_date || '';
+      if (!birthDate && raw) {
+        var bM = raw.match(/(?:né\(e\)\s*le|تاريخ الميلاد|date\s*de\s*naissance)\s*[:\-]?\s*(\d{1,2}[\/-]\d{1,2}[\/-]\d{2,4})/i);
+        if (bM) birthDate = bM[1];
+      }
+      var jobTitle = payload.jobTitle || fields.job_title || '';
+      if (!jobTitle && raw) {
+        var jM = raw.match(/(?:poste|fonction|المنصب|مهنة|spécialité)\s*[:\-]?\s*([^\n\r]{3,60})/i);
+        if (jM) jobTitle = jM[1].trim();
       }
 
       // Inventory & Product extraction
