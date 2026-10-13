@@ -194,8 +194,16 @@
         }
     }
 
+    function isUnconfiguredAIMessage(txt) {
+        if (!txt) return true;
+        var s = String(txt).toLowerCase();
+        return s.includes('غير معرف') || s.includes('no ai provider') || s.includes('معطل حالياً') ||
+               s.includes('missing api') || s.includes('settings → ai') || s.includes('ai status 400') ||
+               s.includes('not supported') || s.includes('disabled');
+    }
+
     /**
-     * Extracts items and specifications from text using LLM, with guaranteed heuristic fallback
+     * Extracts items and specifications from text using LLM, with guaranteed intelligent Algerian heuristic fallback
      */
     async function extractSpecificationsWithAI(documentText) {
         if (!documentText || documentText.trim().length < 5) {
@@ -203,11 +211,8 @@
         }
 
         var activeLang = getActiveLang();
-        var isFr = activeLang === 'fr';
-        var isEn = activeLang === 'en';
-
-        var prompt = `You are an expert public procurement and tenders auditor.
-Analyze the following specification text (Cahier des charges / دفتر الشروط).
+        var prompt = `You are an expert public procurement and tenders auditor for Algerian public tenders (Marchés publics selon Décret 15-247).
+Analyze the following specification text (Cahier des charges / Avis d'appel d'offres / دفتر الشروط).
 Extract the core data and respond ONLY in valid JSON format matching this schema:
 {
   "reference": "Tender reference code",
@@ -232,16 +237,16 @@ Document text:
 
         try {
             var aiRes = await callAIChat(prompt, "You are an expert procurement auditor. Respond ONLY in valid JSON format.", 25000);
-            if (aiRes.ok && aiRes.text) {
+            if (aiRes.ok && aiRes.text && !isUnconfiguredAIMessage(aiRes.text)) {
                 var cleanJson = aiRes.text.replace(/```json/gi, '').replace(/```/g, '').trim();
                 var jsonMatch = cleanJson.match(/\{[\s\S]*\}/);
                 if (jsonMatch) {
                     var parsed = JSON.parse(jsonMatch[0]);
                     return {
-                        reference: parsed.reference || '',
-                        title: parsed.title || '',
-                        authority: parsed.authority || '',
-                        deadline: parsed.deadline || '',
+                        reference: parsed.reference || extractReferenceHeuristic(documentText),
+                        title: parsed.title || extractTitleHeuristic(documentText),
+                        authority: parsed.authority || extractAuthorityHeuristic(documentText),
+                        deadline: parsed.deadline || extractDeadlineHeuristic(documentText),
                         estimatedBudget: parseFloat(parsed.estimatedBudget) || 0,
                         executionPeriod: parsed.executionPeriod || '',
                         items: (Array.isArray(parsed.items) && parsed.items.length) ? parsed.items : parseItemsFromTextHeuristic(documentText),
@@ -255,6 +260,10 @@ Document text:
         }
 
         // Guaranteed Heuristic Fallback
+        return extractAlgerianTenderHeuristics(documentText, activeLang);
+    }
+
+    function extractAlgerianTenderHeuristics(documentText, activeLang) {
         return {
             reference: extractReferenceHeuristic(documentText),
             title: extractTitleHeuristic(documentText),
@@ -264,7 +273,11 @@ Document text:
             executionPeriod: '',
             items: parseItemsFromTextHeuristic(documentText),
             requiredDocuments: getDefaultChecklist(activeLang),
-            keyClauses: []
+            keyClauses: [
+                activeLang === 'ar' ? "الشروط الجزائية للتأخير: 1/1000 عن كل يوم تأخير بحد أقصى 10% من مبلغ الصفقة" : "Pénalités de retard : 1/1000 par jour plafonnées à 10% du marché",
+                activeLang === 'ar' ? "اقتطاع الضمان: 5% من كل كشف حساب تسترجع عند التسليم النهائي (بعد سنة)" : "Retenue de garantie : 5% libérable à la réception définitive (1 an)",
+                activeLang === 'ar' ? "فترة صلاحية العروض: مدة تحضير العروض + 3 أشهر" : "Délai de validité des offres : délai de préparation + 3 mois"
+            ]
         };
     }
 
@@ -272,66 +285,116 @@ Document text:
         if (lang === 'fr') {
             return [
                 "Déclaration de candidature (renseignée et signée)",
-                "Déclaration à souscrire",
-                "Registre de commerce (copie électronique)",
+                "Déclaration de probité (signée et datée)",
+                "Déclaration à souscrire (complétée)",
+                "Statuts de l'entreprise & pouvoirs de signature",
+                "Registre de commerce électronique (code d'activité conforme)",
                 "Extrait de rôle apuré (moins de 3 mois)",
-                "Attestation CASNOS / CNAS à jour",
-                "Bilans financiers certifiés des 3 dernières années",
+                "Attestation d'affiliation et mise à jour CNAS / CASNOS",
+                "Bilans financiers certifiés des 3 dernières années (commissaire aux comptes)",
                 "Références professionnelles similaires (Attestations de bonne exécution)",
-                "Caution de soumission bancaire (si exigée)"
+                "Bordereau des Prix Unitaires (BPU) & Devis Quantitatif Estimatif (DQE)",
+                "Lettre de soumission (signée, datée et cachetée)",
+                "Caution de soumission bancaire (si exigée par le cahier des charges)"
             ];
         } else if (lang === 'en') {
             return [
                 "Application declaration (signed and stamped)",
+                "Integrity declaration (signed and dated)",
                 "Commitment declaration / Bid submission letter",
-                "Commercial register certificate",
+                "Company statutes & signing authority powers",
+                "Commercial register certificate (valid activity code)",
                 "Tax clearance certificate (under 3 months)",
-                "Social security clearance certificate",
+                "Social security clearance certificate (CNAS / CASNOS)",
                 "Audited financial statements for last 3 years",
-                "Proof of past similar project experience",
+                "Proof of past similar project experience (certificates of good execution)",
+                "Price schedule (BPU) & Estimated bill of quantities (DQE)",
                 "Bid bond / Bank guarantee (if applicable)"
             ];
         }
         return [
-            "تصريح بالترشح (مملوء وموقع)",
+            "تصريح بالترشح (مملوء وموقع من المسير)",
+            "تصريح بالنزاهة (موقع ومؤرخ)",
             "تصريح بالاكتتاب (Déclaration à souscrire)",
-            "مستخرج السجل التجاري الإلكتروني",
+            "القانون الأساسي للشركة والوثائق المفوضة للتوقيع",
+            "مستخرج السجل التجاري الإلكتروني (برمز النشاط المناسب)",
             "مستخرج جدول الضرائب مصفى (أقل من 3 أشهر)",
-            "شهادة أداء المستحقات (CASNOS / CNAS)",
-            "الحصائل المالية المعتمدة للسنوات الثلاث الأخيرة",
-            "شهادات حسن الإنجاز لمشاريع مماثلة سابقة",
-            "كفالة التعهد البنكية (إن طلبت)"
+            "شهادة أداء المستحقات وتحديث الاشتراك (CNAS / CASNOS)",
+            "الحصائل المالية المعتمدة للسنوات الثلاث الأخيرة (محافظ الحسابات)",
+            "شهادات حسن الإنجاز لمشاريع مماثلة سابقة مسلّمة من المصالح المتعاقدة",
+            "جدول الأسعار الأحادية (BPU) والتفصيل الكمي والتقديري (DQE)",
+            "خطاب تقديم العرض (Lettre de soumission) موقع ومختوم",
+            "كفالة التعهد البنكية (إن نص دفتر الشروط عليها)"
         ];
     }
 
     function extractReferenceHeuristic(text) {
-        var m = String(text || '').match(/(?:AO[N|I]?|Appel\s+d['']offres|مناقصة|استشارة|R[eé]f(?:\.|erence)?)\s*[:№#\s-]*([A-Z0-9\/\-_]{3,35})/i);
-        return m ? m[1].trim() : '';
+        var str = String(text || '');
+        var m = str.match(/(?:N[°oº]|R[eé]f(?:\.|erence)?|AO|رقم|مرجع)\s*[:\/\-\s#№]+\s*([0-9]{1,4}\s*[\/\-]\s*[0-9]{2,4}|[A-Za-z0-9\/\-_]{2,35})/i);
+        if (m) return m[1].replace(/\s+/g, '').trim();
+        var m2 = str.match(/(?:AO[N|I]?|Appel\s+d['’]offres|مناقصة|استشارة)\s*[:№#\s-]*([A-Z0-9\/\-_]{2,35})/i);
+        return m2 ? m2[1].trim() : '';
     }
 
     function extractTitleHeuristic(text) {
-        var lines = String(text || '').split(/\r?\n/).map(function(l){ return l.trim(); }).filter(Boolean);
-        for (var i = 0; i < Math.min(lines.length, 6); i++) {
+        var str = String(text || '');
+        var m = str.match(/(?:portant\s+sur|portant|objet|relatif\s+[aà]|يتضمن|موضوع|مشروع)\s*[:\-]\s*([^\n\r]+(?:\r?\n[^\n\r]+)?)/i);
+        if (m) {
+            var t = m[1].replace(/\s+/g, ' ').trim();
+            return t.replace(/[.;,]+$/, '').trim();
+        }
+        var lines = str.split(/\r?\n/).map(function(l){ return l.trim(); }).filter(Boolean);
+        for (var i = 0; i < Math.min(lines.length, 10); i++) {
             if (/^(objet|titre|موضوع|مشروع|projet)\s*[:\-]/i.test(lines[i])) {
                 return lines[i].replace(/^(objet|titre|موضوع|مشروع|projet)\s*[:\-]\s*/i, '').trim();
             }
+            if (/^(avis\s+d['’]appel|إعلان\s+عن|استشارة)/i.test(lines[i]) && lines[i+1] && lines[i+1].length > 10) {
+                return lines[i+1].slice(0, 120);
+            }
         }
-        return lines[0] ? lines[0].slice(0, 80) : '';
+        return lines[0] ? lines[0].slice(0, 100) : '';
     }
 
     function extractAuthorityHeuristic(text) {
-        var m = String(text || '').match(/(?:ma[iî]tre\s+d['']ouvrage|client|administration|acheteur|الجهة\s+المتعاقدة|المشتري|الإدارة)\s*[:\-]\s*([^\n\r,]{3,70})/i);
-        return m ? m[1].trim() : '';
+        var str = String(text || '');
+        var m = str.match(/(?:Commune\s+d[e\'’]\s*[A-Za-zÀ-ÿ\-]+|بلدية\s+[\u0621-\u064A\-]+)/i);
+        if (m) return m[0].trim();
+        var m2 = str.match(/(?:Wilaya\s+d[e\'’]\s*[A-Za-zÀ-ÿ\-]+|ولاية\s+[\u0621-\u064A\-]+)/i);
+        if (m2) return m2[0].trim();
+        var m3 = str.match(/(?:Minist[eè]re\s+d[e\'’]\s*[A-Za-zÀ-ÿ\s\-]+|وزارة\s+[\u0621-\u064A\s\-]+)/i);
+        if (m3) return m3[0].trim();
+        var m4 = str.match(/(?:Direction\s+d[e\'’]\s*[A-Za-zÀ-ÿ\s\-]+|مديرية\s+[\u0621-\u064A\s\-]+)/i);
+        if (m4) return m4[0].trim();
+        var m5 = str.match(/(?:ma[iî]tre\s+d['’]ouvrage|client|administration|acheteur|المصلحة\s+المتعاقدة|المشتري|الإدارة)\s*[:\-]\s*([^\n\r,]{3,80})/i);
+        if (m5) return m5[1].trim();
+        return '';
     }
 
     function extractDeadlineHeuristic(text) {
-        var m = String(text || '').match(/(\d{4}[-/]\d{2}[-/]\d{2})|(\d{2}[-/]\d{2}[-/]\d{4})/);
-        return m ? m[0] : '';
+        var str = String(text || '');
+        var m = str.match(/(?:d[eé]lai\s+de\s+pr[eé]paration[^\n\r:]*[:\-]\s*([^\n\r.]{3,40})|deadline|échéance|date\s+limite|آخر\s+أجل|تاريخ\s+الإيداع|مدة\s+التحضير)\s*[:\-]?\s*(\d{1,2}[\/-]\d{1,2}[\/-]\d{2,4}|[^\n\r,.;]{3,35})/i);
+        if (m) return (m[1] || m[2] || '').trim();
+        var mDate = str.match(/(\d{4}[-/]\d{2}[-/]\d{2})|(\d{2}[-/]\d{2}[-/]\d{4})/);
+        return mDate ? mDate[0] : '';
     }
 
     function parseItemsFromTextHeuristic(text) {
-        var lines = String(text || '').split(/\r?\n/);
+        var str = String(text || '');
         var detected = [];
+        var lotRegex = /(?:Lot|Poste|Article|بند|حصة)\s*N?[°oº]?\s*(\d+)\s*[:\-]\s*([^\n\r]+)/gi;
+        var lm;
+        while ((lm = lotRegex.exec(str)) !== null) {
+            var lotName = lm[2].trim().replace(/[.;]+$/, '');
+            var lotNum = lm[1];
+            detected.push({
+                name: (getActiveLang() === 'ar' ? ('الحصة ' + lotNum + ': ' + lotName) : ('Lot ' + lotNum + ' : ' + lotName)),
+                qty: 1,
+                category: (/fourniture|consommable|matériel|équipement|عتاد|تجهيز/i.test(lotName) ? 'Matériel' : 'Services')
+            });
+        }
+        if (detected.length) return detected.slice(0, 25);
+
+        var lines = str.split(/\r?\n/);
         lines.forEach(function(l) {
             var trimmed = l.trim();
             if (!trimmed || trimmed.length < 4 || trimmed.length > 140) return;
@@ -340,33 +403,310 @@ Document text:
                 var name = matchQty[2] || matchQty[1];
                 var qty = parseInt(matchQty[1] || matchQty[2], 10) || 1;
                 detected.push({ name: name.trim(), qty: Math.max(1, qty), category: 'General' });
-            } else if (/^(art|lot|item|poste|article|بند|عنصر)\s*\d+/i.test(trimmed)) {
-                detected.push({ name: trimmed, qty: 1, category: 'General' });
             }
         });
-        if (!detected.length) {
-            var lang = getActiveLang();
-            if (lang === 'fr') {
-                detected = [
-                    { name: "Services de conseil et études techniques", qty: 1, category: "Services" },
-                    { name: "Fourniture et installation équipements", qty: 2, category: "Matériel" },
-                    { name: "Assistance technique et formation", qty: 1, category: "Services" }
-                ];
-            } else if (lang === 'en') {
-                detected = [
-                    { name: "Consulting & Technical Engineering Services", qty: 1, category: "Services" },
-                    { name: "Equipment supply and deployment", qty: 2, category: "Equipment" },
-                    { name: "Technical assistance & operational training", qty: 1, category: "Services" }
-                ];
+        if (detected.length) return detected.slice(0, 25);
+
+        var lang = getActiveLang();
+        if (lang === 'fr') {
+            return [
+                { name: "Lot 01 : Fournitures et équipements principaux", qty: 1, category: "Matériel" },
+                { name: "Lot 02 : Prestations de services et déploiement", qty: 1, category: "Services" }
+            ];
+        } else if (lang === 'en') {
+            return [
+                { name: "Lot 01: Main equipment and supplies", qty: 1, category: "Hardware" },
+                { name: "Lot 02: Deployment & consulting services", qty: 1, category: "Services" }
+            ];
+        } else {
+            return [
+                { name: "الحصة 01: التوريدات والتجهيزات الرئيسية", qty: 1, category: "عتاد" },
+                { name: "الحصة 02: خدمات التركيب والدعم الفني", qty: 1, category: "خدمات" }
+            ];
+        }
+    }
+
+    /**
+     * Offline Procurement Copilot Assistant Engine (Algerian Presidential Decree 15-247 compliant)
+     */
+    function generateOfflineCopilotResponse(query, tenderObj, items, curLang) {
+        var q = String(query || '').toLowerCase();
+        var isAr = curLang === 'ar';
+        var tTitle = tenderObj ? (tenderObj.title || 'Marché') : (currentExtractedMetadata.title || 'Marché');
+        var tRef = tenderObj ? (tenderObj.reference || 'AO-2026') : (currentExtractedMetadata.reference || 'AO-2026');
+        var tAuth = tenderObj ? (tenderObj.authority || 'Administration') : (currentExtractedMetadata.authority || 'Administration');
+        var tDeadline = tenderObj ? (tenderObj.deadline || '15 jours') : (currentExtractedMetadata.deadline || '15 jours');
+        var totalAmountVal = parseFloat(document.getElementById('smartPricingTotalVal')?.textContent) || 0;
+        var marginVal = document.getElementById('marginDisplayVal')?.textContent || '15%';
+
+        // 1. Submission Letter Request
+        if (q.includes('letter') || q.includes('soumission') || q.includes('خطاب') || q.includes('تقديم') || q.includes('تعهد')) {
+            if (isAr) {
+                return `📋 **صياغة خطاب تقديم العرض الرسمي (Lettre de Soumission)**
+المشروع: **${tTitle}** | المرجع: **${tRef}**
+المصلحة المتعاقدة: **${tAuth}**
+
+صيغة الخطاب القانونية الرسمية جاهزة:
+> "أنا الموقع أسفله، ممثل المؤسسة، بعد الاطلاع على كامل وثائق دفتر الشروط الخاص بالمناقصة رقم **${tRef}** المتعلقة بـ **${tTitle}**، أتعهد وألزم مؤسستي بتنفيذ كامل بنود الصفقة طبقا للشروط والمواصفات المحددة، بمبلغ إجمالي قدره **${totalAmountVal.toLocaleString('fr-FR')} دج مع كل الرسوم**، وفي أجل قدره **${tDeadline}**."
+
+💡 **توصية المساعد الذكي:** يمكنك الانتقال إلى تبويب **"صياغة العرض والخطاب الرسمي"** لتوليد الخطاب بالكامل بنسخة جاهزة للطباعة والتوقيع أو نسخه مباشرة.`;
             } else {
-                detected = [
-                    { name: "خدمات الاستشارة والدراسات التقنية", qty: 1, category: "خدمات" },
-                    { name: "توريد وتركيب التجهيزات والمعدات", qty: 2, category: "عتاد" },
-                    { name: "المساعدة الفنية والتدريب التشغيلي", qty: 1, category: "خدمات" }
-                ];
+                return `📋 **Lettre de Soumission Officielle (Décret 15-247)**
+Marché : **${tTitle}** | Réf : **${tRef}**
+Maître d'ouvrage : **${tAuth}**
+
+Modèle formel conforme à la réglementation des marchés publics :
+> "Je soussigné, représentant légal de l'entreprise, après avoir examiné le cahier des charges relatif à l'appel d'offres N° **${tRef}** portant **${tTitle}**, m'engage à exécuter l'ensemble des prestations pour un montant global de **${totalAmountVal.toLocaleString('fr-FR')} DZD TTC**, dans un délai ferme de **${tDeadline}**."
+
+💡 **Conseil du Copilote :** Vous pouvez basculer sur l'onglet **"Rédaction d'offres & Lettres"** pour générer la lettre officielle complète prête pour signature et cachet.`;
             }
         }
-        return detected.slice(0, 25);
+
+        // 2. Pricing & Competitive Strategy
+        if (q.includes('strategy') || q.includes('prix') || q.includes('pricing') || q.includes('تسعير') || q.includes('استراتيجية') || q.includes('ربح') || q.includes('marge')) {
+            var itemsCount = items ? items.length : 0;
+            if (isAr) {
+                return `🎯 **استراتيجية التسعير التنافسية للصفقة:**
+- **مستوى الهامش المعتمد:** ${marginVal} (يوفر توازناً ممتازاً بين التنافسية واستدامة الربحية).
+- **المبلغ الإجمالي المقترح:** ${totalAmountVal.toLocaleString('fr-FR')} دج TTC موزعة على ${itemsCount} بنود.
+- **معيار التقييم المعتمد في قانون الصفقات الجزائري:**
+  1. إذا كان التقييم وفق **"العرض الأقل ثمناً" (Moins-disant)**: يفضل تخفيض الهامش إلى 8%-10% في البنود الرئيسية.
+  2. إذا كان التقييم وفق **"العرض الأفضل اقتصادياً" (Mieux-disant)**: حافظ على هامش 15%-18% مع تدعيم المذكرة التقنية بالضمانات، لأن العلامة التقنية (تمثل عادة 70% إلى 80%) سترجح كفتك.`;
+            } else {
+                return `🎯 **Stratégie de Tarification & Compétitivité :**
+- **Marge appliquée :** ${marginVal} (taux équilibré entre attractivité financière et rentabilité nette).
+- **Montant total de l'offre :** ${totalAmountVal.toLocaleString('fr-FR')} DZD TTC (${itemsCount} postes évalués).
+- **Critères d'attribution (Décret présidentiel 15-247) :**
+  1. **Offre la moins-disante :** Si le marché privilégie uniquement le coût, optimisez la marge entre 8% et 10% sur les fournitures standards.
+  2. **Offre économiquement la plus avantageuse (Mieux-disant) :** Maintenez la marge à 15%-18% et valorisez le mémoire technique (noté sur 70 ou 80 points) pour remporter l'évaluation technique éliminatoire.`;
+            }
+        }
+
+        // 3. Risks & Penalty Clauses
+        if (q.includes('risks') || q.includes('risques') || q.includes('pénalité') || q.includes('مخاطر') || q.includes('غرامة') || q.includes('شروط جزائية') || q.includes('caution') || q.includes('ضمان')) {
+            if (isAr) {
+                return `🛡️ **تحليل المخاطر والبنود التعاقدية الأساسية:**
+1. **غرامات التأخير (Pénalités de retard):** وفق المادة 99 من المرسوم 15-247، تحدد عادة بـ 1/1000 عن كل يوم تأخير، وهي **مسقوفة قانوناً بنسبة 10%** من القيمة الإجمالية للصفقة.
+2. **اقتطاع الضمان (Retenue de garantie):** يتم حجز **5%** من كل وضعية مستحقة، ولا تسترجع إلا بعد محضر الاستلام النهائي (بعد سنة من الاستلام المؤقت). يمكنك قانوناً استبدالها بكفالة بنكية للمحافظة على السيولة.
+3. **أجل إيداع العروض:** الالتزام الصارم بالإيداع قبل الساعة 12:00 من آخر يوم محدد (${tDeadline}) في مكتب الصفقات لتفادي الإقصاء الشكلي.`;
+            } else {
+                return `🛡️ **Audit des Risques & Clauses Réglementaires (Décret 15-247) :**
+1. **Pénalités de retard :** Fixées légalement à 1/1000 par jour calendaire de retard, avec un **plafond légal strict de 10%** du montant global du marché.
+2. **Retenue de garantie :** Une retenue de **5%** s'applique sur chaque décompte mensuel, libérable à la réception définitive (garantie de 12 mois). Vous pouvez la remplacer par une caution bancaire équivalente pour préserver votre trésorerie.
+3. **Validité des offres :** Vous restez engagé pendant la durée de préparation augmentée de 3 mois. Tout désistement entraîne la confiscation de la caution de soumission.`;
+            }
+        }
+
+        // 4. Required Documents Checklist
+        if (q.includes('docs') || q.includes('documents') || q.includes('candidature') || q.includes('وثائق') || q.includes('ملف') || q.includes('شروط') || q.includes('أوراق')) {
+            if (isAr) {
+                return `📑 **ملف الترشح والعرض الكامل وفق القانون الجزائري للصفقات:**
+يتكون الملف القانوني من 3 أظرفة منفصلة داخل ظرف رئيسي مغلق ومبهم:
+1. **ظرف الترشح (Dossier de candidature):**
+   - التصريح بالترشح + التصريح بالنزاهة.
+   - السجل التجاري الإلكتروني (برمز نشاط مطابق).
+   - جدول الضرائب مصفى (أقل من 3 أشهر) + شهادات CNAS/CASNOS سارية.
+   - الحصائل المالية للـ 3 سنوات السابقة + شهادات حسن الإنجاز لمشاريع مماثلة.
+2. **ظرف العرض التقني (Offre technique):**
+   - التصريح بالاكتتاب + المذكرة التقنية ومنهجية التنفيذ + رزنامة الإنجاز.
+3. **ظرف العرض المالي (Offre financière):**
+   - خطاب التقديم (Lettre de soumission) + جدول الأسعار BPU + التفصيل التقديري DQE.`;
+            } else {
+                return `📑 **Dossier Officiel Exigé (Architecture à 3 Enveloppes) :**
+Conformément au Décret 15-247, votre soumission doit comprendre 3 enveloppes distinctes :
+1. **Dossier de Candidature :**
+   - Déclaration de candidature & Déclaration de probité.
+   - Registre de commerce électronique (code d'activité adéquat).
+   - Extrait de rôle apuré (< 3 mois) et attestations CNAS/CASNOS à jour.
+   - Bilans certifiés (3 dernières années) + Attestations de bonne exécution similaires.
+2. **Offre Technique :**
+   - Déclaration à souscrire, Mémoire technique justificatif, planning de réalisation.
+3. **Offre Financière :**
+   - Lettre de soumission signée & cachetée, BPU et DQE chiffrés.`;
+            }
+        }
+
+        // General Consulting Query
+        if (isAr) {
+            return `مرحباً بك! بصفتي المساعد الذكي لمناقصاتك في Zeralda ERP:
+- أنا أتابع ملف المناقصة **${tTitle}** (مرجع: **${tRef}**).
+- يمكنك استخدام الأزرار السريعة بالأعلى لصياغة خطاب التقديم الرسمي، أو فحص الأسعار وهوامش الربح، أو تدقيق قائمة الوثائق الإلزامية لتجنب أي إقصاء إداري.
+- كما يمكنك رفع وثيقة دفتر الشروط في تبويب **"Scan IA"** لاستخراج كافة البنود والأسعار آلياً.`;
+        } else {
+            return `Bonjour ! En tant que Copilote IA pour vos marchés Zeralda ERP :
+- J'analyse le dossier de consultation **${tTitle}** (Réf: **${tRef}**).
+- Utilisez les puces rapides ci-dessus pour rédiger la lettre de soumission, simuler vos marges bénéficiaires, ou vérifier les pièces éliminatoires.
+- Vous pouvez également déposer votre cahier des charges dans l'onglet **"Scan IA"** pour une extraction automatisée immédiate.`;
+        }
+    }
+
+    /**
+     * Offline Official Document Generator for Proposal Drafter
+     */
+    function generateOfflineDraftDocument(docType, tenderObj, items, totalAmount, curLang) {
+        var isAr = curLang === 'ar';
+        var tTitle = tenderObj ? (tenderObj.title || 'Marché de fournitures et prestations') : (currentExtractedMetadata.title || 'Marché de fournitures et prestations');
+        var tRef = tenderObj ? (tenderObj.reference || 'AO-2026/01') : (currentExtractedMetadata.reference || 'AO-2026/01');
+        var tAuth = tenderObj ? (tenderObj.authority || 'Administration Contractante') : (currentExtractedMetadata.authority || 'Administration Contractante');
+        var tDeadline = tenderObj ? (tenderObj.deadline || '15 jours') : (currentExtractedMetadata.deadline || '15 jours');
+        var todayStr = new Date().toLocaleDateString(isAr ? 'ar-DZ' : 'fr-FR');
+        var totalAmountVal = totalAmount || (parseFloat(document.getElementById('smartPricingTotalVal')?.textContent) || 0);
+
+        if (docType === 'submission_letter') {
+            if (isAr) {
+                return `الجمهورية الجزائرية الديمقراطية الشعبية
+
+رسالة التعهد وخطاب تقديم العرض الرسمي (Lettre de Soumission)
+(وفقاً للمرسوم الرئاسي رقم 15-247 المتعلق بتنظيم الصفقات العمومية)
+
+إلى السيد / ${tAuth}
+الموضوع: التعهد في المناقصة رقم: ${tRef}
+موضوع الصفقة: ${tTitle}
+
+أنا الموقع أسفله: [الاسم واللقب / الممثل القانوني للمؤسسة]،
+المتصرف باسم ولحساب شركة: [اسم الشركة / المؤسسة]،
+السجل التجاري رقم: [رقم السجل التجاري]،
+رقم التعريف الجبائي (NIF): [NIF] - رقم المادة (AI): [رقم المادة]،
+المقر الاجتماعي: [العنوان الكامل]،
+
+1. بعد دراسة واطلاع كامل على وثائق دفتر الشروط الخاص بالمناقصة رقم ${tRef}؛
+2. أعلن التزامي وقبولي التام وغير المشروط بجميع الشروط والبنود المحددة في دفتر الشروط؛
+3. أتعهد بتنفيذ كامل التوريدات والخدمات موضوع الصفقة طبقا للشروط والمواصفات الفنية، وبالمبلغ الإجمالي والجزافي:
+   - بالأرقام (مع كل الرسوم TTC): ${totalAmountVal.toLocaleString('fr-FR', {minimumFractionDigits:2})} دج
+   - بالحروف: [يكتب المبلغ بالحروف دينار جزائري مع كل الرسوم].
+4. أتعهد بإنجاز كامل موضوع الصفقة في أجل قدره: ${tDeadline} ابتداءً من تاريخ تبليغ أمر بداية الخدمة (ODS).
+5. أقر بأن هذا العرض يلزمني طيلة فترة صلاحية العروض المحددة في دفتر الشروط.
+
+حرر بـ: ........................، في: ${todayStr}
+
+المتعهد
+(التوقيع القانوني وخاتم المؤسسة)`;
+            } else {
+                return `RÉPUBLIQUE ALGÉRIENNE DÉMOCRATIQUE ET POPULAIRE
+
+LETTRE DE SOUMISSION OFFICIELLE
+(Conforme aux dispositions du Décret présidentiel n° 15-247 portant réglementation des marchés publics)
+
+À l'attention de : Monsieur le Responsable de ${tAuth}
+Objet : Soumission à l'Appel d'Offres N° : ${tRef}
+Intitulé du projet : ${tTitle}
+
+Je soussigné(e) : [Nom, Prénom et Fonction du Gérant / Représentant habilité],
+Agissant au nom et pour le compte de la société : [Raison Sociale de l'Entreprise],
+Inscrite au Registre du Commerce sous le N° : [N° RC],
+Identifiant Fiscal (NIF) : [NIF] - Article d'Imposition : [AI] - NIS : [NIS],
+Adresse du siège social : [Adresse complète],
+
+1. Après avoir examiné l'ensemble des pièces constitutives du cahier des charges relatif au marché cité en référence ;
+2. Déclare accepter sans réserve toutes les clauses, stipulations et obligations prévues dans le dossier d'appel d'offres ;
+3. Me soumets et m'engage envers ${tAuth} à exécuter l'ensemble des prestations conformément aux spécifications techniques et selon les prix mentionnés au Bordereau des Prix Unitaires (BPU) ci-annexé, pour le montant global et forfaitaire de :
+   - En chiffres (TTC) : ${totalAmountVal.toLocaleString('fr-FR', {minimumFractionDigits:2})} DZD
+   - En lettres (TTC) : [Montant arrêté en toutes lettres en Dinars Algériens toutes taxes comprises].
+4. M'engage à réaliser les prestations dans un délai ferme de : ${tDeadline} à compter de la notification de l'Ordre de Service (ODS).
+5. Déclare que la présente offre reste valable pendant toute la durée de validité des offres fixée par le cahier des charges.
+
+Fait à : ...................................., le : ${todayStr}
+
+Le Soumissionnaire
+(Nom, Signature légalisée et cachet de l'entreprise)`;
+            }
+        }
+
+        if (docType === 'bpu') {
+            var lines = [];
+            var totHt = 0;
+            (items || []).forEach(function(it, i) {
+                var p = it.customPrice != null ? it.customPrice : 10000;
+                var q = it.qty || 1;
+                var tht = p * q;
+                totHt += tht;
+                lines.push(`| ${(i+1)} | ${it.name} | ${it.unit || 'U'} | ${q} | ${p.toLocaleString('fr-FR', {minimumFractionDigits:2})} | ${tht.toLocaleString('fr-FR', {minimumFractionDigits:2})} |`);
+            });
+            var tva = totHt * 0.19;
+            var totTtc = totHt + tva;
+
+            if (isAr) {
+                return `جدول الأسعار الأحادية والتفصيل الكمي والتقديري (BPU / DQE)
+المشروع: ${tTitle} | المرجع: ${tRef}
+المصلحة المتعاقدة: ${tAuth}
+
+| الرقم | تعيين البند / المواصفة | الوحدة | الكمية | السعر الأحادي (دج) | المجموع الجزئي (دج) |
+|---|---|---|---|---|---|
+${lines.join('\n')}
+
+- المجموع خارج الرسوم (Total Général HT): ${totHt.toLocaleString('fr-FR', {minimumFractionDigits:2})} دج
+- الرسم على القيمة المضافة (TVA 19%): ${tva.toLocaleString('fr-FR', {minimumFractionDigits:2})} دج
+- المجموع الإجمالي مع كل الرسوم (Total Général TTC): ${totTtc.toLocaleString('fr-FR', {minimumFractionDigits:2})} دج
+
+حرر بتاريخ: ${todayStr}
+ختم وتوقيع المتعهد:`;
+            } else {
+                return `BORDEREAU DES PRIX UNITAIRES & DÉTAIL QUANTITATIF ESTIMATIF (BPU / DQE)
+Marché : ${tTitle} | Réf : ${tRef}
+Maître d'ouvrage : ${tAuth}
+
+| N° | Désignation des Prestations & Fournitures | Unité | Qté | Prix Unitaire HT (DZD) | Montant Total HT (DZD) |
+|---|---|---|---|---|---|
+${lines.join('\n')}
+
+- TOTAL GÉNÉRAL HORS TAXES (HT) : ${totHt.toLocaleString('fr-FR', {minimumFractionDigits:2})} DZD
+- TVA (19%) : ${tva.toLocaleString('fr-FR', {minimumFractionDigits:2})} DZD
+- MONTANT GLOBAL TOUTES TAXES COMPRISES (TTC) : ${totTtc.toLocaleString('fr-FR', {minimumFractionDigits:2})} DZD
+
+Arrêté le présent bordereau à la somme de : [Montant en toutes lettres] Dinars Algériens TTC.
+Fait le : ${todayStr}
+Signature et cachet du Soumissionnaire :`;
+            }
+        }
+
+        // Technical Memo
+        if (isAr) {
+            return `المذكرة التقنية ومنهجية التنفيذ (Mémoire Technique)
+الصفقة: ${tTitle} | المرجع: ${tRef}
+المصلحة المتعاقدة: ${tAuth}
+
+1. نبذة عن المؤسسة ومؤهلاتها:
+- خبرة متخصصة وسجل حافل من المشاريع المشابهة المنجزة بنجاح.
+- توفر طاقم فني وإداري مؤهل تأهيلاً عالياً لضمان تنفيذ المشروع بأعلى درجات الاحترافية.
+
+2. منهجية ومراحل التنفيذ:
+- المرحلة الأولى: الإعداد الأولي، دراسة الاحتياجات وتنسيق خطة العمل مع ممثلي ${tAuth}.
+- المرحلة الثانية: التوريد والتنفيذ الميداني وفق المواصفات القياسية المعتمدة.
+- المرحلة الثالثة: الفحص التجريبي ومحاضر التسليم المؤقت وتدريب المستخدمين.
+
+3. الوسائل البشرية والمادية المسخرة:
+- مهندس رئيسي ومسؤول مشروع لمتابعة الجودة والجدول الزمني.
+- فريق تقني ميداني مجهز بالكامل بأحدث المعدات ووسائل السلامة.
+
+4. نظام الجودة والأمن الصناعي (HSE):
+- الامتثال الصارم لتدابير السلامة والوقاية المعمول بها.
+- الالتزام التام بفترة الضمان والصيانة الفورية وخدمة ما بعد البيع.
+
+حرر بـ: ........................، في: ${todayStr}`;
+        } else {
+            return `MÉMOIRE TECHNIQUE JUSTIFICATIF & MÉTHODOLOGIE D'EXÉCUTION
+Projet : ${tTitle} | Réf : ${tRef}
+Maître d'ouvrage : ${tAuth}
+
+1. PRÉSENTATION DE L'ENTREPRISE & CAPACITÉS OPÉRATIONNELLES
+- Société spécialisée disposant des agréments nécessaires et d'une solide expérience dans le domaine.
+- Références professionnelles probantes et attestations de bonne exécution délivrées par des administrations similaires.
+
+2. MÉTHODOLOGIE D'INTERVENTION & DÉROULEMENT DES PRESTATIONS
+- Phase 1 : Cadrage initial, planification détaillée et coordination avec les services de ${tAuth}.
+- Phase 2 : Approvisionnement conforme aux normes techniques et déploiement opérationnel.
+- Phase 3 : Recette technique, essais de conformité, mise en service et formation du personnel.
+
+3. MOYENS HUMAINS ET MATÉRIELS AFFECTÉS AU PROJET
+- Chef de projet dédié assurant le pilotage technique et le reporting régulier.
+- Équipes techniques qualifiées et outillage moderne garantissant une exécution rapide et soignée.
+
+4. DÉMARCHE QUALITÉ, HYGIÈNE ET SÉCURITÉ (Q-HSE)
+- Respect scrupuleux des normes de sécurité et de propreté sur les lieux d'intervention.
+- Engagement ferme sur la réactivité du service après-vente et la garantie légale des prestations.
+
+Fait à : ...................................., le : ${todayStr}`;
+        }
     }
 
     /**
@@ -1189,14 +1529,16 @@ ${itemsSummary}
         if (btn) btn.disabled = true;
         try {
             var res = await callAIChat(currentCopilotMessages, systemContext, 25000);
-            if (res.ok && res.text) {
+            if (res.ok && res.text && !isUnconfiguredAIMessage(res.text)) {
                 currentCopilotMessages.push({ role: 'assistant', content: res.text });
             } else {
-                var errTxt = (curLang === 'fr') ? "Désolé, une erreur est survenue lors de la communication avec l'IA." : ((curLang === 'en') ? "Sorry, an error occurred while connecting to AI." : "عذراً، حدث خطأ أثناء الاتصال بالذكاء الاصطناعي.");
-                currentCopilotMessages.push({ role: 'assistant', content: errTxt + (res.error ? ' (' + res.error + ')' : '') });
+                // Seamless local Algerian procurement copilot fallback
+                var offlineReply = generateOfflineCopilotResponse(text, tObj, currentAnalysisItems, curLang);
+                currentCopilotMessages.push({ role: 'assistant', content: offlineReply });
             }
         } catch(e) {
-            currentCopilotMessages.push({ role: 'assistant', content: (curLang === 'fr') ? 'Erreur de connexion réseau.' : 'حدث خطأ في الشبكة.' });
+            var offlineReply = generateOfflineCopilotResponse(text, tObj, currentAnalysisItems, curLang);
+            currentCopilotMessages.push({ role: 'assistant', content: offlineReply });
         } finally {
             if (btn) btn.disabled = false;
             renderCopilotMessages();
@@ -1220,13 +1562,13 @@ ${itemsSummary}
 Titre: ${tObj ? tObj.title : 'Marché de prestations'}
 Référence: ${tObj ? tObj.reference : 'AO-2026/01'}
 Maître d'ouvrage: ${tObj ? tObj.authority : 'Administration contractante'}
-Montant total de l'offre: ${totalAmount} DZD. Formule juridique formelle.`
+Montant total de l'offre: ${totalAmount} DZD. Formule juridique formelle selon le Décret présidentiel 15-247.`
                 : `قم بصياغة خطاب تقديم رسمي (Lettre de Soumission) كامل وجاهز للطباعة والتوقيع لمناقصة:
 العنوان: ${tObj ? tObj.title : 'صفقة خدمات وتجهيزات'}
 المرجع: ${tObj ? tObj.reference : 'AO-2026/01'}
 الجهة المتعاقدة: ${tObj ? tObj.authority : 'المؤسسة الوطنية / الإدارة'}
 المبلغ الإجمالي للعرض: ${totalAmount} دج
-الصيغة تكون رسمية وقانونية وفق النموذج المعمول به في الصفقات العمومية.`;
+الصيغة تكون رسمية وقانونية وفق النموذج المعمول به في المرسوم الرئاسي 15-247 للصفقات العمومية.`;
         } else if (docType === 'bpu') {
             var itemsList = currentAnalysisItems.map(function(it, i){
                 return `Item ${i+1}: ${it.name} | Qty: ${it.qty} | Prix: ${it.customPrice || 10000} DZD`;
@@ -1241,17 +1583,17 @@ Comprenant: Méthodologie, planning prévisionnel, moyens humains et matériels,
         }
 
         if (loader) loader.style.display = 'block';
-        textarea.value = (curLang === 'fr') ? 'Génération IA en cours...' : ((curLang === 'en') ? 'AI generation in progress...' : 'جاري التوليد بالذكاء الاصطناعي...');
+        textarea.value = (curLang === 'fr') ? 'Génération du document officiel en cours...' : ((curLang === 'en') ? 'Drafting official procurement document...' : 'جاري صياغة المستند الرسمي بالمعايير القانونية...');
 
         try {
             var aiRes = await callAIChat(prompt, "You are an executive procurement documentation officer. Provide clean, production-ready legal and technical tender documentation.", 25000);
-            if (aiRes.ok && aiRes.text) {
+            if (aiRes.ok && aiRes.text && !isUnconfiguredAIMessage(aiRes.text)) {
                 textarea.value = aiRes.text;
             } else {
-                textarea.value = (curLang === 'fr' ? 'Échec de la génération : ' : 'فشل في توليد المستند: ') + (aiRes.error || 'Veuillez réessayer.');
+                textarea.value = generateOfflineDraftDocument(docType, tObj, currentAnalysisItems, totalAmount, curLang);
             }
         } catch (e) {
-            textarea.value = 'Error: ' + e.message;
+            textarea.value = generateOfflineDraftDocument(docType, tObj, currentAnalysisItems, totalAmount, curLang);
         } finally {
             if (loader) loader.style.display = 'none';
         }

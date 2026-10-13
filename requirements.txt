@@ -20,7 +20,6 @@ python-multipart>=0.0.9
 # System tray launcher (eliminates the console window on Windows)
 pystray>=0.19.5; sys_platform == 'win32'
 Pillow>=10.0.0
-pytesseract>=0.3.10
 
 # Optional extras (not required for core runtime)
 # bcrypt>=4.0.1
