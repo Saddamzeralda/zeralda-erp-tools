@@ -305,6 +305,24 @@ def create_app() -> FastAPI:
             return JSONResponse(status_code=404, content={"ok": False, "error": "Not found"})
         if candidate.is_file():
             return FileResponse(str(candidate))
+
+        # Smart resolution / shortcut for module HTML pages requested at root level
+        clean_fn = safe.lower().strip()
+        MODULE_SHORTCUTS = {
+            "inventory_management.html": "modules/inventory/inventory_management.html",
+            "sales_management.html": "modules/sales/sales_management.html",
+            "purchasing_management.html": "modules/purchasing/purchasing_management.html",
+            "finance_accounting.html": "modules/finance/finance_accounting.html",
+            "hr_management.html": "modules/hr/hr_management.html",
+            "crm_management.html": "modules/crm/crm_management.html",
+            "reports_analytics.html": "modules/reports/reports_analytics.html",
+            "services_management.html": "modules/services/services_management.html",
+            "consulting_tenders_management.html": "modules/consulting/consulting_tenders_management.html",
+        }
+        if clean_fn in MODULE_SHORTCUTS:
+            from fastapi.responses import RedirectResponse
+            return RedirectResponse(url=f"/{MODULE_SHORTCUTS[clean_fn]}", status_code=302)
+
         return JSONResponse(status_code=404, content={"ok": False, "error": "File not found"})
 
     # ── Startup / shutdown ──────────────────────────────────────────────

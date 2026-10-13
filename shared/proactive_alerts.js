@@ -305,7 +305,7 @@
               severity: 'danger',
               title: t('tenderOverdueTitle'),
               message: t('tenderOverdueMsg', { title: tenderTitle, deadline: deadlineStr }),
-              link: 'consulting_tenders_management.html',
+              link: 'modules/consulting/consulting_tenders_management.html',
               days: diffDays,
               timestamp: Date.now()
             });
@@ -316,7 +316,7 @@
               severity: diffDays <= 2 ? 'danger' : 'warning',
               title: getTenderDaysTitle(diffDays),
               message: t('tenderUrgentMsg', { title: tenderTitle, ref: tenderRef, deadline: deadlineStr }),
-              link: 'consulting_tenders_management.html',
+              link: 'modules/consulting/consulting_tenders_management.html',
               days: diffDays,
               timestamp: Date.now()
             });
@@ -345,7 +345,7 @@
               severity: 'danger',
               title: t('stockOutTitle'),
               message: t('stockOutMsg', { name: name }),
-              link: 'inventory_management.html',
+              link: 'modules/inventory/inventory_management.html',
               timestamp: Date.now()
             });
           } else if (qty <= minQty) {
@@ -355,7 +355,7 @@
               severity: 'warning',
               title: t('stockLowTitle'),
               message: t('stockLowMsg', { name: name, qty: qty, minQty: minQty }),
-              link: 'inventory_management.html',
+              link: 'modules/inventory/inventory_management.html',
               timestamp: Date.now()
             });
           }
@@ -394,7 +394,7 @@
                 curr: currSymbol,
                 date: dueDate
               }),
-              link: 'sales_management.html',
+              link: 'modules/sales/sales_management.html',
               timestamp: Date.now()
             });
           }
