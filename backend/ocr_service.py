@@ -533,10 +533,25 @@ def _enhance_image_for_ocr(img, threshold: int = 140):
     return img
 
 
+def _correct_image_orientation(img, tess_mod) -> Image.Image:
+    """Detect and auto-correct inverted (180°) or sideways (90°/270°) document scans."""
+    try:
+        osd = tess_mod.image_to_osd(img)
+        m = re.search(r'Rotate:\s*(\d+)', osd)
+        if m:
+            angle = int(m.group(1))
+            if angle in (90, 180, 270):
+                return img.rotate(angle, expand=True)
+    except Exception:
+        pass
+    return img
+
+
 def _extract_from_image_bytes(image_bytes: bytes, lang: str, mime_type: str = "image/jpeg") -> str:
     """Perform fast, accurate OCR on image bytes using pytesseract + Pillow.
 
     Optimized for responsiveness:
+    - Auto-corrects scan orientation (inverted 180° or rotated scans).
     - Downscales oversized images (>2048px) to reduce CPU load.
     - Uses grayscale + PSM 3 as primary single-pass execution.
     - Only falls back to contrast enhancement if initial extraction is sparse.
@@ -565,6 +580,9 @@ def _extract_from_image_bytes(image_bytes: bytes, lang: str, mime_type: str = "i
             img = img.resize((int(w * scale), int(h * scale)), resample)
 
         gray = img.convert('L')
+        # Auto-correct inverted or rotated document
+        gray = _correct_image_orientation(gray, _tess)
+
         # Fast Primary Pass: PSM 3 (automatic layout)
         try:
             text = _tess.image_to_string(gray, lang=lang, config='--psm 3').strip()
@@ -603,6 +621,7 @@ def _extract_from_pdf_bytes(pdf_bytes: bytes, lang: str, max_pages: int = 35) ->
     - Extracts text layer from pages (up to 35 pages) instantaneously.
     - For scanned PDFs without text layers: renders the first key pages (max 4 pages)
       using fast 130 DPI pixmaps and 1-pass Tesseract.
+    - Auto-detects inverted document orientation (e.g. 180° upside-down scan) and corrects it.
     - Hard time limit of 35s prevents Railway 504 Gateway Timeouts (which occur at 60s).
     """
     if not fitz:
@@ -648,6 +667,7 @@ def _extract_from_pdf_bytes(pdf_bytes: bytes, lang: str, max_pages: int = 35) ->
         from PIL import Image, ImageEnhance
         image_ocr_count = 0
         max_image_pages = 4  # First 4 pages contain >90% of tender specs & submission terms
+        detected_rotation = 0
 
         for i in range(min(total_pages, max_image_pages)):
             # Hard deadline check to prevent cloud proxy timeout
@@ -662,6 +682,21 @@ def _extract_from_pdf_bytes(pdf_bytes: bytes, lang: str, max_pages: int = 35) ->
                 pix = page.get_pixmap(dpi=130)
                 # Directly construct grayscale PIL Image without slow PNG encode/decode in memory
                 img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples).convert('L')
+
+                # On Page 1, detect if document was scanned upside-down or sideways
+                if i == 0:
+                    try:
+                        osd = _tess.image_to_osd(img)
+                        m = re.search(r'Rotate:\s*(\d+)', osd)
+                        if m:
+                            detected_rotation = int(m.group(1))
+                            if detected_rotation in (90, 180, 270):
+                                _logger.info("Auto-detected scanned document rotation: %d degrees", detected_rotation)
+                    except Exception:
+                        detected_rotation = 0
+
+                if detected_rotation in (90, 180, 270):
+                    img = img.rotate(detected_rotation, expand=True)
 
                 # Primary Pass: Fast PSM 3 (auto layout)
                 page_ocr = ''
