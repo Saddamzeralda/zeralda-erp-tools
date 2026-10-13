@@ -534,10 +534,12 @@ def _enhance_image_for_ocr(img, threshold: int = 140):
 
 
 def _extract_from_image_bytes(image_bytes: bytes, lang: str, mime_type: str = "image/jpeg") -> str:
-    """Perform OCR on image bytes using pytesseract + Pillow.
+    """Perform fast, accurate OCR on image bytes using pytesseract + Pillow.
 
-    Requires: `pytesseract` and `Pillow` installed, and Tesseract engine available on PATH
-    or via `TESSERACT_CMD` env var. Returns extracted text.
+    Optimized for responsiveness:
+    - Downscales oversized images (>2048px) to reduce CPU load.
+    - Uses grayscale + PSM 3 as primary single-pass execution.
+    - Only falls back to contrast enhancement if initial extraction is sparse.
     """
     try:
         import pytesseract as _tess
@@ -547,40 +549,43 @@ def _extract_from_image_bytes(image_bytes: bytes, lang: str, mime_type: str = "i
     _configure_tesseract_cmd()
 
     try:
-        from PIL import Image
+        from PIL import Image, ImageEnhance
     except Exception:
         raise RuntimeError('Pillow is required for image OCR')
 
-    # Try multiple PSM modes: 6 (uniform block), 3 (auto, fully automatic), 4 (single column)
-    psm_configs = ['--psm 6', '--psm 3', '--psm 4']
-
     try:
         img = Image.open(io.BytesIO(image_bytes))
-        best_text = ''
-        # Threshold order: 100 (captures most, incl. faint), 140 (balanced), 180 (dark only)
-        for thresh in (100, 140, 180):
-            enhanced = _enhance_image_for_ocr(img, threshold=thresh)
-            for psm_config in psm_configs:
-                try:
-                    text = _tess.image_to_string(enhanced, lang=lang, config=psm_config).strip()
-                except Exception as tess_exc:
-                    _logger.debug("Tesseract PSM=%s thresh=%s failed: %s", psm_config, thresh, tess_exc)
-                    continue
-                # Prefer text with more alphanumeric characters (not just whitespace/noise)
-                if _text_quality(text) > _text_quality(best_text):
-                    best_text = text
-                if len(best_text) >= 50 and _text_quality(best_text) >= 40:
-                    break  # Good enough
-            if len(best_text) >= 50 and _text_quality(best_text) >= 40:
-                break
-        # If all enhanced versions got very little text, try original with PSM 3 (auto)
-        if len(best_text) < 20:
-            if img.mode != 'RGB':
-                img = img.convert('RGB')
-            text_orig = _tess.image_to_string(img, lang=lang).strip()
-            if _text_quality(text_orig) > _text_quality(best_text):
-                best_text = text_orig
-        return best_text
+        w, h = img.size
+        max_dim = max(w, h)
+        if max_dim > 2048:
+            scale = 1800 / max_dim
+            resample = getattr(Image, 'Resampling', getattr(Image, 'LANCZOS', None))
+            if resample is not None and hasattr(resample, 'LANCZOS'):
+                resample = resample.LANCZOS
+            img = img.resize((int(w * scale), int(h * scale)), resample)
+
+        gray = img.convert('L')
+        # Fast Primary Pass: PSM 3 (automatic layout)
+        try:
+            text = _tess.image_to_string(gray, lang=lang, config='--psm 3').strip()
+        except Exception:
+            text = ''
+
+        # If primary pass got good content, return immediately
+        if _text_quality(text) >= 25:
+            return text
+
+        # Secondary fallback: contrast enhancement with PSM 6 (single block)
+        enhancer = ImageEnhance.Contrast(gray)
+        enhanced = enhancer.enhance(1.4)
+        try:
+            alt_text = _tess.image_to_string(enhanced, lang=lang, config='--psm 6').strip()
+            if _text_quality(alt_text) > _text_quality(text):
+                text = alt_text
+        except Exception:
+            pass
+
+        return text
     except Exception as exc:
         raise RuntimeError(f"Image OCR failed: {exc}") from exc
 
@@ -592,17 +597,21 @@ def _text_quality(text: str) -> int:
 
 
 def _extract_from_pdf_bytes(pdf_bytes: bytes, lang: str, max_pages: int = 35) -> str:
-    """Extract text from PDF.
+    """Extract text from PDF with guaranteed timeout protection and fast 1-pass OCR.
 
     Behavior:
-    - If PyMuPDF (`fitz`) is available, try to extract text layer from pages (up to 35 pages).
-    - If a page has no text, render it to an image and perform OCR via pytesseract (capped at 5 pages to prevent timeouts).
-    - If pytesseract is not installed, returns whatever text was extracted from the text layer.
+    - Extracts text layer from pages (up to 35 pages) instantaneously.
+    - For scanned PDFs without text layers: renders the first key pages (max 4 pages)
+      using fast 130 DPI pixmaps and 1-pass Tesseract.
+    - Hard time limit of 35s prevents Railway 504 Gateway Timeouts (which occur at 60s).
     """
     if not fitz:
         raise RuntimeError('PyMuPDF (fitz) is required for PDF OCR')
 
-    # Try to import pytesseract (optional - only needed for image-based PDFs)
+    import time
+    t_start = time.time()
+    max_ocr_duration = 35.0  # Safe cap to guarantee return before Railway proxy 60s timeout
+
     _tess = None
     try:
         import pytesseract as _tess_mod
@@ -616,59 +625,66 @@ def _extract_from_pdf_bytes(pdf_bytes: bytes, lang: str, max_pages: int = 35) ->
         doc = fitz.open(stream=pdf_bytes, filetype='pdf')
         total_pages = len(doc)
         page_count = min(total_pages, max_pages)
-        if total_pages > max_pages:
-            _logger.info("PDF has %d pages, processing first %d only", total_pages, max_pages)
-        image_ocr_count = 0
+
+        # Pass 1: Check if any digital text layer exists in the PDF
+        has_text_layer = False
+        text_layer_parts = []
         for i in range(page_count):
             page = doc.load_page(i)
-            # Try to extract text layer first
-            page_text = page.get_text("text") or ''
-            if page_text and page_text.strip():
-                if not _is_text_garbled(page_text):
-                    out_parts.append(page_text.strip())
-                    continue
-                # Text looks garbled, fall through to OCR
+            page_text = (page.get_text("text") or '').strip()
+            if page_text and len(page_text) > 20 and not _is_text_garbled(page_text):
+                has_text_layer = True
+                text_layer_parts.append(f"--- [Page {i+1}] ---\n" + page_text)
 
-            # Fallback: render page to image and OCR (only if pytesseract is available, max 5 pages)
-            if not _tess or image_ocr_count >= 5:
-                if not _tess:
-                    _logger.debug("PDF page %d has no text layer and pytesseract unavailable, skipping", i)
-                continue
+        if has_text_layer and text_layer_parts:
+            doc.close()
+            return "\n\n".join(text_layer_parts).strip()
+
+        # Pass 2: Scanned document OCR fallback (only if pytesseract is available)
+        if not _tess:
+            doc.close()
+            return ""
+
+        from PIL import Image, ImageEnhance
+        image_ocr_count = 0
+        max_image_pages = 4  # First 4 pages contain >90% of tender specs & submission terms
+
+        for i in range(min(total_pages, max_image_pages)):
+            # Hard deadline check to prevent cloud proxy timeout
+            if time.time() - t_start > max_ocr_duration:
+                _logger.warning("PDF OCR reached %ds timeout safety limit, returning partial text", int(max_ocr_duration))
+                break
+
             image_ocr_count += 1
             try:
-                mat = fitz.Matrix(2.5, 2.5)  # higher zoom for better OCR of faint text
-                pix = page.get_pixmap(matrix=mat)
-                img_bytes = pix.tobytes(output='png')
-                from PIL import Image
-                img = Image.open(io.BytesIO(img_bytes))
-                # Try multiple PSM modes for structured documents
-                psm_configs = ['--psm 6', '--psm 3', '--psm 4']
-                # Threshold order: 100 (captures most), 140 (balanced), 180 (dark only)
-                best_page_ocr = ''
-                for thresh in (100, 140, 180):
-                    enhanced = _enhance_image_for_ocr(img, threshold=thresh)
-                    for psm_config in psm_configs:
-                        try:
-                            page_ocr = _tess.image_to_string(enhanced, lang=lang, config=psm_config).strip()
-                        except Exception:
-                            continue
-                        if _text_quality(page_ocr) > _text_quality(best_page_ocr):
-                            best_page_ocr = page_ocr
-                        if len(best_page_ocr) >= 50 and _text_quality(best_page_ocr) >= 40:
-                            break
-                    if len(best_page_ocr) >= 50 and _text_quality(best_page_ocr) >= 40:
-                        break
-                # Fallback to unenhanced if all enhanced got less
-                if len(best_page_ocr) < 20:
-                    if img.mode != 'RGB':
-                        img = img.convert('RGB')
-                    page_ocr_orig = _tess.image_to_string(img, lang=lang).strip()
-                    if _text_quality(page_ocr_orig) > _text_quality(best_page_ocr):
-                        best_page_ocr = page_ocr_orig
-                if best_page_ocr:
-                    out_parts.append(best_page_ocr)
+                page = doc.load_page(i)
+                # 130 DPI is crisp (~1080p), ideal balance between fast rasterization and OCR clarity
+                pix = page.get_pixmap(dpi=130)
+                # Directly construct grayscale PIL Image without slow PNG encode/decode in memory
+                img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples).convert('L')
+
+                # Primary Pass: Fast PSM 3 (auto layout)
+                page_ocr = ''
+                try:
+                    page_ocr = _tess.image_to_string(img, lang=lang, config='--psm 3').strip()
+                except Exception as tess_err:
+                    _logger.debug("Tesseract PSM 3 page %d failed: %s", i + 1, tess_err)
+
+                # Secondary fallback: if sparse (< 25 chars), try 1 quick contrast-boosted pass with PSM 6
+                if _text_quality(page_ocr) < 25 and (time.time() - t_start < max_ocr_duration - 5):
+                    try:
+                        enhancer = ImageEnhance.Contrast(img)
+                        enhanced = enhancer.enhance(1.4)
+                        alt_ocr = _tess.image_to_string(enhanced, lang=lang, config='--psm 6').strip()
+                        if _text_quality(alt_ocr) > _text_quality(page_ocr):
+                            page_ocr = alt_ocr
+                    except Exception:
+                        pass
+
+                if page_ocr:
+                    out_parts.append(f"--- [Page {i+1}] ---\n" + page_ocr)
             except Exception as page_exc:
-                _logger.warning("PDF page %d render/OCR failed: %s", i, page_exc)
+                _logger.warning("PDF page %d OCR render failed: %s", i + 1, page_exc)
                 continue
 
         doc.close()

@@ -1335,69 +1335,94 @@ Comprenant: Méthodologie, planning prévisionnel, moyens humains et matériels,
         var file = input.files[0];
         var textarea = document.getElementById('auditDocTextInput');
         var statusEl = document.getElementById('auditOcrStatus');
+        var uploadLabel = input.closest('label');
+        var originalLabelHtml = uploadLabel ? uploadLabel.innerHTML : '';
 
         function setStatus(msg, color, bg) {
             if (statusEl) {
                 statusEl.style.display = 'block';
-                statusEl.textContent = msg;
+                statusEl.innerHTML = msg;
                 statusEl.style.color = color || '#1e40af';
                 statusEl.style.background = bg || '#eff6ff';
             }
         }
 
-        setStatus(t('statusExtracting'), '#2563eb', '#eff6ff');
-        if (textarea) textarea.value = t('statusExtracting');
+        var loadingMsg = (getActiveLang() === 'fr') 
+            ? '<i class="fas fa-spinner fa-spin"></i> Numérisation OCR en cours... Veuillez patienter (10-25s)...'
+            : '<i class="fas fa-spinner fa-spin"></i> جاري قراءة واستخراج نصوص الوثيقة ضوئياً (Tesseract OCR)... يرجى الانتظار (10-25 ثانية)...';
+
+        setStatus(loadingMsg, '#2563eb', '#eff6ff');
+        if (textarea) textarea.value = (getActiveLang() === 'fr') ? 'Numérisation et extraction en cours...' : 'جاري الفحص واستخراج النصوص...';
+
+        if (uploadLabel) {
+            uploadLabel.style.pointerEvents = 'none';
+            uploadLabel.style.opacity = '0.7';
+            uploadLabel.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>' + ((getActiveLang() === 'fr') ? 'Numérisation...' : 'جاري الفحص...') + '</span>';
+        }
 
         var isTextFile = /\.(txt|csv|tsv|json|xml)$/i.test(file.name) || (file.type && file.type.indexOf('text/') === 0);
         var extractedText = '';
+        var extractionError = '';
 
-        // 1. Try UnifiedOCR for PDF / Images / Excel / Word
-        if (window.UnifiedOCR && typeof window.UnifiedOCR.extract === 'function') {
-            try {
-                var ocr = await window.UnifiedOCR.extract(file, {
-                    endpoint: '/api/ocr/extract',
-                    allowImage: true,
-                    allowPdf: true,
-                    allowExcel: true,
-                    allowWordTxt: true,
-                    extraBody: { lang: 'ara+fra+eng' }
-                });
-                if (ocr && ocr.text && ocr.text.trim().length > 0) {
-                    extractedText = ocr.text.trim();
+        try {
+            // 1. Try UnifiedOCR for PDF / Images / Excel / Word
+            if (window.UnifiedOCR && typeof window.UnifiedOCR.extract === 'function') {
+                try {
+                    var ocr = await window.UnifiedOCR.extract(file, {
+                        endpoint: '/api/ocr/extract',
+                        allowImage: true,
+                        allowPdf: true,
+                        allowExcel: true,
+                        allowWordTxt: true,
+                        extraBody: { lang: 'ara+fra+eng' }
+                    });
+                    if (ocr && ocr.text && ocr.text.trim().length > 0) {
+                        extractedText = ocr.text.trim();
+                    }
+                } catch(e) {
+                    extractionError = (e && e.message) ? e.message : String(e);
+                    console.warn('[Audit] UnifiedOCR extraction error:', e);
                 }
-            } catch(e) {
-                console.warn('[Audit] UnifiedOCR extraction error:', e);
             }
-        }
 
-        // 2. If it is a text-based format and OCR was skipped or empty, read as UTF-8
-        if (!extractedText && isTextFile) {
-            try {
-                extractedText = await new Promise(function(resolve, reject) {
-                    var reader = new FileReader();
-                    reader.onload = function(evt) { resolve(String(evt.target.result || '').trim()); };
-                    reader.onerror = reject;
-                    reader.readAsText(file, 'utf-8');
-                });
-            } catch (readErr) {
-                console.warn('[Audit] FileReader text decode failed:', readErr);
+            // 2. If it is a text-based format and OCR was skipped or empty, read as UTF-8
+            if (!extractedText && isTextFile) {
+                try {
+                    extractedText = await new Promise(function(resolve, reject) {
+                        var reader = new FileReader();
+                        reader.onload = function(evt) { resolve(String(evt.target.result || '').trim()); };
+                        reader.onerror = reject;
+                        reader.readAsText(file, 'utf-8');
+                    });
+                } catch (readErr) {
+                    console.warn('[Audit] FileReader text decode failed:', readErr);
+                }
             }
-        }
 
-        // Reset file input so user can re-upload same file or another
-        try { input.value = ''; } catch(_) {}
-
-        // 3. Process result safely without freezing
-        if (extractedText && extractedText.length > 5) {
-            if (textarea) textarea.value = extractedText;
-            setStatus(t('statusOcrSuccess'), '#15803d', '#f0fdf4');
-            await runComprehensiveAudit();
-        } else {
-            // Document was binary (or OCR failed) and returned no readable text:
-            // NEVER decode binary as UTF-8 garbage into textarea!
-            if (textarea) textarea.value = '';
-            setStatus(t('statusUnreadable'), '#b45309', '#fffbeb');
-            if (window.showToast) window.showToast(t('statusUnreadable'), 'warning');
+            // 3. Process result safely without freezing
+            if (extractedText && extractedText.length > 5) {
+                if (textarea) textarea.value = extractedText;
+                var successNotice = (getActiveLang() === 'fr')
+                    ? ('<i class="fas fa-check-circle"></i> ' + t('statusOcrSuccess') + ' (' + extractedText.length + ' caractères extraits)')
+                    : ('<i class="fas fa-check-circle"></i> ' + t('statusOcrSuccess') + ' (تم استخراج ' + extractedText.length + ' حرف)');
+                setStatus(successNotice, '#15803d', '#f0fdf4');
+                await runComprehensiveAudit();
+            } else {
+                if (textarea) textarea.value = '';
+                var failNotice = extractionError ? ('<i class="fas fa-exclamation-triangle"></i> ' + extractionError) : ('<i class="fas fa-exclamation-triangle"></i> ' + t('statusUnreadable'));
+                setStatus(failNotice, '#b45309', '#fffbeb');
+                if (window.showToast) window.showToast(extractionError || t('statusUnreadable'), 'warning');
+            }
+        } catch (outerErr) {
+            console.error('[Audit] Unhandled error during file upload:', outerErr);
+            setStatus('<i class="fas fa-times-circle"></i> ' + (outerErr.message || t('statusError')), '#b91c1c', '#fef2f2');
+        } finally {
+            if (uploadLabel) {
+                uploadLabel.style.pointerEvents = 'auto';
+                uploadLabel.style.opacity = '1';
+                uploadLabel.innerHTML = originalLabelHtml;
+            }
+            try { input.value = ''; } catch(_) {}
         }
     };
 
