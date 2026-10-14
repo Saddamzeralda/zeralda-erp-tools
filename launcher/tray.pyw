@@ -27,7 +27,7 @@ PYTHON_EXE = APP_DIR / 'python' / 'python.exe'            # bundled python (not 
 SERVER_PY  = APP_DIR / 'server.py'                        # legacy fallback
 APP_MAIN   = APP_DIR / 'app' / 'main.py'                  # FastAPI app (preferred)
 ICON_PATH  = LAUNCHER / 'app.ico'
-DEFAULT_URL = 'https://athletic-concepts-brochure-next.trycloudflare.com/login.html?next=%2Fzeralda_erp_dashboard.html'
+DEFAULT_URL = 'https://zeralda-erp-employees-main-production.up.railway.app/login.html?next=%2Fzeralda_erp_dashboard.html'
 URL        = os.getenv('STARTUP_URL', DEFAULT_URL)
 LOG_FILE   = APP_DIR / 'logs' / 'tray.log'
 

@@ -106,7 +106,7 @@ If Len(Url) = 0 Then
     If Len(StartupUrl) > 0 Then
         Url = StartupUrl
     Else
-        Url = "https://athletic-concepts-brochure-next.trycloudflare.com/login.html?next=%2Fzeralda_erp_dashboard.html"
+        Url = "https://zeralda-erp-employees-main-production.up.railway.app/login.html?next=%2Fzeralda_erp_dashboard.html"
     End If
 End If
 WShell.Run Url, 1, False

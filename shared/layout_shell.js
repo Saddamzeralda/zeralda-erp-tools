@@ -751,9 +751,10 @@
       .then(function(data){
         var content = document.getElementById('netHostModalContent');
         if (!content) return;
+        var isCloudHost = window.location.hostname && !['localhost', '127.0.0.1'].includes(window.location.hostname) && !/^(192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[0-1]))/.test(window.location.hostname);
         var directLan = data.directLanUrl || ('http://' + (data.primaryIp || '127.0.0.1') + '/');
-        var lanUrl = directLan;
-        var remoteUrl = data.remoteUrl || '';
+        var lanUrl = isCloudHost ? (data.directLanUrl || directLan) : directLan;
+        var remoteUrl = data.remoteUrl || (isCloudHost ? window.location.origin : (data.productionUrl || 'https://zeralda-erp-employees-main-production.up.railway.app'));
 
         content.innerHTML = `
           <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e2e8f0;padding-bottom:12px;margin-bottom:16px;">
@@ -763,7 +764,7 @@
               </div>
               <div>
                 <h3 style="margin:0;font-size:16px;font-weight:800;color:#0f172a;">الاستضافة والربط الشبكي للبرنامج</h3>
-                <p style="margin:0;font-size:11px;color:#64748b;">جهازك يعمل الآن كمستضيف مركزي (Host Server)</p>
+                <p style="margin:0;font-size:11px;color:#64748b;">${isCloudHost ? 'البرنامج متصل بالخادم السحابي المباشر (Cloud Production)' : 'جهازك يعمل الآن كمستضيف مركزي (Host Server)'}</p>
               </div>
             </div>
             <button onclick="document.getElementById('${modalId}').remove()" style="border:none;background:none;font-size:20px;cursor:pointer;color:#94a3b8;">&times;</button>
@@ -771,18 +772,42 @@
 
           <div style="display:flex;flex-direction:column;gap:14px;">
             <!-- QR Code Connect Hub Link -->
-            <a href="/connect.html" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;background:linear-gradient(135deg, #2563eb, #7c3aed);color:#fff;border-radius:12px;text-decoration:none;font-weight:700;font-size:13.5px;box-shadow:0 4px 12px rgba(37,99,235,0.25);">
+            <a href="connect.html" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;background:linear-gradient(135deg, #2563eb, #7c3aed);color:#fff;border-radius:12px;text-decoration:none;font-weight:700;font-size:13.5px;box-shadow:0 4px 12px rgba(37,99,235,0.25);">
               <i class="fas fa-qrcode"></i>
               <span>📱 فتح صفحة الباركود (QR Code) لمسحها بالهاتف مباشرة</span>
               <span>↗</span>
             </a>
 
+            <!-- Remote Worldwide / Cloud Access -->
+            <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:12px;padding:14px;">
+              <div style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#166534;margin-bottom:6px;">
+                <i class="fas fa-globe"></i> 1. رابط الاستضافة السحابية والعالمية (Cloud / 4G / HTTPS):
+              </div>
+              ${remoteUrl ? `
+                <p style="font-size:11.5px;color:#15803d;margin:0 0 8px 0;">متاح عالمياً من أي هاتف أو كمبيوتر عبر الإنترنت:</p>
+                <div style="display:flex;gap:6px;align-items:center;">
+                  <input type="text" readonly value="${remoteUrl}" style="flex:1;padding:8px 12px;font-size:13px;font-weight:700;color:#166534;background:#fff;border:1px solid #86efac;border-radius:8px;direction:ltr;text-align:left;">
+                  <button onclick="navigator.clipboard.writeText('${remoteUrl}'); if(window.showToast) window.showToast('تم نسخ الرابط الخارجي!', 'success');" style="padding:8px 14px;background:#16a34a;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">
+                    <i class="fas fa-copy"></i> نسخ
+                  </button>
+                  <a href="${remoteUrl}" target="_blank" style="padding:8px 14px;background:#15803d;color:#fff;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;">
+                    فتح ↗
+                  </a>
+                </div>
+              ` : `
+                <p style="font-size:11.5px;color:#475569;margin:0 0 6px 0;">لفتح رابط خارجي آمن مشفر بـ HTTPS للوصول من خارج المكتب:</p>
+                <div style="font-size:11px;background:#fff;border:1px dashed #86efac;border-radius:8px;padding:8px 10px;color:#166534;">
+                  قم بتشغيل ملف <strong>START_REMOTE_TUNNEL.cmd</strong> الموجود في مجلد البرنامج لإنشاء رابط عالمي فوري مجاناً.
+                </div>
+              `}
+            </div>
+
             <!-- Hostname / Domain Access -->
             <div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:12px;padding:14px;">
               <div style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#1d4ed8;margin-bottom:6px;">
-                <i class="fas fa-tag"></i> 1. الدخول المباشر بالشبكة المحلية (Wi-Fi):
+                <i class="fas fa-wifi"></i> 2. الدخول المباشر بالشبكة المحلية (Wi-Fi):
               </div>
-              <p style="font-size:11.5px;color:#334155;margin:0 0 8px 0;">يعمل فوراً على أي هاتف أو كمبيوتر في نفس الواي فاي:</p>
+              <p style="font-size:11.5px;color:#334155;margin:0 0 8px 0;">يعمل فوراً على أي هاتف أو كمبيوتر في نفس الواي فاي المحلي:</p>
               <div style="display:flex;flex-direction:column;gap:6px;">
                 <div style="display:flex;gap:6px;align-items:center;">
                   <input type="text" readonly value="${lanUrl}" style="flex:1;padding:8px 12px;font-size:13px;font-weight:800;color:#1e40af;background:#fff;border:1px solid #60a5fa;border-radius:8px;direction:ltr;text-align:left;">
@@ -793,31 +818,10 @@
               </div>
             </div>
 
-            <!-- Remote Worldwide Access -->
-            <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:12px;padding:14px;">
-              <div style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:#166534;margin-bottom:6px;">
-                <i class="fas fa-globe"></i> 2. الاتصال عن بُعد عبر الإنترنت (Cloudflare Tunnel):
-              </div>
-              ${remoteUrl ? `
-                <p style="font-size:11.5px;color:#15803d;margin:0 0 8px 0;">النفق السحابي المشفر مُفعل ومتاح عالمياً:</p>
-                <div style="display:flex;gap:6px;align-items:center;">
-                  <input type="text" readonly value="${remoteUrl}" style="flex:1;padding:8px 12px;font-size:13px;font-weight:700;color:#166534;background:#fff;border:1px solid #86efac;border-radius:8px;direction:ltr;text-align:left;">
-                  <button onclick="navigator.clipboard.writeText('${remoteUrl}'); if(window.showToast) window.showToast('تم نسخ الرابط الخارجي!', 'success');" style="padding:8px 14px;background:#16a34a;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">
-                    <i class="fas fa-copy"></i> نسخ
-                  </button>
-                </div>
-              ` : `
-                <p style="font-size:11.5px;color:#475569;margin:0 0 6px 0;">لفتح رابط خارجي آمن مشفر بـ HTTPS للوصول من خارج المكتب:</p>
-                <div style="font-size:11px;background:#fff;border:1px dashed #86efac;border-radius:8px;padding:8px 10px;color:#166534;">
-                  قم بتشغيل ملف <strong>START_REMOTE_TUNNEL.cmd</strong> الموجود في مجلد البرنامج لإنشاء رابط عالمي فوري مجاناً.
-                </div>
-              `}
-            </div>
-
             <!-- Quick Info -->
             <div style="font-size:11px;color:#64748b;display:flex;justify-content:space-between;padding:0 4px;">
               <span>عنوان IP الجهاز: <strong>${data.primaryIp}</strong></span>
-              <span>المنفذ المباشر: <strong>80 / 8080</strong></span>
+              <span>المنفذ: <strong>${data.port || '8080'}</strong></span>
               <span>الحالة: <strong style="color:#16a34a;">خادم مستضيف نشط</strong></span>
             </div>
           </div>

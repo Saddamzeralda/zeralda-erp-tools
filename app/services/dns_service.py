@@ -57,7 +57,7 @@ def _get_primary_lan_ip() -> str:
             return ip
     except Exception:
         pass
-    return "192.168.100.18"
+    return "127.0.0.1"
 
 
 def _parse_qname(data: bytes, offset: int = 12) -> Tuple[str, int]:

@@ -473,8 +473,12 @@
     <div id="toast">تم نسخ الرابط بنجاح!</div>
 
     <script>
-        let lanUrl = "http://192.168.100.18/";
-        let cloudUrl = "https://athletic-concepts-brochure-next.trycloudflare.com";
+        const PRODUCTION_URL = "https://zeralda-erp-employees-main-production.up.railway.app";
+        const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const isLanIp = /^(192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[0-1]))/.test(window.location.hostname);
+        
+        let lanUrl = isLocalHost ? "http://127.0.0.1:8080/" : (isLanIp ? window.location.origin : "http://127.0.0.1:8080/");
+        let cloudUrl = (!isLocalHost && !isLanIp) ? window.location.origin : PRODUCTION_URL;
 
         function makeQR(containerId, text) {
             const el = document.getElementById(containerId);
@@ -499,14 +503,22 @@
                 const res = await fetch('/api/system/network-info');
                 if (res.ok) {
                     const data = await res.json();
-                    if (data.directLanUrl) {
+                    if (data.directLanUrl && data.primaryIp !== '127.0.0.1') {
                         lanUrl = data.directLanUrl;
-                    } else if (data.primaryIp) {
-                        lanUrl = "http://" + data.primaryIp + "/";
+                    } else if (data.lanUrl && data.primaryIp !== '127.0.0.1') {
+                        lanUrl = data.lanUrl;
+                    } else if (isLanIp) {
+                        lanUrl = window.location.origin + "/";
                     }
 
                     if (data.remoteUrl) {
                         cloudUrl = data.remoteUrl;
+                    } else if (data.cloudUrl) {
+                        cloudUrl = data.cloudUrl;
+                    } else if (!isLocalHost && !isLanIp) {
+                        cloudUrl = window.location.origin;
+                    } else {
+                        cloudUrl = PRODUCTION_URL;
                     }
                 }
             } catch (err) {
@@ -516,13 +528,15 @@
             // Update UI - LAN
             document.getElementById('text-lan').textContent = lanUrl;
             document.getElementById('btn-lan').href = lanUrl;
-            document.getElementById('pc-direct-ip').textContent = lanUrl;
+            var pcIpElem = document.getElementById('pc-direct-ip');
+            if (pcIpElem) pcIpElem.textContent = lanUrl;
             makeQR('qr-lan', lanUrl);
 
             // Update UI - Cloud
             if (cloudUrl) {
                 document.getElementById('text-cloud').textContent = cloudUrl;
                 document.getElementById('btn-cloud').href = cloudUrl;
+                document.getElementById('btn-cloud').style.display = 'inline-flex';
                 makeQR('qr-cloud', cloudUrl);
             } else {
                 document.getElementById('text-cloud').textContent = "النفق السحابي غير مشغل حالياً";

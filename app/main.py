@@ -49,7 +49,7 @@ USE_HTTPS = os.getenv("USE_HTTPS", "false").lower() == "true"
 LAUNCH_MODE = os.getenv("LAUNCH_MODE", "manual")
 AUTO_SHUTDOWN_ON_CLIENT_CLOSE = os.getenv("AUTO_SHUTDOWN_ON_CLIENT_CLOSE", "false").lower() == "true"
 AUTO_SHUTDOWN_GRACE_SECONDS = int(os.getenv("AUTO_SHUTDOWN_GRACE_SECONDS", "300"))
-DEFAULT_STARTUP_URL = "https://athletic-concepts-brochure-next.trycloudflare.com/login.html?next=%2Fzeralda_erp_dashboard.html"
+DEFAULT_STARTUP_URL = "https://zeralda-erp-employees-main-production.up.railway.app/login.html?next=%2Fzeralda_erp_dashboard.html"
 STARTUP_URL = os.getenv("STARTUP_URL", DEFAULT_STARTUP_URL)
 AUTO_OPEN_BROWSER = os.getenv("AUTO_OPEN_BROWSER", "true").lower() in ("true", "1", "yes")
 

@@ -231,7 +231,7 @@ async def export_download(request: Request):
 
 # ── Network & Remote Hosting Info ──────────────────────────────────────────
 @router.get("/system/network-info")
-async def get_network_info():
+async def get_network_info(request: Request):
     """Return local IP, LAN URLs, and active remote tunnel URL for network hosting."""
     import socket
     import json
@@ -257,16 +257,58 @@ async def get_network_info():
 
     port = int(os.getenv("PORT", "8080"))
 
-    # Check if a remote tunnel info file exists
-    remote_tunnel_url = None
+    # Production URL reference
+    official_production_url = "https://zeralda-erp-employees-main-production.up.railway.app"
+
+    # 1. Detect if running inside cloud environment (Railway, etc.)
+    cloud_env_domain = os.getenv("RAILWAY_PUBLIC_DOMAIN") or os.getenv("RAILWAY_STATIC_URL") or os.getenv("PUBLIC_URL")
+    cloud_url = None
+    if cloud_env_domain:
+        if not cloud_env_domain.startswith("http"):
+            cloud_url = f"https://{cloud_env_domain}"
+        else:
+            cloud_url = cloud_env_domain
+
+    # 2. Check incoming request host if public
+    req_host = (request.headers.get("x-forwarded-host") or request.headers.get("host") or "").strip().lower()
+    if req_host and not any(req_host.startswith(prefix) for prefix in ("localhost", "127.", "0.0.0.0", "192.168.", "10.")):
+        proto = (request.headers.get("x-forwarded-proto") or request.url.scheme or "https").lower()
+        cloud_url = f"{proto}://{req_host}"
+
+    # 3. Check if a local active remote tunnel info file exists
+    active_tunnel_url = None
     tunnel_file = storage.DATA_DIR / "remote_access_info.json"
     if tunnel_file.exists():
         try:
             with open(tunnel_file, "r", encoding="utf-8") as f:
                 tinfo = json.load(f)
-                remote_tunnel_url = tinfo.get("public_url")
+                t_pid = tinfo.get("pid")
+                t_url = tinfo.get("public_url")
+                # Validate if PID is actually running
+                is_running = False
+                if t_pid:
+                    try:
+                        import psutil
+                        is_running = psutil.pid_exists(t_pid)
+                    except Exception:
+                        try:
+                            os.kill(t_pid, 0)
+                            is_running = True
+                        except Exception:
+                            is_running = False
+                if is_running and t_url and not t_url.startswith("https://athletic-concepts"):
+                    active_tunnel_url = t_url
+                else:
+                    # Stale tunnel - remove it
+                    try:
+                        tunnel_file.unlink(missing_ok=True)
+                    except Exception:
+                        pass
         except Exception:
             pass
+
+    # Remote URL precedence: active dynamic tunnel > cloud URL > official production URL
+    remote_url = active_tunnel_url or cloud_url or official_production_url
 
     hostname = socket.gethostname()
     return {
@@ -283,7 +325,10 @@ async def get_network_info():
         "mdnsUrl": f"http://zeralda.local:{port}",
         "directMdnsUrl": "http://zeralda.local/",
         "brandUrl": "http://www.zeralda-erp.dz/",
-        "remoteUrl": remote_tunnel_url,
+        "remoteUrl": remote_url,
+        "cloudUrl": cloud_url or official_production_url,
+        "productionUrl": official_production_url,
+        "tunnelUrl": active_tunnel_url,
         "isHosting": True,
     }
 
