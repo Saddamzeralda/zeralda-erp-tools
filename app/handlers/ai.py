@@ -663,6 +663,9 @@ async def action(request: Request):
                 raise HTTPException(400, detail={"ok": False, "error": "email and password are required"})
             if role not in ("admin", "manager", "user", "viewer"):
                 raise HTTPException(400, detail={"ok": False, "error": "Invalid role"})
+            user_role = (user or {}).get("role", "viewer")
+            if role in ("admin", "manager") and user_role != "admin":
+                raise HTTPException(403, detail={"ok": False, "error": "Only admins can create admin or manager accounts", "code": "FORBIDDEN"})
             result = create_user(name, email, password, role)
             return JSONResponse(status_code=200 if result.get("ok") else 400, content=result)
 
@@ -676,7 +679,8 @@ async def action(request: Request):
                 raise HTTPException(400, detail={"ok": False, "error": "email is required"})
             update_data = {k: v for k, v in (args.get("data") or args).items()
                            if k in ("username", "name", "role", "active") and k != "email"}
-            result = update_user(email, update_data, requester_role="admin")
+            user_role = (user or {}).get("role", "viewer")
+            result = update_user(email, update_data, requester_role=user_role)
             return JSONResponse(status_code=200 if result.get("ok") else 400, content=result)
 
         # ── user_delete ──
@@ -721,7 +725,12 @@ async def action(request: Request):
             update = args.get("data") or {}
             if not isinstance(update, dict):
                 raise HTTPException(400, detail={"ok": False, "error": "data must be a JSON object"})
+            user_role = (user or {}).get("role", "viewer")
             if section == "ai":
+                if "role_permissions" in update and user_role != "admin":
+                    raise HTTPException(403, detail={"ok": False, "error": "Only admins can modify role_permissions", "code": "ADMIN_REQUIRED"})
+                if "huggingface_api_key" in update and user_role not in ("admin", "superadmin"):
+                    raise HTTPException(403, detail={"ok": False, "error": "Only admins can modify API keys", "code": "ADMIN_REQUIRED"})
                 ai_sf = os.path.join(storage.DATA_DIR, "ai_settings.json")
                 try:
                     with open(ai_sf, "r", encoding="utf-8") as f:

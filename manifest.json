@@ -1,0 +1,16 @@
+{
+  "name": "Zeralda ERP",
+  "short_name": "Zeralda ERP",
+  "start_url": "/zeralda_erp_dashboard.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#2563eb",
+  "description": "Zeralda ERP - Enterprise Resource Planning System",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ]
+}

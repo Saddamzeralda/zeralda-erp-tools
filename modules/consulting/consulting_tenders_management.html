@@ -335,8 +335,34 @@
     .toast.info { background: #2563eb; }
     @keyframes toastSlideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
+    /* Costing & Analytics Styles */
+    .costing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 768px) { .costing-grid { grid-template-columns: 1fr; } }
+    .badge-expired { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; font-size: 11px; padding: 2px 7px; border-radius: 6px; }
+    .badge-warning-date { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; font-size: 11px; padding: 2px 7px; border-radius: 6px; }
+    .badge-valid-date { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; font-size: 11px; padding: 2px 7px; border-radius: 6px; }
+    .check-category-pill { font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 12px; background: #e0e7ff; color: #3730a3; margin-right: 6px; }
+    .funnel-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 12.5px; }
+    .funnel-bar-bg { flex: 1; height: 10px; background: #e2e8f0; border-radius: 5px; overflow: hidden; }
+    .funnel-bar-fill { height: 100%; border-radius: 5px; transition: width 0.4s ease; }
+    
+    /* Official Lettre Sheet */
+    .lettre-sheet {
+      background: white; border: 1px solid #cbd5e1; border-radius: 8px; padding: 36px 42px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.06); font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+      min-height: 480px; max-height: 62vh; overflow-y: auto; line-height: 1.8; font-size: 14px; color: #0f172a;
+    }
+    .lettre-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0f172a; padding-bottom: 14px; margin-bottom: 20px; }
+    .lettre-stamp-box { border: 2px dashed #94a3b8; border-radius: 8px; padding: 18px 24px; min-height: 110px; min-width: 200px; text-align: center; color: #64748b; font-size: 12px; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; }
+
     /* Print styling */
     @media print {
+      body.printing-lettre * { visibility: hidden !important; }
+      body.printing-lettre #lettreDocumentSheet, body.printing-lettre #lettreDocumentSheet * { visibility: visible !important; }
+      body.printing-lettre #lettreDocumentSheet {
+        position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important;
+        max-height: none !important; border: none !important; box-shadow: none !important; padding: 15mm 20mm !important;
+      }
       .header, .tabs, .action-bar, .filter-chips, .view-switcher, .btn, .close-modal, #sharedLayoutMount { display: none !important; }
       .main-content { margin: 0 !important; padding: 0 !important; }
       .tab-content { display: block !important; padding: 0 !important; }
@@ -356,10 +382,13 @@
         <div class="breadcrumb"><i class="fas fa-briefcase"></i> <span data-en="Track consulting engagements, public tenders pipeline & requisitions" data-ar="متابعة ملفات الاستشارات، مسار المناقصات وطلبات الاقتناء" data-fr="Suivre les missions de conseil, appels d'offres et réquisitions">Track consulting engagements, public tenders pipeline & requisitions</span></div>
       </div>
       <div class="btn-group">
+        <button class="btn btn-purple btn-sm" onclick="toggleAdvancedAnalytics()"><i class="fas fa-chart-line"></i> <span id="toggleAnalyticsBtnText" data-en="Analytics & KPIs" data-ar="لوحة التحليلات ومؤشرات الأداء" data-fr="Tableau de bord">لوحة التحليلات ومؤشرات الأداء</span></button>
+        <button class="btn btn-primary btn-sm" onclick="openCostingModal()"><i class="fas fa-calculator"></i> <span data-en="Costing & Win %" data-ar="حاسبة التكاليف ونسبة الفوز" data-fr="Calculateur coûts">حاسبة التكاليف ونسبة الفوز</span></button>
+        <button class="btn btn-warning btn-sm" onclick="openLettreSoumissionModal()"><i class="fas fa-file-signature"></i> <span data-en="Submission Letter" data-ar="رسالة التعهد بالعرض" data-fr="Lettre de soumission">رسالة التعهد بالعرض</span></button>
         <button class="btn btn-secondary btn-sm" onclick="printPage()" title="Print Current View"><i class="fas fa-print"></i> <span data-en="Print" data-ar="طباعة" data-fr="Imprimer">Print</span></button>
-        <button class="btn btn-primary" onclick="openConsultModal()"><i class="fas fa-plus"></i> <span data-en="New Consultation" data-ar="استشارة جديدة" data-fr="Nouvelle consultation">New Consultation</span></button>
-        <button class="btn btn-success" onclick="openTenderModal()"><i class="fas fa-plus"></i> <span data-en="New Tender" data-ar="مناقصة جديدة" data-fr="Nouvel AO">New Tender</span></button>
-        <button class="btn btn-info" onclick="openRequisitionModal()"><i class="fas fa-plus"></i> <span data-en="New Requisition" data-ar="طلب اقتناء جديد" data-fr="Nouvelle réquisition">New Requisition</span></button>
+        <button class="btn btn-primary btn-sm" onclick="openConsultModal()"><i class="fas fa-plus"></i> <span data-en="New Consultation" data-ar="استشارة جديدة" data-fr="Nouvelle consultation">New Consultation</span></button>
+        <button class="btn btn-success btn-sm" onclick="openTenderModal()"><i class="fas fa-plus"></i> <span data-en="New Tender" data-ar="مناقصة جديدة" data-fr="Nouvel AO">New Tender</span></button>
+        <button class="btn btn-info btn-sm" onclick="openRequisitionModal()"><i class="fas fa-plus"></i> <span data-en="New Requisition" data-ar="طلب اقتناء جديد" data-fr="Nouvelle réquisition">New Requisition</span></button>
       </div>
     </div>
 
@@ -412,6 +441,69 @@
       </div>
     </div>
 
+    <!-- ════════ ADVANCED ANALYTICS & WIN/LOSS KPIS PANEL ════════ -->
+    <div id="advancedAnalyticsPanel" style="display:none; background:white; border-radius:16px; padding:22px; margin-bottom:24px; border:1px solid #e2e8f0; box-shadow:var(--card-shadow); animation:fadeIn 0.25s ease;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; border-bottom:1px solid #f1f5f9; padding-bottom:12px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div style="width:38px; height:38px; border-radius:10px; background:linear-gradient(135deg, #7c3aed, #4f46e5); color:white; display:flex; align-items:center; justify-content:center; font-size:16px;"><i class="fas fa-chart-line"></i></div>
+          <div>
+            <h3 style="font-size:17px; font-weight:800; color:#0f172a;" data-en="Tender Analytics & Win/Loss KPIs" data-ar="لوحة التحليلات المعمقة ونسب الفوز بالصفقات" data-fr="Analyses et Performance des AO">لوحة التحليلات المعمقة ونسب الفوز بالصفقات</h3>
+            <p style="font-size:12px; color:#64748b;" data-en="Conversion funnel, margins & critical tender countdowns" data-ar="قمع التحويل، كفاءة الهوامش والآجال العاجلة للطلبات والصفقات" data-fr="Entonnoir de conversion, marges et échéances critiques">قمع التحويل، كفاءة الهوامش والآجال العاجلة للطلبات والصفقات</p>
+          </div>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="toggleAdvancedAnalytics()"><i class="fas fa-times"></i></button>
+      </div>
+
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:18px; margin-bottom:18px;">
+        <!-- Pipeline Conversion Funnel -->
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:16px;">
+          <h4 style="font-size:13px; font-weight:700; color:#334155; margin-bottom:12px; display:flex; justify-content:space-between;">
+            <span><i class="fas fa-filter text-primary"></i> <span data-en="Conversion Funnel" data-ar="قمع التحويل للصفقات" data-fr="Entonnoir de conversion">قمع التحويل للصفقات</span></span>
+            <span id="kpiConversionRate" class="badge badge-open">0% فوز</span>
+          </h4>
+          <div id="analyticsFunnelBars" style="display:flex; flex-direction:column; gap:8px;"></div>
+        </div>
+
+        <!-- Financial Breakdown & Margins -->
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:16px;">
+          <h4 style="font-size:13px; font-weight:700; color:#334155; margin-bottom:12px;">
+            <i class="fas fa-percentage text-success"></i> <span data-en="Margins & Financial Velocity" data-ar="المردودية والهوامش المحققة" data-fr="Marges & Rentabilité">المردودية والهوامش المحققة</span>
+          </h4>
+          <div style="display:flex; flex-direction:column; gap:10px; font-size:13px;">
+            <div style="display:flex; justify-content:space-between;">
+              <span style="color:#64748b;" data-en="Average Estimated Margin:" data-ar="متوسط هامش الربح المحسوب:" data-fr="Marge moyenne estimée :">متوسط هامش الربح المحسوب:</span>
+              <span id="kpiAvgMargin" style="font-weight:700; color:#059669;">18%</span>
+            </div>
+            <div style="display:flex; justify-content:space-between;">
+              <span style="color:#64748b;" data-en="Total Pipeline Volume:" data-ar="إجمالي القيمة التقديرية للمسار:" data-fr="Volume global du pipeline :">إجمالي القيمة التقديرية للمسار:</span>
+              <span id="kpiTotalPipeline" style="font-weight:700; color:#2563eb;">0.00 دج</span>
+            </div>
+            <div style="display:flex; justify-content:space-between;">
+              <span style="color:#64748b;" data-en="Total Won Revenue:" data-ar="قيمة الصفقات المؤكدة (Won):" data-fr="Volume total remporté :">قيمة الصفقات المؤكدة (Won):</span>
+              <span id="kpiWonVolume" style="font-weight:800; color:#16a34a;">0.00 دج</span>
+            </div>
+            <div style="display:flex; justify-content:space-between;">
+              <span style="color:#64748b;" data-en="Average Tender Value:" data-ar="متوسط قيمة المناقصة الواحدة:" data-fr="Valeur moyenne d'un AO :">متوسط قيمة المناقصة الواحدة:</span>
+              <span id="kpiAvgTenderValue" style="font-weight:700; color:#334155;">0.00 دج</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Authorities & Sectors Distribution -->
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:16px;">
+          <h4 style="font-size:13px; font-weight:700; color:#334155; margin-bottom:12px;">
+            <i class="fas fa-building text-purple"></i> <span data-en="Top Authorities & Sectors" data-ar="أهم الجهات المتعاقدة والقطاعات" data-fr="Principaux maîtres d'ouvrage">أهم الجهات المتعاقدة والقطاعات</span>
+          </h4>
+          <div id="analyticsAuthoritiesList" style="display:flex; flex-direction:column; gap:6px; max-height:140px; overflow-y:auto;"></div>
+        </div>
+      </div>
+
+      <!-- Urgent Deadlines Countdown Bar -->
+      <div id="analyticsUrgentDeadlinesBox" style="background:#fef2f2; border:1px solid #fecaca; border-radius:12px; padding:12px 16px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+        <!-- Injected dynamically in renderAdvancedAnalytics() -->
+      </div>
+    </div>
+
     <!-- Tabs Container -->
     <div class="tabs-container">
       <div class="tabs">
@@ -451,6 +543,8 @@
               <button id="viewBtnTable" class="view-btn active" onclick="setTenderViewMode('table')"><i class="fas fa-table"></i> <span data-en="Table" data-ar="جدول" data-fr="Tableau">Table</span></button>
               <button id="viewBtnKanban" class="view-btn" onclick="setTenderViewMode('kanban')"><i class="fas fa-columns"></i> <span data-en="Kanban" data-ar="كانبان" data-fr="Kanban">Kanban</span></button>
             </div>
+            <button class="btn btn-primary btn-sm" onclick="openCostingModal()" title="حاسبة التكاليف وهوامش الربح وتقدير نسبة الفوز"><i class="fas fa-calculator"></i> <span data-en="Costing Calc" data-ar="حاسبة التكاليف" data-fr="Calculateur">حاسبة التكاليف</span></button>
+            <button class="btn btn-warning btn-sm" onclick="openLettreSoumissionModal()" title="توليد رسالة التعهد بالعرض الرسمية"><i class="fas fa-file-signature"></i> <span data-en="Submission Letter" data-ar="رسالة التعهد" data-fr="Lettre de soumission">رسالة التعهد</span></button>
             <button class="btn btn-purple btn-sm" onclick="openSmartPricingForTender(null, 'copilot')" title="AI Tender Copilot" style="background: linear-gradient(135deg, #7c3aed, #4f46e5); color: white; border: none; font-weight: 600;"><i class="fas fa-brain"></i> <span data-en="AI Copilot" data-ar="المساعد الذكي" data-fr="Copilote IA">المساعد الذكي</span></button>
             <button class="btn btn-info btn-sm" onclick="openTenderOcrModal()" title="AI Scan & OCR via Copilote IA"><i class="fas fa-robot"></i> <span data-en="AI Scan" data-ar="مسح ذكي (Scan IA)" data-fr="Scan IA">مسح ذكي (Scan IA)</span></button>
             <button class="btn btn-secondary btn-sm" onclick="exportTendersCSV()" title="Export CSV"><i class="fas fa-file-csv"></i> <span data-en="CSV" data-ar="تصدير CSV" data-fr="CSV">CSV</span></button>
@@ -658,7 +752,10 @@
           <div class="form-group">
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <label data-en="Estimated Amount (DZD)" data-ar="القيمة التقديرية (دج)" data-fr="Montant estimé (DZD)">Estimated Amount (DZD)</label>
-              <button type="button" class="btn btn-secondary btn-sm" style="padding:2px 8px; font-size:11px;" onclick="triggerSmartPricingFromModal()"><i class="fas fa-brain"></i> <span data-en="Smart Price" data-ar="تسعير ذكي" data-fr="Prix IA">Smart Price</span></button>
+              <div style="display:flex; gap:4px;">
+                <button type="button" class="btn btn-primary btn-sm" style="padding:2px 8px; font-size:11px;" onclick="openCostingModalFromTenderModal()"><i class="fas fa-calculator"></i> <span data-en="Costing" data-ar="حاسبة التكاليف" data-fr="Coûts">حاسبة التكاليف</span></button>
+                <button type="button" class="btn btn-secondary btn-sm" style="padding:2px 8px; font-size:11px;" onclick="triggerSmartPricingFromModal()"><i class="fas fa-brain"></i> <span data-en="Smart Price" data-ar="تسعير ذكي" data-fr="Prix IA">Smart Price</span></button>
+              </div>
             </div>
             <input id="tenderAmount" class="form-input" type="number" min="0" step="0.01" placeholder="0.00">
           </div>
@@ -697,6 +794,15 @@
         <button class="close-modal" onclick="closeChecklistModal()"><i class="fas fa-times"></i></button>
       </div>
       <div class="modal-body">
+        <!-- Algerian Procurement Presets -->
+        <div style="background:#f1f5f9; padding:10px 14px; border-radius:10px; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+          <span style="font-size:12px; font-weight:700; color:#475569;"><i class="fas fa-magic text-primary"></i> <span data-en="Compliance Templates:" data-ar="نماذج الملفات الرسمية المعتمدة:" data-fr="Modèles conformité :">نماذج الملفات الرسمية المعتمدة:</span></span>
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <button type="button" class="btn btn-primary btn-sm" style="font-size:11px; padding:4px 10px;" onclick="loadChecklistPreset('marche_public')"><i class="fas fa-gavel"></i> <span data-en="Public Tender (Decree 15-247)" data-ar="صفقات عمومية (مرسوم 15-247)" data-fr="Marché Public (15-247)">صفقات عمومية (مرسوم 15-247)</span></button>
+            <button type="button" class="btn btn-secondary btn-sm" style="font-size:11px; padding:4px 10px;" onclick="loadChecklistPreset('consultation')"><i class="fas fa-bolt"></i> <span data-en="Quick Consultation" data-ar="استشارة مبسطة" data-fr="Consultation simple">استشارة مبسطة</span></button>
+            <button type="button" class="btn btn-secondary btn-sm" style="font-size:11px; padding:4px 10px;" onclick="loadChecklistPreset('prive')"><i class="fas fa-building"></i> <span data-en="Private / Supply Bid" data-ar="توريدات وقطاع خاص" data-fr="Privé & Fournitures">توريدات وقطاع خاص</span></button>
+          </div>
+        </div>
         <div id="checklistMeta" class="check-meta">-</div>
         <div id="checklistGrid" class="checklist-grid"></div>
         <div id="checklistProgress" style="margin-top:14px;font-size:13px;color:#6b7280;"></div>
@@ -761,6 +867,177 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="closeRiskModal()"><i class="fas fa-times"></i> <span data-en="Close" data-ar="إغلاق" data-fr="Fermer">Close</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Bid Margin & Costing Calculator Modal ── -->
+  <div id="tenderCostingModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" style="width:min(900px, 96vw);">
+      <div class="modal-header" style="background: linear-gradient(135deg, #059669, #047857); color: white;">
+        <h3 style="color:white;"><i class="fas fa-calculator"></i> <span id="costingModalTitle" data-en="Bid Margin & Costing Calculator" data-ar="حاسبة التكاليف وهوامش الربح وتقدير نسبة الفوز" data-fr="Calculateur de Coûts & Marge">حاسبة التكاليف وهوامش الربح</span></h3>
+        <button class="close-modal" onclick="closeCostingModal()" style="color:white; background:rgba(255,255,255,0.2);"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <!-- Target Tender Selector -->
+        <div style="background:#f8fafc; padding:12px 16px; border-radius:12px; margin-bottom:18px; border:1px solid #e2e8f0; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+          <div>
+            <label style="font-size:12px; font-weight:700; color:#64748b; display:block; margin-bottom:4px;" data-en="Target Tender:" data-ar="المناقصة المستهدفة:" data-fr="Appel d'offres :">المناقصة المستهدفة:</label>
+            <select id="costingTenderSelect" class="form-input" style="min-width:280px;" onchange="onCostingTenderChange()">
+              <option value="-1">-- مناقصة جديدة أو تقدير حر --</option>
+            </select>
+          </div>
+          <div id="costingTenderMeta" style="font-size:12.5px; color:#475569;">
+            <!-- Reference, Authority info -->
+          </div>
+        </div>
+
+        <div class="costing-grid">
+          <!-- Left: Direct Costing Inputs -->
+          <div style="background:#ffffff; padding:16px; border-radius:12px; border:1px solid #e2e8f0;">
+            <h4 style="font-size:14px; font-weight:800; color:#1e293b; margin-bottom:14px; display:flex; align-items:center; gap:8px;">
+              <i class="fas fa-coins text-warning"></i> <span data-en="Direct Project Costs" data-ar="التكاليف المباشرة للمشروع (Coûts Directs)" data-fr="Coûts Directs du Projet">التكاليف المباشرة للمشروع (Coûts Directs)</span>
+            </h4>
+            <div class="form-group" style="margin-bottom:10px;">
+              <label style="font-size:12px; font-weight:600;" data-en="Materials & Purchases (DZD)" data-ar="المواد والمشتريات (Matériaux & Fournitures) دج" data-fr="Matériaux & Achats (DZD)">المواد والمشتريات (Matériaux & Fournitures) دج</label>
+              <input type="number" id="costMaterials" class="form-input" min="0" step="1000" value="0" oninput="calculateCosting()">
+            </div>
+            <div class="form-group" style="margin-bottom:10px;">
+              <label style="font-size:12px; font-weight:600;" data-en="Direct Labor (DZD)" data-ar="اليد العاملة المباشرة والأجور (Main d'œuvre directe) دج" data-fr="Main d'œuvre directe (DZD)">اليد العاملة المباشرة والأجور (Main d'œuvre directe) دج</label>
+              <input type="number" id="costLabor" class="form-input" min="0" step="1000" value="0" oninput="calculateCosting()">
+            </div>
+            <div class="form-group" style="margin-bottom:10px;">
+              <label style="font-size:12px; font-weight:600;" data-en="Equipment, Plant & Logistics (DZD)" data-ar="العتاد والآليات والنقل (Équipements & Logistique) دج" data-fr="Matériel & Logistique (DZD)">العتاد والآليات والنقل (Équipements & Logistique) دج</label>
+              <input type="number" id="costEquipment" class="form-input" min="0" step="1000" value="0" oninput="calculateCosting()">
+            </div>
+            <div class="form-group" style="margin-bottom:14px;">
+              <label style="font-size:12px; font-weight:600;" data-en="Subcontracting & Services (DZD)" data-ar="المقاولات من الباطن والخدمات (Sous-traitance & Services) دج" data-fr="Sous-traitance & Prestations (DZD)">المقاولات من الباطن والخدمات (Sous-traitance & Services) دج</label>
+              <input type="number" id="costSubcontract" class="form-input" min="0" step="1000" value="0" oninput="calculateCosting()">
+            </div>
+
+            <div style="padding:10px 12px; background:#f1f5f9; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-size:13px; font-weight:700; color:#475569;" data-en="Direct Cost Total:" data-ar="إجمالي التكلفة المباشرة:" data-fr="Total Coûts Directs :">إجمالي التكلفة المباشرة:</span>
+              <span id="costDirectTotal" style="font-size:15px; font-weight:800; color:#0f172a;">0.00 دج</span>
+            </div>
+          </div>
+
+          <!-- Right: Margin, Overheads & Financial Offer Calculation -->
+          <div style="background:#ffffff; padding:16px; border-radius:12px; border:1px solid #e2e8f0;">
+            <h4 style="font-size:14px; font-weight:800; color:#1e293b; margin-bottom:14px; display:flex; align-items:center; gap:8px;">
+              <i class="fas fa-chart-pie text-primary"></i> <span data-en="Overheads, Margins & Offer" data-ar="المصاريف العامة وهوامش الربح والعرض" data-fr="Frais généraux & Marges">المصاريف العامة وهوامش الربح والعرض</span>
+            </h4>
+            
+            <div class="form-group" style="margin-bottom:12px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                <label style="font-size:12px; font-weight:600;" data-en="Overhead Expenses (Frais généraux %)" data-ar="المصاريف العامة والإدارية (Frais généraux %)" data-fr="Frais généraux (%)">المصاريف العامة والإدارية (Frais généraux %)</label>
+                <span id="costOverheadVal" style="font-size:12px; font-weight:700; color:#2563eb;">10%</span>
+              </div>
+              <input type="range" id="costOverheadPct" min="0" max="30" step="1" value="10" style="width:100%;" oninput="calculateCosting()">
+            </div>
+
+            <div class="form-group" style="margin-bottom:12px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                <label style="font-size:12px; font-weight:600;" data-en="Target Net Profit Margin (Marge %)" data-ar="هامش الربح الصافي المستهدف (Marge nette %)" data-fr="Marge bénéficiaire nette (%)">هامش الربح الصافي المستهدف (Marge nette %)</label>
+                <span id="costMarginVal" style="font-size:12px; font-weight:700; color:#059669;">18%</span>
+              </div>
+              <input type="range" id="costMarginPct" min="5" max="50" step="1" value="18" style="width:100%;" oninput="calculateCosting()">
+            </div>
+
+            <div class="form-group" style="margin-bottom:12px;">
+              <label style="font-size:12px; font-weight:600;" data-en="VAT / TVA Rate" data-ar="الرسم على القيمة المضافة (TVA)" data-fr="Taux de TVA">الرسم على القيمة المضافة (TVA)</label>
+              <select id="costTvaPct" class="form-input" onchange="calculateCosting()">
+                <option value="19" selected>19% (المعدل العادي للصفقات والخدمات)</option>
+                <option value="9">9% (المعدل المخفض)</option>
+                <option value="0">0% (معفى من الرسم أو تصدير)</option>
+              </select>
+            </div>
+
+            <!-- Cost Summary Box -->
+            <div style="background:#f8fafc; border-radius:10px; padding:12px; border:1px solid #e2e8f0; font-size:13px; line-height:1.7;">
+              <div style="display:flex; justify-content:space-between;">
+                <span style="color:#64748b;" data-en="Total Cost Base (Prix de revient):" data-ar="سعر التكلفة الإجمالي (Prix de revient):" data-fr="Prix de revient global :">سعر التكلفة الإجمالي (Prix de revient):</span>
+                <span id="costBaseTotal" style="font-weight:700;">0.00 دج</span>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span style="color:#64748b;" data-en="Net Profit Value:" data-ar="قيمة الربح الصافي المقترح:" data-fr="Bénéfice net prévu :">قيمة الربح الصافي المقترح:</span>
+                <span id="costProfitVal" style="font-weight:700; color:#059669;">0.00 دج</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; border-top:1px dashed #cbd5e1; padding-top:4px; margin-top:4px;">
+                <span style="color:#1e40af; font-weight:700;" data-en="Financial Bid (HT):" data-ar="العرض المالي بدون رسوم (Montant HT):" data-fr="Offre Financière HT :">العرض المالي بدون رسوم (Montant HT):</span>
+                <span id="costFinancialHT" style="font-weight:800; color:#1e40af;">0.00 دج</span>
+              </div>
+              <div style="display:flex; justify-content:space-between;">
+                <span style="color:#64748b;" data-en="VAT / TVA Amount:" data-ar="مبلغ الرسم (TVA):" data-fr="Montant TVA :">مبلغ الرسم (TVA):</span>
+                <span id="costTvaVal" style="font-weight:700;">0.00 دج</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; background:#ecfdf5; padding:6px 8px; border-radius:6px; margin-top:6px;">
+                <span style="color:#065f46; font-weight:800; font-size:14px;" data-en="Total Bid All Taxes (TTC):" data-ar="الإجمالي بكل الرسوم (Montant TTC):" data-fr="Montant Total TTC :">الإجمالي بكل الرسوم (Montant TTC):</span>
+                <span id="costFinancialTTC" style="font-weight:900; color:#065f46; font-size:15px;">0.00 دج</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Win Probability Score Gauge -->
+        <div style="margin-top:20px; background:linear-gradient(135deg, #f8fafc, #f1f5f9); border-radius:12px; padding:16px; border:1px solid #e2e8f0;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <i class="fas fa-trophy text-warning" style="font-size:18px;"></i>
+              <span style="font-weight:800; font-size:14px; color:#1e293b;" data-en="Win Probability Score:" data-ar="مؤشر احتمالية الفوز بالصفقة (Win Probability Score):" data-fr="Indice de succès estimé :">مؤشر احتمالية الفوز بالصفقة (Win Probability Score):</span>
+            </div>
+            <span id="costWinScoreBadge" class="badge badge-won" style="font-size:13px; padding:4px 12px;">78% - فرصة عالية</span>
+          </div>
+          <div class="progress-bar" style="height:12px; border-radius:6px; background:#e2e8f0;">
+            <div id="costWinScoreBar" class="progress-fill" style="width:78%; background:linear-gradient(90deg, #10b981, #059669); border-radius:6px;"></div>
+          </div>
+          <div id="costWinAdvice" style="margin-top:8px; font-size:12.5px; color:#475569;">
+            💡 نصيحة التنافسية: هامش 18% يمنح توازناً ممتازاً بين المردودية وفرصة الترسية للمناقصات العمومية.
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="display:flex; justify-content:space-between;">
+        <button class="btn btn-secondary" onclick="closeCostingModal()"><i class="fas fa-times"></i> <span data-en="Close" data-ar="إغلاق" data-fr="Fermer">إغلاق</span></button>
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-warning" onclick="generateLettreFromCosting()"><i class="fas fa-file-signature"></i> <span data-en="Draft Submission Letter" data-ar="توليد رسالة التعهد" data-fr="Lettre de soumission">توليد رسالة التعهد</span></button>
+          <button class="btn btn-success" onclick="applyCostingToTender()"><i class="fas fa-check"></i> <span data-en="Apply to Tender" data-ar="اعتماد المبلغ في المناقصة" data-fr="Appliquer à l'AO">اعتماد المبلغ في المناقصة</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Algerian Public Procurement "Lettre de Soumission" Modal ── -->
+  <div id="lettreSoumissionModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" style="width:min(940px, 96vw);">
+      <div class="modal-header" style="background: linear-gradient(135deg, #1e3a8a, #2563eb); color: white;">
+        <h3 style="color:white;"><i class="fas fa-file-contract"></i> <span data-en="Official Submission Letter (Code des Marchés)" data-ar="رسالة التعهد بالعرض الرسمية (وفق المرسوم الرئاسي 15-247)" data-fr="Lettre de Soumission Officielle (Décret 15-247)">رسالة التعهد بالعرض الرسمية (وفق المرسوم الرئاسي 15-247)</span></h3>
+        <button class="close-modal" onclick="closeLettreSoumissionModal()" style="color:white; background:rgba(255,255,255,0.2);"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <!-- Tender Selector & Document Type Switcher -->
+        <div style="background:#f8fafc; padding:12px 16px; border-radius:12px; margin-bottom:16px; border:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <label style="font-weight:700; font-size:12.5px; color:#475569;" data-en="Select Tender:" data-ar="المناقصة المستهدفة:" data-fr="Sélectionner l'AO :">المناقصة المستهدفة:</label>
+            <select id="lettreTenderSelect" class="form-input" style="min-width:280px;" onchange="onLettreTenderChange()"></select>
+          </div>
+          <div class="view-switcher">
+            <button id="btnLettreAr" class="view-btn active" onclick="switchLettreLang('ar')"><i class="fas fa-language"></i> العربية (الرسمية)</button>
+            <button id="btnLettreFr" class="view-btn" onclick="switchLettreLang('fr')"><i class="fas fa-globe"></i> Français</button>
+            <button id="btnLettreDecl" class="view-btn" onclick="switchLettreLang('decl')"><i class="fas fa-pen-nib"></i> التصريح بالاكتتاب</button>
+          </div>
+        </div>
+
+        <!-- Printable Document Canvas Sheet -->
+        <div id="lettreDocumentSheet" class="lettre-sheet">
+          <!-- Dynamically generated letterhead, legal formula, amounts in letters, signatures -->
+        </div>
+      </div>
+      <div class="modal-footer" style="display:flex; justify-content:space-between;">
+        <button class="btn btn-secondary" onclick="closeLettreSoumissionModal()"><i class="fas fa-times"></i> <span data-en="Close" data-ar="إغلاق" data-fr="Fermer">إغلاق</span></button>
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-secondary" onclick="copyLettreToClipboard()"><i class="fas fa-copy"></i> <span data-en="Copy Text" data-ar="نسخ النص" data-fr="Copier">نسخ النص</span></button>
+          <button class="btn btn-info" onclick="exportLettrePDF()"><i class="fas fa-file-pdf"></i> <span data-en="Export PDF" data-ar="تصدير PDF" data-fr="PDF">تصدير PDF</span></button>
+          <button class="btn btn-primary" onclick="printOfficialLettre()"><i class="fas fa-print"></i> <span data-en="Print Letter" data-ar="طباعة رسمية" data-fr="Imprimer">طباعة رسمية</span></button>
+        </div>
       </div>
     </div>
   </div>
@@ -1022,6 +1299,8 @@
       if(el('tendersBadge')) el('tendersBadge').textContent = tenders.length;
       if(el('consultBadge')) el('consultBadge').textContent = consultations.length;
       if(el('reqBadge')) el('reqBadge').textContent = requisitions.length;
+
+      if(typeof renderAdvancedAnalytics === 'function') renderAdvancedAnalytics();
     }
 
     // ── Sorting ──
@@ -1212,6 +1491,8 @@
           '<td>' + checklistInfo + '</td>' +
           '<td style="text-align:right;white-space:nowrap;">' +
             '<button class="btn btn-secondary btn-sm" onclick="openTenderDossier(' + realIndex + ')" title="View Dossier"><i class="fas fa-eye"></i></button> ' +
+            '<button class="btn btn-primary btn-sm" onclick="openCostingModal(' + realIndex + ')" title="حاسبة التكاليف وهوامش الربح"><i class="fas fa-calculator"></i></button> ' +
+            '<button class="btn btn-warning btn-sm" onclick="openLettreSoumissionModal(' + realIndex + ')" title="رسالة التعهد بالعرض الرسمية"><i class="fas fa-file-signature"></i></button> ' +
             '<button class="btn btn-info btn-sm" onclick="openSmartPricingForTender(' + realIndex + ')" title="Smart Pricing AI"><i class="fas fa-brain"></i></button> ' +
             '<button class="btn btn-purple btn-sm" onclick="runRiskAnalysis(\'tender\',' + realIndex + ')" title="' + escapeHtml(tr('risk_analysis','Risk Analysis')) + '"><i class="fas fa-shield-alt"></i></button> ' +
             '<button class="btn btn-warning btn-sm" onclick="toggleChecklist(' + realIndex + ')" title="' + escapeHtml(tr('checklist','Checklist')) + '"><i class="fas fa-tasks"></i></button> ' +
@@ -1278,6 +1559,8 @@
             <div class="kanban-card-footer">
               <div class="kanban-card-actions">
                 <button class="btn btn-secondary btn-sm" style="padding:4px 8px;" onclick="openTenderDossier(${realIndex})" title="Dossier"><i class="fas fa-eye"></i></button>
+                <button class="btn btn-primary btn-sm" style="padding:4px 8px;" onclick="openCostingModal(${realIndex})" title="Costing & Win %"><i class="fas fa-calculator"></i></button>
+                <button class="btn btn-warning btn-sm" style="padding:4px 8px;" onclick="openLettreSoumissionModal(${realIndex})" title="Lettre de Soumission"><i class="fas fa-file-signature"></i></button>
                 <button class="btn btn-info btn-sm" style="padding:4px 8px;" onclick="openSmartPricingForTender(${realIndex})" title="Smart Pricing AI"><i class="fas fa-brain"></i></button>
                 <button class="btn btn-purple btn-sm" style="padding:4px 8px;" onclick="runRiskAnalysis('tender', ${realIndex})" title="AI Risk"><i class="fas fa-shield-alt"></i></button>
                 <button class="btn btn-warning btn-sm" style="padding:4px 8px;" onclick="toggleChecklist(${realIndex})" title="Checklist"><i class="fas fa-tasks"></i></button>
@@ -1577,6 +1860,8 @@
 
             <div class="dossier-box" style="display:flex; flex-direction:column; gap:8px;">
               <div class="dossier-label">Quick Actions</div>
+              <button class="btn btn-primary btn-sm" onclick="openCostingModal(${idx})"><i class="fas fa-calculator"></i> <span>حاسبة التكاليف والربحية (Costing)</span></button>
+              <button class="btn btn-warning btn-sm" onclick="openLettreSoumissionModal(${idx})"><i class="fas fa-file-signature"></i> <span>رسالة التعهد بالعرض (Lettre)</span></button>
               <button class="btn btn-info btn-sm" onclick="openSmartPricingForTender(${idx})"><i class="fas fa-brain"></i> <span>Smart Pricing AI</span></button>
               <button class="btn btn-purple btn-sm" onclick="runRiskAnalysis('tender', ${idx})"><i class="fas fa-shield-alt"></i> <span>Risk Analysis Scan</span></button>
               <button class="btn btn-secondary btn-sm" onclick="exportTenderSummary(${idx})"><i class="fas fa-file-pdf"></i> <span>Export PDF Report</span></button>
@@ -1617,20 +1902,101 @@
       if(!grid) return;
       grid.innerHTML = '';
       const items = Array.isArray(t.checklist) ? t.checklist : [];
+      const now = new Date();
       items.forEach(function(item, i){
         const div = document.createElement('div');
         div.className = 'check-item' + (item.done ? ' done' : '');
+        
+        let expiryBadge = '';
+        if(item.expiryDate){
+          const diff = Math.ceil((new Date(item.expiryDate) - now) / (1000*60*60*24));
+          if(diff < 0){
+            expiryBadge = `<span class="badge-expired"><i class="fas fa-exclamation-triangle"></i> منتهي الصلاحية (${escapeHtml(item.expiryDate)})</span>`;
+          } else if(diff <= 15){
+            expiryBadge = `<span class="badge-warning-date"><i class="fas fa-clock"></i> ينتهي قريباً (${diff} يوم)</span>`;
+          } else {
+            expiryBadge = `<span class="badge-valid-date"><i class="fas fa-check"></i> صالح (${diff} يوم)</span>`;
+          }
+        }
+
+        const catBadge = item.category ? `<span class="check-category-pill">${escapeHtml(item.category)}</span>` : '';
+
         div.innerHTML = `
-          <label style="display:flex; align-items:center; gap:10px; cursor:pointer; flex:1;">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; flex:1; min-width:240px; flex-wrap:wrap;">
             <input type="checkbox" data-check-idx="${i}" ${item.done ? 'checked' : ''} onchange="updateChecklistVisual()">
-            <span>${escapeHtml(item.text)}</span>
+            <span>${catBadge}<strong>${escapeHtml(item.text)}</strong></span>
           </label>
-          <button type="button" class="btn btn-danger btn-sm" style="padding:2px 6px; font-size:11px;" onclick="removeChecklistItem(${i})" title="Remove"><i class="fas fa-trash"></i></button>
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            ${expiryBadge}
+            <input type="date" style="padding:3px 6px; font-size:11px; border:1px solid #cbd5e1; border-radius:6px; outline:none;" value="${item.expiryDate || ''}" title="تاريخ انتهاء صلاحية الوثيقة" onchange="updateChecklistItemExpiry(${i}, this.value)">
+            <button type="button" class="btn btn-danger btn-sm" style="padding:2px 6px; font-size:11px;" onclick="removeChecklistItem(${i})" title="Remove"><i class="fas fa-trash"></i></button>
+          </div>
         `;
         grid.appendChild(div);
       });
       updateChecklistVisual();
     }
+
+    function loadChecklistPreset(presetType){
+      const t = getTenderByIndex(activeChecklistTenderIndex);
+      if(!t) return;
+
+      let presetItems = [];
+      const threeMonths = new Date(Date.now() + 90*86400000).toISOString().slice(0,10);
+      if(presetType === 'marche_public'){
+        presetItems = [
+          { text: 'Déclaration de candidature (تصريح بالترشح)', done: false, category: 'ملف الترشح' },
+          { text: 'Déclaration de probité (تصريح بالنزاهة)', done: false, category: 'ملف الترشح' },
+          { text: 'Statuts de l\'entreprise (القانون الأساسي للشركة)', done: false, category: 'ملف الترشح' },
+          { text: 'Registre de Commerce électronique (السجل التجاري الإلكتروني)', done: false, category: 'ملف الترشح' },
+          { text: 'Extrait de rôle apuré (مستخرج الضرائب مصفى)', done: false, category: 'ملف الترشح', expiryDate: threeMonths },
+          { text: 'Attestation de mise à jour CNAS (شهادة أداء المستحقات كاسناس)', done: false, category: 'ملف الترشح', expiryDate: threeMonths },
+          { text: 'Attestation de mise à jour CASNOS (شهادة أداء المستحقات كازنوس)', done: false, category: 'ملف الترشح', expiryDate: threeMonths },
+          { text: 'Casier judiciaire n°3 du gérant (صحيفة السوابق القضائية للمسير)', done: false, category: 'ملف الترشح', expiryDate: threeMonths },
+          { text: 'Bilans financiers certifiés 3 ans (الحصائل المالية المعتمدة)', done: false, category: 'ملف الترشح' },
+          { text: 'Certificat de qualification et classification (شهادة التأهيل والتصنيف)', done: false, category: 'العرض التقني' },
+          { text: 'Attestations de bonne exécution (شهادات حسن الإنجاز)', done: false, category: 'العرض التقني' },
+          { text: 'Déclaration à souscrire (تصريح بالاكتتاب)', done: false, category: 'العرض التقني' },
+          { text: 'Mémoire technique justificatif (المذكرة التقنية التبريرية)', done: false, category: 'العرض التقني' },
+          { text: 'Caution bancaire de soumission (كفالة التعهد المصرفية)', done: false, category: 'العرض المالي' },
+          { text: 'Lettre de soumission (رسالة التعهد بالعرض)', done: false, category: 'العرض المالي' },
+          { text: 'Bordereau des prix unitaires BPU (جدول الأسعار الأحادية)', done: false, category: 'العرض المالي' },
+          { text: 'Devis quantitatif et estimatif DQE (الكشف الكمي والتقديري)', done: false, category: 'العرض المالي' }
+        ];
+      } else if(presetType === 'consultation'){
+        presetItems = [
+          { text: 'Registre de commerce (السجل التجاري)', done: false, category: 'الملف الإداري' },
+          { text: 'Carte NIF & NIS (بطاقة التعريف الجبائي والإحصائي)', done: false, category: 'الملف الإداري' },
+          { text: 'Extrait de rôle apuré (مستخرج الضرائب)', done: false, category: 'الملف الإداري', expiryDate: threeMonths },
+          { text: 'Offre technique et références (العرض التقني والخبرات المماثلة)', done: false, category: 'العرض التقني' },
+          { text: 'Devis estimatif et offre financière (الكشف المالي والتقديري)', done: false, category: 'العرض المالي' },
+          { text: 'Lettre d\'engagement (رسالة التعهد)', done: false, category: 'العرض المالي' }
+        ];
+      } else {
+        presetItems = [
+          { text: 'Dossier administratif entreprise (RC, NIF, Statuts)', done: false, category: 'إداري' },
+          { text: 'Références clients et attestations (مراجع الأعمال السابقة)', done: false, category: 'تقني' },
+          { text: 'Devis détaillé et conditions commerciales (عرض السعر المفصل)', done: false, category: 'مالي' },
+          { text: 'Planning d\'exécution et livraison (مخطط التسليم)', done: false, category: 'تقني' }
+        ];
+      }
+
+      t.checklist = presetItems;
+      renderChecklistGrid(t);
+      saveData();
+      renderAll();
+      showToast('تم تحميل حزمة الوثائق الرسمية المطلوبة بنجاح.', 'success');
+    }
+    window.loadChecklistPreset = loadChecklistPreset;
+
+    function updateChecklistItemExpiry(i, dateVal){
+      const t = getTenderByIndex(activeChecklistTenderIndex);
+      if(!t || !Array.isArray(t.checklist) || !t.checklist[i]) return;
+      t.checklist[i].expiryDate = dateVal;
+      saveData();
+      renderChecklistGrid(t);
+    }
+    window.updateChecklistItemExpiry = updateChecklistItemExpiry;
 
     function addNewChecklistItem(){
       const input = document.getElementById('newChecklistInput');
@@ -1822,8 +2188,42 @@
             setVal('tenderTitle', data.tenderTitle || data.subject);
             setVal('tenderAuthority', data.authority || data.customerName);
             setVal('tenderDeadline', data.deadline);
-            if (data.totals && data.totals.total > 0) setVal('tenderAmount', data.totals.total.toFixed(2));
-            if (data.rawText) setVal('tenderNotes', data.rawText.slice(0, 300));
+            var totalAmt = (data.totals && data.totals.total > 0) ? data.totals.total : parseFloat(data.amount || 0);
+            if (totalAmt > 0) setVal('tenderAmount', totalAmt.toFixed(2));
+
+            // Extract caution de soumission and delay from text if present
+            var raw = String(data.rawText || '');
+            var cautionMatch = raw.match(/caution\s*(?:de\s*soumission)?\s*(?:de|:)?\s*([0-9\s.,]+)\s*(?:dzd|da|دج)/i);
+            var delayMatch = raw.match(/d[ée]lai\s*(?:d['’]ex[ée]cution|de\s*r[ée]alisation)?\s*(?:de|:)?\s*([0-9]+)\s*(mois|jours|شهر|أشهر|يوم)/i);
+
+            var noteExt = [];
+            if (cautionMatch) noteExt.push('كفالة التعهد: ' + cautionMatch[1].trim() + ' دج');
+            if (delayMatch) noteExt.push('مدة الإنجاز: ' + delayMatch[1] + ' ' + delayMatch[2]);
+            if (noteExt.length) {
+              setVal('tenderNotes', noteExt.join(' | ') + '\n' + raw.slice(0, 300));
+            } else if (raw) {
+              setVal('tenderNotes', raw.slice(0, 300));
+            }
+
+            // Pre-seed Algerian public procurement checklist
+            const threeMonths = new Date(Date.now() + 90*86400000).toISOString().slice(0,10);
+            window._pendingOcrChecklist = [
+              { text: 'Déclaration de candidature (تصريح بالترشح)', done: false, category: 'ملف الترشح' },
+              { text: 'Déclaration de probité (تصريح بالنزاهة)', done: false, category: 'ملف الترشح' },
+              { text: 'Registre de Commerce électronique (السجل التجاري)', done: false, category: 'ملف الترشح' },
+              { text: 'Extrait de rôle apuré (مستخرج الضرائب مصفى)', done: false, category: 'ملف الترشح', expiryDate: threeMonths },
+              { text: 'Attestation CNAS & CASNOS (شهادات أداء المستحقات)', done: false, category: 'ملف الترشح', expiryDate: threeMonths },
+              { text: 'Casier judiciaire n°3 (صحيفة السوابق القضائية)', done: false, category: 'ملف الترشح', expiryDate: threeMonths },
+              { text: 'Certificat de qualification et classification (شهادة التأهيل والتصنيف)', done: false, category: 'العرض التقني' },
+              { text: 'Attestations de bonne exécution (شهادات حسن الإنجاز)', done: false, category: 'العرض التقني' },
+              { text: 'Déclaration à souscrire (تصريح بالاكتتاب)', done: false, category: 'العرض التقني' },
+              { text: 'Mémoire technique justificatif (المذكرة التقنية التبريرية)', done: false, category: 'العرض التقني' },
+              { text: 'Caution de soumission (كفالة التعهد المصرفية)', done: false, category: 'العرض المالي' },
+              { text: 'Lettre de soumission (رسالة التعهد بالعرض)', done: false, category: 'العرض المالي' },
+              { text: 'Bordereau des prix unitaires BPU (جدول الأسعار الأحادية)', done: false, category: 'العرض المالي' },
+              { text: 'Devis quantitatif et estimatif DQE (الكشف الكمي والتقديري)', done: false, category: 'العرض المالي' }
+            ];
+
             showToast(tr('ocr_done', 'Data extracted successfully!'), 'success');
           }
         });
@@ -2337,6 +2737,808 @@
     }
     window.printPage = printPage;
 
+    // ═════════════════════════════════════════════════════════════════
+    // ── ADVANCED ANALYTICS & WIN/LOSS KPIS MODULE ──
+    // ═════════════════════════════════════════════════════════════════
+    let _analyticsPanelOpen = false;
+    function toggleAdvancedAnalytics(){
+      _analyticsPanelOpen = !_analyticsPanelOpen;
+      const panel = document.getElementById('advancedAnalyticsPanel');
+      if(panel){
+        panel.style.display = _analyticsPanelOpen ? 'block' : 'none';
+        if(_analyticsPanelOpen) renderAdvancedAnalytics();
+      }
+    }
+    window.toggleAdvancedAnalytics = toggleAdvancedAnalytics;
+
+    function renderAdvancedAnalytics(){
+      const panel = document.getElementById('advancedAnalyticsPanel');
+      if(!panel || panel.style.display === 'none') return;
+
+      const now = new Date();
+      const openT = tenders.filter(t => t.status === 'Open');
+      const subT = tenders.filter(t => t.status === 'Submitted');
+      const wonT = tenders.filter(t => t.status === 'Won');
+      const lostT = tenders.filter(t => t.status === 'Lost');
+
+      const resolved = wonT.length + lostT.length;
+      const winRate = resolved > 0 ? Math.round((wonT.length / resolved) * 100) : 0;
+      const totalVolume = tenders.reduce((acc, t) => acc + Number(t.amount || 0), 0);
+      const wonVolume = wonT.reduce((acc, t) => acc + Number(t.amount || 0), 0);
+      const avgValue = tenders.length > 0 ? (totalVolume / tenders.length) : 0;
+
+      // Calculate average margin
+      let marginSum = 0;
+      tenders.forEach(t => {
+        marginSum += (t.costing && t.costing.marginPct) ? Number(t.costing.marginPct) : 18;
+      });
+      const avgMargin = tenders.length > 0 ? (marginSum / tenders.length).toFixed(1) : '18.0';
+
+      const el = id => document.getElementById(id);
+      if(el('kpiConversionRate')) el('kpiConversionRate').textContent = winRate + '% ' + tr('won', 'Won');
+      if(el('kpiAvgMargin')) el('kpiAvgMargin').textContent = avgMargin + '%';
+      if(el('kpiTotalPipeline')) el('kpiTotalPipeline').textContent = formatMoney(totalVolume);
+      if(el('kpiWonVolume')) el('kpiWonVolume').textContent = formatMoney(wonVolume);
+      if(el('kpiAvgTenderValue')) el('kpiAvgTenderValue').textContent = formatMoney(avgValue);
+
+      // Render Funnel Bars
+      const funnelContainer = document.getElementById('analyticsFunnelBars');
+      if(funnelContainer){
+        const maxStage = Math.max(tenders.length, 1);
+        const stages = [
+          { name: tr('open_or_draft', 'مفتوحة / تحضير'), count: openT.length, amount: openT.reduce((s,t)=>s+Number(t.amount||0),0), color: '#3b82f6' },
+          { name: tr('submitted_bids', 'عروض مقدمة'), count: subT.length, amount: subT.reduce((s,t)=>s+Number(t.amount||0),0), color: '#f59e0b' },
+          { name: tr('won_marches', 'صفقات فائزة'), count: wonT.length, amount: wonVolume, color: '#10b981' },
+          { name: tr('lost_rejected', 'خاسرة / مستبعدة'), count: lostT.length, amount: lostT.reduce((s,t)=>s+Number(t.amount||0),0), color: '#ef4444' }
+        ];
+        funnelContainer.innerHTML = stages.map(st => {
+          const pct = Math.round((st.count / maxStage) * 100);
+          return `
+            <div class="funnel-row">
+              <span style="min-width:90px; color:#475569; font-weight:600;">${st.name}</span>
+              <div class="funnel-bar-bg"><div class="funnel-bar-fill" style="width:${pct}%; background:${st.color};"></div></div>
+              <span style="min-width:45px; text-align:right; font-weight:700; color:#0f172a;">${st.count}</span>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Render Top Authorities
+      const authContainer = document.getElementById('analyticsAuthoritiesList');
+      if(authContainer){
+        const authMap = {};
+        tenders.forEach(t => {
+          const a = (t.authority || 'جهة غير محددة').trim();
+          authMap[a] = (authMap[a] || 0) + 1;
+        });
+        const sortedAuths = Object.entries(authMap).sort((a,b) => b[1] - a[1]).slice(0, 4);
+        if(!sortedAuths.length){
+          authContainer.innerHTML = '<span class="text-muted" style="font-size:12px;">لا توجد جهات مسجلة بعد</span>';
+        } else {
+          authContainer.innerHTML = sortedAuths.map(([name, count]) => `
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 0; border-bottom:1px dashed #f1f5f9; font-size:12.5px;">
+              <span style="font-weight:600; color:#334155; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;">${escapeHtml(name)}</span>
+              <span class="badge badge-open" style="font-size:11px;">${count} صفقات</span>
+            </div>
+          `).join('');
+        }
+      }
+
+      // Render Urgent Deadlines Countdown Bar
+      const urgentBox = document.getElementById('analyticsUrgentDeadlinesBox');
+      if(urgentBox){
+        const urgentList = openT.filter(t => {
+          if(!t.deadline) return false;
+          const diff = Math.ceil((new Date(t.deadline) - now) / (1000*60*60*24));
+          return diff >= 0 && diff <= 7;
+        }).sort((a,b) => new Date(a.deadline) - new Date(b.deadline));
+
+        if(!urgentList.length){
+          urgentBox.style.background = '#f0fdf4';
+          urgentBox.style.borderColor = '#bbf7d0';
+          urgentBox.innerHTML = `
+            <div style="display:flex; align-items:center; gap:8px; color:#166534; font-size:13px; font-weight:600;">
+              <i class="fas fa-check-circle text-success"></i>
+              <span>جميع المناقصات الجارية ضمن الآجال الآمنة ولا توجد مواعيد تسليم حرجة (أقل من 7 أيام).</span>
+            </div>
+          `;
+        } else {
+          urgentBox.style.background = '#fef2f2';
+          urgentBox.style.borderColor = '#fecaca';
+          urgentBox.innerHTML = `
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+              <span style="color:#b91c1c; font-weight:800; font-size:13px;"><i class="fas fa-bell fa-shake"></i> تنبيهات الآجال الحرجة (${urgentList.length}):</span>
+              ${urgentList.map(t => {
+                const diff = Math.ceil((new Date(t.deadline) - now) / (1000*60*60*24));
+                return `
+                  <div style="background:white; border:1px solid #fca5a5; padding:4px 10px; border-radius:8px; font-size:12px; display:inline-flex; align-items:center; gap:6px;">
+                    <strong>${escapeHtml(t.reference||'AO')}</strong>: <span class="text-danger font-bold">${diff === 0 ? 'اليوم آخر أجل!' : diff + ' أيام متبقية'}</span>
+                    <button class="btn btn-secondary btn-sm" style="padding:1px 6px; font-size:10px;" onclick="openTenderDossier(${tenders.indexOf(t)})"><i class="fas fa-eye"></i></button>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          `;
+        }
+      }
+    }
+    window.renderAdvancedAnalytics = renderAdvancedAnalytics;
+
+    // ═════════════════════════════════════════════════════════════════
+    // ── NUMBER TO WORDS (ALGERIAN ARABIC & FRENCH) ──
+    // ═════════════════════════════════════════════════════════════════
+    function numberToArabicWords(num) {
+      num = Math.floor(Math.abs(Number(num) || 0));
+      if (num === 0) return 'صفر دينار جزائري';
+      
+      const ones = ['', 'واحد', 'اثنان', 'ثلاثة', 'أربعة', 'خمسة', 'ستة', 'سبعة', 'ثمانية', 'تسعة'];
+      const tens = ['', 'عشرة', 'عشرون', 'ثلاثون', 'أربعون', 'خمسون', 'ستون', 'سبعون', 'ثمانون', 'تسعون'];
+      const teens = ['عشرة', 'أحد عشر', 'اثنا عشر', 'ثلاثة عشر', 'أربعة عشر', 'خمسة عشر', 'ستة عشر', 'سبعة عشر', 'ثمانية عشر', 'تسعة عشر'];
+      const hundreds = ['', 'مائة', 'مائتان', 'ثلاثمائة', 'أربعمائة', 'خمسمائة', 'ستمائة', 'سبعمائة', 'ثمانمائة', 'تسعمائة'];
+      
+      function convertGroup(n) {
+        let str = '';
+        const h = Math.floor(n / 100);
+        const rem = n % 100;
+        const t = Math.floor(rem / 10);
+        const u = rem % 10;
+        
+        if (h > 0) str += hundreds[h];
+        if (rem > 0) {
+          if (str !== '') str += ' و ';
+          if (rem >= 10 && rem <= 19) {
+            str += teens[rem - 10];
+          } else {
+            if (u > 0) str += ones[u];
+            if (t > 0) {
+              if (u > 0) str += ' و ';
+              str += tens[t];
+            }
+          }
+        }
+        return str;
+      }
+      
+      const parts = [];
+      const billions = Math.floor(num / 1000000000);
+      const remB = num % 1000000000;
+      const millions = Math.floor(remB / 1000000);
+      const remM = remB % 1000000;
+      const thousands = Math.floor(remM / 1000);
+      const units = remM % 1000;
+      
+      if (billions > 0) {
+        if (billions === 1) parts.push('مليار');
+        else if (billions === 2) parts.push('ملياران');
+        else if (billions >= 3 && billions <= 10) parts.push(convertGroup(billions) + ' مليارات');
+        else parts.push(convertGroup(billions) + ' مليار');
+      }
+      if (millions > 0) {
+        if (millions === 1) parts.push('مليون');
+        else if (millions === 2) parts.push('مليونان');
+        else if (millions >= 3 && millions <= 10) parts.push(convertGroup(millions) + ' ملايين');
+        else parts.push(convertGroup(millions) + ' مليون');
+      }
+      if (thousands > 0) {
+        if (thousands === 1) parts.push('ألف');
+        else if (thousands === 2) parts.push('ألفان');
+        else if (thousands >= 3 && thousands <= 10) parts.push(convertGroup(thousands) + ' آلاف');
+        else parts.push(convertGroup(thousands) + ' ألف');
+      }
+      if (units > 0) {
+        parts.push(convertGroup(units));
+      }
+      
+      return parts.join(' و ') + ' دينار جزائري فقط لا غير';
+    }
+    window.numberToArabicWords = numberToArabicWords;
+
+    function numberToFrenchWords(num) {
+      num = Math.floor(Math.abs(Number(num) || 0));
+      if (num === 0) return 'Zéro dinar algérien';
+      
+      const units = ['', 'un', 'deux', 'trois', 'quatre', 'cinq', 'six', 'sept', 'huit', 'neuf'];
+      const teens = ['dix', 'onze', 'douze', 'treize', 'quatorze', 'quinze', 'seize', 'dix-sept', 'dix-huit', 'dix-neuf'];
+      const tens = ['', 'dix', 'vingt', 'trente', 'quarante', 'cinquante', 'soixante', 'soixante-dix', 'quatre-vingts', 'quatre-vingt-dix'];
+
+      function convertSmall(n) {
+        if (n === 0) return '';
+        if (n < 10) return units[n];
+        if (n < 20) return teens[n - 10];
+        const t = Math.floor(n / 10);
+        const u = n % 10;
+        if (t === 7) return 'soixante-' + (u === 1 ? 'et-onze' : teens[u]);
+        if (t === 9) return 'quatre-vingt-' + teens[u];
+        if (u === 0) return (t === 8) ? 'quatre-vingts' : tens[t];
+        if (u === 1 && t < 8) return tens[t] + ' et un';
+        return tens[t] + '-' + units[u];
+      }
+
+      function convertHundreds(n) {
+        const h = Math.floor(n / 100);
+        const rem = n % 100;
+        let str = '';
+        if (h === 1) str = 'cent';
+        else if (h > 1) str = units[h] + ' cents';
+        if (rem > 0) {
+          if (h > 1) str = units[h] + ' cent';
+          str = (str ? str + ' ' : '') + convertSmall(rem);
+        }
+        return str;
+      }
+
+      const parts = [];
+      const billions = Math.floor(num / 1000000000);
+      const remB = num % 1000000000;
+      const millions = Math.floor(remB / 1000000);
+      const remM = remB % 1000000;
+      const thousands = Math.floor(remM / 1000);
+      const unitsVal = remM % 1000;
+
+      if (billions > 0) parts.push(billions === 1 ? 'un milliard' : convertHundreds(billions) + ' milliards');
+      if (millions > 0) parts.push(millions === 1 ? 'un million' : convertHundreds(millions) + ' millions');
+      if (thousands > 0) parts.push(thousands === 1 ? 'mille' : convertHundreds(thousands) + ' mille');
+      if (unitsVal > 0) parts.push(convertHundreds(unitsVal));
+
+      const res = parts.join(' ').trim();
+      return (res.charAt(0).toUpperCase() + res.slice(1)) + ' dinars algériens';
+    }
+    window.numberToFrenchWords = numberToFrenchWords;
+
+    // ═════════════════════════════════════════════════════════════════
+    // ── ACTIVE COMPANY DETAILS EXTRACTOR ──
+    // ═════════════════════════════════════════════════════════════════
+    function getActiveCompanyDetails() {
+      try {
+        const s = getSettings();
+        const cid = getActiveCompanyId();
+        if (s && Array.isArray(s.companies)) {
+          const c = s.companies.find(comp => String(comp.id) === String(cid));
+          if (c) {
+            return {
+              name: c.name || c.legalName || 'SARL ZERALDA SERVICES',
+              legalForm: c.legalForm || 'SARL',
+              capital: c.capital || '10 000 000',
+              address: c.address || 'Alger, Algérie',
+              phone: c.phone || '+213 23 00 00 00',
+              email: c.email || 'contact@zeralda-erp.dz',
+              rc: c.rc || c.tradeRegistry || '16/00-0987654B22',
+              nif: c.nif || c.taxId || '002216098765432',
+              nis: c.nis || '00221609000123',
+              rib: c.rib || '001 00234 0123456789 45',
+              bank: c.bank || 'Banque Nationale d\'Algérie (BNA) - Agence Zeralda',
+              manager: c.manager || c.owner || 'Le Gérant / المسير القانوني'
+            };
+          }
+        }
+      } catch (_) {}
+      return {
+        name: 'SARL ZERALDA SERVICES & LOGISTICS',
+        legalForm: 'SARL',
+        capital: '10 000 000',
+        address: 'Zone d\'Activité, Zeralda, W. Alger',
+        phone: '+213 23 00 00 00',
+        email: 'contact@zeralda-services.dz',
+        rc: '16/00-1234567B22',
+        nif: '002216012345678',
+        nis: '00221601000123',
+        rib: '001 00234 0123456789 45',
+        bank: 'Banque Nationale d\'Algérie (BNA) - Agence Zeralda',
+        manager: 'Le Gérant / المسير'
+      };
+    }
+    window.getActiveCompanyDetails = getActiveCompanyDetails;
+
+    // ═════════════════════════════════════════════════════════════════
+    // ── BID MARGIN & COSTING CALCULATOR ──
+    // ═════════════════════════════════════════════════════════════════
+    let _activeCostingTenderIdx = -1;
+
+    function openCostingModal(tenderIdx){
+      const sel = document.getElementById('costingTenderSelect');
+      if(sel){
+        sel.innerHTML = '<option value="-1">-- تقدير حر / مناقصة جديدة --</option>';
+        tenders.forEach((t, i) => {
+          const opt = document.createElement('option');
+          opt.value = i;
+          opt.textContent = (t.reference || 'AO') + ' — ' + (t.title ? t.title.slice(0, 45) : 'Sans titre');
+          sel.appendChild(opt);
+        });
+      }
+
+      if(tenderIdx !== undefined && tenderIdx !== null && Number.isInteger(tenderIdx) && tenderIdx >= 0 && tenderIdx < tenders.length){
+        _activeCostingTenderIdx = tenderIdx;
+        if(sel) sel.value = tenderIdx;
+      } else {
+        _activeCostingTenderIdx = -1;
+        if(sel) sel.value = -1;
+      }
+
+      loadCostingForActiveTender();
+      openModal('tenderCostingModal');
+    }
+    window.openCostingModal = openCostingModal;
+
+    function openCostingModalFromTenderModal(){
+      const editIdx = parseInt(document.getElementById('tenderEditIdx')?.value || '-1', 10);
+      openCostingModal(editIdx >= 0 ? editIdx : -1);
+    }
+    window.openCostingModalFromTenderModal = openCostingModalFromTenderModal;
+
+    function closeCostingModal(){
+      closeModal('tenderCostingModal');
+    }
+    window.closeCostingModal = closeCostingModal;
+
+    function onCostingTenderChange(){
+      const sel = document.getElementById('costingTenderSelect');
+      _activeCostingTenderIdx = sel ? parseInt(sel.value, 10) : -1;
+      loadCostingForActiveTender();
+    }
+    window.onCostingTenderChange = onCostingTenderChange;
+
+    function loadCostingForActiveTender(){
+      const t = getTenderByIndex(_activeCostingTenderIdx);
+      const metaEl = document.getElementById('costingTenderMeta');
+      if(t && metaEl){
+        metaEl.innerHTML = `<strong>${escapeHtml(t.reference||'-')}</strong> | ${escapeHtml(t.authority||'جهة غير محددة')} | المبلغ المسجل: <span class="text-primary font-bold">${formatMoney(t.amount||0)}</span>`;
+      } else if(metaEl) {
+        metaEl.innerHTML = '<span class="text-muted">حساب تكاليف تقديري مستقل</span>';
+      }
+
+      if(t && t.costing){
+        document.getElementById('costMaterials').value = t.costing.materials || 0;
+        document.getElementById('costLabor').value = t.costing.labor || 0;
+        document.getElementById('costEquipment').value = t.costing.equipment || 0;
+        document.getElementById('costSubcontract').value = t.costing.subcontract || 0;
+        document.getElementById('costOverheadPct').value = t.costing.overheadPct || 10;
+        document.getElementById('costMarginPct').value = t.costing.marginPct || 18;
+        document.getElementById('costTvaPct').value = t.costing.tvaPct !== undefined ? t.costing.tvaPct : 19;
+      } else if(t && Number(t.amount || 0) > 0) {
+        const amt = Number(t.amount);
+        const estCost = amt / 1.18;
+        document.getElementById('costMaterials').value = Math.round(estCost * 0.50);
+        document.getElementById('costLabor').value = Math.round(estCost * 0.30);
+        document.getElementById('costEquipment').value = Math.round(estCost * 0.12);
+        document.getElementById('costSubcontract').value = Math.round(estCost * 0.08);
+        document.getElementById('costOverheadPct').value = 10;
+        document.getElementById('costMarginPct').value = 18;
+        document.getElementById('costTvaPct').value = 19;
+      } else {
+        document.getElementById('costMaterials').value = 2500000;
+        document.getElementById('costLabor').value = 1200000;
+        document.getElementById('costEquipment').value = 500000;
+        document.getElementById('costSubcontract').value = 300000;
+        document.getElementById('costOverheadPct').value = 10;
+        document.getElementById('costMarginPct').value = 18;
+        document.getElementById('costTvaPct').value = 19;
+      }
+
+      calculateCosting();
+    }
+
+    function calculateCosting(){
+      const mat = parseFloat(document.getElementById('costMaterials')?.value) || 0;
+      const labor = parseFloat(document.getElementById('costLabor')?.value) || 0;
+      const equip = parseFloat(document.getElementById('costEquipment')?.value) || 0;
+      const sub = parseFloat(document.getElementById('costSubcontract')?.value) || 0;
+      const overheadPct = parseFloat(document.getElementById('costOverheadPct')?.value) || 0;
+      const marginPct = parseFloat(document.getElementById('costMarginPct')?.value) || 5;
+      const tvaPct = parseFloat(document.getElementById('costTvaPct')?.value) || 0;
+
+      if(document.getElementById('costOverheadVal')) document.getElementById('costOverheadVal').textContent = overheadPct + '%';
+      if(document.getElementById('costMarginVal')) document.getElementById('costMarginVal').textContent = marginPct + '%';
+
+      const directTotal = mat + labor + equip + sub;
+      const overheadVal = directTotal * (overheadPct / 100);
+      const costBase = directTotal + overheadVal;
+      const financialHT = costBase / (1 - (marginPct / 100));
+      const profitVal = financialHT - costBase;
+      const tvaVal = financialHT * (tvaPct / 100);
+      const financialTTC = financialHT + tvaVal;
+
+      const el = id => document.getElementById(id);
+      if(el('costDirectTotal')) el('costDirectTotal').textContent = formatMoney(directTotal);
+      if(el('costBaseTotal')) el('costBaseTotal').textContent = formatMoney(costBase);
+      if(el('costProfitVal')) el('costProfitVal').textContent = formatMoney(profitVal);
+      if(el('costFinancialHT')) el('costFinancialHT').textContent = formatMoney(financialHT);
+      if(el('costTvaVal')) el('costTvaVal').textContent = formatMoney(tvaVal);
+      if(el('costFinancialTTC')) el('costFinancialTTC').textContent = formatMoney(financialTTC);
+
+      let baseScore = Math.round(98 - (marginPct * 1.5) - (overheadPct * 0.4));
+      baseScore = Math.max(18, Math.min(95, baseScore));
+
+      const t = getTenderByIndex(_activeCostingTenderIdx);
+      if(t && Array.isArray(t.checklist) && t.checklist.length){
+        const done = t.checklist.filter(i => i.done).length;
+        const bonus = Math.round((done / t.checklist.length) * 8);
+        baseScore = Math.min(99, baseScore + bonus);
+      }
+
+      const scoreBadge = el('costWinScoreBadge');
+      const scoreBar = el('costWinScoreBar');
+      const scoreAdvice = el('costWinAdvice');
+
+      if(scoreBadge && scoreBar){
+        scoreBar.style.width = baseScore + '%';
+        if(baseScore >= 75){
+          scoreBadge.className = 'badge badge-won';
+          scoreBadge.textContent = baseScore + '% - فرصة فوز عالية جداً (تنافسي)';
+          scoreBar.style.background = 'linear-gradient(90deg, #10b981, #059669)';
+          if(scoreAdvice) scoreAdvice.textContent = '💡 العرض ذو تنافسية عالية ومطابق لمعايير الأفضلية في الصفقات العمومية، مع هامش ربح مدروس.';
+        } else if(baseScore >= 50){
+          scoreBadge.className = 'badge badge-open';
+          scoreBadge.textContent = baseScore + '% - فرصة فوز متوسطة (متوازن)';
+          scoreBar.style.background = 'linear-gradient(90deg, #3b82f6, #1d4ed8)';
+          if(scoreAdvice) scoreAdvice.textContent = '💡 العرض متوازن بين المردودية وفرصة القبول. يمكن تعزيز النسبة باستكمال وثائق التأهيل وحسن التنفيذ.';
+        } else {
+          scoreBadge.className = 'badge badge-lost';
+          scoreBadge.textContent = baseScore + '% - فرصة فوز منخفضة (هامش مرتفع)';
+          scoreBar.style.background = 'linear-gradient(90deg, #ef4444, #b91c1c)';
+          if(scoreAdvice) scoreAdvice.textContent = '⚠️ تنبيه: هامش الربح المستهدف مرتفع مقارنة بمتوسط أسعار الصفقات المنافسة. يُنصح بمراجعته لزيادة فرصة الترسية.';
+        }
+      }
+
+      window._lastCalculatedCosting = {
+        materials: mat,
+        labor: labor,
+        equipment: equip,
+        subcontract: sub,
+        directTotal: directTotal,
+        overheadPct: overheadPct,
+        overheadVal: overheadVal,
+        costBase: costBase,
+        marginPct: marginPct,
+        profitVal: profitVal,
+        tvaPct: tvaPct,
+        tvaVal: tvaVal,
+        financialHT: financialHT,
+        financialTTC: financialTTC,
+        winScore: baseScore
+      };
+    }
+    window.calculateCosting = calculateCosting;
+
+    function applyCostingToTender(){
+      calculateCosting();
+      const costing = window._lastCalculatedCosting;
+      if(!costing) return;
+
+      const t = getTenderByIndex(_activeCostingTenderIdx);
+      if(t){
+        t.amount = Math.round(costing.financialHT * 100) / 100;
+        t.costing = costing;
+        const noteTag = `[تسعير: HT = ${formatMoney(costing.financialHT)} | TTC = ${formatMoney(costing.financialTTC)} | هامش: ${costing.marginPct}% | احتمالية الفوز: ${costing.winScore}%]`;
+        if(!String(t.notes || '').includes('[تسعير:')){
+          t.notes = (t.notes ? t.notes + '\n' : '') + noteTag;
+        } else {
+          t.notes = t.notes.replace(/\[تسعير:[^\]]+\]/g, noteTag);
+        }
+        saveData();
+        renderAll();
+        showToast('تم اعتماد مبلغ وتكاليف المناقصة بنجاح.', 'success');
+      }
+
+      const modalAmountInput = document.getElementById('tenderAmount');
+      if(modalAmountInput){
+        modalAmountInput.value = costing.financialHT.toFixed(2);
+      }
+
+      closeCostingModal();
+    }
+    window.applyCostingToTender = applyCostingToTender;
+
+    function generateLettreFromCosting(){
+      calculateCosting();
+      const idx = _activeCostingTenderIdx >= 0 ? _activeCostingTenderIdx : 0;
+      closeCostingModal();
+      openLettreSoumissionModal(idx);
+    }
+    window.generateLettreFromCosting = generateLettreFromCosting;
+
+    // ═════════════════════════════════════════════════════════════════
+    // ── OFFICIAL ALGERIAN "LETTRE DE SOUMISSION" GENERATOR ──
+    // ═════════════════════════════════════════════════════════════════
+    let _activeLettreTenderIdx = 0;
+    let _activeLettreLang = 'ar';
+
+    function openLettreSoumissionModal(tenderIdx){
+      const sel = document.getElementById('lettreTenderSelect');
+      if(sel){
+        sel.innerHTML = '';
+        tenders.forEach((t, i) => {
+          const opt = document.createElement('option');
+          opt.value = i;
+          opt.textContent = (t.reference || 'AO') + ' — ' + (t.title ? t.title.slice(0, 45) : 'Sans titre');
+          sel.appendChild(opt);
+        });
+      }
+
+      if(tenderIdx !== undefined && tenderIdx !== null && Number.isInteger(tenderIdx) && tenderIdx >= 0 && tenderIdx < tenders.length){
+        _activeLettreTenderIdx = tenderIdx;
+        if(sel) sel.value = tenderIdx;
+      } else if(tenders.length > 0){
+        _activeLettreTenderIdx = 0;
+        if(sel) sel.value = 0;
+      }
+
+      _activeLettreLang = getLang() === 'fr' ? 'fr' : 'ar';
+      updateLettreLangButtons();
+      renderLettreDocument();
+      openModal('lettreSoumissionModal');
+    }
+    window.openLettreSoumissionModal = openLettreSoumissionModal;
+
+    function closeLettreSoumissionModal(){
+      closeModal('lettreSoumissionModal');
+    }
+    window.closeLettreSoumissionModal = closeLettreSoumissionModal;
+
+    function onLettreTenderChange(){
+      const sel = document.getElementById('lettreTenderSelect');
+      _activeLettreTenderIdx = sel ? parseInt(sel.value, 10) : 0;
+      renderLettreDocument();
+    }
+    window.onLettreTenderChange = onLettreTenderChange;
+
+    function switchLettreLang(lang){
+      _activeLettreLang = lang;
+      updateLettreLangButtons();
+      renderLettreDocument();
+    }
+    window.switchLettreLang = switchLettreLang;
+
+    function updateLettreLangButtons(){
+      ['btnLettreAr', 'btnLettreFr', 'btnLettreDecl'].forEach(id => {
+        const btn = document.getElementById(id);
+        if(!btn) return;
+        if(id === 'btnLettreAr') btn.classList.toggle('active', _activeLettreLang === 'ar');
+        if(id === 'btnLettreFr') btn.classList.toggle('active', _activeLettreLang === 'fr');
+        if(id === 'btnLettreDecl') btn.classList.toggle('active', _activeLettreLang === 'decl');
+      });
+    }
+
+    function renderLettreDocument(){
+      const sheet = document.getElementById('lettreDocumentSheet');
+      if(!sheet) return;
+
+      const t = getTenderByIndex(_activeLettreTenderIdx) || {
+        reference: 'AO/2026/014',
+        title: 'صفقة اقتناء وتوريد تجهيزات ومعدات',
+        authority: 'مديرية الإدارة المحلية - ولاية الجزائر',
+        deadline: new Date().toISOString().slice(0,10),
+        amount: 5400000
+      };
+
+      const comp = getActiveCompanyDetails();
+      const amountHT = (t.costing && t.costing.financialHT) ? t.costing.financialHT : Number(t.amount || 0);
+      const amountTVA = (t.costing && t.costing.tvaVal) ? t.costing.tvaVal : Math.round(amountHT * 0.19);
+      const amountTTC = (t.costing && t.costing.financialTTC) ? t.costing.financialTTC : (amountHT + amountTVA);
+
+      const wordsArHT = numberToArabicWords(amountHT);
+      const wordsArTTC = numberToArabicWords(amountTTC);
+      const wordsFrHT = numberToFrenchWords(amountHT);
+      const wordsFrTTC = numberToFrenchWords(amountTTC);
+
+      const todayStrAr = new Date().toLocaleDateString('ar-DZ', { year: 'numeric', month: 'long', day: 'numeric' });
+      const todayStrFr = new Date().toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' });
+
+      if(_activeLettreLang === 'fr'){
+        sheet.setAttribute('dir', 'ltr');
+        sheet.innerHTML = `
+          <div class="lettre-header">
+            <div>
+              <div style="font-size:16px; font-weight:800; color:#1e3a8a; text-transform:uppercase;">${escapeHtml(comp.name)}</div>
+              <div style="font-size:12px; color:#475569;">${escapeHtml(comp.legalForm)} au capital de ${escapeHtml(comp.capital)} DZD</div>
+              <div style="font-size:12px; color:#475569;">Siège social : ${escapeHtml(comp.address)}</div>
+              <div style="font-size:12px; color:#475569;">Tél : ${escapeHtml(comp.phone)} | Email : ${escapeHtml(comp.email)}</div>
+              <div style="font-size:11.5px; color:#64748b; margin-top:4px;">
+                RC : <strong>${escapeHtml(comp.rc)}</strong> | NIF : <strong>${escapeHtml(comp.nif)}</strong> | NIS : <strong>${escapeHtml(comp.nis)}</strong>
+              </div>
+            </div>
+            <div style="text-align:right; font-size:12px; color:#334155;">
+              <div style="font-weight:700; color:#0f172a;">RÉPUBLIQUE ALGÉRIENNE DÉMOCRATIQUE ET POPULAIRE</div>
+              <div style="margin-top:6px;">À l'attention de :</div>
+              <div style="font-weight:800; color:#1e40af; font-size:13.5px;">${escapeHtml(t.authority || 'Monsieur le Responsable du Service Contractant')}</div>
+            </div>
+          </div>
+
+          <div style="text-align:center; margin:22px 0 16px;">
+            <h2 style="font-size:18px; font-weight:900; color:#1e293b; text-decoration:underline; text-underline-offset:6px; letter-spacing:0.5px;">LETTRE DE SOUMISSION</h2>
+            <div style="font-size:12px; color:#64748b; margin-top:4px;">(Établie en application du Décret présidentiel n° 15-247 du 16 septembre 2015 portant réglementation des marchés publics)</div>
+          </div>
+
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 16px; margin-bottom:18px; font-size:13px;">
+            <div><strong>Appel d'Offres n° :</strong> ${escapeHtml(t.reference || 'AO')}</div>
+            <div style="margin-top:3px;"><strong>Objet du Marché :</strong> ${escapeHtml(t.title || 'Prestations et fournitures')}</div>
+          </div>
+
+          <p style="margin-bottom:12px;">Je soussigné(e), <strong>${escapeHtml(comp.manager)}</strong>, agissant en qualité de Gérant et représentant légal dûment habilité de la société <strong>${escapeHtml(comp.name)}</strong>,</p>
+
+          <p style="margin-bottom:12px;">Après avoir pris pleine et entière connaissance de toutes les pièces constitutives du dossier d'appel d'offres susmentionné, et après avoir apprécié la nature, la consistance et l'étendue des prestations à exécuter :</p>
+
+          <p style="margin-bottom:14px;"><strong>M'ENGAGE SUR L'HONNEUR</strong> à exécuter et achever l'ensemble des prestations conformément aux clauses, spécifications techniques et conditions du cahier des charges, moyennant les prix que j'ai moi-même établis, s'élevant à :</p>
+
+          <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:14px 18px; margin-bottom:16px; line-height:1.9;">
+            <div>• <strong>Montant Total Hors Taxes (HT) :</strong> <span style="font-size:16px; font-weight:800; color:#1e40af;">${formatMoney(amountHT)}</span></div>
+            <div style="font-size:12.5px; color:#3b82f6;"><em>(${escapeHtml(wordsFrHT)})</em></div>
+            <div style="margin-top:6px;">• <strong>Montant de la TVA (19%) :</strong> <strong>${formatMoney(amountTVA)}</strong></div>
+            <div style="margin-top:6px; border-top:1px dashed #93c5fd; padding-top:6px;">• <strong>Montant Total Toutes Taxes Comprises (TTC) :</strong> <span style="font-size:17px; font-weight:900; color:#1e3a8a;">${formatMoney(amountTTC)}</span></div>
+            <div style="font-size:12.5px; color:#1e40af;"><em>(${escapeHtml(wordsFrTTC)})</em></div>
+          </div>
+
+          <p style="margin-bottom:8px;">Le paiement des prestations sera effectué au compte bancaire (RIB) n° : <strong>${escapeHtml(comp.rib)}</strong> ouvert auprès de la banque : <strong>${escapeHtml(comp.bank)}</strong>.</p>
+          <p style="margin-bottom:8px;">Je m'engage à maintenir la présente offre valable pendant un délai de <strong>90 jours</strong> à compter de la date limite de dépôt des offres.</p>
+          <p style="margin-bottom:24px;">Je m'engage à entamer et livrer les prestations dans les délais prévus par le cahier des charges dès notification de l'approbation du marché.</p>
+
+          <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:20px;">
+            <div style="font-size:13px; color:#475569;">
+              <div>Fait à Alger, le ${todayStrFr}</div>
+              <div style="font-size:11px; color:#64748b; margin-top:4px;">Document certifié conforme pour valoir ce que de droit.</div>
+            </div>
+            <div class="lettre-stamp-box">
+              <span style="font-weight:700; color:#1e293b;">Signature et Cachet du Soumissionnaire</span>
+              <span style="font-size:11px; margin-top:35px; color:#94a3b8;">(Griffe, signature et cachet humide)</span>
+            </div>
+          </div>
+        `;
+      } else if(_activeLettreLang === 'decl'){
+        sheet.setAttribute('dir', 'rtl');
+        sheet.innerHTML = `
+          <div class="lettre-header">
+            <div>
+              <div style="font-size:16px; font-weight:800; color:#1e3a8a;">الجمهورية الجزائرية الديمقراطية الشعبية</div>
+              <div style="font-size:13px; color:#475569; margin-top:4px;">المصلحة المتعاقدة: <strong>${escapeHtml(t.authority || 'الإدارة المتعاقدة')}</strong></div>
+            </div>
+            <div style="text-align:left; font-size:12px; color:#475569;">
+              <div style="font-weight:700; color:#0f172a;">${escapeHtml(comp.name)}</div>
+              <div>سجل تجاري: ${escapeHtml(comp.rc)} | NIF: ${escapeHtml(comp.nif)}</div>
+            </div>
+          </div>
+
+          <div style="text-align:center; margin:20px 0 16px;">
+            <h2 style="font-size:18px; font-weight:900; color:#1e293b; text-decoration:underline; text-underline-offset:6px;">التصريح بالاكتتاب (Déclaration à souscrire)</h2>
+            <div style="font-size:12px; color:#64748b; margin-top:4px;">(طبقاً لأحكام المرسوم الرئاسي 15-247 المتعلق بتنظيم الصفقات العمومية)</div>
+          </div>
+
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 16px; margin-bottom:18px; font-size:13.5px;">
+            <div><strong>إعلان / استشارة رقم:</strong> ${escapeHtml(t.reference || 'AO')}</div>
+            <div style="margin-top:4px;"><strong>موضوع الصفقة:</strong> ${escapeHtml(t.title || 'مشروع الصفقة')}</div>
+          </div>
+
+          <p style="margin-bottom:12px;">أنا الموقع أدناه: <strong>${escapeHtml(comp.manager)}</strong>، بصفتي المسير والممثل القانوني المخول لشركة <strong>${escapeHtml(comp.name)}</strong>، الكائن مقرها الاجتماعي بـ: ${escapeHtml(comp.address)}.</p>
+
+          <p style="margin-bottom:12px;">أصرح بأنني اكتتبت في هذا العرض الخاص بالصفقة المذكورة أعلاه، وألتزم بـ:</p>
+          <ul style="padding-right:24px; margin-bottom:14px; font-size:13.5px; line-height:1.9;">
+            <li>تنفيذ وإنجاز موضوع الصفقة طبقاً للشروط والمواصفات المحددة في دفتر الشروط وملحقاته.</li>
+            <li>عدم التنازل عن الصفقة أو مناولتها إلا طبقاً للتشريع والتنظيم المعمول بهما.</li>
+            <li>الامتثال لجميع القوانين الجبائية والعمالية والضمان الاجتماعي السارية في الجمهورية الجزائرية.</li>
+            <li>إبقاء هذا التعهد ملزماً لمؤسستنا طيلة مدة صلاحية العروض المحددة في دفتر الشروط (90 يوماً).</li>
+          </ul>
+
+          <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:26px;">
+            <div style="font-size:13.5px; color:#475569;">
+              <div>حرر بالجزائر، في: ${todayStrAr}</div>
+            </div>
+            <div class="lettre-stamp-box">
+              <span style="font-weight:700; color:#1e293b;">توقيع وختم المتعهد</span>
+              <span style="font-size:11px; margin-top:35px; color:#94a3b8;">(الختم الرطب والتوقيع)</span>
+            </div>
+          </div>
+        `;
+      } else {
+        sheet.setAttribute('dir', 'rtl');
+        sheet.innerHTML = `
+          <div class="lettre-header">
+            <div>
+              <div style="font-size:16px; font-weight:800; color:#1e3a8a;">${escapeHtml(comp.name)}</div>
+              <div style="font-size:12px; color:#475569;">${escapeHtml(comp.legalForm)} — رأس المال: ${escapeHtml(comp.capital)} دج</div>
+              <div style="font-size:12px; color:#475569;">المقر الاجتماعي: ${escapeHtml(comp.address)}</div>
+              <div style="font-size:12px; color:#475569;">الهاتف: ${escapeHtml(comp.phone)} | البريد: ${escapeHtml(comp.email)}</div>
+              <div style="font-size:11.5px; color:#64748b; margin-top:4px;">
+                سجل تجاري: <strong>${escapeHtml(comp.rc)}</strong> | NIF: <strong>${escapeHtml(comp.nif)}</strong> | NIS: <strong>${escapeHtml(comp.nis)}</strong>
+              </div>
+            </div>
+            <div style="text-align:left; font-size:12px; color:#334155;">
+              <div style="font-weight:700; color:#0f172a;">الجمهورية الجزائرية الديمقراطية الشعبية</div>
+              <div style="margin-top:6px;">إلى السيد:</div>
+              <div style="font-weight:800; color:#1e40af; font-size:13.5px;">${escapeHtml(t.authority || 'مسؤول المصلحة المتعاقدة')}</div>
+            </div>
+          </div>
+
+          <div style="text-align:center; margin:22px 0 16px;">
+            <h2 style="font-size:19px; font-weight:900; color:#1e293b; text-decoration:underline; text-underline-offset:6px;">رسالة التعهد بالعرض (LETTRE DE SOUMISSION)</h2>
+            <div style="font-size:12px; color:#64748b; margin-top:4px;">(محررة وفق أحكام المرسوم الرئاسي رقم 15-247 المؤرخ في 16 سبتمبر 2015 المتضمن تنظيم الصفقات العمومية)</div>
+          </div>
+
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 16px; margin-bottom:18px; font-size:13.5px;">
+            <div><strong>مرجع إعلان المناقصة / الاستشارة:</strong> ${escapeHtml(t.reference || 'AO')}</div>
+            <div style="margin-top:4px;"><strong>موضوع الصفقة:</strong> ${escapeHtml(t.title || 'مشروع الصفقة')}</div>
+          </div>
+
+          <p style="margin-bottom:12px;">أنا الموقع أدناه، السيد(ة): <strong>${escapeHtml(comp.manager)}</strong>، بصفتي المسير والممثل القانوني المخول لشركة <strong>${escapeHtml(comp.name)}</strong>،</p>
+
+          <p style="margin-bottom:12px;">بعد اطلاعي الكامل والدقيق على جميع وثائق ومستندات ملف المناقصة المذكور أعلاه، وبعد تقديري تحت مسؤوليتي لطبيعة وحجم الصعوبات والالتزامات الواجبة لتنفيذ موضوع الصفقة:</p>
+
+          <p style="margin-bottom:14px;"><strong>ألتزم على شرفي</strong> بتنفيذ وإتمام كافة الخدمات والأشغال موضوع الصفقة طبقاً للشروط والمواصفات الواردة في دفتر الشروط، وذلك مقابل الأسعار التي حددتها بنفسي، والبالغة إجمالياً ما يلي:</p>
+
+          <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:14px 18px; margin-bottom:16px; line-height:2;">
+            <div>• <strong>المبلغ الإجمالي بدون رسوم (HT):</strong> <span style="font-size:17px; font-weight:800; color:#1e40af;">${formatMoney(amountHT)}</span></div>
+            <div style="font-size:12.5px; color:#3b82f6;"><em>(${escapeHtml(wordsArHT)})</em></div>
+            <div style="margin-top:6px;">• <strong>مبلغ الرسم على القيمة المضافة (TVA 19%):</strong> <strong>${formatMoney(amountTVA)}</strong></div>
+            <div style="margin-top:6px; border-top:1px dashed #93c5fd; padding-top:6px;">• <strong>المبلغ الإجمالي بكل الرسوم (TTC):</strong> <span style="font-size:18px; font-weight:900; color:#1e3a8a;">${formatMoney(amountTTC)}</span></div>
+            <div style="font-size:13px; color:#1e40af;"><em>(${escapeHtml(wordsArTTC)})</em></div>
+          </div>
+
+          <p style="margin-bottom:8px;">يتم دفع المبالغ المستحقة بموجب الصفقة في الحساب المصرفي (RIB) رقم: <strong>${escapeHtml(comp.rib)}</strong> المفتوح لدى: <strong>${escapeHtml(comp.bank)}</strong>.</p>
+          <p style="margin-bottom:8px;">ألتزم بإبقاء هذا التعهد سارياً وملزماً لمؤسستنا لمدة <strong>90 يوماً</strong> كاملة ابتداءً من التاريخ المحدد لإيداع العروض.</p>
+          <p style="margin-bottom:24px;">كما ألتزم بتنفيذ الصفقة والبدء في الأشغال فور تلقي إشعار الترسية المؤقتة والنهائية من المصلحة المتعاقدة.</p>
+
+          <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:20px;">
+            <div style="font-size:13.5px; color:#475569;">
+              <div>حرر بالجزائر، في: ${todayStrAr}</div>
+              <div style="font-size:11px; color:#64748b; margin-top:4px;">وثيقة رسمية صالحة لإثبات الالتزام بالصفقة.</div>
+            </div>
+            <div class="lettre-stamp-box">
+              <span style="font-weight:700; color:#1e293b;">توقيع وختم المتعهد</span>
+              <span style="font-size:11px; margin-top:35px; color:#94a3b8;">(الختم الرطب، الصفة والتوقيع)</span>
+            </div>
+          </div>
+        `;
+      }
+    }
+    window.renderLettreDocument = renderLettreDocument;
+
+    function copyLettreToClipboard(){
+      const sheet = document.getElementById('lettreDocumentSheet');
+      if(!sheet) return;
+      const text = sheet.innerText || sheet.textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('تم نسخ نص رسالة التعهد إلى الحافظة بنجاح.', 'success');
+      }).catch(() => {
+        showToast('تعذر النسخ التلقائي.', 'error');
+      });
+    }
+    window.copyLettreToClipboard = copyLettreToClipboard;
+
+    function printOfficialLettre(){
+      document.body.classList.add('printing-lettre');
+      window.print();
+      setTimeout(() => {
+        document.body.classList.remove('printing-lettre');
+      }, 500);
+    }
+    window.printOfficialLettre = printOfficialLettre;
+
+    function exportLettrePDF(){
+      const t = getTenderByIndex(_activeLettreTenderIdx);
+      const ref = String((t && t.reference) || 'Tender').replace(/[^a-zA-Z0-9_-]/g, '_');
+      if(window.jspdf && window.jspdf.jsPDF){
+        const doc = new window.jspdf.jsPDF({ unit: 'pt', format: 'a4' });
+        const sheet = document.getElementById('lettreDocumentSheet');
+        const text = sheet ? (sheet.innerText || '') : '';
+        doc.setFillColor(30, 58, 138);
+        doc.rect(0, 0, 595, 45, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(14);
+        doc.text('Lettre de Soumission - Zeralda ERP', 40, 28);
+        doc.setTextColor(30, 41, 59);
+        doc.setFontSize(10.5);
+        const lines = doc.splitTextToSize(text, 515);
+        let y = 70;
+        lines.forEach(l => {
+          doc.text(l, 40, y);
+          y += 16;
+          if(y > 780){ doc.addPage(); y = 40; }
+        });
+        doc.save('Lettre_Soumission_' + ref + '.pdf');
+        showToast('تم تصدير ملف PDF بنجاح.', 'success');
+        return;
+      }
+      printOfficialLettre();
+    }
+    window.exportLettrePDF = exportLettrePDF;
+
     // Modal Helpers
     function openModal(id){
       const m = document.getElementById(id);
@@ -2376,7 +3578,7 @@
 
     // ── Event Listeners ──
     window.addEventListener('click', function(event){
-      ['consultModal','tenderModal','tenderDossierModal','tenderOcrModal','consultOcrModal','checklistModal','requisitionModal','riskModal'].forEach(function(id){
+      ['consultModal','tenderModal','tenderDossierModal','tenderOcrModal','consultOcrModal','checklistModal','requisitionModal','riskModal','tenderCostingModal','lettreSoumissionModal'].forEach(function(id){
         const modal = document.getElementById(id);
         if(modal && event.target === modal) closeModal(id);
       });
@@ -2384,7 +3586,7 @@
 
     window.addEventListener('keydown', function(event){
       if(event && event.key === 'Escape'){
-        ['consultModal','tenderModal','tenderDossierModal','tenderOcrModal','consultOcrModal','checklistModal','requisitionModal','riskModal'].forEach(function(id){
+        ['consultModal','tenderModal','tenderDossierModal','tenderOcrModal','consultOcrModal','checklistModal','requisitionModal','riskModal','tenderCostingModal','lettreSoumissionModal'].forEach(function(id){
           closeModal(id);
         });
       }

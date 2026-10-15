@@ -713,9 +713,23 @@ body.rtl .table-container::after {
     button:not(.print-keep) {
         display: none !important;
     }
-    tr, tbody tr, table, .preview-paper, .facture-container, .preview-card, .preview-totals-card, .preview-signatures, .invoice-header, .invoice-totals, .coordonnees, .totaux, .signature-section {
+    table, tbody, .preview-paper, .facture-container, #doc-page, #doc-fit-root {
+        page-break-inside: auto !important;
+        break-inside: auto !important;
+    }
+    tr, tbody tr, .preview-card, .preview-totals-card, .preview-signatures, .invoice-header, .invoice-totals, .coordonnees, .totaux, .signature-section, .facture-footer-area, .pied, .notes {
         page-break-inside: avoid !important;
         break-inside: avoid !important;
+    }
+    .preview-scale-content, .preview-zoom-viewport {
+        transform: none !important;
+        transform-origin: top left !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 100% !important;
+        overflow: visible !important;
+        padding: 0 !important;
+        margin: 0 !important;
     }
     thead {
         display: table-header-group !important;

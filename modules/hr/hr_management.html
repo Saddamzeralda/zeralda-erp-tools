@@ -1659,6 +1659,10 @@
                             <i class="fas fa-sync-alt"></i>
                             <span data-en="Recalculate (Legal)" data-ar="إعادة احتساب وفق القانون" data-fr="Recalculer (Légal)">Recalculate (Legal)</span>
                         </button>
+                        <button class="btn btn-info" onclick="comptabiliserMonthlyPayrollToFinance()" style="background:#0891b2; color:#fff;" title="ترحيل مجمل رواتب وأعباء الشهر المالي إلى اليومية المحاسبية SCF">
+                            <i class="fas fa-book"></i>
+                            <span data-en="Post Month to Finance" data-ar="ترحيل رواتب الشهر للمحاسبة" data-fr="Comptabiliser le Mois">ترحيل رواتب الشهر للمحاسبة</span>
+                        </button>
                         <button class="btn btn-secondary" onclick="exportPayrollCSV()">
                             <i class="fas fa-file-export"></i>
                             <span data-en="Export" data-ar="تصدير" data-fr="Exporter">Export</span>
@@ -2380,6 +2384,14 @@
                 <button class="btn btn-secondary" onclick="closeModal('viewPayslipModal')">
                     <i class="fas fa-times"></i>
                     <span data-en="Close" data-ar="إغلاق" data-fr="Fermer">Close</span>
+                </button>
+                <button class="btn btn-info" onclick="comptabiliserCurrentPayslipToFinance()" style="background:#0891b2; color:#fff;" title="ترحيل قيد هذا الراتب الفردي إلى اليومية المحاسبية SCF">
+                    <i class="fas fa-book"></i>
+                    <span data-en="Post to Finance" data-ar="ترحيل لليومية المحاسبية" data-fr="Comptabiliser">ترحيل لليومية المحاسبية</span>
+                </button>
+                <button class="btn btn-warning" onclick="generateLeaveVoucherFromCurrentPayslip()" style="background:#f59e0b; color:#fff;" title="إنشاء سند رخصة العطلة السنوية (Titre de Congé)">
+                    <i class="fas fa-calendar-check"></i>
+                    <span data-en="Leave Voucher" data-ar="سند رخصة العطلة" data-fr="Titre de Congé">سند رخصة العطلة</span>
                 </button>
                 <button class="btn btn-primary" onclick="printPayslip()">
                     <i class="fas fa-print"></i>

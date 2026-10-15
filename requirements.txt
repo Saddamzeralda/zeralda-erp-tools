@@ -21,6 +21,7 @@ python-multipart>=0.0.9
 pystray>=0.19.5; sys_platform == 'win32'
 Pillow>=10.0.0
 pytesseract>=0.3.10
+pywebpush>=2.0.0
 
 # Optional extras (not required for core runtime)
 # bcrypt>=4.0.1

@@ -496,6 +496,11 @@ async def generate_key(request: Request):
 @keys_router.post("/verify")
 async def verify_key(request: Request):
     from backend import keygen_service
+    client_ip = get_client_ip(request)
+    if auth_rate_limited(client_ip):
+        log_structured("WARNING", "Key verification rate limited", action="keygen_rate_limited",
+                       ip=client_ip, status="blocked")
+        return JSONResponse(status_code=429, content={"ok": False, "error": "Too many verification attempts. Please wait.", "code": "RATE_LIMITED"})
     data = await read_json_body(request)
     try:
         req = KeyVerifyRequest(**{k: v for k, v in data.items() if k in KeyVerifyRequest.model_fields})
@@ -559,5 +564,112 @@ async def delete_key(request: Request):
     return JSONResponse(status_code=200 if result["ok"] else 400, content=result)
 
 
+# ── 2FA & Session Revocation Endpoints ─────────────────────────────────────
+class Verify2FARequest(BaseModel):
+    temp_token: str
+    code: str
+
+
+class Enable2FARequest(BaseModel):
+    secret: str
+    code: str
+
+
+@router.post("/2fa/verify")
+async def verify_2fa_endpoint(request: Request):
+    """Verify 2FA TOTP code for a pending login."""
+    client_ip = get_client_ip(request)
+    if auth_rate_limited(client_ip):
+        return JSONResponse(status_code=429, content={"ok": False, "error": "Too many attempts", "code": "RATE_LIMITED"})
+    data = await read_json_body(request)
+    try:
+        req = Verify2FARequest(**{k: v for k, v in data.items() if k in Verify2FARequest.model_fields})
+    except Exception as e:
+        raise HTTPException(400, detail={"ok": False, "error": f"Invalid request: {e}"})
+
+    ua = request.headers.get("User-Agent", "")
+    from backend import auth
+    result = auth.verify_2fa_login(req.temp_token, req.code, ip_address=client_ip, user_agent=ua)
+    return JSONResponse(status_code=200 if result.get("ok") else 401, content=result)
+
+
+@router.post("/2fa/setup")
+async def setup_2fa_endpoint(request: Request):
+    """Generate a new TOTP secret and provisioning URI for the authenticated user."""
+    user = require_auth(request)
+    from backend import auth
+    result = auth.setup_user_2fa(user.get("email", ""))
+    return JSONResponse(status_code=200 if result.get("ok") else 400, content=result)
+
+
+@router.post("/2fa/enable")
+async def enable_2fa_endpoint(request: Request):
+    """Verify code and enable 2FA for the authenticated user."""
+    user = require_auth(request)
+    data = await read_json_body(request)
+    try:
+        req = Enable2FARequest(**{k: v for k, v in data.items() if k in Enable2FARequest.model_fields})
+    except Exception as e:
+        raise HTTPException(400, detail={"ok": False, "error": f"Invalid request: {e}"})
+
+    from backend import auth
+    result = auth.enable_user_2fa(user.get("email", ""), req.secret, req.code)
+    return JSONResponse(status_code=200 if result.get("ok") else 400, content=result)
+
+
+@router.post("/2fa/disable")
+async def disable_2fa_endpoint(request: Request):
+    """Disable 2FA for the authenticated user."""
+    user = require_auth(request)
+    from backend import auth
+    result = auth.disable_user_2fa(user.get("email", ""))
+    return JSONResponse(status_code=200 if result.get("ok") else 400, content=result)
+
+
+@router.post("/sessions/revoke-all")
+async def revoke_sessions_endpoint(request: Request):
+    """Revoke all active sessions for the authenticated user (or specified user for admin)."""
+    current_user = require_auth(request)
+    data = await read_json_body(request) or {}
+    target_email = str(data.get("email") or current_user.get("email", "")).strip().lower()
+
+    # Non-admins can only revoke their own sessions
+    if target_email != str(current_user.get("email", "")).lower() and current_user.get("role") != "admin":
+        raise HTTPException(403, detail={"ok": False, "error": "Only admins can revoke other users sessions"})
+
+    from backend import auth
+    count = auth.revoke_all_sessions(target_email)
+    try:
+        from app.services.audit import record_audit_event
+        record_audit_event("sessions_revoked", current_user.get("email", ""),
+                           {"target": target_email, "count": count}, status="success")
+    except Exception:
+        pass
+    return {"ok": True, "message": f"Successfully revoked {count} active session(s)", "revoked_count": count}
+
+
+# ── Audit Trail Endpoints ──────────────────────────────────────────────────
+audit_router = APIRouter(prefix="/api/audit", tags=["audit"])
+
+
+@audit_router.get("/logs")
+async def get_audit_logs(request: Request, limit: int = 100, action: Optional[str] = None, user: Optional[str] = None):
+    """Get recent cryptographically chained audit events (admin only)."""
+    require_auth(request, required_role="admin")
+    from app.services.audit import get_audit_events
+    events = get_audit_events(limit=min(limit, 500), action=action, user=user)
+    return {"ok": True, "count": len(events), "events": events}
+
+
+@audit_router.get("/verify")
+async def verify_audit_trail(request: Request):
+    """Verify cryptographic integrity of the entire audit chain (admin only)."""
+    require_auth(request, required_role="admin")
+    from app.services.audit import verify_audit_chain
+    result = verify_audit_chain()
+    return JSONResponse(status_code=200 if result.get("ok") else 400, content=result)
+
+
 # Late import for JSONResponse (avoid top-level circular)
 from fastapi.responses import JSONResponse  # noqa: E402
+

@@ -1195,7 +1195,144 @@
           @media(max-width:640px){.tax-op-grid.two{grid-template-columns:1fr;}}
           @media(max-width:1000px){.tax-layout{grid-template-columns:1fr;}}
           @media(max-width:640px){.tax-grid{grid-template-columns:1fr;}}
-    </style>
+    
+/* Enhanced Accounting & SCF Tokens */
+.scf-pills {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 10px 0;
+    margin-bottom: 15px;
+    scrollbar-width: thin;
+}
+.scf-pill {
+    padding: 6px 14px;
+    border-radius: 20px;
+    background: #f1f5f9;
+    color: #475569;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid #cbd5e1;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.scf-pill:hover, .scf-pill.active {
+    background: var(--primary-color, #2563eb);
+    color: #ffffff;
+    border-color: var(--primary-color, #2563eb);
+    box-shadow: 0 2px 8px rgba(37,99,235,0.25);
+}
+.journal-kpi-bar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+}
+.kpi-mini-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 12px 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.kpi-mini-card .kpi-label {
+    font-size: 11px;
+    color: #64748b;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+.kpi-mini-card .kpi-val {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1e293b;
+}
+.piece-comptable-sheet {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 24px;
+    max-width: 800px;
+    margin: 0 auto;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+    color: #0f172a;
+}
+.piece-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 2px solid #0f172a;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+.piece-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+}
+.piece-table th, .piece-table td {
+    border: 1px solid #cbd5e1;
+    padding: 8px 12px;
+    font-size: 13px;
+}
+.piece-table th {
+    background: #f8fafc;
+    font-weight: 700;
+}
+.reconciliation-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 15px;
+}
+@media (max-width: 900px) {
+    .reconciliation-grid { grid-template-columns: 1fr; }
+}
+.pointage-box {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 15px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+.reconcile-stat {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px dashed #cbd5e1;
+    font-size: 13px;
+}
+.reconcile-stat.total {
+    font-weight: 700;
+    font-size: 15px;
+    border-bottom: 2px solid #1e293b;
+    margin-top: 10px;
+}
+@media print {
+    body.printing-finance-report * {
+        visibility: hidden !important;
+    }
+    body.printing-finance-report #printableFinanceArea,
+    body.printing-finance-report #printableFinanceArea * {
+        visibility: visible !important;
+    }
+    body.printing-finance-report #printableFinanceArea {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        background: #ffffff !important;
+        margin: 0 !important;
+        padding: 20px !important;
+    }
+}
+
+</style>
     <link rel="stylesheet" href="styles/dark_theme.css">
 </head>
 <body>
@@ -1223,11 +1360,11 @@
                         <i class="fas fa-wallet"></i>
                     </div>
                 </div>
-                <div class="stat-label" data-en="Total Assets" data-ar="إجمالي الأصول" data-fr="Total Actifs">Total Assets</div>
-                <div class="stat-value">$0</div>
+                <div class="stat-label" data-en="Total Assets" data-ar="إجمالي الأصول (SCF)" data-fr="Total Actifs (SCF)">Total Assets</div>
+                <div class="stat-value" id="statTotalAssets">0.00 DZD</div>
                 <div class="stat-change">
-                    <i class="fas fa-minus"></i>
-                    <span>-</span>
+                    <i class="fas fa-arrow-up text-success"></i>
+                    <span id="statAssetsSub">أصول مثبتة وجارية</span>
                 </div>
             </div>
 
@@ -1237,11 +1374,11 @@
                         <i class="fas fa-chart-line"></i>
                     </div>
                 </div>
-                <div class="stat-label" data-en="Total Revenue" data-ar="إجمالي الإيرادات" data-fr="Revenu Total">Total Revenue</div>
-                <div class="stat-value">$0</div>
+                <div class="stat-label" data-en="Total Revenue" data-ar="إجمالي الإيرادات (صنف 7)" data-fr="Revenu Total (Classe 7)">Total Revenue</div>
+                <div class="stat-value" id="statTotalRevenue">0.00 DZD</div>
                 <div class="stat-change">
-                    <i class="fas fa-minus"></i>
-                    <span>-</span>
+                    <i class="fas fa-check-circle text-success"></i>
+                    <span id="statRevenueSub">مبيعات ونواتج عملياتية</span>
                 </div>
             </div>
 
@@ -1251,11 +1388,11 @@
                         <i class="fas fa-receipt"></i>
                     </div>
                 </div>
-                <div class="stat-label" data-en="Total Expenses" data-ar="إجمالي المصروفات" data-fr="Dépenses Totales">Total Expenses</div>
-                <div class="stat-value">$0</div>
+                <div class="stat-label" data-en="Total Expenses" data-ar="إجمالي الأعباء (صنف 6)" data-fr="Dépenses Totales (Classe 6)">Total Expenses</div>
+                <div class="stat-value" id="statTotalExpenses">0.00 DZD</div>
                 <div class="stat-change">
-                    <i class="fas fa-minus"></i>
-                    <span>-</span>
+                    <i class="fas fa-arrow-down text-danger"></i>
+                    <span id="statExpensesSub">مشتريات، خدمات وأجور</span>
                 </div>
             </div>
 
@@ -1265,11 +1402,11 @@
                         <i class="fas fa-hand-holding-usd"></i>
                     </div>
                 </div>
-                <div class="stat-label" data-en="Net Profit" data-ar="صافي الربح" data-fr="Bénéfice Net">Net Profit</div>
-                <div class="stat-value">$0</div>
+                <div class="stat-label" data-en="Net Profit" data-ar="صافي النتيجة (TCR)" data-fr="Résultat Net (TCR)">Net Profit</div>
+                <div class="stat-value" id="statNetProfit">0.00 DZD</div>
                 <div class="stat-change">
-                    <i class="fas fa-minus"></i>
-                    <span>-</span>
+                    <i class="fas fa-balance-scale"></i>
+                    <span id="statProfitSub">ربح / خسارة السنة</span>
                 </div>
             </div>
 
@@ -1279,11 +1416,11 @@
                         <i class="fas fa-university"></i>
                     </div>
                 </div>
-                <div class="stat-label" data-en="Bank Balance" data-ar="الرصيد البنكي" data-fr="Solde Bancaire">Bank Balance</div>
-                <div class="stat-value">$0</div>
+                <div class="stat-label" data-en="Bank Balance" data-ar="السيولة البنكية والخزينة (512/53)" data-fr="Trésorerie Actif (512/53)">Bank Balance</div>
+                <div class="stat-value" id="statBankBalance">0.00 DZD</div>
                 <div class="stat-change">
-                    <i class="fas fa-minus"></i>
-                    <span>-</span>
+                    <i class="fas fa-money-bill-wave text-info"></i>
+                    <span id="statBankSub">بنوك وصندوق</span>
                 </div>
             </div>
 
@@ -1293,11 +1430,11 @@
                         <i class="fas fa-file-invoice-dollar"></i>
                     </div>
                 </div>
-                <div class="stat-label" data-en="Accounts Payable" data-ar="الحسابات الدائنة" data-fr="Comptes Fournisseurs">Accounts Payable</div>
-                <div class="stat-value">$0</div>
+                <div class="stat-label" data-en="Accounts Payable" data-ar="ديون الموردين والغير (401)" data-fr="Dettes Fournisseurs (401)">Accounts Payable</div>
+                <div class="stat-value" id="statAccountsPayable">0.00 DZD</div>
                 <div class="stat-change">
-                    <i class="fas fa-minus"></i>
-                    <span>-</span>
+                    <i class="fas fa-exclamation-circle text-warning"></i>
+                    <span id="statPayableSub">مستحقات غير مسددة</span>
                 </div>
             </div>
         </div>
@@ -1341,24 +1478,40 @@
 
             <!-- Chart of Accounts Tab -->
             <div id="accounts" class="tab-content active" role="tabpanel" aria-labelledby="tab-accounts" aria-hidden="false">
-                <div class="action-bar">
-                    <div class="search-box">
+                <div class="action-bar" style="flex-wrap:wrap; gap:12px;">
+                    <div class="search-box" style="flex:1; min-width:240px;">
                         <i class="fas fa-search"></i>
-                        <input type="text" placeholder="Search accounts..." data-en-placeholder="Search accounts..." data-ar-placeholder="البحث عن الحسابات..." data-fr-placeholder="Rechercher des comptes...">
+                        <input type="text" id="accountSearchInput" oninput="filterAccountsTree(this.value)" placeholder="البحث برقم أو اسم الحساب SCF..." data-en-placeholder="Search SCF code or name..." data-ar-placeholder="البحث برقم أو اسم الحساب SCF..." data-fr-placeholder="Rechercher code ou nom SCF...">
                     </div>
-                    <div class="btn-group">
+                    <div class="btn-group" style="flex-wrap:wrap;">
                         <button class="btn btn-success" onclick="openModal('addAccount')">
                             <i class="fas fa-plus"></i>
-                            <span data-en="New Account" data-ar="حساب جديد" data-fr="Nouveau Compte">New Account</span>
+                            <span data-en="New Account" data-ar="حساب محاسبي جديد" data-fr="Nouveau Compte">حساب محاسبي جديد</span>
                         </button>
-                        <button class="btn btn-secondary">
-                            <i class="fas fa-file-export"></i>
-                            <span data-en="Export" data-ar="تصدير" data-fr="Exporter">Export</span>
+                        <button class="btn btn-primary" onclick="resetScfAccounts()" title="استعادة الدليل المحاسبي الجزائري النموذجي">
+                            <i class="fas fa-sync-alt"></i>
+                            <span data-en="Reset SCF" data-ar="استعادة دليل SCF" data-fr="Réinitialiser SCF">استعادة دليل SCF</span>
+                        </button>
+                        <button class="btn btn-secondary" onclick="exportAccountsToCsv()">
+                            <i class="fas fa-file-excel"></i>
+                            <span data-en="Export SCF" data-ar="تصدير الدليل (CSV)" data-fr="Exporter SCF">تصدير الدليل (CSV)</span>
                         </button>
                     </div>
                 </div>
 
-                <div class="account-tree">
+                <!-- SCF Category Filter Pills -->
+                <div class="scf-pills">
+                    <div class="scf-pill active" onclick="filterAccountsByClass('all', this)"><i class="fas fa-layer-group"></i> كافة الأصناف (1-7)</div>
+                    <div class="scf-pill" onclick="filterAccountsByClass(1, this)"><i class="fas fa-landmark"></i> الصنف 1: رؤوس الأموال</div>
+                    <div class="scf-pill" onclick="filterAccountsByClass(2, this)"><i class="fas fa-building"></i> الصنف 2: التثبيتات</div>
+                    <div class="scf-pill" onclick="filterAccountsByClass(3, this)"><i class="fas fa-boxes"></i> الصنف 3: المخزونات</div>
+                    <div class="scf-pill" onclick="filterAccountsByClass(4, this)"><i class="fas fa-users"></i> الصنف 4: حسابات الغير</div>
+                    <div class="scf-pill" onclick="filterAccountsByClass(5, this)"><i class="fas fa-coins"></i> الصنف 5: الحسابات المالية</div>
+                    <div class="scf-pill" onclick="filterAccountsByClass(6, this)"><i class="fas fa-receipt"></i> الصنف 6: الأعباء والمصاريف</div>
+                    <div class="scf-pill" onclick="filterAccountsByClass(7, this)"><i class="fas fa-chart-line"></i> الصنف 7: النواتج والإيرادات</div>
+                </div>
+
+                <div class="account-tree" id="accountsTreeContainer">
                     <!-- Assets -->
                     <div class="account-category">
                         <div class="category-header">
@@ -1540,24 +1693,48 @@
 
             <!-- Journal Entries Tab -->
             <div id="journal" class="tab-content" role="tabpanel" aria-labelledby="tab-journal" aria-hidden="true">
-                <div class="action-bar">
-                    <div class="search-box">
+                <div class="action-bar" style="flex-wrap:wrap; gap:12px;">
+                    <div class="search-box" style="flex:1; min-width:240px;">
                         <i class="fas fa-search"></i>
-                        <input type="text" placeholder="Search journal entries..." data-en-placeholder="Search journal entries..." data-ar-placeholder="البحث عن القيود..." data-fr-placeholder="Rechercher des écritures...">
+                        <input type="text" id="journalSearchInput" oninput="renderJournalEntries(this.value)" placeholder="البحث برقم القيد، المرجع، الوصف..." data-en-placeholder="Search entries..." data-ar-placeholder="البحث برقم القيد، المرجع، الوصف..." data-fr-placeholder="Rechercher écritures...">
                     </div>
-                    <div class="btn-group">
+                    <div class="btn-group" style="flex-wrap:wrap;">
                         <button class="btn btn-success" onclick="openModal('addJournal')">
                             <i class="fas fa-plus"></i>
-                            <span data-en="New Journal Entry" data-ar="قيد جديد" data-fr="Nouvelle Écriture">New Journal Entry</span>
+                            <span data-en="New Journal Entry" data-ar="قيد محاسبي جديد" data-fr="Nouvelle Écriture">قيد محاسبي جديد</span>
+                        </button>
+                        <button class="btn btn-primary" onclick="syncInvoicesToJournal()" title="توليد قيود محاسبية تلقائياً من فواتير المبيعات، المشتريات، والرواتب">
+                            <i class="fas fa-magic"></i>
+                            <span data-en="Auto Sync" data-ar="توليد آلي من الفواتير والرواتب" data-fr="Génération Auto">توليد آلي من الفواتير والرواتب</span>
                         </button>
                         <button class="btn btn-info" onclick="openFinanceOcrModal('journal')" title="Scan document to create journal entry">
                             <i class="fas fa-camera"></i>
                             <span data-en="Scan IA" data-ar="مسح وقيد ذكي (Scan IA)" data-fr="Scan IA">مسح وقيد ذكي (Scan IA)</span>
                         </button>
-                        <button class="btn btn-secondary">
-                            <i class="fas fa-file-export"></i>
-                            <span data-en="Export" data-ar="تصدير" data-fr="Exporter">Export</span>
+                        <button class="btn btn-secondary" onclick="exportJournalToCsv()">
+                            <i class="fas fa-file-excel"></i>
+                            <span data-en="Export" data-ar="تصدير اليومية (CSV)" data-fr="Exporter">تصدير اليومية (CSV)</span>
                         </button>
+                    </div>
+                </div>
+
+                <!-- Journal Quick KPI Bar -->
+                <div class="journal-kpi-bar">
+                    <div class="kpi-mini-card">
+                        <div class="kpi-label"><i class="fas fa-list-ol"></i> إجمالي عدد القيود</div>
+                        <div class="kpi-val" id="kpiJournalCount">0</div>
+                    </div>
+                    <div class="kpi-mini-card">
+                        <div class="kpi-label"><i class="fas fa-arrow-circle-down text-primary"></i> إجمالي حركة المدين (Débit)</div>
+                        <div class="kpi-val" id="kpiTotalDebit" style="color:#2563eb;">0.00 DZD</div>
+                    </div>
+                    <div class="kpi-mini-card">
+                        <div class="kpi-label"><i class="fas fa-arrow-circle-up text-success"></i> إجمالي حركة الدائن (Crédit)</div>
+                        <div class="kpi-val" id="kpiTotalCredit" style="color:#10b981;">0.00 DZD</div>
+                    </div>
+                    <div class="kpi-mini-card">
+                        <div class="kpi-label"><i class="fas fa-balance-scale"></i> حالة التوازن المحاسبي</div>
+                        <div class="kpi-val" id="kpiBalanceStatus" style="font-size:15px; color:#10b981;">متوازن 100%</div>
                     </div>
                 </div>
 
@@ -1587,25 +1764,32 @@
 
             <!-- Financial Reports Tab -->
             <div id="reports" class="tab-content" role="tabpanel" aria-labelledby="tab-reports" aria-hidden="true">
-                <div class="action-bar">
-                    <h3 data-en="Select Report" data-ar="اختر التقرير" data-fr="Sélectionner Rapport">Select Report</h3>
-                    <div class="btn-group">
+                <div class="action-bar" style="flex-wrap:wrap; gap:10px;">
+                    <h3 data-en="Financial Statements & Reports" data-ar="القوائم والتقارير المالية (SCF)" data-fr="États Financiers & Rapports">القوائم والتقارير المالية (SCF)</h3>
+                    <div class="btn-group" style="flex-wrap:wrap;">
                         <button class="btn btn-primary" onclick="showReport('balance')">
                             <i class="fas fa-balance-scale"></i>
-                            <span data-en="Balance Sheet" data-ar="الميزانية العمومية" data-fr="Bilan">Balance Sheet</span>
+                            <span data-en="Balance Sheet" data-ar="الميزانية (Bilan)" data-fr="Bilan">الميزانية (Bilan)</span>
                         </button>
                         <button class="btn btn-success" onclick="showReport('income')">
                             <i class="fas fa-chart-pie"></i>
-                            <span data-en="Income Statement" data-ar="قائمة الدخل" data-fr="Compte de Résultat">Income Statement</span>
+                            <span data-en="Income Statement" data-ar="جدول النتائج (TCR)" data-fr="Compte de Résultat">جدول النتائج (TCR)</span>
+                        </button>
+                        <button class="btn btn-warning" onclick="showReport('trial')">
+                            <i class="fas fa-table"></i>
+                            <span data-en="Trial Balance" data-ar="ميزان المراجعة (Balance)" data-fr="Balance Générale">ميزان المراجعة (Balance)</span>
+                        </button>
+                        <button class="btn btn-purple" style="background:#8b5cf6; color:#fff;" onclick="showReport('ledger')">
+                            <i class="fas fa-book-open"></i>
+                            <span data-en="General Ledger" data-ar="دفتر الأستاذ (Grand Livre)" data-fr="Grand Livre">دفتر الأستاذ (Grand Livre)</span>
                         </button>
                         <button class="btn btn-info" onclick="showReport('cashflow')">
-                            <i class
-							="fas fa-exchange-alt"></i>
-                            <span data-en="Cash Flow" data-ar="التدفقات النقدية" data-fr="Flux de Trésorerie">Cash Flow</span>
+                            <i class="fas fa-exchange-alt"></i>
+                            <span data-en="Cash Flow" data-ar="التدفقات النقدية (Flux)" data-fr="Flux de Trésorerie">التدفقات النقدية (Flux)</span>
                         </button>
-                        <button class="btn btn-secondary">
-                            <i class="fas fa-file-pdf"></i>
-                            <span data-en="Export PDF" data-ar="تصدير PDF" data-fr="Exporter PDF">Export PDF</span>
+                        <button class="btn btn-secondary" onclick="printActiveReport()">
+                            <i class="fas fa-print"></i>
+                            <span data-en="Print / PDF" data-ar="طباعة وتصدير التقرير" data-fr="Imprimer / PDF">طباعة وتصدير التقرير</span>
                         </button>
                     </div>
                 </div>
@@ -1744,7 +1928,100 @@
                 </div>
 
                 <!-- Charts -->
-                <h3 style="margin: 40px 0 20px 0;" data-en="Financial Analysis" data-ar="التحليل المالي" data-fr="Analyse Financière">Financial Analysis</h3>
+                
+                <!-- Trial Balance Report (6 Colonnes) -->
+                <div id="trialBalanceReport" class="report-container" style="display:none; margin-top: 25px;">
+                    <div class="report-header">
+                        <h2>Zeralda ERP Tools - Système Comptable Financier</h2>
+                        <h3 data-en="Trial Balance (6 Columns)" data-ar="ميزان المراجعة بـ 6 أعمدة (Balance Générale des Comptes)" data-fr="Balance Générale des Comptes (6 Colonnes)">ميزان المراجعة بـ 6 أعمدة (Balance Générale des Comptes)</h3>
+                        <p class="report-period" id="trialBalancePeriod">الفترة الحالية</p>
+                    </div>
+                    <div class="table-container" style="margin-top:15px;">
+                        <table style="width:100%;">
+                            <thead>
+                                <tr>
+                                    <th rowspan="2" style="vertical-align:middle;">رقم الحساب</th>
+                                    <th rowspan="2" style="vertical-align:middle;">اسم الحساب (Libellé)</th>
+                                    <th colspan="2" style="text-align:center; background:#f1f5f9;">الأرصدة الافتتاحية</th>
+                                    <th colspan="2" style="text-align:center; background:#e0f2fe;">حركات الفترة</th>
+                                    <th colspan="2" style="text-align:center; background:#fef3c7;">الأرصدة الختامية</th>
+                                </tr>
+                                <tr>
+                                    <th style="text-align:right;">مدين</th>
+                                    <th style="text-align:right;">دائن</th>
+                                    <th style="text-align:right;">مدين</th>
+                                    <th style="text-align:right;">دائن</th>
+                                    <th style="text-align:right;">مدين</th>
+                                    <th style="text-align:right;">دائن</th>
+                                </tr>
+                            </thead>
+                            <tbody id="trialBalanceTableBody">
+                                <tr><td colspan="8" style="text-align:center; padding:30px; color:#64748b;">جاري استخراج ميزان المراجعة...</td></tr>
+                            </tbody>
+                            <tfoot id="trialBalanceTableFoot" style="font-weight:700; background:#f8fafc;"></tfoot>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- General Ledger Report (Grand Livre) -->
+                <div id="generalLedgerReport" class="report-container" style="display:none; margin-top: 25px;">
+                    <div class="report-header">
+                        <h2>Zeralda ERP Tools - Grand Livre des Comptes</h2>
+                        <h3 data-en="General Ledger" data-ar="دفتر الأستاذ العام (Grand Livre)" data-fr="Grand Livre des Comptes">دفتر الأستاذ العام (Grand Livre)</h3>
+                        <div style="margin-top:15px; display:inline-flex; align-items:center; gap:10px;">
+                            <label style="font-weight:600;">اختر الحساب المحاسبي:</label>
+                            <select id="ledgerAccountSelect" onchange="renderGeneralLedgerForAccount(this.value)" style="padding:8px 14px; border:1px solid #cbd5e1; border-radius:8px; font-weight:600; min-width:280px;"></select>
+                        </div>
+                    </div>
+                    <div class="table-container" style="margin-top:15px;">
+                        <table style="width:100%;">
+                            <thead>
+                                <tr>
+                                    <th>التاريخ</th>
+                                    <th>رقم القيد</th>
+                                    <th>المرجع والبيان</th>
+                                    <th style="text-align:right;">حركة مدين</th>
+                                    <th style="text-align:right;">حركة دائن</th>
+                                    <th style="text-align:right;">الرصيد التراكمي المتحرك</th>
+                                </tr>
+                            </thead>
+                            <tbody id="generalLedgerTableBody">
+                                <tr><td colspan="6" style="text-align:center; padding:30px; color:#64748b;">اختر حساباً لعرض كشف الحركات التفصيلي</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Cash Flow Statement Report -->
+                <div id="cashFlowReport" class="report-container" style="display:none; margin-top: 25px;">
+                    <div class="report-header">
+                        <h2>Zeralda ERP Tools - Tableau des Flux de Trésorerie</h2>
+                        <h3 data-en="Cash Flow Statement" data-ar="جدول سيولة الخزينة والتدفقات النقدية (TFT)" data-fr="Tableau des Flux de Trésorerie">جدول سيولة الخزينة والتدفقات النقدية (TFT)</h3>
+                        <p class="report-period" id="cashFlowPeriod">الفترة الحالية</p>
+                    </div>
+                    <div class="report-section">
+                        <div class="section-title">1. تدفقات الخزينة المتأتية من الأنشطة التشغيلية (Flux Opérationnels)</div>
+                        <div class="report-row"><span>التحصيلات المقبوضة من الزبائن (Ventes encaissées)</span><strong id="cfOperatingIn">0.00 DZD</strong></div>
+                        <div class="report-row"><span>المبالغ المدفوعة للموردين والمستخدمين (Fournisseurs & Salaires)</span><strong id="cfOperatingOut">0.00 DZD</strong></div>
+                        <div class="report-row total"><span>صافي تدفقات الأنشطة التشغيلية (A)</span><strong id="cfOperatingNet">0.00 DZD</strong></div>
+                    </div>
+                    <div class="report-section">
+                        <div class="section-title">2. تدفقات الخزينة المتأتية من أنشطة الاستثمار (Flux d'Investissement)</div>
+                        <div class="report-row"><span>سداد حيازات تثبيتات عينية ومعنوية (Acquisitions d'immob.)</span><strong id="cfInvesting">0.00 DZD</strong></div>
+                        <div class="report-row total"><span>صافي تدفقات أنشطة الاستثمار (B)</span><strong id="cfInvestingNet">0.00 DZD</strong></div>
+                    </div>
+                    <div class="report-section">
+                        <div class="section-title">3. تدفقات الخزينة المتأتية من أنشطة التمويل (Flux de Financement)</div>
+                        <div class="report-row"><span>رأس المال والاقتراضات البنكية (Capital & Emprunts)</span><strong id="cfFinancing">0.00 DZD</strong></div>
+                        <div class="report-row total"><span>صافي تدفقات أنشطة التمويل (C)</span><strong id="cfFinancingNet">0.00 DZD</strong></div>
+                    </div>
+                    <div class="report-row grand-total">
+                        <span>صافي التغير في الخزينة خلال الدورة (A + B + C)</span>
+                        <strong id="cfNetChange">0.00 DZD</strong>
+                    </div>
+                </div>
+
+<h3 style="margin: 40px 0 20px 0;" data-en="Financial Analysis" data-ar="التحليل المالي" data-fr="Analyse Financière">Financial Analysis</h3>
                 <div class="charts-grid">
                     <div class="chart-container">
                         <h3 data-en="Revenue vs Expenses" data-ar="الإيرادات مقابل المصروفات" data-fr="Revenus vs Dépenses">Revenue vs Expenses</h3>
@@ -3052,27 +3329,308 @@
             }
         }
 
-        // Account Functions
-        function saveAccount() {
-            alert(tRuntime('account_saved'));
+        // ============================================================
+        // ALGERIAN SCF (SYSTÈME COMPTABLE FINANCIER) OFFICIAL ACCOUNTS
+        // ============================================================
+        const DEFAULT_SCF_ACCOUNTS = [
+            // Classe 1: Capitaux propres
+            { code: '101000', name: 'رأس المال الصادر (Capital émis)', nameFr: 'Capital émis', class: 1, type: 'equity', balance: 0 },
+            { code: '106000', name: 'الاحتياطات القانونية والنظامية (Réserves)', nameFr: 'Réserves légales et statutaires', class: 1, type: 'equity', balance: 0 },
+            { code: '110000', name: 'الترحيل من جديد (Report à nouveau)', nameFr: 'Report à nouveau', class: 1, type: 'equity', balance: 0 },
+            { code: '120000', name: 'نتيجة السنة المالية - رصيد دائن / ربح (Résultat net)', nameFr: 'Résultat de l\'exercice', class: 1, type: 'equity', balance: 0 },
+            { code: '164000', name: 'اقتراضات لدى مؤسسات القرض (Emprunts bancaires)', nameFr: 'Emprunts auprès des ét. de crédit', class: 1, type: 'liability', balance: 0 },
+
+            // Classe 2: Immobilisations
+            { code: '204000', name: 'برمجيات وتطبيقات معلوماتية (Logiciels informatiques)', nameFr: 'Logiciels informatiques', class: 2, type: 'asset', balance: 0 },
+            { code: '213000', name: 'البناءات والعقارات (Constructions)', nameFr: 'Constructions & Bâtiments', class: 2, type: 'asset', balance: 0 },
+            { code: '215000', name: 'منشآت تقنية ومعدات صناعية (Installations techniques)', nameFr: 'Installations et matériel', class: 2, type: 'asset', balance: 0 },
+            { code: '218200', name: 'معدات النقل والسيارات (Matériel de transport)', nameFr: 'Matériel de transport', class: 2, type: 'asset', balance: 0 },
+            { code: '218300', name: 'معدات مكتبية وإعلام آلي (Matériel de bureau & info)', nameFr: 'Matériel de bureau et informatique', class: 2, type: 'asset', balance: 0 },
+            { code: '281800', name: 'اهتلاك التثبيتات العينية (Amortissements immob.)', nameFr: 'Amortissements des immob. corporelles', class: 2, type: 'asset', balance: 0 },
+
+            // Classe 3: Stocks
+            { code: '300000', name: 'مخزونات البضائع (Stocks de marchandises)', nameFr: 'Stocks de marchandises', class: 3, type: 'asset', balance: 0 },
+            { code: '310000', name: 'مواد أولية ولوازم (Matières premières et fournitures)', nameFr: 'Matières premières', class: 3, type: 'asset', balance: 0 },
+            { code: '320000', name: 'تموينات أخرى ومستهلكات (Autres approvisionnements)', nameFr: 'Autres approvisionnements', class: 3, type: 'asset', balance: 0 },
+            { code: '350000', name: 'منتجات تامة الصنع (Produits finis)', nameFr: 'Produits finis', class: 3, type: 'asset', balance: 0 },
+
+            // Classe 4: Tiers
+            { code: '401000', name: 'موردو المخزونات والخدمات (Fournisseurs)', nameFr: 'Fournisseurs de stocks et services', class: 4, type: 'liability', balance: 0 },
+            { code: '404000', name: 'موردو التثبيتات (Fournisseurs d\'immobilisations)', nameFr: 'Fournisseurs d\'immobilisations', class: 4, type: 'liability', balance: 0 },
+            { code: '409000', name: 'موردون مدينون - تسبيقات مدفوعة (Fournisseurs débiteurs)', nameFr: 'Fournisseurs débiteurs (avances)', class: 4, type: 'asset', balance: 0 },
+            { code: '411000', name: 'الزبائن والعملاء (Clients)', nameFr: 'Clients', class: 4, type: 'asset', balance: 0 },
+            { code: '419000', name: 'زبائن دائنون - تسبيقات مقبوضة (Clients créditeurs)', nameFr: 'Clients créditeurs (avances)', class: 4, type: 'liability', balance: 0 },
+            { code: '421000', name: 'المستخدمون - الأجور المستحقة (Personnel - Salaires)', nameFr: 'Personnel - Rémunérations dues', class: 4, type: 'liability', balance: 0 },
+            { code: '431000', name: 'الضمان الاجتماعي - كيناس (Sécurité sociale - CNAS)', nameFr: 'Sécurité sociale (CNAS)', class: 4, type: 'liability', balance: 0 },
+            { code: '444000', name: 'الدولة - ضرائب على النتائج IBS (État - IBS)', nameFr: 'Impôts sur les bénéfices (IBS)', class: 4, type: 'liability', balance: 0 },
+            { code: '445600', name: 'الدولة - رسم TVA قابل للاسترجاع (TVA déductible)', nameFr: 'TVA déductible', class: 4, type: 'asset', balance: 0 },
+            { code: '445700', name: 'الدولة - رسم TVA محصل على المبيعات (TVA collectée)', nameFr: 'TVA collectée', class: 4, type: 'liability', balance: 0 },
+            { code: '447000', name: 'الضرائب والرسوم الأخرى TAP/IRG (Autres impôts)', nameFr: 'Autres impôts et taxes (TAP/IRG)', class: 4, type: 'liability', balance: 0 },
+
+            // Classe 5: Financiers
+            { code: '512000', name: 'البنوك والحسابات الجارية (Banques et comptes courants)', nameFr: 'Banques et comptes courants', class: 5, type: 'asset', balance: 0 },
+            { code: '515000', name: 'الحساب البريدي الجاري CCP (Chèques postaux)', nameFr: 'Chèques postaux (CCP)', class: 5, type: 'asset', balance: 0 },
+            { code: '519000', name: 'سلفات مصرفية وسحب على المكشوف (Concours bancaires)', nameFr: 'Concours bancaires courants', class: 5, type: 'liability', balance: 0 },
+            { code: '530000', name: 'الصندوق / الخزينة النقدية (Caisse)', nameFr: 'Caisse', class: 5, type: 'asset', balance: 0 },
+            { code: '580000', name: 'تحويلات داخلية للأموال (Virements internes)', nameFr: 'Virements internes', class: 5, type: 'asset', balance: 0 },
+
+            // Classe 6: Charges
+            { code: '600000', name: 'مشتريات بضائع مبيعة (Achats de marchandises)', nameFr: 'Achats de marchandises vendues', class: 6, type: 'expense', balance: 0 },
+            { code: '601000', name: 'مواد أولية مستهلكة (Matières premières consommées)', nameFr: 'Matières premières consommées', class: 6, type: 'expense', balance: 0 },
+            { code: '604000', name: 'شراء دراسات واستشارات وخدمات (Achats d\'études)', nameFr: 'Achats d\'études et prestations', class: 6, type: 'expense', balance: 0 },
+            { code: '613000', name: 'إيجارات ومصاريف كراء (Locations & charges)', nameFr: 'Locations et charges locatives', class: 6, type: 'expense', balance: 0 },
+            { code: '615000', name: 'صيانة وإصلاحات (Entretien et réparations)', nameFr: 'Entretien et réparations', class: 6, type: 'expense', balance: 0 },
+            { code: '616000', name: 'أقساط التأمين التجاري والصناعي (Primes d\'assurance)', nameFr: 'Primes d\'assurance', class: 6, type: 'expense', balance: 0 },
+            { code: '623000', name: 'إشهار ونشر وعلاقات عامة (Publicité et relations publiques)', nameFr: 'Publicité, publications, RP', class: 6, type: 'expense', balance: 0 },
+            { code: '624000', name: 'نقل السلع وتنقلات الأفراد (Transports de biens & pers.)', nameFr: 'Transports de biens et personnel', class: 6, type: 'expense', balance: 0 },
+            { code: '626000', name: 'مصاريف البريد والمواصلات الهاتفية (Frais postaux & télécoms)', nameFr: 'Frais postaux et télécoms', class: 6, type: 'expense', balance: 0 },
+            { code: '627000', name: 'خدمات مصرفية وعمولات بنكية (Services bancaires)', nameFr: 'Services bancaires et assimilés', class: 6, type: 'expense', balance: 0 },
+            { code: '631000', name: 'أجور المستخدمين والرواتب (Rémunérations du personnel)', nameFr: 'Rémunérations du personnel', class: 6, type: 'expense', balance: 0 },
+            { code: '635000', name: 'اشتراكات الضمان الاجتماعي الملقاة على رب العمل (Cotisations CNAS)', nameFr: 'Cotisations sociales patronales', class: 6, type: 'expense', balance: 0 },
+            { code: '641000', name: 'الضرائب والرسوم غير المسترجعة (Impôts et taxes)', nameFr: 'Impôts, taxes et versements assimilés', class: 6, type: 'expense', balance: 0 },
+            { code: '661000', name: 'أعباء الفوائد البنكية (Charges d\'intérêts)', nameFr: 'Charges d\'intérêts', class: 6, type: 'expense', balance: 0 },
+            { code: '681000', name: 'مخصصات الاهتلاكات والمؤونات (Dotations amortissements)', nameFr: 'Dotations aux amortissements', class: 6, type: 'expense', balance: 0 },
+
+            // Classe 7: Produits
+            { code: '700000', name: 'مبيعات البضائع (Ventes de marchandises)', nameFr: 'Ventes de marchandises', class: 7, type: 'revenue', balance: 0 },
+            { code: '701000', name: 'مبيعات المنتجات التامة (Ventes de produits finis)', nameFr: 'Ventes de produits finis', class: 7, type: 'revenue', balance: 0 },
+            { code: '704000', name: 'خدمات مؤداة وأشغال منجزة (Prestations de services)', nameFr: 'Prestations de services et travaux', class: 7, type: 'revenue', balance: 0 },
+            { code: '706000', name: 'أشغال واستشارات ومشاريع (Travaux & Consulting)', nameFr: 'Travaux et études facturées', class: 7, type: 'revenue', balance: 0 },
+            { code: '750000', name: 'نواتج عملياتية أخرى (Autres produits opérationnels)', nameFr: 'Autres produits opérationnels', class: 7, type: 'revenue', balance: 0 },
+            { code: '768000', name: 'نواتج مالية أخرى وفوائد (Autres produits financiers)', nameFr: 'Autres produits financiers', class: 7, type: 'revenue', balance: 0 }
+        ];
+
+        var _currentScfClassFilter = 'all';
+
+        // ------------------------------------------------------------
+        // SCF CHART OF ACCOUNTS FUNCTIONS
+        // ------------------------------------------------------------
+        function computeAccountBalances() {
+            const balances = {};
+            _financeAccounts.forEach(function(acc) {
+                balances[acc.code] = { debit: 0, credit: 0, net: 0 };
+            });
+
+            _journalEntries.forEach(function(entry) {
+                if (entry.status === 'draft') return; // only posted entries count
+                if (entry.lines && entry.lines.length) {
+                    entry.lines.forEach(function(l) {
+                        const code = String(l.accountCode || '').trim();
+                        if (!balances[code]) {
+                            balances[code] = { debit: 0, credit: 0, net: 0 };
+                        }
+                        balances[code].debit += parseFloat(l.debit) || 0;
+                        balances[code].credit += parseFloat(l.credit) || 0;
+                    });
+                }
+            });
+
+            _financeAccounts.forEach(function(acc) {
+                const b = balances[acc.code] || { debit: 0, credit: 0 };
+                acc.totalDebit = b.debit;
+                acc.totalCredit = b.credit;
+                // Assets & Expenses: normal balance = debit - credit
+                // Liabilities, Equity, Revenue: normal balance = credit - debit
+                if (acc.type === 'asset' || acc.type === 'expense') {
+                    acc.balance = b.debit - b.credit;
+                } else {
+                    acc.balance = b.credit - b.debit;
+                }
+            });
+        }
+
+        function renderAccountsTree(filterText, classFilter) {
+            const container = document.getElementById('accountsTreeContainer');
+            if (!container) return;
+            computeAccountBalances();
+
+            const cFilter = classFilter !== undefined ? classFilter : _currentScfClassFilter;
+            _currentScfClassFilter = cFilter;
+
+            const searchLower = (filterText || '').toLowerCase().trim();
+
+            const classesMeta = [
+                { id: 1, name: 'الصنف 1: رؤوس الأموال الخاصة (Capitaux Propres)', icon: 'fa-landmark', color: '#1e40af', bg: 'linear-gradient(135deg, #1e40af, #1e3a8a)' },
+                { id: 2, name: 'الصنف 2: حسابات التثبيتات (Immobilisations)', icon: 'fa-building', color: '#2563eb', bg: 'linear-gradient(135deg, #2563eb, #1d4ed8)' },
+                { id: 3, name: 'الصنف 3: حسابات المخزونات (Stocks)', icon: 'fa-boxes', color: '#0891b2', bg: 'linear-gradient(135deg, #0891b2, #0e7490)' },
+                { id: 4, name: 'الصنف 4: حسابات الغير (Comptes de Tiers)', icon: 'fa-users', color: '#dc2626', bg: 'linear-gradient(135deg, #ef4444, #dc2626)' },
+                { id: 5, name: 'الصنف 5: الحسابات المالية (Comptes Financiers)', icon: 'fa-coins', color: '#059669', bg: 'linear-gradient(135deg, #10b981, #059669)' },
+                { id: 6, name: 'الصنف 6: حسابات الأعباء (Comptes de Charges)', icon: 'fa-receipt', color: '#d97706', bg: 'linear-gradient(135deg, #f59e0b, #d97706)' },
+                { id: 7, name: 'الصنف 7: حسابات النواتج (Comptes de Produits)', icon: 'fa-chart-line', color: '#7c3aed', bg: 'linear-gradient(135deg, #8b5cf6, #7c3aed)' }
+            ];
+
+            let html = '';
+            classesMeta.forEach(function(meta) {
+                if (cFilter !== 'all' && parseInt(cFilter) !== meta.id) return;
+
+                const accountsInClass = _financeAccounts.filter(function(acc) {
+                    if (acc.class !== meta.id) return false;
+                    if (!searchLower) return true;
+                    return (acc.code || '').toLowerCase().includes(searchLower)
+                        || (acc.name || '').toLowerCase().includes(searchLower)
+                        || (acc.nameFr || '').toLowerCase().includes(searchLower);
+                });
+
+                if (searchLower && accountsInClass.length === 0) return;
+
+                let classTotal = 0;
+                accountsInClass.forEach(function(a) { classTotal += (a.balance || 0); });
+
+                html += '<div class="account-category" style="margin-bottom:20px;">'
+                    + '<div class="category-header" style="background:' + meta.bg + ';">'
+                    + '  <h3><i class="fas ' + meta.icon + '"></i> ' + meta.name + ' <small style="font-size:12px;opacity:0.85;">(' + accountsInClass.length + ' حساب)</small></h3>'
+                    + '  <strong>' + _ckFmtAmt(classTotal, 'DZD') + '</strong>'
+                    + '</div>'
+                    + '<div class="category-accounts">';
+
+                if (!accountsInClass.length) {
+                    html += '<div style="padding:15px; color:#94a3b8; font-size:13px; text-align:center;">لا توجد حسابات مطابقة للبحث في هذا الصنف</div>';
+                } else {
+                    accountsInClass.forEach(function(acc) {
+                        const isDebitBal = (acc.type === 'asset' || acc.type === 'expense');
+                        const balClass = isDebitBal ? 'balance-debit' : 'balance-credit';
+                        html += '<div class="account-item" onclick="viewAccount(\'' + acc.code + '\')" style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" title="انقر لعرض دفتر الأستاذ">'
+                            + '  <div class="account-info" style="display:flex; align-items:center; gap:10px;">'
+                            + '    <span class="account-code" style="background:#e2e8f0; color:#1e293b; padding:3px 8px; border-radius:4px; font-weight:700;">' + acc.code + '</span>'
+                            + '    <div><strong>' + _ckEsc(acc.name) + '</strong><br><small style="color:#64748b;">' + _ckEsc(acc.nameFr || '') + '</small></div>'
+                            + '  </div>'
+                            + '  <div style="text-align:right;">'
+                            + '    <div class="account-balance ' + balClass + '" style="font-weight:700; font-size:14px;">' + _ckFmtAmt(acc.balance || 0, 'DZD') + '</div>'
+                            + '    <small style="color:#94a3b8;">مدين: ' + _ckFmtAmt(acc.totalDebit || 0) + ' | دائن: ' + _ckFmtAmt(acc.totalCredit || 0) + '</small>'
+                            + '  </div>'
+                            + '</div>';
+                    });
+                }
+                html += '</div></div>';
+            });
+
+            if (!html) {
+                html = '<div style="text-align:center; padding:50px 20px; color:#64748b;"><i class="fas fa-search fa-2x" style="margin-bottom:10px; display:block;"></i>لم يتم العثور على أي حساب يطابق: "<strong>' + _ckEsc(searchLower) + '</strong>"</div>';
+            }
+
+            container.innerHTML = html;
+        }
+
+        function filterAccountsTree(val) {
+            renderAccountsTree(val, _currentScfClassFilter);
+        }
+
+        function filterAccountsByClass(cls, pillEl) {
+            document.querySelectorAll('.scf-pill').forEach(function(p) { p.classList.remove('active'); });
+            if (pillEl) pillEl.classList.add('active');
+            const searchVal = (document.getElementById('accountSearchInput') || {}).value || '';
+            renderAccountsTree(searchVal, cls);
+        }
+
+        async function resetScfAccounts() {
+            if (!confirm('هل تريد استعادة الدليل المحاسبي الجزائري النموذجي (SCF) بالكامل؟ لن يؤثر ذلك على القيود المسجلة مسبقاً.')) return;
+            _financeAccounts = JSON.parse(JSON.stringify(DEFAULT_SCF_ACCOUNTS));
+            await _financeStoreSet('finance_chart_of_accounts', _financeAccounts);
+            renderAccountsTree();
+            populateJournalAccountSelects();
+            financeToast('تمت استعادة الدليل المحاسبي الجزائري بنجاح.');
+        }
+
+        async function saveAccount() {
+            const form = document.getElementById('accountForm');
+            if (!form) return;
+            const inputs = form.querySelectorAll('input, select, textarea');
+            const code = ((form.querySelector('input[placeholder*="1050"]') || {}).value || '').trim();
+            const name = ((form.querySelector('input[placeholder*="name"]') || form.querySelector('input[placeholder*="اسم"]') || {}).value || '').trim();
+            const typeSelect = form.querySelector('select');
+            const type = typeSelect ? typeSelect.value : 'asset';
+
+            if (!code || !name) {
+                alert('يرجى إدخال رمز الحساب واسم الحساب.');
+                return;
+            }
+
+            const existing = _financeAccounts.find(function(a) { return a.code === code; });
+            if (existing) {
+                alert('رمز الحساب ' + code + ' موجود بالفعل في الدليل.');
+                return;
+            }
+
+            const firstDigit = parseInt(code.charAt(0)) || 1;
+            const newAcc = {
+                code: code,
+                name: name,
+                nameFr: name,
+                class: (firstDigit >= 1 && firstDigit <= 7) ? firstDigit : 1,
+                type: type,
+                balance: 0
+            };
+
+            _financeAccounts.push(newAcc);
+            _financeAccounts.sort(function(a, b) { return a.code.localeCompare(b.code); });
+            await _financeStoreSet('finance_chart_of_accounts', _financeAccounts);
+            renderAccountsTree();
+            populateJournalAccountSelects();
             closeModal('addAccount');
+            form.reset();
+            financeToast('تم حفظ الحساب المحاسبي الجديد: ' + code);
         }
 
         function viewAccount(code) {
-            alert(tRuntime('opening_account', { code }));
+            // Switch to reports tab and load General Ledger for this account
+            const tabBtn = document.getElementById('tab-reports');
+            if (tabBtn) switchTab({ currentTarget: tabBtn }, 'reports');
+            showReport('ledger');
+            setTimeout(function() {
+                const sel = document.getElementById('ledgerAccountSelect');
+                if (sel) {
+                    sel.value = code;
+                    renderGeneralLedgerForAccount(code);
+                }
+            }, 100);
         }
 
-        // Journal Entry Functions
+        function exportAccountsToCsv() {
+            if (!_financeAccounts.length) return;
+            computeAccountBalances();
+            let csv = '\uFEFFرقم الحساب,اسم الحساب,الصنف,النوع,حركات المدين,حركات الدائن,الرصيد الصافي\n';
+            _financeAccounts.forEach(function(a) {
+                csv += '"' + a.code + '","' + (a.name || '').replace(/"/g, '""') + '","' + a.class + '","' + a.type + '",' + (a.totalDebit || 0) + ',' + (a.totalCredit || 0) + ',' + (a.balance || 0) + '\n';
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'Plan_Comptable_SCF_' + new Date().toISOString().slice(0, 10) + '.csv';
+            link.click();
+        }
+
+        // ------------------------------------------------------------
+        // JOURNAL ENTRY FUNCTIONS & TRUE POSTING
+        // ------------------------------------------------------------
+        function populateJournalAccountSelects() {
+            const selects = document.querySelectorAll('#journalLinesTable select');
+            const accounts = _financeAccounts && _financeAccounts.length ? _financeAccounts : DEFAULT_SCF_ACCOUNTS;
+            selects.forEach(function(sel) {
+                const currentVal = sel.value;
+                let optHtml = '<option value="">-- اختر الحساب SCF --</option>';
+                accounts.forEach(function(acc) {
+                    optHtml += '<option value="' + acc.code + '">' + acc.code + ' - ' + _ckEsc(acc.name) + '</option>';
+                });
+                sel.innerHTML = optHtml;
+                if (currentVal) sel.value = currentVal;
+            });
+        }
+
         function addJournalLine() {
             const table = document.getElementById('journalLinesTable');
-            const newRow = table.rows[0].cloneNode(true);
+            if (!table) return;
+            const newRow = document.createElement('tr');
+            let optHtml = '<option value="">-- اختر الحساب SCF --</option>';
+            const accounts = _financeAccounts && _financeAccounts.length ? _financeAccounts : DEFAULT_SCF_ACCOUNTS;
+            accounts.forEach(function(acc) {
+                optHtml += '<option value="' + acc.code + '">' + acc.code + ' - ' + _ckEsc(acc.name) + '</option>';
+            });
 
-            newRow.querySelectorAll('input').forEach(input => {
-                input.value = '';
-            });
-            newRow.querySelectorAll('select').forEach(select => {
-                select.selectedIndex = 0;
-            });
+            newRow.innerHTML = '<td><select style="width:100%; padding:8px; border:2px solid var(--light-color); border-radius:8px;">' + optHtml + '</select></td>'
+                + '<td><input type="text" style="width:100%; padding:8px;" placeholder="بيان السطر"></td>'
+                + '<td><input type="number" style="width:110px; padding:8px;" placeholder="0.00" step="0.01" onchange="calculateJournalBalance()" oninput="calculateJournalBalance()"></td>'
+                + '<td><input type="number" style="width:110px; padding:8px;" placeholder="0.00" step="0.01" onchange="calculateJournalBalance()" oninput="calculateJournalBalance()"></td>'
+                + '<td><button type="button" class="btn btn-danger" onclick="removeJournalLine(this)" style="padding:8px 12px;"><i class="fas fa-trash"></i></button></td>';
 
             table.appendChild(newRow);
         }
@@ -3083,7 +3641,7 @@
                 button.closest('tr').remove();
                 calculateJournalBalance();
             } else {
-                alert(tRuntime('at_least_two_lines'));
+                alert('يجب أن يحتوي القيد المحاسبي على سطرين على الأقل (مدين ودائن).');
             }
         }
 
@@ -3091,197 +3649,1084 @@
             let totalDebit = 0;
             let totalCredit = 0;
             const table = document.getElementById('journalLinesTable');
+            if (!table) return;
 
             for (let row of table.rows) {
-                const debit = parseFloat(row.querySelectorAll('input[type="number"]')[0].value) || 0;
-                const credit = parseFloat(row.querySelectorAll('input[type="number"]')[1].value) || 0;
-                totalDebit += debit;
-                totalCredit += credit;
+                const inputs = row.querySelectorAll('input[type="number"]');
+                if (inputs.length >= 2) {
+                    const debit = parseFloat(inputs[0].value) || 0;
+                    const credit = parseFloat(inputs[1].value) || 0;
+                    totalDebit += debit;
+                    totalCredit += credit;
+                }
             }
 
             const difference = Math.abs(totalDebit - totalCredit);
 
-            document.getElementById('totalDebit').textContent = '$' + totalDebit.toFixed(2);
-            document.getElementById('totalCredit').textContent = '$' + totalCredit.toFixed(2);
+            const tdEl = document.getElementById('totalDebit');
+            const tcEl = document.getElementById('totalCredit');
+            const diffEl = document.getElementById('difference');
 
-            const diffElement = document.getElementById('difference');
-            diffElement.textContent = '$' + difference.toFixed(2);
+            if (tdEl) tdEl.textContent = _ckFmtAmt(totalDebit, 'DZD');
+            if (tcEl) tcEl.textContent = _ckFmtAmt(totalCredit, 'DZD');
 
-            if (difference === 0 && totalDebit > 0) {
-                diffElement.className = 'summary-value balanced';
-            } else {
-                diffElement.className = 'summary-value unbalanced';
+            if (diffEl) {
+                diffEl.textContent = _ckFmtAmt(difference, 'DZD');
+                if (difference === 0 && totalDebit > 0) {
+                    diffEl.className = 'summary-value balanced';
+                    diffEl.innerHTML = '<i class="fas fa-check-circle"></i> متوازن ' + _ckFmtAmt(difference, 'DZD');
+                } else {
+                    diffEl.className = 'summary-value unbalanced';
+                    diffEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i> فارق غير متوازن: ' + _ckFmtAmt(difference, 'DZD');
+                }
             }
+        }
+
+        async function saveJournal(isDraft) {
+            const form = document.getElementById('journalForm');
+            if (!form) return;
+
+            const dateInput = form.querySelector('input[type="date"]');
+            const refInput = form.querySelector('input[placeholder*="reference"]') || form.querySelector('input[placeholder*="مرجع"]');
+            const descInput = form.querySelector('textarea');
+
+            const date = dateInput ? dateInput.value : new Date().toISOString().slice(0, 10);
+            const reference = refInput ? refInput.value.trim() : '';
+            const description = descInput ? descInput.value.trim() : '';
+
+            if (!description) {
+                alert('يرجى إدخال وصف أو بيان القيد المحاسبي.');
+                return;
+            }
+
+            const table = document.getElementById('journalLinesTable');
+            const lines = [];
+            let totalDebit = 0;
+            let totalCredit = 0;
+
+            for (let row of table.rows) {
+                const sel = row.querySelector('select');
+                const textInput = row.querySelector('input[type="text"]');
+                const numInputs = row.querySelectorAll('input[type="number"]');
+
+                const accCode = sel ? sel.value : '';
+                const lineDesc = textInput ? textInput.value.trim() : description;
+                const debit = numInputs[0] ? (parseFloat(numInputs[0].value) || 0) : 0;
+                const credit = numInputs[1] ? (parseFloat(numInputs[1].value) || 0) : 0;
+
+                if (accCode && (debit > 0 || credit > 0)) {
+                    lines.push({
+                        accountCode: accCode,
+                        accountName: (_financeAccounts.find(function(a){ return a.code === accCode; }) || {}).name || accCode,
+                        description: lineDesc,
+                        debit: debit,
+                        credit: credit
+                    });
+                    totalDebit += debit;
+                    totalCredit += credit;
+                }
+            }
+
+            if (lines.length < 2) {
+                alert('يجب إدخال سطرين على الأقل بقيم صحيحة.');
+                return;
+            }
+
+            const diff = Math.abs(totalDebit - totalCredit);
+            if (!isDraft && diff > 0.01) {
+                alert('لا يمكن ترحيل قيد غير متوازن!\nإجمالي المدين: ' + totalDebit.toFixed(2) + ' DZD\nإجمالي الدائن: ' + totalCredit.toFixed(2) + ' DZD\nالفارق: ' + diff.toFixed(2) + ' DZD');
+                return;
+            }
+
+            const year = new Date(date).getFullYear() || 2026;
+            const seq = (_journalEntries.length + 1).toString().padStart(4, '0');
+            const entryId = 'ECR-' + year + '-' + seq;
+
+            const entry = {
+                id: entryId,
+                date: date,
+                reference: reference,
+                description: description,
+                sourceType: 'manual',
+                status: isDraft ? 'draft' : 'posted',
+                createdAt: new Date().toISOString(),
+                lines: lines,
+                totalDebit: totalDebit,
+                totalCredit: totalCredit
+            };
+
+            _journalEntries.unshift(entry);
+            await persistFinanceData();
+
+            renderJournalEntries();
+            renderAccountsTree();
+            updateFinanceDashboardStats();
+            refreshFinancialReports();
+
+            closeModal('addJournal');
+            form.reset();
+
+            // Reset table to 2 empty rows
+            table.innerHTML = '';
+            addJournalLine();
+            addJournalLine();
+            calculateJournalBalance();
+
+            financeToast(isDraft ? 'تم حفظ القيد كمسودة: ' + entryId : 'تم ترحيل القيد المحاسبي بنجاح: ' + entryId);
         }
 
         function saveJournalDraft() {
-            alert(tRuntime('journal_saved_draft'));
-            closeModal('addJournal');
+            saveJournal(true);
         }
 
-        function saveJournal() {
-            const totalDebit = parseFloat(document.getElementById('totalDebit').textContent.replace('$', ''));
-            const totalCredit = parseFloat(document.getElementById('totalCredit').textContent.replace('$', ''));
-
-            if (totalDebit !== totalCredit) {
-                alert(tRuntime('debit_credit_equal', { debit: totalDebit, credit: totalCredit }));
-                return;
-            }
-
-            if (totalDebit === 0) {
-                alert(tRuntime('add_journal_lines'));
-                return;
-            }
-
-            alert(tRuntime('journal_posted'));
-            closeModal('addJournal');
-        }
-
-        // Enhanced Journal Entry Functions
         function renderJournalEntries(filterText) {
             const tbody = document.querySelector('#journal tbody');
             if (!tbody) return;
+
+            let totalDebitAll = 0;
+            let totalCreditAll = 0;
+            let postedCount = 0;
+
+            _journalEntries.forEach(function(e) {
+                if (e.status === 'posted') {
+                    postedCount++;
+                    if (e.lines) {
+                        e.lines.forEach(function(l) {
+                            totalDebitAll += parseFloat(l.debit) || 0;
+                            totalCreditAll += parseFloat(l.credit) || 0;
+                        });
+                    }
+                }
+            });
+
+            // Update Quick KPI mini cards
+            const kpiCount = document.getElementById('kpiJournalCount');
+            const kpiDebit = document.getElementById('kpiTotalDebit');
+            const kpiCredit = document.getElementById('kpiTotalCredit');
+            const kpiStatus = document.getElementById('kpiBalanceStatus');
+
+            if (kpiCount) kpiCount.textContent = _journalEntries.length + ' قيد (' + postedCount + ' مرحّل)';
+            if (kpiDebit) kpiDebit.textContent = _ckFmtAmt(totalDebitAll, 'DZD');
+            if (kpiCredit) kpiCredit.textContent = _ckFmtAmt(totalCreditAll, 'DZD');
+            if (kpiStatus) {
+                const diff = Math.abs(totalDebitAll - totalCreditAll);
+                if (diff < 0.05) {
+                    kpiStatus.innerHTML = '<span style="color:#10b981;"><i class="fas fa-check-circle"></i> متوازن تماماً</span>';
+                } else {
+                    kpiStatus.innerHTML = '<span style="color:#ef4444;"><i class="fas fa-exclamation-triangle"></i> فارق: ' + _ckFmtAmt(diff, 'DZD') + '</span>';
+                }
+            }
+
             if (!_journalEntries.length) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px 20px;color:#6b7280;">لا توجد قيود يومية بعد</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px 20px;color:#6b7280;"><i class="fas fa-book-open fa-2x" style="display:block;margin-bottom:10px;color:#cbd5e1;"></i>لا توجد قيود يومية بعد.<br><small>يمكنك إضافة قيد جديد أو التوليد التلقائي من الفواتير والرواتب</small></td></tr>';
                 return;
             }
+
+            const searchLower = (filterText || '').toLowerCase().trim();
             const filtered = _journalEntries.filter(function(entry) {
-                if (!filterText) return true;
-                const lower = filterText.toLowerCase();
-                return (entry.id || '').toLowerCase().includes(lower)
-                    || (entry.description || '').toLowerCase().includes(lower)
-                    || (entry.sourceType || '').toLowerCase().includes(lower);
+                if (!searchLower) return true;
+                return (entry.id || '').toLowerCase().includes(searchLower)
+                    || (entry.description || '').toLowerCase().includes(searchLower)
+                    || (entry.reference || '').toLowerCase().includes(searchLower)
+                    || (entry.sourceType || '').toLowerCase().includes(searchLower);
             });
-            tbody.innerHTML = filtered.slice(0, 50).map(function(entry) {
+
+            if (!filtered.length) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#64748b;">لا توجد قيود مطابقة لبحث: "<strong>' + _ckEsc(searchLower) + '</strong>"</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = filtered.slice(0, 100).map(function(entry) {
                 let totalDebit = 0, totalCredit = 0;
                 if (entry.lines && entry.lines.length) {
                     entry.lines.forEach(function(line) {
-                        totalDebit += line.debit || 0;
-                        totalCredit += line.credit || 0;
+                        totalDebit += parseFloat(line.debit) || 0;
+                        totalCredit += parseFloat(line.credit) || 0;
                     });
                 }
                 const status = entry.status || 'posted';
                 const statusClass = status === 'draft' ? 'badge-warning' : 'badge-success';
-                return '<tr>'
-                    + '<td>' + _ckEsc(entry.id || '') + '</td>'
+                const statusLabel = status === 'draft' ? 'مسودة (Draft)' : 'مرحّل (Posté)';
+
+                return '<tr style="cursor:pointer;" onclick="viewJournalEntry(\'' + entry.id + '\')">'
+                    + '<td><strong style="color:var(--primary-color);">' + _ckEsc(entry.id || '') + '</strong></td>'
                     + '<td>' + _ckEsc(_ckFmtDate(entry.date)) + '</td>'
-                    + '<td><small>' + _ckEsc(entry.sourceType === 'issued_check' ? 'شيك مصدر' : entry.description || '') + '</small></td>'
-                    + '<td style="text-align:right;">' + _ckFmtAmt(totalDebit, 'DZD') + '</td>'
-                    + '<td style="text-align:right;">' + _ckFmtAmt(totalCredit, 'DZD') + '</td>'
-                    + '<td><span class="badge ' + statusClass + '" style="padding:4px 8px;border-radius:3px;font-size:11px;">' + (status === 'draft' ? 'مسودة' : 'مرسل') + '</span></td>'
-                    + '<td style="white-space:nowrap;" onclick="event.stopPropagation();"><button class="btn btn-secondary" style="padding:6px 10px;margin-right:4px;" onclick="viewJournalEntry(\'' + entry.id + '\')" title="عرض"><i class="fas fa-eye"></i></button><button class="btn btn-danger" style="padding:6px 10px;" onclick="deleteJournalEntry(\'' + entry.id + '\')" title="حذف"><i class="fas fa-trash"></i></button></td>'
+                    + '<td><strong>' + _ckEsc(entry.description || '') + '</strong>' + (entry.reference ? ' <small style="color:#64748b;">(' + _ckEsc(entry.reference) + ')</small>' : '') + '</td>'
+                    + '<td style="text-align:right; font-weight:700; color:#2563eb;">' + _ckFmtAmt(totalDebit, 'DZD') + '</td>'
+                    + '<td style="text-align:right; font-weight:700; color:#10b981;">' + _ckFmtAmt(totalCredit, 'DZD') + '</td>'
+                    + '<td><span class="badge ' + statusClass + '" style="padding:4px 8px;border-radius:4px;font-size:11px;">' + statusLabel + '</span></td>'
+                    + '<td style="white-space:nowrap;" onclick="event.stopPropagation();">'
+                    + '  <button class="btn btn-secondary" style="padding:6px 10px;margin-right:4px;" onclick="viewJournalEntry(\'' + entry.id + '\')" title="عرض السند الرسمي"><i class="fas fa-eye"></i></button>'
+                    + '  <button class="btn btn-danger" style="padding:6px 10px;" onclick="deleteJournalEntry(\'' + entry.id + '\')" title="حذف"><i class="fas fa-trash"></i></button>'
+                    + '</td>'
                     + '</tr>';
             }).join('');
-        }
-
-        function viewJournal(id) {
-            alert(tRuntime('opening_journal_details', { id }));
         }
 
         function viewJournalEntry(id) {
             const entry = _journalEntries.find(function(j) { return j.id === id; });
             if (!entry) return;
-            let msg = 'القيد: ' + id + '\nالتاريخ: ' + (entry.date || '') + '\nالمصدر: ' + (entry.sourceType || '') + '\nالحطوط:\n';
-            if (entry.lines && entry.lines.length) {
-                entry.lines.forEach(function(line) {
-                    msg += '  الحساب: ' + line.accountCode + ' | مدين: ' + line.debit + ' | دائن: ' + line.credit + '\n';
+
+            const modal = document.getElementById('viewJournalEntryModal');
+            const container = document.getElementById('pieceComptableContent');
+            if (!modal || !container) return;
+
+            let linesHtml = '';
+            let totalDebit = 0, totalCredit = 0;
+            if (entry.lines) {
+                entry.lines.forEach(function(l) {
+                    totalDebit += parseFloat(l.debit) || 0;
+                    totalCredit += parseFloat(l.credit) || 0;
+                    linesHtml += '<tr>'
+                        + '<td><strong>' + _ckEsc(l.accountCode) + '</strong></td>'
+                        + '<td>' + _ckEsc(l.accountName || '') + '</td>'
+                        + '<td>' + _ckEsc(l.description || entry.description) + '</td>'
+                        + '<td style="text-align:right; font-weight:700;">' + (l.debit > 0 ? _ckFmtAmt(l.debit, 'DZD') : '-') + '</td>'
+                        + '<td style="text-align:right; font-weight:700;">' + (l.credit > 0 ? _ckFmtAmt(l.credit, 'DZD') : '-') + '</td>'
+                        + '</tr>';
                 });
             }
-            alert(msg);
+
+            container.innerHTML = '<div class="piece-header">'
+                + '  <div>'
+                + '    <h2 style="margin:0; font-size:22px; color:#1e293b;">سند قيد محاسبي رسمي</h2>'
+                + '    <p style="margin:3px 0 0; color:#64748b; font-size:13px;">Système Comptable Financier (SCF) Algérien</p>'
+                + '  </div>'
+                + '  <div style="text-align:left;">'
+                + '    <h3 style="margin:0; color:var(--primary-color);">' + _ckEsc(entry.id) + '</h3>'
+                + '    <span style="font-size:13px; color:#475569;">التاريخ: ' + _ckEsc(_ckFmtDate(entry.date)) + '</span>'
+                + '  </div>'
+                + '</div>'
+                + '<div style="margin-bottom:15px; font-size:14px; background:#f8fafc; padding:12px; border-radius:6px; border:1px solid #e2e8f0;">'
+                + '  <strong>البيان والوصف العام:</strong> ' + _ckEsc(entry.description) + '<br>'
+                + '  <strong>المرجع / المستند:</strong> ' + _ckEsc(entry.reference || 'بدون مرجع') + ' | '
+                + '  <strong>الحالة:</strong> ' + (entry.status === 'draft' ? 'مسودة' : 'مرحّل معتمد') + ' | '
+                + '  <strong>المصدر:</strong> ' + _ckEsc(entry.sourceType || 'يدوي')
+                + '</div>'
+                + '<table class="piece-table">'
+                + '  <thead>'
+                + '    <tr><th>رقم الحساب</th><th>اسم الحساب</th><th>البيان والتفصيل</th><th style="text-align:right;">مدين (Débit)</th><th style="text-align:right;">دائن (Crédit)</th></tr>'
+                + '  </thead>'
+                + '  <tbody>' + linesHtml + '</tbody>'
+                + '  <tfoot>'
+                + '    <tr style="background:#f1f5f9; font-weight:700;">'
+                + '      <td colspan="3" style="text-align:right;">الإجمالي العام:</td>'
+                + '      <td style="text-align:right; color:#2563eb;">' + _ckFmtAmt(totalDebit, 'DZD') + '</td>'
+                + '      <td style="text-align:right; color:#10b981;">' + _ckFmtAmt(totalCredit, 'DZD') + '</td>'
+                + '    </tr>'
+                + '  </tfoot>'
+                + '</table>'
+                + '<div style="margin-top:40px; display:flex; justify-content:space-between; text-align:center; font-size:13px;">'
+                + '  <div style="width:200px; border-top:1px solid #94a3b8; padding-top:6px;">إعداد المحاسب</div>'
+                + '  <div style="width:200px; border-top:1px solid #94a3b8; padding-top:6px;">مراجعة رئيس الحسابات</div>'
+                + '  <div style="width:200px; border-top:1px solid #94a3b8; padding-top:6px;">المصادقة والإدارة</div>'
+                + '</div>';
+
+            openModal('viewJournalEntryModal');
         }
 
-        function deleteJournalEntry(id) {
-            const entry = _journalEntries.find(function(j) { return j.id === id; });
-            if (!entry) return;
-            if (!entry.sourceType.startsWith('issued_check')) {
-                if (!confirm('هل تريد حقاً حذف هذا القيد الدليل؟')) return;
-            }
-            removeById(_journalEntries, id);
-            persistFinanceData();
-            renderJournalEntries();
-            financeToast('تم حذف القيد بنجاح.');
+        function printPieceComptable() {
+            document.body.classList.add('printing-finance-report');
+            window.print();
+            setTimeout(function() {
+                document.body.classList.remove('printing-finance-report');
+            }, 1000);
         }
 
-        function editJournal(id) {
-            alert(tRuntime('opening_journal_edit', { id }));
-            openModal('addJournal');
-        }
-
-        function printJournal(id) {
-            alert(tRuntime('preparing_journal_print', { id }));
-        }
-
-        // Check Archive Search & Filter
-        function filterCheckArchive(searchText) {
-            const body = document.getElementById('ckArchiveBody');
-            if (!body) return;
-            if (!searchText || !searchText.trim()) {
-                renderCheckArchive();
-                return;
-            }
-            const lower = searchText.toLowerCase();
-            const filtered = _printedChecks.filter(function(record) {
-                return (record.checkNumber || '').toLowerCase().includes(lower)
-                    || (record.payee || '').toLowerCase().includes(lower)
-                    || (record.bankLabel || '').toLowerCase().includes(lower)
-                    || record.amount.toString().includes(lower);
+        function exportJournalToCsv() {
+            if (!_journalEntries.length) return;
+            let csv = '\uFEFFرقم القيد,التاريخ,الوصف,المرجع,الحالة,رقم الحساب,اسم الحساب,مدين,دائن\n';
+            _journalEntries.forEach(function(e) {
+                if (e.lines && e.lines.length) {
+                    e.lines.forEach(function(l) {
+                        csv += '"' + e.id + '","' + (e.date || '') + '","' + (e.description || '').replace(/"/g, '""') + '","' + (e.reference || '').replace(/"/g, '""') + '","' + e.status + '","' + l.accountCode + '","' + (l.accountName || '').replace(/"/g, '""') + '",' + (l.debit || 0) + ',' + (l.credit || 0) + '\n';
+                    });
+                }
             });
-            if (!filtered.length) {
-                body.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:36px 20px;color:#6b7280;">لم يتم العثور على شيكات</td></tr>';
-                return;
-            }
-            body.innerHTML = filtered.map(function(record) {
-                const bank = getBankProfile(record.bankCode);
-                const typeMap = { normal:'عادي', crossed:'مخطط', certified:'مصادق' };
-                return '<tr>'
-                    + '<td>' + _ckEsc(record.checkNumber) + '</td>'
-                    + '<td>' + _ckEsc(record.bankLabel || bank.name) + '</td>'
-                    + '<td>' + _ckEsc(record.payee) + '</td>'
-                    + '<td>' + _ckEsc(_ckFmtAmt(record.amount, record.currency)) + '</td>'
-                    + '<td>' + _ckEsc(_ckFmtDate(record.date)) + '</td>'
-                    + '<td>' + _ckEsc(typeMap[record.checkType] || record.checkType || 'عادي') + '</td>'
-                    + '<td style="white-space:nowrap;"><button class="btn btn-secondary" style="padding:8px 12px;" onclick="loadArchivedCheck(\'' + record.id + '\')" title="تعديل"><i class="fas fa-pen"></i></button> <button class="btn btn-primary" style="padding:8px 12px;" onclick="reprintArchivedCheck(\'' + record.id + '\')" title="طباعة"><i class="fas fa-print"></i></button> <button class="btn btn-info" style="padding:8px 12px;" onclick="exportCheckToPdf(\'' + record.id + '\')" title="تصدير PDF"><i class="fas fa-file-pdf"></i></button> <button class="btn btn-danger" style="padding:8px 12px;" onclick="deleteArchivedCheck(\'' + record.id + '\')" title="حذف"><i class="fas fa-trash"></i></button></td>'
-                    + '</tr>';
-            }).join('');
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'Journal_Comptable_' + new Date().toISOString().slice(0, 10) + '.csv';
+            link.click();
         }
 
-        // PDF Export for Checks
-        function exportCheckToPdf(id) {
-            const record = _printedChecks.find(function(item) { return item.id === id; });
-            if (!record) return;
-            const bank = getBankProfile(record.bankCode);
-            const element = document.createElement('div');
-            element.innerHTML = buildCheckHtml(record);
-            element.style.padding = '20px';
-            element.style.background = '#ffffff';
+        // ------------------------------------------------------------
+        // AUTO-SYNC INVOICES, EXPENSES & PAYROLL TO JOURNAL
+        // ------------------------------------------------------------
+        async function syncInvoicesToJournal() {
+            let createdCount = 0;
+            const existingRefs = new Set(_journalEntries.map(function(e){ return e.reference; }).filter(Boolean));
 
-            const opt = {
-                margin: 10,
-                filename: 'Check_' + record.checkNumber + '.pdf',
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2 },
-                jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+            // 1. Scan Invoices
+            try {
+                const invoicesRaw = await _financeStoreGet('invoices-data', []);
+                if (Array.isArray(invoicesRaw)) {
+                    invoicesRaw.forEach(function(inv) {
+                        const invRef = inv.invoiceNumber || inv.id || ('INV-' + inv.date);
+                        if (existingRefs.has(invRef)) return;
+
+                        const totalTTC = parseFloat(inv.totalTtc || inv.total || inv.grandTotal || inv.amount) || 0;
+                        const totalHT = parseFloat(inv.totalHt || inv.subtotal) || (totalTTC / 1.19);
+                        const tvaAmt = totalTTC - totalHT;
+
+                        if (totalTTC > 0) {
+                            const year = inv.date ? new Date(inv.date).getFullYear() : 2026;
+                            const eId = 'ECR-' + year + '-' + (_journalEntries.length + 1).toString().padStart(4, '0');
+                            _journalEntries.unshift({
+                                id: eId,
+                                date: inv.date || new Date().toISOString().slice(0, 10),
+                                reference: invRef,
+                                description: 'فاتورة مبيعات رقم ' + invRef + ' - ' + (inv.customerName || inv.client || 'زبون'),
+                                sourceType: 'invoices',
+                                status: 'posted',
+                                createdAt: new Date().toISOString(),
+                                lines: [
+                                    { accountCode: '411000', accountName: 'الزبائن', description: 'استحقاق الزبون ' + (inv.customerName || ''), debit: totalTTC, credit: 0 },
+                                    { accountCode: '700000', accountName: 'مبيعات البضائع والمنتجات', description: 'إيراد المبيعات HT', debit: 0, credit: totalHT },
+                                    { accountCode: '445700', accountName: 'الدولة - TVA محصلة', description: 'رسم القيمة المضافة المحصل', debit: 0, credit: tvaAmt }
+                                ]
+                            });
+                            existingRefs.add(invRef);
+                            createdCount++;
+                        }
+                    });
+                }
+            } catch (err) {
+                console.warn('Sync invoices error:', err);
+            }
+
+            // 2. Scan Expenses / Purchases
+            try {
+                const expensesRaw = await _financeStoreGet('expenses-data', []);
+                if (Array.isArray(expensesRaw)) {
+                    expensesRaw.forEach(function(exp) {
+                        const expRef = exp.reference || exp.invoiceNumber || exp.id || ('EXP-' + (exp.date || ''));
+                        if (existingRefs.has(expRef)) return;
+
+                        const totalTTC = parseFloat(exp.amount || exp.total || exp.totalTtc) || 0;
+                        const totalHT = parseFloat(exp.totalHt) || (totalTTC / 1.19);
+                        const tvaAmt = totalTTC - totalHT;
+
+                        if (totalTTC > 0) {
+                            const year = exp.date ? new Date(exp.date).getFullYear() : 2026;
+                            const eId = 'ECR-' + year + '-' + (_journalEntries.length + 1).toString().padStart(4, '0');
+                            _journalEntries.unshift({
+                                id: eId,
+                                date: exp.date || new Date().toISOString().slice(0, 10),
+                                reference: expRef,
+                                description: 'مصروف / مشتريات: ' + (exp.description || exp.category || expRef),
+                                sourceType: 'expenses',
+                                status: 'posted',
+                                createdAt: new Date().toISOString(),
+                                lines: [
+                                    { accountCode: '600000', accountName: 'مشتريات مستهلكة / أعباء', description: exp.description || 'أعباء مشتريات HT', debit: totalHT, credit: 0 },
+                                    { accountCode: '445600', accountName: 'الدولة - TVA قابلة للاسترجاع', description: 'TVA مسترجعة على المصروفات', debit: tvaAmt, credit: 0 },
+                                    { accountCode: '401000', accountName: 'موردو المخزونات والخدمات', description: 'استحقاق المورد ' + (exp.supplier || exp.payee || ''), debit: 0, credit: totalTTC }
+                                ]
+                            });
+                            existingRefs.add(expRef);
+                            createdCount++;
+                        }
+                    });
+                }
+            } catch (err) {
+                console.warn('Sync expenses error:', err);
+            }
+
+            // 3. Scan Payroll
+            try {
+                const payrollRaw = await _financeStoreGet('payroll-data', []);
+                if (Array.isArray(payrollRaw)) {
+                    payrollRaw.forEach(function(pay) {
+                        const payRef = pay.period ? ('PAY-' + pay.period) : (pay.id || 'PAY-ROLL');
+                        if (existingRefs.has(payRef)) return;
+
+                        const gross = parseFloat(pay.totalGross || pay.grossSalary || pay.total) || 0;
+                        const net = parseFloat(pay.totalNet || pay.netSalary) || (gross * 0.85);
+                        const cnas = parseFloat(pay.totalCnas || pay.cnas) || (gross * 0.09);
+                        const irg = gross - net - cnas;
+
+                        if (gross > 0) {
+                            const year = pay.period ? parseInt(pay.period.slice(0, 4)) : 2026;
+                            const eId = 'ECR-' + year + '-' + (_journalEntries.length + 1).toString().padStart(4, '0');
+                            _journalEntries.unshift({
+                                id: eId,
+                                date: pay.date || new Date().toISOString().slice(0, 10),
+                                reference: payRef,
+                                description: 'أجور ورواتب المستخدمين لشهر: ' + (pay.period || 'الحالي'),
+                                sourceType: 'payroll',
+                                status: 'posted',
+                                createdAt: new Date().toISOString(),
+                                lines: [
+                                    { accountCode: '631000', accountName: 'أجور المستخدمين والرواتب', description: 'الرواتب الخام (Salaires bruts)', debit: gross, credit: 0 },
+                                    { accountCode: '421000', accountName: 'المستخدمون - الأجور المستحقة', description: 'صافي الأجور للدفع (Salaires nets)', debit: 0, credit: net },
+                                    { accountCode: '431000', accountName: 'الضمان الاجتماعي CNAS', description: 'اقتطاعات اشتراكات CNAS', debit: 0, credit: cnas },
+                                    { accountCode: '447000', accountName: 'الضرائب والرسوم IRG Salaires', description: 'اقتطاع ضريبة الدخل IRG', debit: 0, credit: Math.max(0, irg) }
+                                ]
+                            });
+                            existingRefs.add(payRef);
+                            createdCount++;
+                        }
+                    });
+                }
+            } catch (err) {
+                console.warn('Sync payroll error:', err);
+            }
+
+            if (createdCount > 0) {
+                await persistFinanceData();
+                renderJournalEntries();
+                renderAccountsTree();
+                updateFinanceDashboardStats();
+                refreshFinancialReports();
+                alert('تم توليد وترحيل ' + createdCount + ' قيد محاسبي آلياً بنجاح من فواتير وعمليات النظام.');
+            } else {
+                alert('جميع الفواتير والمصاريف والرواتب الحالية مرحلة بالفعل في دفتر اليومية.');
+            }
+        }
+
+        // ------------------------------------------------------------
+        // TRUE FINANCIAL STATEMENTS & REPORTS ENGINE
+        // ------------------------------------------------------------
+        var _activeReportType = 'balance';
+
+        function showReport(type) {
+            _activeReportType = type;
+            const bSheet = document.getElementById('balanceSheet');
+            const iState = document.getElementById('incomeStatement');
+            const tBal = document.getElementById('trialBalanceReport');
+            const gLedger = document.getElementById('generalLedgerReport');
+            const cFlow = document.getElementById('cashFlowReport');
+
+            if (bSheet) bSheet.style.display = 'none';
+            if (iState) iState.style.display = 'none';
+            if (tBal) tBal.style.display = 'none';
+            if (gLedger) gLedger.style.display = 'none';
+            if (cFlow) cFlow.style.display = 'none';
+
+            refreshFinancialReports();
+
+            if (type === 'balance' && bSheet) {
+                bSheet.style.display = 'block';
+            } else if (type === 'income' && iState) {
+                iState.style.display = 'block';
+            } else if (type === 'trial' && tBal) {
+                tBal.style.display = 'block';
+                renderTrialBalance();
+            } else if (type === 'ledger' && gLedger) {
+                gLedger.style.display = 'block';
+                populateLedgerAccountSelect();
+            } else if (type === 'cashflow' && cFlow) {
+                cFlow.style.display = 'block';
+                renderCashFlowReport();
+            }
+        }
+
+        function refreshFinancialReports() {
+            computeAccountBalances();
+
+            let totalAssets = 0;
+            let totalLiabilities = 0;
+            let totalEquity = 0;
+            let totalRevenue = 0;
+            let totalExpenses = 0;
+            let bankCashTotal = 0;
+            let accountsReceivable = 0;
+            let inventoryTotal = 0;
+            let accountsPayable = 0;
+            let taxPayable = 0;
+            let salariesPayable = 0;
+            let capitalTotal = 0;
+
+            _financeAccounts.forEach(function(acc) {
+                const bal = acc.balance || 0;
+                if (acc.class === 2 || acc.class === 3 || acc.class === 5 || (acc.class === 4 && acc.type === 'asset')) {
+                    totalAssets += Math.max(0, bal);
+                }
+                if (acc.class === 5) {
+                    bankCashTotal += bal;
+                }
+                if (acc.code === '411000' || acc.code === '409000') {
+                    accountsReceivable += Math.max(0, bal);
+                }
+                if (acc.class === 3) {
+                    inventoryTotal += Math.max(0, bal);
+                }
+                if (acc.code === '401000' || acc.code === '404000') {
+                    accountsPayable += Math.max(0, bal);
+                }
+                if (acc.code === '444000' || acc.code === '445700' || acc.code === '447000') {
+                    taxPayable += Math.max(0, bal);
+                }
+                if (acc.code === '421000' || acc.code === '431000') {
+                    salariesPayable += Math.max(0, bal);
+                }
+                if (acc.code === '101000') {
+                    capitalTotal += Math.max(0, bal);
+                }
+                if (acc.class === 1) {
+                    totalEquity += Math.max(0, bal);
+                }
+                if (acc.class === 4 && acc.type === 'liability') {
+                    totalLiabilities += Math.max(0, bal);
+                }
+                if (acc.class === 1 && acc.type === 'liability') {
+                    totalLiabilities += Math.max(0, bal);
+                }
+                if (acc.class === 7) {
+                    totalRevenue += Math.max(0, bal);
+                }
+                if (acc.class === 6) {
+                    totalExpenses += Math.max(0, bal);
+                }
+            });
+
+            const netProfit = totalRevenue - totalExpenses;
+            totalEquity += netProfit; // retained earnings / net profit addition to equity
+
+            // Update Balance Sheet View
+            const bs = document.getElementById('balanceSheet');
+            if (bs) {
+                const rows = bs.querySelectorAll('.report-row strong');
+                if (rows.length >= 10) {
+                    rows[0].textContent = _ckFmtAmt(bankCashTotal, 'DZD');
+                    rows[1].textContent = _ckFmtAmt(accountsReceivable, 'DZD');
+                    rows[2].textContent = _ckFmtAmt(inventoryTotal, 'DZD');
+                    rows[3].textContent = _ckFmtAmt(totalAssets, 'DZD'); // Total Assets
+
+                    rows[4].textContent = _ckFmtAmt(accountsPayable, 'DZD');
+                    rows[5].textContent = _ckFmtAmt(taxPayable, 'DZD');
+                    rows[6].textContent = _ckFmtAmt(salariesPayable, 'DZD');
+                    rows[7].textContent = _ckFmtAmt(totalLiabilities, 'DZD'); // Total Liabilities
+
+                    rows[8].textContent = _ckFmtAmt(capitalTotal, 'DZD');
+                    rows[9].textContent = _ckFmtAmt(netProfit, 'DZD'); // Retained Earnings / Net Profit
+                    if (rows[10]) rows[10].textContent = _ckFmtAmt(totalEquity, 'DZD');
+                    if (rows[11]) rows[11].textContent = _ckFmtAmt(totalLiabilities + totalEquity, 'DZD');
+                }
+            }
+
+            // Update Income Statement View
+            const isEl = document.getElementById('incomeStatement');
+            if (isEl) {
+                const rows = isEl.querySelectorAll('.report-row strong');
+                if (rows.length >= 8) {
+                    const salesRev = (_financeAccounts.find(function(a){ return a.code === '700000'; }) || {}).balance || (totalRevenue * 0.7);
+                    const servRev = totalRevenue - salesRev;
+                    rows[0].textContent = _ckFmtAmt(salesRev, 'DZD');
+                    rows[1].textContent = _ckFmtAmt(servRev, 'DZD');
+                    rows[2].textContent = _ckFmtAmt(totalRevenue, 'DZD'); // Total Revenue
+
+                    const cogs = (_financeAccounts.find(function(a){ return a.code === '600000'; }) || {}).balance || 0;
+                    const salaries = (_financeAccounts.find(function(a){ return a.code === '631000'; }) || {}).balance || 0;
+                    const rent = (_financeAccounts.find(function(a){ return a.code === '613000'; }) || {}).balance || 0;
+                    const charges = (_financeAccounts.find(function(a){ return a.code === '626000'; }) || {}).balance || 0;
+                    const marketing = (_financeAccounts.find(function(a){ return a.code === '623000'; }) || {}).balance || 0;
+
+                    rows[3].textContent = _ckFmtAmt(cogs, 'DZD');
+                    rows[4].textContent = _ckFmtAmt(salaries, 'DZD');
+                    rows[5].textContent = _ckFmtAmt(rent, 'DZD');
+                    rows[6].textContent = _ckFmtAmt(charges, 'DZD');
+                    rows[7].textContent = _ckFmtAmt(marketing, 'DZD');
+                    if (rows[8]) rows[8].textContent = _ckFmtAmt(totalExpenses, 'DZD');
+                    if (rows[9]) rows[9].textContent = _ckFmtAmt(netProfit, 'DZD');
+                }
+            }
+
+            
+            // Update Chart.js instances if active
+            if (window.finPosChart && window.finPosChart.data && window.finPosChart.data.datasets[0]) {
+                window.finPosChart.data.datasets[0].data = [Math.max(0, totalAssets), Math.max(0, totalLiabilities), Math.max(0, totalEquity)];
+                window.finPosChart.update();
+            }
+            if (window.revExpChart && window.revExpChart.data && window.revExpChart.data.datasets[0]) {
+                const curMonth = new Date().getMonth();
+                window.revExpChart.data.datasets[0].data[curMonth] = totalRevenue;
+                window.revExpChart.data.datasets[1].data[curMonth] = totalExpenses;
+                window.revExpChart.update();
+            }
+
+            // Update Top Stat Cards
+            updateFinanceDashboardStats(totalAssets, totalRevenue, totalExpenses, netProfit, bankCashTotal, accountsPayable);
+        }
+
+        function updateFinanceDashboardStats(assets, rev, exp, profit, bank, payable) {
+            if (assets === undefined) {
+                computeAccountBalances();
+                let a = 0, r = 0, e = 0, b = 0, p = 0;
+                _financeAccounts.forEach(function(acc) {
+                    const bal = acc.balance || 0;
+                    if (acc.class === 2 || acc.class === 3 || acc.class === 5 || (acc.class === 4 && acc.type === 'asset')) a += Math.max(0, bal);
+                    if (acc.class === 5) b += bal;
+                    if (acc.code === '401000' || acc.code === '404000') p += Math.max(0, bal);
+                    if (acc.class === 7) r += Math.max(0, bal);
+                    if (acc.class === 6) e += Math.max(0, bal);
+                });
+                assets = a; rev = r; exp = e; profit = r - e; bank = b; payable = p;
+            }
+
+            const elAssets = document.getElementById('statTotalAssets');
+            const elRev = document.getElementById('statTotalRevenue');
+            const elExp = document.getElementById('statTotalExpenses');
+            const elProfit = document.getElementById('statNetProfit');
+            const elBank = document.getElementById('statBankBalance');
+            const elPayable = document.getElementById('statAccountsPayable');
+
+            if (elAssets) elAssets.textContent = _ckFmtAmt(assets, 'DZD');
+            if (elRev) elRev.textContent = _ckFmtAmt(rev, 'DZD');
+            if (elExp) elExp.textContent = _ckFmtAmt(exp, 'DZD');
+            if (elProfit) {
+                elProfit.textContent = _ckFmtAmt(profit, 'DZD');
+                elProfit.style.color = profit >= 0 ? '#10b981' : '#ef4444';
+            }
+            if (elBank) elBank.textContent = _ckFmtAmt(bank, 'DZD');
+            if (elPayable) elPayable.textContent = _ckFmtAmt(payable, 'DZD');
+        }
+
+        function renderTrialBalance() {
+            const tbody = document.getElementById('trialBalanceTableBody');
+            const tfoot = document.getElementById('trialBalanceTableFoot');
+            if (!tbody) return;
+
+            computeAccountBalances();
+
+            let totInitDebit = 0, totInitCredit = 0;
+            let totMvtDebit = 0, totMvtCredit = 0;
+            let totFinDebit = 0, totFinCredit = 0;
+
+            let html = '';
+            _financeAccounts.forEach(function(acc) {
+                const mvtD = acc.totalDebit || 0;
+                const mvtC = acc.totalCredit || 0;
+                if (mvtD === 0 && mvtC === 0 && (acc.balance || 0) === 0) return; // skip zero activity
+
+                let finD = 0, finC = 0;
+                if (acc.type === 'asset' || acc.type === 'expense') {
+                    const diff = mvtD - mvtC;
+                    if (diff >= 0) finD = diff; else finC = Math.abs(diff);
+                } else {
+                    const diff = mvtC - mvtD;
+                    if (diff >= 0) finC = diff; else finD = Math.abs(diff);
+                }
+
+                totMvtDebit += mvtD;
+                totMvtCredit += mvtC;
+                totFinDebit += finD;
+                totFinCredit += finC;
+
+                html += '<tr>'
+                    + '<td><strong style="color:var(--primary-color);">' + acc.code + '</strong></td>'
+                    + '<td>' + _ckEsc(acc.name) + '</td>'
+                    + '<td style="text-align:right;">0.00</td>'
+                    + '<td style="text-align:right;">0.00</td>'
+                    + '<td style="text-align:right; font-weight:600; color:#2563eb;">' + (mvtD > 0 ? _ckFmtAmt(mvtD) : '-') + '</td>'
+                    + '<td style="text-align:right; font-weight:600; color:#10b981;">' + (mvtC > 0 ? _ckFmtAmt(mvtC) : '-') + '</td>'
+                    + '<td style="text-align:right; font-weight:700;">' + (finD > 0 ? _ckFmtAmt(finD) : '-') + '</td>'
+                    + '<td style="text-align:right; font-weight:700;">' + (finC > 0 ? _ckFmtAmt(finC) : '-') + '</td>'
+                    + '</tr>';
+            });
+
+            if (!html) {
+                html = '<tr><td colspan="8" style="text-align:center; padding:30px; color:#64748b;">لا توجد حركات محاسبية مسجلة بعد</td></tr>';
+            }
+
+            tbody.innerHTML = html;
+
+            if (tfoot) {
+                tfoot.innerHTML = '<tr>'
+                    + '<td colspan="2" style="text-align:right;">المجاميع الإجمالية:</td>'
+                    + '<td style="text-align:right;">' + _ckFmtAmt(totInitDebit) + '</td>'
+                    + '<td style="text-align:right;">' + _ckFmtAmt(totInitCredit) + '</td>'
+                    + '<td style="text-align:right; color:#2563eb;">' + _ckFmtAmt(totMvtDebit) + '</td>'
+                    + '<td style="text-align:right; color:#10b981;">' + _ckFmtAmt(totMvtCredit) + '</td>'
+                    + '<td style="text-align:right; font-size:14px;">' + _ckFmtAmt(totFinDebit) + '</td>'
+                    + '<td style="text-align:right; font-size:14px;">' + _ckFmtAmt(totFinCredit) + '</td>'
+                    + '</tr>';
+            }
+        }
+
+        function populateLedgerAccountSelect() {
+            const sel = document.getElementById('ledgerAccountSelect');
+            if (!sel) return;
+            const currentVal = sel.value;
+            let opt = '<option value="">-- اختر حساباً لعرض دفتر الأستاذ --</option>';
+            _financeAccounts.forEach(function(a) {
+                opt += '<option value="' + a.code + '">' + a.code + ' - ' + _ckEsc(a.name) + '</option>';
+            });
+            sel.innerHTML = opt;
+            if (currentVal) sel.value = currentVal;
+            else if (_financeAccounts.length) {
+                sel.value = _financeAccounts[0].code;
+                renderGeneralLedgerForAccount(_financeAccounts[0].code);
+            }
+        }
+
+        function renderGeneralLedgerForAccount(code) {
+            const tbody = document.getElementById('generalLedgerTableBody');
+            if (!tbody || !code) return;
+
+            const acc = _financeAccounts.find(function(a){ return a.code === code; });
+            const isDebitType = acc ? (acc.type === 'asset' || acc.type === 'expense') : true;
+
+            const entriesForAcc = [];
+            _journalEntries.forEach(function(e) {
+                if (e.status === 'draft') return;
+                if (e.lines) {
+                    e.lines.forEach(function(l) {
+                        if (String(l.accountCode).trim() === String(code).trim()) {
+                            entriesForAcc.push({
+                                date: e.date,
+                                id: e.id,
+                                description: l.description || e.description,
+                                debit: parseFloat(l.debit) || 0,
+                                credit: parseFloat(l.credit) || 0
+                            });
+                        }
+                    });
+                }
+            });
+
+            entriesForAcc.sort(function(a, b) { return (a.date || '').localeCompare(b.date || ''); });
+
+            if (!entriesForAcc.length) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:#64748b;">لا توجد حركات مسجلة للحساب: <strong>' + code + '</strong></td></tr>';
+                return;
+            }
+
+            let runningBal = 0;
+            let html = '';
+            entriesForAcc.forEach(function(item) {
+                if (isDebitType) {
+                    runningBal += (item.debit - item.credit);
+                } else {
+                    runningBal += (item.credit - item.debit);
+                }
+                html += '<tr>'
+                    + '<td>' + _ckEsc(_ckFmtDate(item.date)) + '</td>'
+                    + '<td><strong style="color:var(--primary-color); cursor:pointer;" onclick="viewJournalEntry(\'' + item.id + '\')">' + item.id + '</strong></td>'
+                    + '<td>' + _ckEsc(item.description) + '</td>'
+                    + '<td style="text-align:right; font-weight:600; color:#2563eb;">' + (item.debit > 0 ? _ckFmtAmt(item.debit, 'DZD') : '-') + '</td>'
+                    + '<td style="text-align:right; font-weight:600; color:#10b981;">' + (item.credit > 0 ? _ckFmtAmt(item.credit, 'DZD') : '-') + '</td>'
+                    + '<td style="text-align:right; font-weight:700;">' + _ckFmtAmt(runningBal, 'DZD') + '</td>'
+                    + '</tr>';
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        function renderCashFlowReport() {
+            computeAccountBalances();
+            const rev = (_financeAccounts.find(function(a){ return a.code === '700000'; }) || {}).balance || 0;
+            const cogs = (_financeAccounts.find(function(a){ return a.code === '600000'; }) || {}).balance || 0;
+            const salaries = (_financeAccounts.find(function(a){ return a.code === '631000'; }) || {}).balance || 0;
+            const opNet = rev - (cogs + salaries);
+
+            const elIn = document.getElementById('cfOperatingIn');
+            const elOut = document.getElementById('cfOperatingOut');
+            const elOpNet = document.getElementById('cfOperatingNet');
+            const elInv = document.getElementById('cfInvesting');
+            const elInvNet = document.getElementById('cfInvestingNet');
+            const elFin = document.getElementById('cfFinancing');
+            const elFinNet = document.getElementById('cfFinancingNet');
+            const elNet = document.getElementById('cfNetChange');
+
+            if (elIn) elIn.textContent = _ckFmtAmt(rev, 'DZD');
+            if (elOut) elOut.textContent = _ckFmtAmt(cogs + salaries, 'DZD');
+            if (elOpNet) elOpNet.textContent = _ckFmtAmt(opNet, 'DZD');
+            if (elInv) elInv.textContent = '0.00 DZD';
+            if (elInvNet) elInvNet.textContent = '0.00 DZD';
+            if (elFin) elFin.textContent = '0.00 DZD';
+            if (elFinNet) elFinNet.textContent = '0.00 DZD';
+            if (elNet) elNet.textContent = _ckFmtAmt(opNet, 'DZD');
+        }
+
+        function printActiveReport() {
+            document.body.classList.add('printing-finance-report');
+            const area = document.getElementById('printableFinanceArea');
+            if (area) {
+                // If in reports tab, clone active report to print area
+                let targetId = 'balanceSheet';
+                if (_activeReportType === 'income') targetId = 'incomeStatement';
+                else if (_activeReportType === 'trial') targetId = 'trialBalanceReport';
+                else if (_activeReportType === 'ledger') targetId = 'generalLedgerReport';
+                else if (_activeReportType === 'cashflow') targetId = 'cashFlowReport';
+
+                const targetEl = document.getElementById(targetId);
+                if (targetEl) {
+                    area.innerHTML = targetEl.innerHTML;
+                }
+            }
+            window.print();
+            setTimeout(function() {
+                document.body.classList.remove('printing-finance-report');
+            }, 1000);
+        }
+
+        // ------------------------------------------------------------
+        // BANK RECONCILIATION (RAPPROCHEMENT BANCAIRE) WORKFLOW
+        // ------------------------------------------------------------
+        var _reconcileState = { checkedIds: new Set(), bookBalance: 0, statementBalance: 0 };
+
+        function openBankReconciliationModal() {
+            const sel = document.getElementById('reconcileBankSelect');
+            if (sel) {
+                let opt = '';
+                if (_financeBankAccounts && _financeBankAccounts.length) {
+                    _financeBankAccounts.forEach(function(b) {
+                        opt += '<option value="' + b.id + '">' + _ckEsc(b.bankName || b.bankLabel || 'بنك') + ' (' + (b.accountNumber || '') + ')</option>';
+                    });
+                } else {
+                    opt = '<option value="default">حساب بنكي رئيسي (512000)</option>';
+                }
+                sel.innerHTML = opt;
+            }
+
+            const dateInp = document.getElementById('reconcileStatementDate');
+            if (dateInp && !dateInp.value) {
+                dateInp.value = new Date().toISOString().slice(0, 10);
+            }
+
+            loadBankReconciliationData();
+            openModal('bankReconciliationModal');
+        }
+
+        function loadBankReconciliationData() {
+            const listEl = document.getElementById('reconcileTransactionsList');
+            if (!listEl) return;
+
+            // Compute current bank balance (Account 512000)
+            computeAccountBalances();
+            const bAcc = _financeAccounts.find(function(a){ return a.code === '512000'; });
+            const bookBal = bAcc ? (bAcc.balance || 0) : 0;
+            _reconcileState.bookBalance = bookBal;
+
+            // Collect transactions from _bankTransactions or _journalEntries
+            const txs = [];
+            _journalEntries.forEach(function(e) {
+                if (e.lines) {
+                    e.lines.forEach(function(l) {
+                        if (String(l.accountCode).startsWith('512')) {
+                            txs.push({
+                                id: e.id + '_' + l.accountCode,
+                                date: e.date,
+                                desc: l.description || e.description,
+                                debit: l.debit || 0,
+                                credit: l.credit || 0,
+                                net: (l.debit || 0) - (l.credit || 0)
+                            });
+                        }
+                    });
+                }
+            });
+
+            if (!txs.length) {
+                listEl.innerHTML = '<div style="text-align:center; padding:30px; color:#64748b;">لا توجد عمليات مسجلة بحساب البنك (512) للتسوية</div>';
+            } else {
+                let html = '';
+                txs.forEach(function(tx) {
+                    const isChecked = _reconcileState.checkedIds.has(tx.id);
+                    html += '<div style="display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid #e2e8f0;">'
+                        + '  <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; flex:1;">'
+                        + '    <input type="checkbox" ' + (isChecked ? 'checked' : '') + ' onchange="toggleReconcileCheck(\'' + tx.id + '\', this.checked)">'
+                        + '    <span><strong>' + _ckEsc(tx.desc) + '</strong> <small style="color:#64748b;">(' + _ckEsc(_ckFmtDate(tx.date)) + ')</small></span>'
+                        + '  </label>'
+                        + '  <span style="font-weight:700; color:' + (tx.net >= 0 ? '#2563eb' : '#ef4444') + ';">' + _ckFmtAmt(tx.net, 'DZD') + '</span>'
+                        + '</div>';
+                });
+                listEl.innerHTML = html;
+            }
+
+            calculateReconciliationSummary();
+        }
+
+        function toggleReconcileCheck(txId, isChecked) {
+            if (isChecked) _reconcileState.checkedIds.add(txId);
+            else _reconcileState.checkedIds.delete(txId);
+            calculateReconciliationSummary();
+        }
+
+        function calculateReconciliationSummary() {
+            const stmtInp = document.getElementById('reconcileStatementBalance');
+            const stmtBal = parseFloat((stmtInp || {}).value) || 0;
+            _reconcileState.statementBalance = stmtBal;
+
+            let uncheckedTotal = 0;
+            _journalEntries.forEach(function(e) {
+                if (e.lines) {
+                    e.lines.forEach(function(l) {
+                        if (String(l.accountCode).startsWith('512')) {
+                            const txId = e.id + '_' + l.accountCode;
+                            if (!_reconcileState.checkedIds.has(txId)) {
+                                uncheckedTotal += ((l.debit || 0) - (l.credit || 0));
+                            }
+                        }
+                    });
+                }
+            });
+
+            const adjustedBook = _reconcileState.bookBalance - uncheckedTotal;
+            const diff = Math.abs(adjustedBook - stmtBal);
+
+            const elBook = document.getElementById('recBookBalance');
+            const elUnchecked = document.getElementById('recUncheckedBook');
+            const elStmt = document.getElementById('recStatementBalance');
+            const elDiff = document.getElementById('recDifference');
+
+            if (elBook) elBook.textContent = _ckFmtAmt(_reconcileState.bookBalance, 'DZD');
+            if (elUnchecked) elUnchecked.textContent = _ckFmtAmt(uncheckedTotal, 'DZD');
+            if (elStmt) elStmt.textContent = _ckFmtAmt(stmtBal, 'DZD');
+
+            if (elDiff) {
+                if (diff < 0.05) {
+                    elDiff.style.color = '#10b981';
+                    elDiff.innerHTML = '<i class="fas fa-check-circle"></i> 0.00 DZD (الحساب متطابق تماماً)';
+                } else {
+                    elDiff.style.color = '#ef4444';
+                    elDiff.innerHTML = '<i class="fas fa-times-circle"></i> ' + _ckFmtAmt(diff, 'DZD') + ' (يوجد فارق تسوية)';
+                }
+            }
+        }
+
+        async function saveBankReconciliation() {
+            const bankSel = document.getElementById('reconcileBankSelect');
+            const dateInp = document.getElementById('reconcileStatementDate');
+            const bankName = bankSel ? bankSel.options[bankSel.selectedIndex].text : 'البنك';
+            const date = dateInp ? dateInp.value : new Date().toISOString().slice(0, 10);
+
+            const recRecord = {
+                id: 'REC-' + Date.now(),
+                date: date,
+                bankName: bankName,
+                bookBalance: _reconcileState.bookBalance,
+                statementBalance: _reconcileState.statementBalance,
+                checkedCount: _reconcileState.checkedIds.size,
+                createdAt: new Date().toISOString()
             };
 
-            if (window.html2pdf && window.html2pdf.default) {
-                html2pdf().set(opt).from(element).save();
-            } else {
-                alert('تعذر تحميل مكتبة PDF. سيتم فتح نافذة طباعة بدلاً');
-                const PrintableCheck = 'data:text/html,' + encodeURIComponent(
-                    '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Check ' + record.checkNumber + '</title>'
-                    + '<style>body{margin:0;padding:20px;background:#f0f0f0;font-family:Arial,sans-serif;}</style>'
-                    + '</head><body onload="window.focus();setTimeout(function(){window.print();},300);window.onafterprint=function(){try{window.close();}catch(e){}};">'
-                    + buildCheckHtml(record)
-                    + '<\/body><\/html>'
-                );
-                window.open(PrintableCheck, 'CheckPrint_' + record.checkNumber, 'width=800,height=600');
-            }
+            _bankReconciliations.push(recRecord);
+            await _financeStoreSet('finance_bank_reconciliations', _bankReconciliations);
+
+            closeModal('bankReconciliationModal');
+            financeToast('تم اعتماد وحفظ مذكرة التسوية والتوفيق البنكي بنجاح.');
         }
 
-        // Report Functions
-        function showReport(type) {
-            alert(tRuntime('loading_report', { type }));
+        function printReconciliationReport() {
+            const printArea = document.getElementById('printableFinanceArea');
+            if (!printArea) return;
+
+            const bankSel = document.getElementById('reconcileBankSelect');
+            const dateInp = document.getElementById('reconcileStatementDate');
+            const stmtInp = document.getElementById('reconcileStatementBalance');
+
+            const bankName = bankSel ? bankSel.options[bankSel.selectedIndex].text : 'البنك';
+            const date = dateInp ? dateInp.value : new Date().toISOString().slice(0, 10);
+            const stmtBal = parseFloat((stmtInp || {}).value) || 0;
+
+            printArea.innerHTML = '<div class="piece-comptable-sheet">'
+                + '<div class="piece-header">'
+                + '  <div><h2>مذكرة التسوية والتوفيق البنكي (État de Rapprochement)</h2><p>Zeralda ERP - Département Finance & Comptabilité</p></div>'
+                + '  <div style="text-align:left;"><h3>' + _ckEsc(bankName) + '</h3><span>تاريخ الكشف: ' + date + '</span></div>'
+                + '</div>'
+                + '<table class="piece-table">'
+                + '  <tr><td><strong>رصيد الدفاتر المحاسبية (حساب 512):</strong></td><td style="text-align:right; font-weight:700;">' + _ckFmtAmt(_reconcileState.bookBalance, 'DZD') + '</td></tr>'
+                + '  <tr><td><strong>رصيد كشف الحساب البنكي الفعلي (Relevé):</strong></td><td style="text-align:right; font-weight:700;">' + _ckFmtAmt(stmtBal, 'DZD') + '</td></tr>'
+                + '  <tr><td><strong>العمليات المؤشرة المطابقة:</strong></td><td style="text-align:right;">' + _reconcileState.checkedIds.size + ' عملية</td></tr>'
+                + '</table>'
+                + '<div style="margin-top:40px; display:flex; justify-content:space-between; font-size:13px; text-align:center;">'
+                + '  <div style="width:200px; border-top:1px solid #000; padding-top:6px;">توقيع المحاسب المكلف</div>'
+                + '  <div style="width:200px; border-top:1px solid #000; padding-top:6px;">مراجعة الإدارة المالية</div>'
+                + '</div></div>';
+
+            openModal('viewJournalEntryModal');
         }
+
+        // ------------------------------------------------------------
+        // AUTO-G50 ALGERIAN TAX DECLARATION GENERATOR
+        // ------------------------------------------------------------
+        async function generateAutoG50() {
+            computeAccountBalances();
+            const periodInput = document.getElementById('tdPeriod');
+            const curPeriod = periodInput ? periodInput.value : new Date().toISOString().slice(0, 7);
+
+            // Compute turnover, collected VAT, deductible VAT from Invoices and Journal
+            let turnover = 0;
+            let tvaCollected = 0;
+            let tvaDeductible = 0;
+            let irgSalaries = 0;
+
+            // Scan invoices for current period
+            try {
+                const invoicesRaw = await _financeStoreGet('invoices-data', []);
+                if (Array.isArray(invoicesRaw)) {
+                    invoicesRaw.forEach(function(inv) {
+                        const invDate = inv.date || '';
+                        if (!curPeriod || invDate.startsWith(curPeriod)) {
+                            const ttc = parseFloat(inv.totalTtc || inv.total || inv.amount) || 0;
+                            const ht = parseFloat(inv.totalHt) || (ttc / 1.19);
+                            turnover += ht;
+                            tvaCollected += (ttc - ht);
+                        }
+                    });
+                }
+            } catch(e) {}
+
+            // Scan expenses for deductible VAT
+            try {
+                const expensesRaw = await _financeStoreGet('expenses-data', []);
+                if (Array.isArray(expensesRaw)) {
+                    expensesRaw.forEach(function(exp) {
+                        const expDate = exp.date || '';
+                        if (!curPeriod || expDate.startsWith(curPeriod)) {
+                            const ttc = parseFloat(exp.amount || exp.total) || 0;
+                            const ht = parseFloat(exp.totalHt) || (ttc / 1.19);
+                            tvaDeductible += (ttc - ht);
+                        }
+                    });
+                }
+            } catch(e) {}
+
+            // Scan journal for IRG
+            _journalEntries.forEach(function(e) {
+                if (e.date && (!curPeriod || e.date.startsWith(curPeriod))) {
+                    if (e.lines) {
+                        e.lines.forEach(function(l) {
+                            if (String(l.accountCode) === '447000') irgSalaries += (l.credit || 0);
+                        });
+                    }
+                }
+            });
+
+            // Fallback to accounts if turnover was 0
+            if (turnover === 0) {
+                const rAcc = _financeAccounts.find(function(a){ return a.code === '700000'; });
+                turnover = rAcc ? (rAcc.balance || 0) : 0;
+                tvaCollected = turnover * 0.19;
+                const dAcc = _financeAccounts.find(function(a){ return a.code === '445600'; });
+                tvaDeductible = dAcc ? (dAcc.balance || 0) : (tvaCollected * 0.4);
+            }
+
+            const netTva = Math.max(0, tvaCollected - tvaDeductible);
+            const totalTaxDue = netTva + irgSalaries;
+
+            // Fill G50 Form fields
+            const formTypeEl = document.getElementById('tdFormType');
+            const taxAmtEl = document.getElementById('tdEstimatedTax');
+            const notesEl = document.getElementById('tdNotes');
+
+            if (formTypeEl) formTypeEl.value = 'G50';
+            if (taxAmtEl) taxAmtEl.value = totalTaxDue.toFixed(2);
+            if (notesEl) {
+                notesEl.value = 'توليد آلي للتصريح G50 لشهر ' + curPeriod + ':\n'
+                    + '- رقم الأعمال الخاضع (CA HT): ' + turnover.toFixed(2) + ' DZD\n'
+                    + '- الرسم على القيمة المضافة المحصل (TVA Collectée 19%): ' + tvaCollected.toFixed(2) + ' DZD\n'
+                    + '- الرسم القابل للخصم (TVA Déductible): ' + tvaDeductible.toFixed(2) + ' DZD\n'
+                    + '- صافي TVA المستحق للدفع: ' + netTva.toFixed(2) + ' DZD\n'
+                    + '- اقتطاع الضريبة على الأجور (IRG Salaires): ' + irgSalaries.toFixed(2) + ' DZD';
+            }
+
+            financeToast('تم حساب وتوليد بيانات التصريح G50 بنجاح.');
+        }
+
 
         // Bank Functions
         const ALGERIAN_BANKS = [
@@ -3307,6 +4752,8 @@
         var _taxDeclarations = [];
         var _taxActivities = [];
         var _taxSettings = { taxId: '', office: '', reminderDays: 7 };
+        var _financeAccounts = [];
+        var _bankReconciliations = [];
         var _ckSelectedAccountId = null;
         var _lastPrintedCheckId = null;
 
@@ -3993,10 +5440,12 @@
 
         async function persistFinanceData() {
             await Promise.all([
+                _financeStoreSet('finance_chart_of_accounts', _financeAccounts),
                 _financeStoreSet(window.financeAPI ? window.financeAPI.BANK_ACCOUNTS_KEY : 'finance_bank_accounts', _financeBankAccounts),
                 _financeStoreSet(window.financeAPI ? window.financeAPI.BANK_TRANSACTIONS_KEY : 'finance_bank_transactions', _bankTransactions),
                 _financeStoreSet(window.financeAPI ? window.financeAPI.PRINTED_CHECKS_KEY : 'finance_printed_checks', _printedChecks),
                 _financeStoreSet(window.financeAPI ? window.financeAPI.JOURNAL_ENTRIES_KEY : 'finance_journal_entries', _journalEntries),
+                _financeStoreSet('finance_bank_reconciliations', _bankReconciliations),
                 _financeStoreSet(_taxDeclarationStorageKey(), _taxDeclarations),
                 _financeStoreSet(_taxActivitiesStorageKey(), _taxActivities),
                 _financeStoreSet(_taxSettingsStorageKey(), _taxSettings)
@@ -4460,13 +5909,21 @@
         }
 
         async function initializeFinanceModule() {
+            _financeAccounts = await _financeStoreGet('finance_chart_of_accounts', DEFAULT_SCF_ACCOUNTS);
+            if (!_financeAccounts || !_financeAccounts.length) {
+                _financeAccounts = JSON.parse(JSON.stringify(DEFAULT_SCF_ACCOUNTS));
+            }
             _financeBankAccounts = await _financeStoreGet(window.financeAPI ? window.financeAPI.BANK_ACCOUNTS_KEY : 'finance_bank_accounts', []);
             _bankTransactions = await _financeStoreGet(window.financeAPI ? window.financeAPI.BANK_TRANSACTIONS_KEY : 'finance_bank_transactions', []);
             _journalEntries = await _financeStoreGet(window.financeAPI ? window.financeAPI.JOURNAL_ENTRIES_KEY : 'finance_journal_entries', []);
             _printedChecks = await _financeStoreGet(window.financeAPI ? window.financeAPI.PRINTED_CHECKS_KEY : 'finance_printed_checks', []);
+            _bankReconciliations = await _financeStoreGet('finance_bank_reconciliations', []);
             _taxDeclarations = await _financeStoreGet(_taxDeclarationStorageKey(), []);
             _taxActivities = await _financeStoreGet(_taxActivitiesStorageKey(), []);
             _taxSettings = await _financeStoreGet(_taxSettingsStorageKey(), { taxId: '', office: '', reminderDays: 7 });
+
+            renderAccountsTree();
+            populateJournalAccountSelects();
             recalculateBankTransactionBalances();
             renderBankAccounts();
             renderCheckBanks();
@@ -4475,6 +5932,8 @@
             renderTaxDeclarationArchive();
             renderTaxActivityLog();
             applyTaxSettingsToForm();
+            updateFinanceDashboardStats();
+            refreshFinancialReports();
 
             // Attach search listener for journal entries
             const journalSearch = document.querySelector('#journal .search-box input');
@@ -4535,7 +5994,7 @@
             // Revenue vs Expenses Chart
             const revenueExpenseCtx = document.getElementById('revenueExpenseChart');
             if (revenueExpenseCtx) {
-                new Chart(revenueExpenseCtx.getContext('2d'), {
+                window.revExpChart = new Chart(revenueExpenseCtx.getContext('2d'), {
                     type: 'bar',
                     data: {
                         labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
@@ -4570,7 +6029,7 @@
             // Financial Position Chart
             const financialPositionCtx = document.getElementById('financialPositionChart');
             if (financialPositionCtx) {
-                new Chart(financialPositionCtx.getContext('2d'), {
+                window.finPosChart = new Chart(financialPositionCtx.getContext('2d'), {
                     type: 'doughnut',
                     data: {
                         labels: ['Assets', 'Liabilities', 'Equity'],
@@ -4669,5 +6128,95 @@
     <script src="shared/erp_export_utils.js?v=20260721a" defer></script>
     <script src="shared/export_panel.js?v=20260721a" defer></script>
     <script src="shared/data_guard.js?v=20260802a" defer></script>
-    </body>
+    <!-- View Journal Entry Modal (Pièce Comptable Officielle) -->
+    <div id="viewJournalEntryModal" class="modal">
+        <div class="modal-content" style="max-width: 820px;">
+            <div class="modal-header">
+                <h2><i class="fas fa-file-invoice text-primary"></i> سند قيد محاسبي رسمي (Pièce Comptable)</h2>
+                <div class="close-modal" onclick="closeModal('viewJournalEntryModal')">
+                    <i class="fas fa-times"></i>
+                </div>
+            </div>
+            <div class="modal-body" id="printableFinanceArea">
+                <div class="piece-comptable-sheet" id="pieceComptableContent">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('viewJournalEntryModal')">
+                    <i class="fas fa-times"></i> إغلاق
+                </button>
+                <button class="btn btn-primary" onclick="printPieceComptable()">
+                    <i class="fas fa-print"></i> طباعة السند (Print / PDF)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bank Reconciliation Modal (Rapprochement Bancaire) -->
+    <div id="bankReconciliationModal" class="modal">
+        <div class="modal-content" style="max-width: 950px;">
+            <div class="modal-header">
+                <h2><i class="fas fa-check-double text-warning"></i> التسوية والتوفيق البنكي (Rapprochement Bancaire)</h2>
+                <div class="close-modal" onclick="closeModal('bankReconciliationModal')">
+                    <i class="fas fa-times"></i>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px; padding:15px; margin-bottom:15px;">
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px;">
+                        <div>
+                            <label style="font-weight:600; font-size:12px; display:block; margin-bottom:4px;">الحساب البنكي المراد تسويته:</label>
+                            <select id="reconcileBankSelect" onchange="loadBankReconciliationData()" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px; font-weight:600;"></select>
+                        </div>
+                        <div>
+                            <label style="font-weight:600; font-size:12px; display:block; margin-bottom:4px;">تاريخ كشف الحساب البنكي (Date Relevé):</label>
+                            <input type="date" id="reconcileStatementDate" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px;">
+                        </div>
+                        <div>
+                            <label style="font-weight:600; font-size:12px; display:block; margin-bottom:4px;">رصيد كشف البنك الفعلي (Solde Relevé):</label>
+                            <input type="number" step="0.01" id="reconcileStatementBalance" oninput="calculateReconciliationSummary()" placeholder="0.00 DZD" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px; font-weight:700;">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="reconciliation-grid">
+                    <div>
+                        <h4 style="margin-bottom:8px; color:#1e293b;"><i class="fas fa-list-check"></i> عمليات الدفاتر غير المطابقة (Pointage):</h4>
+                        <div class="pointage-box" id="reconcileTransactionsList">
+                            <!-- Populated with transactions with checkboxes -->
+                        </div>
+                    </div>
+                    <div>
+                        <h4 style="margin-bottom:8px; color:#1e293b;"><i class="fas fa-calculator"></i> ملخص حالة التقارب البنكي (État de Rapprochement):</h4>
+                        <div style="background:#ffffff; border:1px solid #cbd5e1; border-radius:8px; padding:16px;">
+                            <div class="reconcile-stat"><span>رصيد الدفاتر المحاسبية (ح/512):</span><strong id="recBookBalance">0.00 DZD</strong></div>
+                            <div class="reconcile-stat"><span>عمليات غير مؤشرة مسجلة بالدفاتر:</span><strong id="recUncheckedBook" style="color:#ef4444;">0.00 DZD</strong></div>
+                            <div class="reconcile-stat"><span>رصيد كشف البنك المدخل (Relevé):</span><strong id="recStatementBalance">0.00 DZD</strong></div>
+                            <div class="reconcile-stat total">
+                                <span>فارق التسوية (Écart de Rapprochement):</span>
+                                <strong id="recDifference" style="color:#10b981;">0.00 DZD (مطابق)</strong>
+                            </div>
+                        </div>
+                        <div style="margin-top:15px; font-size:12px; color:#64748b; background:#eff6ff; padding:10px; border-radius:6px; border:1px solid #bfdbfe;">
+                            <i class="fas fa-info-circle text-primary"></i> قم بتأشير (Cocher) العمليات التي ظهرت فعلاً في كشف الحساب البنكي. عندما يصبح الفارق <strong>0.00 DZD</strong> تكون التسوية مكتملة بنجاح.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('bankReconciliationModal')">
+                    <i class="fas fa-times"></i> إلغاء
+                </button>
+                <button class="btn btn-primary" onclick="printReconciliationReport()">
+                    <i class="fas fa-print"></i> طباعة مذكرة التسوية
+                </button>
+                <button class="btn btn-success" onclick="saveBankReconciliation()">
+                    <i class="fas fa-save"></i> اعتماد وحفظ التسوية
+                </button>
+            </div>
+        </div>
+    </div>
+
+</body>
 </html>

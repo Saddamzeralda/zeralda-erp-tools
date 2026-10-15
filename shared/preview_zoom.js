@@ -305,6 +305,28 @@
     }
   };
 
+  // Reset zoom scale during print so documents fill the full page and never print shrunk
+  window.addEventListener('beforeprint', function() {
+    try {
+      document.querySelectorAll('.preview-scale-content').forEach(function(el) {
+        el.setAttribute('data-prev-transform', el.style.transform || '');
+        el.style.transform = 'none';
+      });
+    } catch (_) {}
+  });
+
+  window.addEventListener('afterprint', function() {
+    try {
+      document.querySelectorAll('.preview-scale-content').forEach(function(el) {
+        var prev = el.getAttribute('data-prev-transform');
+        if (prev !== null) {
+          el.style.transform = prev;
+          el.removeAttribute('data-prev-transform');
+        }
+      });
+    } catch (_) {}
+  });
+
   // Listen to orientation change / resize
   window.addEventListener('resize', function() {
     Object.keys(_zoomStates).forEach(function(targetId) {

@@ -654,14 +654,13 @@
                     <strong id="companyFormTitle" style="font-size:15px;" data-en="Add Company" data-ar="إضافة شركة" data-fr="Ajouter une entreprise">Add Company</strong>
                     <button class="btn btn-secondary" type="button" onclick="closeCompanyFormDrawer()"><i class="fas fa-times"></i> <span data-en="Close" data-ar="إغلاق" data-fr="Fermer">Close</span></button>
                 </div>
-                <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:10px;">
-                    <input id="companyOcrInvoiceInput" type="file" accept="image/*,application/pdf,.xlsx,.xls,.csv,.doc,.docx,.txt,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv,application/csv,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,text/plain" class="form-input" style="max-width:320px;" />
-                    <button id="companyOcrInvoiceBtn" class="btn btn-info" type="button" onclick="runCompanyInvoiceOcrFill()">
+                <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:14px; padding:10px 14px; background:linear-gradient(135deg, rgba(37,99,235,0.06) 0%, rgba(124,58,237,0.06) 100%); border:1px solid rgba(37,99,235,0.18); border-radius:10px;">
+                    <button id="companyOcrInvoiceBtn" class="btn btn-info" type="button" onclick="openCompanyCopilotOcrModal()" style="display:inline-flex; align-items:center; gap:8px; font-weight:700; background:linear-gradient(135deg, #2563eb 0%, #7c3aed 100%); color:#fff; border:none; padding:8px 16px; border-radius:8px; box-shadow:0 2px 6px rgba(37,99,235,0.25); cursor:pointer;">
                         <i class="fas fa-robot"></i>
-                        <span data-en="AI Scan From Invoice" data-ar="مسح ذكي من الفاتورة (Scan IA)" data-fr="Scan IA depuis facture">مسح ذكي من الفاتورة (Scan IA)</span>
+                        <span data-en="Copilot IA Scan" data-ar="المساعد الذكي (Copilot IA) : مسح المستند" data-fr="Copilote IA : Scan et extraction entreprise">المساعد الذكي (Copilot IA) : مسح المستند</span>
                     </button>
+                    <span style="font-size:12px; color:#64748b;" data-en="Scan invoice, commercial register (RC), bank check or document" data-ar="امسح أي فاتورة، سجل تجاري (RC)، صك بنكي، أو وثيقة لملء بيانات الشركة تلقائياً وبدقة عالية" data-fr="Scannez facture, registre de commerce (RC), chèque ou document">امسح أي فاتورة، سجل تجاري (RC)، صك بنكي، أو وثيقة لملء بيانات الشركة تلقائياً وبدقة عالية</span>
                 </div>
-                <div id="companyOcrStatus" style="display:none; margin-bottom:10px; font-size:13px; padding:10px; border-radius:8px;"></div>
                 <input type="hidden" id="editingCompanyId" value="">
                 <div class="form-grid">
                     <div class="form-group">
@@ -1063,7 +1062,98 @@
                 </div>
             </div>
 
-            <div class="btn-group" style="margin-top:8px;">
+            
+            <!-- ═══════════════════════════════════════════════════════════════ -->
+            <!-- 📱 NATIVE SMARTPHONE PUSH & TELEGRAM NOTIFICATION HUB           -->
+            <!-- ═══════════════════════════════════════════════════════════════ -->
+            <div style="margin-top:24px; padding:20px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:14px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div style="width:36px; height:36px; border-radius:10px; background:linear-gradient(135deg,#0284c7,#0369a1); display:flex; align-items:center; justify-content:center; color:#fff; font-size:18px;">
+                            <i class="fas fa-mobile-screen-button"></i>
+                        </div>
+                        <div>
+                            <h4 style="margin:0; font-size:16px; font-weight:700; color:#0f172a;">
+                                <span data-en="Mobile Smartphone Push Notifications" data-ar="نظام إشعارات الهاتف الذكي المباشرة" data-fr="Notifications mobiles push">نظام إشعارات الهاتف الذكي المباشرة</span>
+                            </h4>
+                            <small style="color:#64748b;" data-en="Receive instant alerts on your phone screen even when the app is closed." data-ar="استقبل التنبيهات الفورية على شاشة هاتفك مباشرة حتى عند إغلاق التطبيق." data-fr="Recevez des alertes instantanees sur votre telephone.">استقبل التنبيهات الفورية على شاشة هاتفك مباشرة حتى عند إغلاق التطبيق.</small>
+                        </div>
+                    </div>
+                    <span id="currentDeviceStatusBadge" style="padding:5px 12px; border-radius:20px; font-size:12px; font-weight:700; background:#e2e8f0; color:#475569;">
+                        <i class="fas fa-circle-notch fa-spin"></i> جارٍ فحص هذا الجهاز...
+                    </span>
+                </div>
+
+                <!-- Web Push Device Control Card -->
+                <div style="background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:16px; margin-bottom:16px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                        <div>
+                            <strong style="color:#0f172a; font-size:14px; display:block;">إشعارات هذا الجهاز (Native Web Push)</strong>
+                            <small style="color:#64748b;">مدعوم على هواتف Android (Chrome, Edge, Samsung) وهواتف iPhone (iOS 16.4+).</small>
+                        </div>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                            <button id="btnSubscribeThisPhone" class="btn btn-primary" type="button" onclick="handleSubscribePhoneClick()" style="font-size:13px; padding:7px 14px;">
+                                <i class="fas fa-bell"></i> تفعيل إشعارات هذا الجهاز
+                            </button>
+                            <button class="btn btn-success" type="button" onclick="handleTestPhonePushClick()" style="font-size:13px; padding:7px 14px;">
+                                <i class="fas fa-paper-plane"></i> إرسال إشعار تجريبي
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Registered Devices Table -->
+                    <div style="margin-top:14px; border-top:1px solid #f1f5f9; padding-top:12px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <span style="font-size:12px; font-weight:700; color:#475569;"><i class="fas fa-tablet-screen-button"></i> الأجهزة والهواتف المشتركة بالنظام:</span>
+                            <button type="button" onclick="loadRegisteredMobileDevices()" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:12px;">
+                                <i class="fas fa-sync"></i> تحديث
+                            </button>
+                        </div>
+                        <div id="registeredDevicesContainer" style="max-height:160px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:8px; background:#f8fafc; font-size:12px;">
+                            <div style="padding:12px; text-align:center; color:#64748b;">جارٍ تحميل الأجهزة...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Telegram Smartphone Bot Card -->
+                <div style="background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:16px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <i class="fab fa-telegram" style="color:#0284c7; font-size:22px;"></i>
+                            <strong style="color:#0f172a; font-size:14px;">بوابة تنبيهات تيليغرام للهاتف (Telegram Bot Gateway)</strong>
+                        </div>
+                        <label style="display:flex; align-items:center; gap:6px; font-size:13px; font-weight:700; cursor:pointer;">
+                            <input id="notifTgEnabled" type="checkbox" onchange="toggleTgSettingsView()">
+                            <span>تفعيل تنبيهات تيليغرام</span>
+                        </label>
+                    </div>
+
+                    <p style="font-size:12px; color:#64748b; margin:0 0 12px 0;">
+                        استقبل تقارير المبيعات وتنبيهات الأمان ونقص المخزون مباشرة كرسائل فورية عبر تطبيق Telegram على هاتفك.
+                    </p>
+
+                    <div id="tgConfigFields" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; margin-bottom:12px;">
+                        <div>
+                            <label class="form-label" style="font-size:12px; font-weight:600;">Telegram Bot Token:</label>
+                            <input id="notifTgBotToken" class="form-input" type="password" placeholder="مثال: 123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ">
+                            <small style="color:#94a3b8; font-size:11px;">احصل عليه مجاناً عبر محادثة @BotFather</small>
+                        </div>
+                        <div>
+                            <label class="form-label" style="font-size:12px; font-weight:600;">Telegram Chat ID (معرف الدردشة):</label>
+                            <input id="notifTgChatId" class="form-input" type="text" placeholder="مثال: 987654321">
+                            <small style="color:#94a3b8; font-size:11px;">احصل على معرف حسابك عبر @userinfobot</small>
+                        </div>
+                    </div>
+
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                        <button class="btn btn-secondary" type="button" onclick="testTelegramBotAlert()" style="font-size:13px; padding:6px 14px;">
+                            <i class="fab fa-telegram-plane"></i> اختبار إرسال رسالة للهاتف
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+<div class="btn-group" style="margin-top:8px;">
                 <button class="btn btn-primary" onclick="saveNotificationSettings()">
                     <i class="fas fa-save"></i>
                     <span data-en="Save Notification Settings" data-ar="حفظ إعدادات الإشعارات" data-fr="Enregistrer les notifications">Save Notification Settings</span>
@@ -1628,6 +1718,34 @@
         </div>
 
         <!-- ════════════════════════════════════════════════════════════════════ -->
+        <!-- Automated Cloud Snapshots & Recovery Hub -->
+            <div style="margin-top:20px; padding:16px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:10px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+                    <h4 style="margin:0;font-size:15px;font-weight:700;color:#0f172a;">
+                        <i class="fas fa-server" style="color:#0284c7;"></i>
+                        <span data-en="Automated Server Snapshots" data-ar="النسخ الاحتياطية المجدولة على الخادم" data-fr="Sauvegardes automatiques serveur">النسخ الاحتياطية المجدولة على الخادم</span>
+                    </h4>
+                    <a href="restore_backup.html" class="btn btn-primary" style="text-decoration:none; padding:6px 14px; font-size:13px;">
+                        <i class="fas fa-shield-halved"></i> <span data-en="Disaster Recovery Center" data-ar="مركز الاستعادة الشامل" data-fr="Centre de Restauration">مركز الاستعادة الشامل</span>
+                    </a>
+                </div>
+                <p style="margin:0 0 12px 0;font-size:12px;color:#475569;" data-en="Automated server-side snapshots run on schedule and rotate automatically to ensure zero data loss." data-ar="يقوم الخادم بإنشاء نسخ احتياطية دورية مجدولة وتدويرها تلقائياً لضمان عدم فقدان أي بيانات نهائياً." data-fr="Sauvegardes automatiques planifiees sur le serveur.">
+                    يقوم الخادم بإنشاء نسخ احتياطية دورية مجدولة وتدويرها تلقائياً لضمان عدم فقدان أي بيانات نهائياً.
+                </p>
+                <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;">
+                    <button class="btn btn-success" type="button" onclick="triggerServerSnapshotNow()">
+                        <i class="fas fa-camera"></i> <span data-en="Take Snapshot Now" data-ar="أخذ نسخة احتياطية الآن" data-fr="Prendre instantane">أخذ نسخة احتياطية الآن</span>
+                    </button>
+                    <button class="btn btn-secondary" type="button" onclick="loadSettingsServerSnapshots()">
+                        <i class="fas fa-sync"></i> <span data-en="Refresh List" data-ar="تحديث القائمة" data-fr="Actualiser">تحديث القائمة</span>
+                    </button>
+                </div>
+                <div id="settingsSnapshotsList" style="max-height:220px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:6px; background:#fff;">
+                    <small style="color:#6b7280; display:block; padding:12px; text-align:center;">جارٍ تحميل النسخ الاحتياطية من الخادم...</small>
+                </div>
+            </div>
+        </div>
+
         <!-- FACTORY RESET | إعادة ضبط المصنع -->
         <!-- ════════════════════════════════════════════════════════════════════ -->
         <div id="factory-reset" class="settings-section">
@@ -3336,67 +3454,90 @@
                 var logoHidden = document.getElementById('companyLogoDataUrl');
                 if (logoHidden) logoHidden.value = '';
             };
-            if (typeof runCompanyInvoiceOcrFill !== 'function') window.runCompanyInvoiceOcrFill = async function(){
-                var fileInput = document.getElementById('companyOcrInvoiceInput');
-                var status = document.getElementById('companyOcrStatus');
-                var button = document.getElementById('companyOcrInvoiceBtn');
-                var file = fileInput && fileInput.files && fileInput.files[0];
-                var showStatus = function(message, type) {
-                    if (!status) return;
-                    status.style.display = 'block';
-                    status.style.background = type === 'error' ? '#fef2f2' : type === 'success' ? '#f0fdf4' : '#eff6ff';
-                    status.style.color = type === 'error' ? '#b91c1c' : type === 'success' ? '#166534' : '#1d4ed8';
-                    status.textContent = message;
+            window.openCompanyCopilotOcrModal = function() {
+                var ocr = window.ZeraldaOCR || window.UnifiedOCR;
+                var openFn = null;
+                if (ocr && typeof ocr.open === 'function') openFn = function(o){ return ocr.open(o); };
+                else if (ocr && typeof ocr.openModal === 'function') openFn = function(o){ return ocr.openModal(o); };
+                else if (typeof window.openOcrModal === 'function') openFn = function(o){ return window.openOcrModal(o); };
+
+                var lang = 'ar';
+                try {
+                    if (window.UnifiedI18N && typeof window.UnifiedI18N.getCurrentLang === 'function') {
+                        lang = window.UnifiedI18N.getCurrentLang();
+                    } else {
+                        lang = String(ZS.getItem('preferred-language') || 'ar').toLowerCase();
+                    }
+                } catch(e) {}
+                if (lang !== 'fr' && lang !== 'en') lang = 'ar';
+
+                var titles = {
+                    ar: 'المساعد الذكي (Copilot IA) : مسح واستخراج بيانات الشركة',
+                    fr: 'Copilote IA : Scan & Extraction Entreprise',
+                    en: 'AI Copilot: Company Document Scan & Extraction'
                 };
+                var subtitles = {
+                    ar: 'اسحب وأفلت فاتورة، سجل تجاري (RC)، ترخيص أو شيك بنكي لاستخراج جميع البيانات تلقائياً وبدقة متناهية',
+                    fr: 'Glissez une facture, registre de commerce (RC), agrément ou chèque pour remplir automatiquement la fiche entreprise',
+                    en: 'Drag & drop invoice, commercial register (RC), license, or bank check to auto-fill company profile with precision'
+                };
+
                 var setValue = function(id, value) {
                     if (value === undefined || value === null || String(value).trim() === '') return;
                     var input = document.getElementById(id);
                     if (input) input.value = String(value).trim();
                 };
 
-                if (!file) {
-                    showStatus(_tr('select_file'), 'error');
-                    return;
-                }
-                if (!window.UnifiedOCR || typeof window.UnifiedOCR.extract !== 'function') {
-                    showStatus(_tr('ocr_not_loaded'), 'error');
+                if (openFn) {
+                    openFn({
+                        mode: 'company',
+                        title: titles[lang] || titles.ar,
+                        subtitle: subtitles[lang] || subtitles.ar,
+                        icon: 'fas fa-building',
+                        onApply: function(data) {
+                            setValue('companyName', data.companyName || data.supplierName || data.customerName);
+                            setValue('companySiege', data.siege || data.address);
+                            setValue('companyAddress', data.address || data.siege);
+                            setValue('companyRC', data.rc);
+                            setValue('companyArtNumber', data.art || data.ai);
+                            setValue('companyNIF', data.nif);
+                            setValue('companyNIS', data.nis);
+                            setValue('companyBP', data.bp);
+                            setValue('companyAG', data.ag);
+                            setValue('companyNIN', data.nin);
+                            setValue('companyPhone', data.phone);
+                            setValue('companyEmail', data.email);
+                            setValue('companyWebsite', data.website);
+                            setValue('companyCity', data.city);
+                            setValue('companyCapital', data.capital);
+                            setValue('companyBankName', data.bankName);
+                            setValue('companyRIB', data.rib);
+                            setValue('companyBankAccount', data.bankAccount || data.rib);
+                            if (data.vat) setValue('companyVAT', data.vat);
+
+                            var logoPreview = document.getElementById('logoPreviewCompanyName');
+                            if (logoPreview && (data.companyName || data.supplierName)) {
+                                logoPreview.textContent = data.companyName || data.supplierName;
+                            }
+
+                            if (typeof showToast === 'function') {
+                                var msgs = {
+                                    ar: '✓ تم تطبيق واستخراج بيانات الشركة بنجاح بواسطة Copilot IA!',
+                                    fr: '✓ Données d\'entreprise appliquées avec succès via Copilote IA !',
+                                    en: '✓ Company data successfully extracted and applied via AI Copilot!'
+                                };
+                                showToast(msgs[lang] || msgs.ar, 'success');
+                            } else {
+                                alert(lang === 'fr' ? 'Données d\'entreprise extraites et appliquées avec succès !' : (lang === 'en' ? 'Company data extracted and applied successfully!' : 'تم استخراج وتطبيق بيانات الشركة بنجاح!'));
+                            }
+                        }
+                    });
                     return;
                 }
 
-                if (button) button.disabled = true;
-                showStatus(_tr('extracting'), 'info');
-                try {
-                    var result = await window.UnifiedOCR.extract(file, {
-                        endpoint: '/api/ai/invoice-extract',
-                        imageMaxWidth: 2000,
-                        emptyFileMessage: _tr('empty_file'),
-                        unsupportedTypeMessage: _tr('unsupported')
-                    });
-                    var data = result.payload || {};
-                    var text = result.text || '';
-                    var extractors = window.OcrFieldExtractors || {};
-                    var firstLine = text.split(/\r?\n/).map(function(line) { return line.trim(); }).filter(Boolean)[0] || '';
-                    setValue('companyName', data.supplier || data.company_name || firstLine);
-                    setValue('companySiege', data.supplierAddress);
-                    var nifMatch = text.match(/(?:\bNIF\b|num(?:e|é)ro\s+d['']?identification\s+fiscale|رقم\s+التعريف\s+الجبائي)\s*[:\-]?\s*([A-Z0-9\-\/]{4,40})/i);
-                    setValue('companyRC', data.supplierRc || (extractors.extractRc && extractors.extractRc(text)));
-                    setValue('companyArtNumber', data.supplierArt || (extractors.extractArt && extractors.extractArt(text)));
-                    setValue('companyNIF', data.supplierTaxId || (nifMatch && nifMatch[1]));
-                    setValue('companyNIS', data.supplierNis || (extractors.extractNis && extractors.extractNis(text)));
-                    setValue('companyBP', data.supplierBp || (extractors.extractBp && extractors.extractBp(text)));
-                    setValue('companyAG', extractors.extractAg && extractors.extractAg(text));
-                    setValue('companyNIN', extractors.extractNin && extractors.extractNin(text));
-                    setValue('companyPhone', data.supplierPhone);
-                    setValue('companyEmail', data.supplierEmail);
-                    setValue('companyRIB', data.supplierRib);
-                    setValue('companyBankName', data.supplierBank);
-                    showStatus(_tr('extracted_ok'), 'success');
-                } catch (error) {
-                    showStatus(_tr('extract_failed') + (error && error.message ? error.message : _tr('unknown_error')), 'error');
-                } finally {
-                    if (button) button.disabled = false;
-                }
+                alert(lang === 'fr' ? 'Copilote IA en cours de chargement... Veuillez réessayer.' : 'Copilot IA is loading, please try again.');
             };
+            window.runCompanyInvoiceOcrFill = window.openCompanyCopilotOcrModal;
             if (typeof checkAiStatus !== 'function') {
                 window.checkAiStatus = function() {
                     var dot = document.getElementById('aiStatusDot');
@@ -4883,12 +5024,8 @@
                 return;
             }
 
-            // Check if popups are blocked BEFORE triggering OAuth
-            if (isPopupBlocked()) {
-                showPopupBlockedHelp();
-                setGoogleProgress('', false);
-                return;
-            }
+            // Do not call window.open('about:blank') here as it consumes the user activation
+            // token in modern browsers (Chrome/Safari), causing Google's auth popup to be blocked!
             hidePopupBlockedHelp();
 
             // If no custom Client ID is set, the system will use the built-in default from ZeraldaGoogle
@@ -4973,11 +5110,17 @@
                         showToast(getGoogleOAuthSetupHint(), 'info');
                         return;
                     }
-                    if (String(err.error || '').toLowerCase() === 'popup_closed_by_user' ||
-                        String(err.error || '').toLowerCase() === 'access_denied' ||
-                        String(err.error || '').toLowerCase() === 'popup_failed_to_open') {
+                    var errType = String(err.error || '').toLowerCase();
+                    if (errType === 'popup_failed_to_open') {
+                        showToast('تم حظر النافذة المنبثقة من قِبل المتصفح. جاري التحويل لتسجيل الدخول المباشر...', 'info');
+                        if (typeof ZeraldaGoogle !== 'undefined' && ZeraldaGoogle.startManualOAuth) {
+                            ZeraldaGoogle.startManualOAuth();
+                            return;
+                        }
+                    }
+                    if (errType === 'popup_closed_by_user' || errType === 'access_denied') {
                         showPopupBlockedHelp();
-                        finishConnect(false, 'Please allow popups for this site, then try again.', 'info');
+                        finishConnect(false, 'تم إغلاق نافذة تسجيل الدخول أو تم رفض الوصول.', 'info');
                         return;
                     }
                     var rawErr = JSON.stringify(err);
@@ -5879,6 +6022,206 @@
     });
     </script>
 
-        <script src="shared/license_auto.js?v=20260828a" defer></script>
+        <script src="shared/license_auto.js?v=20260828a" defer>
+// ============================================================
+// MOBILE & SMARTPHONE PUSH NOTIFICATIONS HELPERS
+// ============================================================
+async function initMobileNotificationsSettings() {
+    // 1. Check current device push status
+    var badge = document.getElementById('currentDeviceStatusBadge');
+    var btn = document.getElementById('btnSubscribeThisPhone');
+    
+    if (window.ZeraldaMobileNotifications && window.ZeraldaMobileNotifications.isSupported()) {
+        try {
+            var sub = await window.ZeraldaMobileNotifications.getCurrentSubscription();
+            if (sub) {
+                if (badge) {
+                    badge.style.background = '#dcfce7';
+                    badge.style.color = '#15803d';
+                    badge.innerHTML = '<i class="fas fa-check-circle"></i> هذا الجهاز مفعل للإشعارات';
+                }
+                if (btn) {
+                    btn.className = 'btn btn-secondary';
+                    btn.innerHTML = '<i class="fas fa-bell-slash"></i> إلغاء إشعارات هذا الجهاز';
+                }
+            } else {
+                if (badge) {
+                    badge.style.background = '#f1f5f9';
+                    badge.style.color = '#475569';
+                    badge.innerHTML = '<i class="fas fa-bell"></i> الإشعارات غير مفعلة بهذا الجهاز';
+                }
+                if (btn) {
+                    btn.className = 'btn btn-primary';
+                    btn.innerHTML = '<i class="fas fa-bell"></i> تفعيل إشعارات هذا الجهاز';
+                }
+            }
+        } catch(e) {}
+    } else {
+        if (badge) {
+            badge.style.background = '#fef2f2';
+            badge.style.color = '#b91c1c';
+            badge.innerHTML = '<i class="fas fa-exclamation-triangle"></i> هذا المتصفح لا يدعم Web Push';
+        }
+        if (btn) btn.disabled = true;
+    }
+
+    // 2. Load registered devices list
+    loadRegisteredMobileDevices();
+
+    // 3. Load Telegram & Server settings
+    loadNotificationServerSettings();
+}
+
+async function handleSubscribePhoneClick() {
+    if (!window.ZeraldaMobileNotifications) return;
+    var btn = document.getElementById('btnSubscribeThisPhone');
+    try {
+        var sub = await window.ZeraldaMobileNotifications.getCurrentSubscription();
+        if (sub) {
+            // Already subscribed -> Unsubscribe
+            if (confirm('هل تريد بالتأكيد إلغاء استقبال الإشعارات على هذا الجهاز؟')) {
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ الإلغاء...';
+                await window.ZeraldaMobileNotifications.unsubscribeCurrentDevice();
+                alert('تم إلغاء تفعيل إشعارات هذا الجهاز.');
+                initMobileNotificationsSettings();
+            }
+        } else {
+            // Subscribe
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ التفعيل...';
+            var devName = prompt('أدخل اسماً مميزاً لهذا الهاتف / الجهاز (اختياري):', 'هاتفي المحمول');
+            await window.ZeraldaMobileNotifications.subscribeCurrentDevice(devName);
+            alert('تم تفعيل إشعارات الهاتف بنجاح! تم تسجيل هذا الجهاز لاستقبال كافة تنبيهات النظام.');
+            initMobileNotificationsSettings();
+            // Send test
+            window.ZeraldaMobileNotifications.sendTestPush();
+        }
+    } catch(err) {
+        alert(err.message || 'حدث خطأ أثناء ضبط الإشعارات.');
+        initMobileNotificationsSettings();
+    }
+}
+
+async function handleTestPhonePushClick() {
+    try {
+        var res = await fetch('/api/notifications/test-push', {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/json' }
+        });
+        var d = await res.json();
+        if (d.ok) {
+            alert('تم إرسال الإشعار التجريبي بنجاح! تحقق من شاشة هاتفك أو جهازك الآن.');
+        } else {
+            alert('تعذر إرسال الإشعار التجريبي: ' + (d.error || 'خطأ غير معروف'));
+        }
+    } catch(e) {
+        alert('فشل الاتصال بالخادم لإرسال الإشعار التجريبي.');
+    }
+}
+
+async function loadRegisteredMobileDevices() {
+    var container = document.getElementById('registeredDevicesContainer');
+    if (!container) return;
+    container.innerHTML = '<div style="padding:10px;text-align:center;color:#64748b;"><i class="fas fa-spinner fa-spin"></i> جارٍ التحميل...</div>';
+    try {
+        var res = await fetch('/api/notifications/subscriptions', {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        var d = await res.json();
+        if (!d.ok || !d.subscriptions || !d.subscriptions.length) {
+            container.innerHTML = '<div style="padding:10px;text-align:center;color:#64748b;">لا توجد أجهزة أو هواتف مشتركة بالنظام حالياً. انقر على "تفعيل إشعارات هذا الجهاز" للاشتراك.</div>';
+            return;
+        }
+
+        var html = '<table style="width:100%; border-collapse:collapse;">'
+            + '<thead style="background:#edf2f7; color:#475569;"><tr>'
+            + '  <th style="padding:6px 10px; text-align:right;">اسم الجهاز</th>'
+            + '  <th style="padding:6px 10px; text-align:right;">المستخدم</th>'
+            + '  <th style="padding:6px 10px; text-align:right;">تاريخ الاشتراك</th>'
+            + '  <th style="padding:6px 10px; text-align:center;">إجراء</th>'
+            + '</tr></thead><tbody>';
+
+        d.subscriptions.forEach(function(dev) {
+            var dateStr = dev.created_at ? new Date(dev.created_at).toLocaleDateString('ar-DZ') : '-';
+            html += '<tr style="border-bottom:1px solid #e2e8f0;">'
+                + '  <td style="padding:6px 10px;"><strong><i class="fas fa-mobile-alt" style="color:#0284c7;"></i> ' + (dev.device_name || 'هاتف') + '</strong></td>'
+                + '  <td style="padding:6px 10px; color:#64748b;">' + (dev.user_email || 'user') + '</td>'
+                + '  <td style="padding:6px 10px; color:#64748b;">' + dateStr + '</td>'
+                + '  <td style="padding:6px 10px; text-align:center;">'
+                + '    <button type="button" onclick="deleteRegisteredDevice(\'' + (dev.endpoint_short || '') + '\')" style="background:none; border:none; color:#dc2626; cursor:pointer;" title="حذف الجهاز"><i class="fas fa-trash"></i></button>'
+                + '  </td>'
+                + '</tr>';
+        });
+
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    } catch(err) {
+        container.innerHTML = '<div style="padding:10px;text-align:center;color:#dc2626;">تعذر جلب قائمة الأجهزة المشتركة.</div>';
+    }
+}
+
+async function loadNotificationServerSettings() {
+    try {
+        var res = await fetch('/api/notifications/settings', {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        var d = await res.json();
+        if (d.ok && d.settings) {
+            var s = d.settings;
+            var tgCheck = document.getElementById('notifTgEnabled');
+            var tgChat = document.getElementById('notifTgChatId');
+            if (tgCheck) tgCheck.checked = !!s.telegram_enabled;
+            if (tgChat && s.telegram_chat_id) tgChat.value = s.telegram_chat_id;
+            toggleTgSettingsView();
+        }
+    } catch(e) {}
+}
+
+function toggleTgSettingsView() {
+    var check = document.getElementById('notifTgEnabled');
+    var fields = document.getElementById('tgConfigFields');
+    if (fields) {
+        fields.style.display = (check && check.checked) ? 'grid' : 'none';
+    }
+}
+
+async function testTelegramBotAlert() {
+    var token = (document.getElementById('notifTgBotToken') || {}).value || '';
+    var chatId = (document.getElementById('notifTgChatId') || {}).value || '';
+    
+    var payload = {};
+    if (token && chatId) {
+        payload.bot_token = token;
+        payload.chat_id = chatId;
+    }
+
+    try {
+        var res = await fetch('/api/notifications/test-telegram', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            body: JSON.stringify(payload)
+        });
+        var d = await res.json();
+        if (d.ok) {
+            alert('تم إرسال رسالة الاختبار بنجاح إلى هاتفك عبر Telegram!');
+        } else {
+            alert('فشل الاختبار: ' + (d.error || d.message || 'يرجى التحقق من صحة التوكن ومعرف المحادثة.'));
+        }
+    } catch(err) {
+        alert('تعذر الاتصال بالخادم لاختبار تيليغرام.');
+    }
+}
+
+// Hook into showSection for notifications tab
+var _prevShowSectionNotif = typeof showSection === 'function' ? showSection : null;
+if (_prevShowSectionNotif) {
+    showSection = function(id, el) {
+        _prevShowSectionNotif(id, el);
+        if (id === 'notifications') {
+            setTimeout(initMobileNotificationsSettings, 150);
+        }
+    };
+}
+
+</script>
 </body>
 </html>

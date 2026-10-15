@@ -965,6 +965,12 @@
         });
       }).then(function (result) {
         var data = result.data || {};
+        if (data.require_2fa) {
+          show2FAModal(data.temp_token, data.email);
+          isLogging = false;
+          setLoading(false);
+          return;
+        }
         if (result.status !== 200 || !data.ok) {
           if (data.code === 'ACCOUNT_LOCKED') {
             showError('Account is locked temporarily due to multiple failed attempts.');
@@ -1522,11 +1528,21 @@
         redirect_uri: isWebView2 ? (window.location.origin + '/oauth_callback.html') : undefined,
         error_callback: function (err) {
           var mapped = err || {};
+          var type = String(mapped.type || '').toLowerCase();
+          if (type === 'popup_failed_to_open') {
+            console.warn('[Google Login] Popup blocked by browser — falling back to redirect OAuth...');
+            var redirectUrl = 'https://accounts.google.com/o/oauth2/v2/auth' +
+              '?client_id=' + encodeURIComponent(GOOGLE_CLIENT_ID) +
+              '&redirect_uri=' + encodeURIComponent(window.location.origin + '/oauth_callback.html') +
+              '&response_type=token' +
+              '&scope=' + encodeURIComponent('openid email profile') +
+              '&prompt=consent';
+            window.location.href = redirectUrl;
+            return;
+          }
           var t = window._loginTr || TR.en;
           var msg = t.googleErrPopup;
-          var type = String(mapped.type || '').toLowerCase();
-          if (type === 'popup_failed_to_open') msg = t.googleErrPopup;
-          else if (type === 'popup_closed') msg = t.googleErrPopup;
+          if (type === 'popup_closed') msg = t.googleErrPopup;
           setGoogleLoading(false);
           showError(msg);
           isGoogleLogging = false;
@@ -1762,5 +1778,99 @@
   })();
   </script>
 
-    </body>
+  <!-- ── 2FA Verification Modal ─────────────────────────────────────────── -->
+  <div id="modal2FA" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.75);z-index:99999;align-items:center;justify-content:center;backdrop-filter:blur(6px);">
+    <div style="background:var(--card-bg, #fff);padding:32px;border-radius:18px;max-width:390px;width:92%;box-shadow:0 24px 48px rgba(0,0,0,0.3);text-align:center;border:1px solid var(--border,#e2e8f0);">
+      <div style="font-size:42px;color:var(--accent,#d36b2e);margin-bottom:14px;"><i class="fas fa-shield-halved"></i></div>
+      <h3 style="margin-bottom:8px;font-size:20px;font-weight:700;color:var(--ink,#1e293b);font-family:'Space Grotesk',sans-serif;">التحقق بخطوتين (2FA)</h3>
+      <p style="font-size:13px;color:var(--muted,#64748b);margin-bottom:18px;line-height:1.5;">أدخل رمز الأمان المكون من 6 أرقام من تطبيق Google أو Microsoft Authenticator الخاص بك.</p>
+      <div id="error2FA" style="color:var(--error,#ef4444);font-size:13px;margin-bottom:14px;min-height:18px;font-weight:500;"></div>
+      <input type="text" id="code2FA" maxlength="6" pattern="[0-9]*" inputmode="numeric" placeholder="••••••" autocomplete="one-time-code" style="width:100%;text-align:center;font-size:28px;letter-spacing:10px;font-weight:700;padding:12px;border:2px solid var(--border,#cbd5e1);border-radius:12px;margin-bottom:22px;outline:none;background:var(--bg,#f8fafc);color:var(--ink,#0f172a);" />
+      <div style="display:flex;gap:12px;">
+        <button type="button" onclick="cancel2FA()" style="flex:1;padding:12px;background:#e2e8f0;border:none;border-radius:10px;cursor:pointer;font-weight:600;color:#334155;">إلغاء</button>
+        <button type="button" id="btnSubmit2FA" onclick="submit2FA()" style="flex:2;padding:12px;background:var(--accent,#d36b2e);color:#fff;border:none;border-radius:10px;cursor:pointer;font-weight:600;">تأكيد الدخول</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    var _pending2FAToken = '';
+    var _pending2FAEmail = '';
+
+    function show2FAModal(tempToken, email) {
+      _pending2FAToken = tempToken;
+      _pending2FAEmail = email;
+      var modal = document.getElementById('modal2FA');
+      if (modal) {
+        modal.style.display = 'flex';
+        var inp = document.getElementById('code2FA');
+        if (inp) { inp.value = ''; inp.focus(); }
+        var err = document.getElementById('error2FA');
+        if (err) err.textContent = '';
+      }
+    }
+
+    function cancel2FA() {
+      _pending2FAToken = '';
+      var modal = document.getElementById('modal2FA');
+      if (modal) modal.style.display = 'none';
+    }
+
+    function submit2FA() {
+      var inp = document.getElementById('code2FA');
+      var code = (inp ? inp.value : '').trim();
+      var err = document.getElementById('error2FA');
+      if (code.length !== 6) {
+        if (err) err.textContent = 'الرجاء إدخال الرمز المكون من 6 أرقام';
+        return;
+      }
+      var btn = document.getElementById('btnSubmit2FA');
+      if (btn) btn.disabled = true;
+
+      authRequest('/api/auth/2fa/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ temp_token: _pending2FAToken, code: code })
+      }).then(function (res) {
+        return res.json().catch(function() { return {}; }).then(function (data) {
+          return { status: res.status, data: data };
+        });
+      }).then(function (res) {
+        if (btn) btn.disabled = false;
+        if (res.status === 200 && res.data && res.data.ok) {
+          cancel2FA();
+          var data = res.data;
+          var token = data.session_token;
+          var user = data.user || {};
+          ZS.setItem(TOKEN_KEY, token);
+          ZS.setItem('zeralda-session-token', token);
+          document.cookie = "zeralda-auth-token=" + encodeURIComponent(token) + "; path=/; max-age=604800; SameSite=Lax";
+          ZS.setItem(AUTH_META_KEY, JSON.stringify({
+            failedByUser: {},
+            userId: user.email || user.username || _pending2FAEmail,
+            loginAt: Date.now(),
+            lastActivityAt: Date.now(),
+            expiresAt: Date.now() + (10 * 60 * 60 * 1000),
+            rememberMe: false
+          }));
+          syncServerPrefsAndRedirect(token, nextPage);
+        } else {
+          if (err) err.textContent = (res.data && res.data.error) || 'رمز التحقق غير صحيح أو منتهي الصلاحية';
+        }
+      }).catch(function (e) {
+        if (btn) btn.disabled = false;
+        if (err) err.textContent = 'فشل الاتصال بخادم المصادقة';
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      var inp = document.getElementById('code2FA');
+      if (inp) {
+        inp.addEventListener('keyup', function (e) {
+          if (e.key === 'Enter') submit2FA();
+        });
+      }
+    });
+  </script>
+</body>
 </html>

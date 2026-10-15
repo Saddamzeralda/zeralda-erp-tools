@@ -1,0 +1,31 @@
+FACTURE PROFORMA
+N°: TEST-001
+Date: 2026-08-07
+
+FOURNISSEUR: EURL TEST SUPPLIER
+Adresse: 123 Rue de Test, Alger
+Téléphone: 021 12 34 56
+Email: contact@test-supplier.dz
+RC: 16/00-1234567 B
+NIF: 000916100123456
+NIS: 000916180123456
+AI: 16184614036
+
+CLIENT: EURL TEST CLIENT
+Adresse: 456 Avenue Client, Oran
+Téléphone: 041 65 43 21
+
+Code        Désignation                        Qte    P.U HT        Montant HT
+ART-001     Ordinateur Portable Dell           5      85 000,00     425 000,00
+ART-002     Écran LED 24 pouces                10     18 500,00     185 000,00
+ART-003     Clavier USB                         20     1 200,00      24 000,00
+ART-004     Souris Optique                      20     800,00        16 000,00
+ART-005     Câble HDMI 2m                       15     350,00        5 250,00
+
+Total HT:                                       655 250,00 DA
+TVA (19%):                                      124 497,50 DA
+Timbre:                                         0,00 DA
+Total TTC:                                      779 747,50 DA
+
+Arrêté la présente facture proforma à la somme de:
+SEPT CENT SOIXANTE-DIX-NEUF MILLE SEPT CENT QUARANTE-SEPT DINARS

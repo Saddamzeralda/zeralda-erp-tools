@@ -2370,4 +2370,195 @@
 			}
 		}
 	});
+
+	// ============================================================
+	// LIVE SYNC & BACKUP CONTROL CENTER WIDGET
+	// ============================================================
+	var _syncState = { state: 'synced', pendingCount: 0, lastSync: Date.now() };
+
+	function _updateSyncPillUI() {
+		var pill = document.getElementById('zeraldaSyncPill');
+		if (!pill) return;
+		var icon = pill.querySelector('.sync-icon');
+		var text = pill.querySelector('.sync-text');
+
+		if (_syncState.state === 'syncing') {
+			pill.style.background = '#fef3c7';
+			pill.style.borderColor = '#f59e0b';
+			pill.style.color = '#b45309';
+			if (icon) icon.className = 'fas fa-rotate fa-spin sync-icon';
+			if (text) text.textContent = 'جارٍ المزامنة...';
+		} else if (_syncState.state === 'offline' || _syncState.pendingCount > 0) {
+			pill.style.background = '#fef2f2';
+			pill.style.borderColor = '#ef4444';
+			pill.style.color = '#b91c1c';
+			if (icon) icon.className = 'fas fa-cloud-arrow-up sync-icon';
+			if (text) text.textContent = 'أوفلاين (' + _syncState.pendingCount + ' معلق)';
+		} else {
+			pill.style.background = '#f0fdf4';
+			pill.style.borderColor = '#22c55e';
+			pill.style.color = '#15803d';
+			if (icon) icon.className = 'fas fa-cloud-check sync-icon';
+			if (text) text.textContent = 'متزامن (100%)';
+		}
+	}
+
+	window.addEventListener('zeralda-sync-status', function(e) {
+		if (e.detail) {
+			_syncState.state = e.detail.state || 'synced';
+			_syncState.pendingCount = e.detail.pendingCount || 0;
+			if (e.detail.lastSync) _syncState.lastSync = e.detail.lastSync;
+			_updateSyncPillUI();
+		}
+	});
+
+	window.addEventListener('online', function() {
+		_syncState.state = 'syncing';
+		_updateSyncPillUI();
+	});
+
+	window.addEventListener('offline', function() {
+		_syncState.state = 'offline';
+		_updateSyncPillUI();
+	});
+
+	function _mountSyncIndicatorWidget() {
+		if (document.getElementById('zeraldaSyncPill')) return;
+		var isLoginPage = /(^|\/)(login|license|oauth_callback|restore_session)\.html/i.test(String(window.location.pathname || ''));
+		if (isLoginPage) return;
+
+		var pill = document.createElement('div');
+		pill.id = 'zeraldaSyncPill';
+		pill.title = 'حالة المزامنة والنسخ الاحتياطي — انقر للتحكم السريع';
+		pill.style.cssText = 'position:fixed;bottom:16px;left:16px;z-index:99997;display:flex;align-items:center;gap:7px;padding:6px 12px;background:#f0fdf4;border:1px solid #22c55e;border-radius:20px;color:#15803d;font-family:sans-serif;font-size:12px;font-weight:700;box-shadow:0 4px 14px rgba(0,0,0,0.1);cursor:pointer;transition:all .2s;user-select:none;direction:rtl;';
+		pill.innerHTML = '<i class="fas fa-cloud-check sync-icon" style="font-size:13px;"></i><span class="sync-text">متزامن (100%)</span>';
+		pill.onclick = _openSyncHubModal;
+		document.body.appendChild(pill);
+
+		// Modal structure
+		if (!document.getElementById('zeraldaSyncHubModal')) {
+			var modal = document.createElement('div');
+			modal.id = 'zeraldaSyncHubModal';
+			modal.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.45);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:99999;font-family:sans-serif;direction:rtl;';
+			modal.innerHTML = '<div style="background:#fff;border-radius:16px;max-width:440px;width:90%;box-shadow:0 20px 40px rgba(0,0,0,0.2);overflow:hidden;border:1px solid #e2e8f0;">'
+				+ '<div style="background:linear-gradient(135deg,#0f172a,#1e293b);color:#fff;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;">'
+				+ '  <div style="font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px;"><i class="fas fa-arrows-rotate text-primary" style="color:#38bdf8;"></i> مركز المزامنة والنسخ الاحتياطي</div>'
+				+ '  <span style="font-size:20px;cursor:pointer;color:#94a3b8;" onclick="document.getElementById(\'zeraldaSyncHubModal\').style.display=\'none\'">&times;</span>'
+				+ '</div>'
+				+ '<div style="padding:20px;">'
+				+ '  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;text-align:center;">'
+				+ '    <div style="background:#f8fafc;border:1px solid #e2e8f0;padding:10px;border-radius:8px;"><div style="font-size:11px;color:#64748b;">حالة الاتصال</div><div id="hubConnStatus" style="font-weight:700;font-size:13px;color:#15803d;margin-top:2px;">متصل بالخادم</div></div>'
+				+ '    <div style="background:#f8fafc;border:1px solid #e2e8f0;padding:10px;border-radius:8px;"><div style="font-size:11px;color:#64748b;">العمليات المعلقة</div><div id="hubPendingCount" style="font-weight:700;font-size:13px;color:#0f172a;margin-top:2px;">0 معلق</div></div>'
+				+ '  </div>'
+				+ '  <div style="font-size:12px;color:#64748b;margin-bottom:16px;text-align:center;" id="hubLastSyncText">آخر مزامنة ناجحة: الآن</div>'
+				+ '  <div style="display:flex;flex-direction:column;gap:8px;">'
+				+ '    <button id="btnForceSync" style="background:#0284c7;color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;" onclick="_execForceSyncNow()"><i class="fas fa-rotate"></i> مزامنة فورية الآن</button>'
+				+ '    <button id="btnInstantCloudBackup" style="background:#16a34a;color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;" onclick="_execInstantBackup()"><i class="fas fa-cloud-arrow-up"></i> إنشاء نسخة احتياطية سريعة</button>'
+				+ '    <button id="btnMobileNotifPrompt" style="background:#4f46e5;color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;" onclick="_execSetupMobilePush()"><i class="fas fa-mobile-screen-button"></i> إشعارات الهاتف الفورية (Web Push)</button>'
+				+ '    <a href="/restore_backup.html" style="background:#f1f5f9;color:#334155;border:1px solid #cbd5e1;border-radius:8px;padding:9px;font-size:13px;font-weight:600;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px;"><i class="fas fa-shield-halved"></i> مركز استعادة النسخ الاحتياطية (Disaster Recovery)</a>'
+				+ '  </div>'
+				+ '</div>'
+				+ '</div>';
+			document.body.appendChild(modal);
+		}
+
+		// Dynamically ensure mobile notifications script is loaded
+		if (!window.ZeraldaMobileNotifications && !document.querySelector('script[src*="mobile_notifications.js"]')) {
+			var mnScript = document.createElement('script');
+			mnScript.src = '/shared/mobile_notifications.js';
+			mnScript.defer = true;
+			document.head.appendChild(mnScript);
+		}
+
+		_updateSyncPillUI();
+	}
+
+	function _openSyncHubModal() {
+		var modal = document.getElementById('zeraldaSyncHubModal');
+		if (!modal) return;
+		var connEl = document.getElementById('hubConnStatus');
+		var pendEl = document.getElementById('hubPendingCount');
+		var timeEl = document.getElementById('hubLastSyncText');
+
+		if (connEl) {
+			connEl.textContent = navigator.onLine ? 'متصل بالإنترنت والخادم' : 'وضع عدم الاتصال (Offline)';
+			connEl.style.color = navigator.onLine ? '#15803d' : '#dc2626';
+		}
+		if (pendEl) {
+			pendEl.textContent = _syncState.pendingCount + ' عملية معلقة';
+			pendEl.style.color = _syncState.pendingCount > 0 ? '#b91c1c' : '#15803d';
+		}
+		if (timeEl) {
+			var dt = new Date(_syncState.lastSync);
+			timeEl.textContent = 'آخر مزامنة: ' + dt.toLocaleTimeString('ar-DZ') + ' (' + dt.toLocaleDateString('ar-DZ') + ')';
+		}
+		modal.style.display = 'flex';
+	}
+
+	window._execForceSyncNow = async function() {
+		var btn = document.getElementById('btnForceSync');
+		if (btn) btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ المزامنة...';
+		try {
+			if (window.ZS && typeof window.ZS.flushOfflineQueue === 'function') {
+				window.ZS.flushOfflineQueue();
+			}
+			if (typeof pullAllToLocalStorage === 'function') {
+				await pullAllToLocalStorage();
+			}
+			alert('تمت المزامنة الفورية بنجاح مع الخادم المركزي!');
+		} catch(e) {
+			alert('حدث خطأ أثناء المزامنة: ' + (e.message || e));
+		}
+		if (btn) btn.innerHTML = '<i class="fas fa-rotate"></i> مزامنة فورية الآن';
+		_updateSyncPillUI();
+		_openSyncHubModal();
+	};
+
+	window._execInstantBackup = async function() {
+		var btn = document.getElementById('btnInstantCloudBackup');
+		if (btn) btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ إنشاء النسخة...';
+		try {
+			var res = await fetch('/api/backup/automated/run', {
+				method: 'POST',
+				headers: { 'X-Requested-With': 'XMLHttpRequest' }
+			});
+			var d = await res.json();
+			if (d.ok) {
+				alert('تم إنشاء نسخة احتياطية سحابية ناجحة على الخادم!\nالملف: ' + d.filename + '\nالحجم: ' + (d.size_bytes/1024).toFixed(1) + ' KB');
+			} else {
+				alert('تعذر إنشاء النسخة: ' + (d.error || 'خطأ غير معروف'));
+			}
+		} catch(e) {
+			alert('فشل الاتصال بالخادم لإنشاء النسخة السحابية.');
+		}
+		if (btn) btn.innerHTML = '<i class="fas fa-cloud-arrow-up"></i> إنشاء نسخة احتياطية سريعة';
+	};
+
+	window._execSetupMobilePush = async function() {
+		var btn = document.getElementById('btnMobileNotifPrompt');
+		if (!window.ZeraldaMobileNotifications) {
+			alert('جاري تهيئة نظام إشعارات الهاتف، يرجى المحاولة بعد لحظات...');
+			return;
+		}
+		if (btn) btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ التفعيل...';
+		try {
+			await window.ZeraldaMobileNotifications.subscribeCurrentDevice();
+			alert('تم تفعيل إشعارات الهاتف بنجاح! تم تسجيل هذا الجهاز لاستقبال التنبيهات الفورية.');
+			if (btn) {
+				btn.innerHTML = '<i class="fas fa-circle-check"></i> إشعارات هذا الجهاز مفعلة ✓';
+				btn.style.background = '#059669';
+			}
+			window.ZeraldaMobileNotifications.sendTestPush();
+		} catch(err) {
+			alert(err.message || 'تعذر تفعيل إشعارات الهاتف.');
+			if (btn) btn.innerHTML = '<i class="fas fa-mobile-screen-button"></i> إشعارات الهاتف الفورية (Web Push)';
+		}
+	};
+
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', _mountSyncIndicatorWidget);
+	} else {
+		setTimeout(_mountSyncIndicatorWidget, 500);
+	}
+
 })(window);

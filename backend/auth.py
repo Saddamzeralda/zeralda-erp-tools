@@ -14,7 +14,7 @@ import time
 import re
 import threading
 from datetime import datetime, timedelta
-from typing import Optional, Dict, List, Tuple
+from typing import Optional, Dict, List, Tuple, Any
 
 # Data directories
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data')
@@ -511,6 +511,57 @@ def destroy_session(session_token: str):
             _flush_sessions_locked(force=True)
 
 
+def _invalidate_user_sessions(email: str) -> int:
+    """Invalidate all active sessions for a user (thread-safe)."""
+    clean_email = str(email or '').strip().lower()
+    if not clean_email:
+        return 0
+    with _sessions_lock:
+        sessions = load_sessions()
+        to_del = [tok for tok, s in sessions.items() if str(s.get('email', '')).lower() == clean_email]
+        for tok in to_del:
+            del sessions[tok]
+        if to_del:
+            save_sessions(sessions)
+            _flush_sessions_locked(force=True)
+            print(f"[AUTH] Revoked {len(to_del)} active sessions for {clean_email}")
+        return len(to_del)
+
+
+def revoke_all_sessions(email: str) -> int:
+    """Public helper to revoke all active sessions for a user."""
+    return _invalidate_user_sessions(email)
+
+
+# ── Pending 2FA Login Tokens ──────────────────────────────────────────────
+_PENDING_2FA: Dict[str, Dict[str, Any]] = {}
+_PENDING_2FA_LOCK = threading.RLock()
+
+
+def _store_temp_2fa_token(token: str, email: str, ttl_seconds: int = 300) -> None:
+    now = datetime.now()
+    with _PENDING_2FA_LOCK:
+        # Cleanup expired
+        expired = [t for t, data in _PENDING_2FA.items() if data['expires_at'] < now]
+        for t in expired:
+            del _PENDING_2FA[t]
+        _PENDING_2FA[token] = {
+            'email': email.strip().lower(),
+            'expires_at': now + timedelta(seconds=ttl_seconds)
+        }
+
+
+def _verify_and_consume_2fa_token(token: str) -> Optional[str]:
+    now = datetime.now()
+    with _PENDING_2FA_LOCK:
+        data = _PENDING_2FA.pop(token, None)
+        if not data:
+            return None
+        if data['expires_at'] < now:
+            return None
+        return data['email']
+
+
 def cleanup_expired_sessions():
     """Remove all expired sessions — thread-safe"""
     with _sessions_lock:
@@ -595,20 +646,147 @@ def authenticate(identifier: str, password: str, ip_address: str = '', user_agen
         record_failed_attempt(email_key)
         return {'ok': False, 'error': 'Invalid credentials', 'code': 'INVALID_CREDENTIALS'}
 
+    # Check if 2FA is enabled for this user
+    if user.get('totp_enabled') and user.get('totp_secret'):
+        temp_token = secrets.token_urlsafe(32)
+        _store_temp_2fa_token(temp_token, email_key)
+        try:
+            from app.services.audit import record_audit_event
+            record_audit_event("login_2fa_prompt", email_key, {"method": "password_verified"}, ip=ip_address, status="pending")
+        except Exception:
+            pass
+        return {
+            'ok': True,
+            'require_2fa': True,
+            'temp_token': temp_token,
+            'email': email_key
+        }
+
     # Success - reset failed attempts
     reset_failed_attempts(email_key)
 
     # Create session with IP/UA binding if enabled
     session_token = create_session(email_key, ip_address, user_agent)
 
-    # Return user data (without password)
-    safe_user = {k: v for k, v in user.items() if k not in ['password', 'salt']}
+    # Record audit event
+    try:
+        from app.services.audit import record_audit_event
+        record_audit_event("login", email_key, {"method": "password"}, ip=ip_address, status="success")
+    except Exception:
+        pass
+
+    # Return user data (without password or TOTP secret)
+    safe_user = {k: v for k, v in user.items() if k not in ['password', 'salt', 'totp_secret']}
 
     return {
         'ok': True,
         'session_token': session_token,
         'user': safe_user
     }
+
+
+def verify_2fa_login(temp_token: str, code: str, ip_address: str = '', user_agent: str = '') -> Dict:
+    """Verify 2FA TOTP code for a pending login session and create session token."""
+    email = _verify_and_consume_2fa_token(temp_token)
+    if not email:
+        return {'ok': False, 'error': '2FA session expired or invalid. Please login again.', 'code': '2FA_SESSION_EXPIRED'}
+
+    users = load_users()
+    user = users.get(email)
+    if not user or not user.get('active', True):
+        return {'ok': False, 'error': 'User not found or disabled', 'code': 'USER_DISABLED'}
+
+    totp_secret = user.get('totp_secret')
+    if not totp_secret:
+        return {'ok': False, 'error': '2FA is not properly configured', 'code': '2FA_NOT_CONFIGURED'}
+
+    from app.services.totp import verify_totp_token
+    if not verify_totp_token(totp_secret, code):
+        _store_temp_2fa_token(temp_token, email, ttl_seconds=120)
+        try:
+            from app.services.audit import record_audit_event
+            record_audit_event("login_2fa_failed", email, {"reason": "bad_totp_code"}, ip=ip_address, status="failed")
+        except Exception:
+            pass
+        return {'ok': False, 'error': 'Invalid 2FA verification code', 'code': 'INVALID_2FA_CODE'}
+
+    reset_failed_attempts(email)
+    session_token = create_session(email, ip_address, user_agent)
+    try:
+        from app.services.audit import record_audit_event
+        record_audit_event("login_2fa_success", email, {"method": "totp"}, ip=ip_address, status="success")
+    except Exception:
+        pass
+
+    safe_user = {k: v for k, v in user.items() if k not in ['password', 'salt', 'totp_secret']}
+    return {
+        'ok': True,
+        'session_token': session_token,
+        'user': safe_user
+    }
+
+
+def setup_user_2fa(email: str) -> Dict:
+    """Generate a new TOTP secret and provisioning URI for a user."""
+    users = load_users()
+    clean_email = str(email or '').strip().lower()
+    user = users.get(clean_email)
+    if not user:
+        return {'ok': False, 'error': 'User not found', 'code': 'USER_NOT_FOUND'}
+
+    from app.services.totp import generate_secret, get_provisioning_uri
+    secret = generate_secret()
+    uri = get_provisioning_uri(secret, clean_email)
+    return {
+        'ok': True,
+        'secret': secret,
+        'uri': uri,
+        'email': clean_email
+    }
+
+
+def enable_user_2fa(email: str, secret: str, code: str) -> Dict:
+    """Verify code against secret and enable 2FA for the user."""
+    users = load_users()
+    clean_email = str(email or '').strip().lower()
+    user = users.get(clean_email)
+    if not user:
+        return {'ok': False, 'error': 'User not found', 'code': 'USER_NOT_FOUND'}
+
+    from app.services.totp import verify_totp_token
+    if not verify_totp_token(secret, code):
+        return {'ok': False, 'error': 'Verification code does not match. Please check time on your authenticator device.', 'code': 'INVALID_CODE'}
+
+    user['totp_secret'] = secret
+    user['totp_enabled'] = True
+    user['updated_at'] = datetime.now().isoformat()
+    save_users(users)
+    try:
+        from app.services.audit import record_audit_event
+        record_audit_event("2fa_enabled", clean_email, {}, status="success")
+    except Exception:
+        pass
+    return {'ok': True, 'message': 'Two-factor authentication successfully enabled'}
+
+
+def disable_user_2fa(email: str) -> Dict:
+    """Disable 2FA for a user."""
+    users = load_users()
+    clean_email = str(email or '').strip().lower()
+    user = users.get(clean_email)
+    if not user:
+        return {'ok': False, 'error': 'User not found', 'code': 'USER_NOT_FOUND'}
+
+    user['totp_enabled'] = False
+    user['totp_secret'] = None
+    user['updated_at'] = datetime.now().isoformat()
+    save_users(users)
+    try:
+        from app.services.audit import record_audit_event
+        record_audit_event("2fa_disabled", clean_email, {}, status="success")
+    except Exception:
+        pass
+    return {'ok': True, 'message': 'Two-factor authentication disabled'}
 
 
 # ══════════════════════════════════════════════════════════

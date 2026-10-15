@@ -1164,22 +1164,118 @@
         });
     }
 
-    // إرسال متزامن للخادم (sync XHR — الخادم محلي فالحفظ فوري)
+    // ── Resilient Offline Sync Queue & Health Diagnostics ──
+    var _offlineServerQueue = {};
+    try {
+        var _savedOfflineQ = localStorage.getItem('zeralda_server_offline_queue');
+        if (_savedOfflineQ) _offlineServerQueue = JSON.parse(_savedOfflineQ) || {};
+    } catch(e) {}
+
+    var _lastSyncTime = Date.now();
+    var _isFlushingOffline = false;
+
+    function _saveOfflineQueue() {
+        try {
+            localStorage.setItem('zeralda_server_offline_queue', JSON.stringify(_offlineServerQueue));
+        } catch(e) {}
+    }
+
+    function _dispatchSyncStatus(state, extra) {
+        try {
+            var pending = Object.keys(_offlineServerQueue).length;
+            var detail = {
+                state: state || (pending > 0 ? 'offline' : 'synced'),
+                pendingCount: pending,
+                lastSync: _lastSyncTime,
+                online: navigator.onLine
+            };
+            if (extra && typeof extra === 'object') {
+                for (var k in extra) detail[k] = extra[k];
+            }
+            window.dispatchEvent(new CustomEvent('zeralda-sync-status', { detail: detail }));
+        } catch(e) {}
+    }
+
+    function _flushOfflineServerQueue() {
+        if (_isFlushingOffline) return;
+        var keys = Object.keys(_offlineServerQueue);
+        if (!keys.length) return;
+        var token = _getServerToken();
+        if (!token) return;
+
+        _isFlushingOffline = true;
+        _dispatchSyncStatus('syncing', { flushingCount: keys.length });
+
+        var flushed = 0;
+        keys.forEach(function(k) {
+            try {
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', _serverApi(), false);
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+                xhr.setRequestHeader('X-Session-Token', token);
+                xhr.send(JSON.stringify({ key: k, value: _offlineServerQueue[k] }));
+                if (xhr.status === 200) {
+                    delete _offlineServerQueue[k];
+                    flushed++;
+                }
+            } catch(e) {}
+        });
+
+        _saveOfflineQueue();
+        _isFlushingOffline = false;
+        _lastSyncTime = Date.now();
+        var remaining = Object.keys(_offlineServerQueue).length;
+        _dispatchSyncStatus(remaining === 0 ? 'synced' : 'offline', { remaining: remaining, flushed: flushed });
+    }
+
+    window.addEventListener('online', function() {
+        console.log('[ZS] Network online detected — flushing offline sync queue');
+        _flushOfflineServerQueue();
+    });
+    setInterval(_flushOfflineServerQueue, 20000);
+
+    var _isPageDismissing = false;
+    if (typeof window !== 'undefined') {
+        window.addEventListener('beforeunload', function() { _isPageDismissing = true; });
+        window.addEventListener('pagehide', function() { _isPageDismissing = true; });
+    }
+
+    // إرسال متزامن للخادم (sync XHR — الخادم محلي فالحفظ فوري) مع طابور أوفلاين
     function _pushToServer(key, value) {
         // لا ترسل للخادم إذا لم يكن الـ token متاحاً (مثل صفحة login)
         var token = _getServerToken();
         if (!token) {
-            // حفظ في الذاكرة فقط — سيُرسل للخادم لاحقاً عند توفر الـ token
             console.log('[ZS] No token — skipping server push for', key);
             return;
         }
-        // حماية جذرية من فقدان البيانات: لا تكتب للخادم قبل نجاح التحميل الأولي.
-        // بدون هذا، الصفحة تكتب بيانات فارغة (settings بدون شركات) فوق بيانات الخادم.
-        // استثناء: مفاتيح الترخيح (zeralda-license-*) يمكن كتابتها قبل التحميل.
         if (!_memReady && key.indexOf('zeralda-license-') !== 0) {
             console.warn('[ZS] BLOCKED write before initial load for', key, '— preventing data loss');
             return;
         }
+
+        var payloadStr = JSON.stringify({ key: key, value: value });
+
+        // If page is dismissing/unloading, modern browsers prohibit synchronous XHR.
+        // Use fetch with keepalive: true (W3C standard for background delivery during page dismissal)
+        if (_isPageDismissing) {
+            try {
+                fetch(_serverApi(), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Authorization': 'Bearer ' + token,
+                        'X-Session-Token': token
+                    },
+                    body: payloadStr,
+                    keepalive: true
+                }).catch(function() {});
+            } catch(e) {}
+            return;
+        }
+
         try {
             var xhr = new XMLHttpRequest();
             xhr.open('POST', _serverApi(), false);  // false = متزامن
@@ -1187,12 +1283,44 @@
             xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
             xhr.setRequestHeader('Authorization', 'Bearer ' + token);
             xhr.setRequestHeader('X-Session-Token', token);
-            xhr.send(JSON.stringify({ key: key, value: value }));
-            if (xhr.status !== 200) {
+            xhr.send(payloadStr);
+            if (xhr.status === 200) {
+                if (_offlineServerQueue[key]) {
+                    delete _offlineServerQueue[key];
+                    _saveOfflineQueue();
+                }
+                _lastSyncTime = Date.now();
+                _dispatchSyncStatus('synced');
+            } else {
                 console.warn('[ZS] Server write failed for', key, xhr.status);
+                _offlineServerQueue[key] = value;
+                _saveOfflineQueue();
+                _dispatchSyncStatus('offline', { key: key, status: xhr.status });
             }
         } catch(e) {
-            console.warn('[ZS] Sync write error for', key, e.message);
+            var msg = String(e && e.message || '');
+            if (msg.indexOf('page dismissal') !== -1 || msg.indexOf('Synchronous XHR') !== -1) {
+                // Browser prohibited sync XHR during page unload — deliver via fetch keepalive
+                _isPageDismissing = true;
+                try {
+                    fetch(_serverApi(), {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Authorization': 'Bearer ' + token,
+                            'X-Session-Token': token
+                        },
+                        body: payloadStr,
+                        keepalive: true
+                    }).catch(function() {});
+                } catch(_) {}
+            } else {
+                console.warn('[ZS] Sync write error for', key, msg);
+                _offlineServerQueue[key] = value;
+                _saveOfflineQueue();
+                _dispatchSyncStatus('offline', { key: key, error: msg });
+            }
         }
     }
 
@@ -1221,6 +1349,22 @@
             console.warn('[ZS] BLOCKED delete before initial load for', key, '— preventing data loss');
             return;
         }
+
+        if (_isPageDismissing) {
+            try {
+                fetch(_serverApi() + '?key=' + encodeURIComponent(key), {
+                    method: 'DELETE',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Authorization': 'Bearer ' + token,
+                        'X-Session-Token': token
+                    },
+                    keepalive: true
+                }).catch(function() {});
+            } catch(e) {}
+            return;
+        }
+
         try {
             var xhr = new XMLHttpRequest();
             xhr.open('DELETE', _serverApi() + '?key=' + encodeURIComponent(key), false);
@@ -1232,15 +1376,31 @@
                 console.warn('[ZS] Server delete failed for', key, xhr.status);
             }
         } catch(e) {
-            console.warn('[ZS] Sync delete error for', key, e.message);
-            // fallback async
-            try {
-                fetch(_serverApi() + '?key=' + encodeURIComponent(key), {
-                    method: 'DELETE',
-                    cache: 'no-store',
-                    headers: _buildHeaders()
-                }).catch(function() {});
-            } catch(_) {}
+            var delMsg = String(e && e.message || '');
+            if (delMsg.indexOf('page dismissal') !== -1 || delMsg.indexOf('Synchronous XHR') !== -1) {
+                _isPageDismissing = true;
+                try {
+                    fetch(_serverApi() + '?key=' + encodeURIComponent(key), {
+                        method: 'DELETE',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Authorization': 'Bearer ' + token,
+                            'X-Session-Token': token
+                        },
+                        keepalive: true
+                    }).catch(function() {});
+                } catch(_) {}
+            } else {
+                console.warn('[ZS] Sync delete error for', key, delMsg);
+                // fallback async
+                try {
+                    fetch(_serverApi() + '?key=' + encodeURIComponent(key), {
+                        method: 'DELETE',
+                        cache: 'no-store',
+                        headers: _buildHeaders()
+                    }).catch(function() {});
+                } catch(_) {}
+            }
         }
     }
 
@@ -1360,7 +1520,16 @@
         isReady: function () { return _memReady; },
         getBackend: function () { return 'server'; },
         // إعادة تحميل من الخادم (refresh)
-        reloadFromServer: function () { return _loadFromServer(); }
+        reloadFromServer: function () { return _loadFromServer(); },
+        getSyncHealth: function() {
+            return {
+                online: navigator.onLine,
+                pendingCount: Object.keys(_offlineServerQueue).length,
+                lastSync: _lastSyncTime,
+                offlineKeys: Object.keys(_offlineServerQueue)
+            };
+        },
+        flushOfflineQueue: function() { return _flushOfflineServerQueue(); }
     };
 
 })();

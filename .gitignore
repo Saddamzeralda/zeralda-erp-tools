@@ -58,6 +58,7 @@ test_*.py
 .webview2_cache/
 
 # ملفات scratch / تجريبية في الجذر (لا ترفعها إلى Git)
+scratch/
 _*.py
 _*.txt
 _*.json

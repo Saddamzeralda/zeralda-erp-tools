@@ -129,6 +129,34 @@
     return m ? String(m[1] || '').trim() : '';
   }
 
+  function extractCapital(text) {
+    var raw = String(text || '');
+    if (!raw) return '';
+    var m = raw.match(/(?:capital(?:\s+social)?|رأس\s+المال)\s*[:\-]?\s*([0-9\s.,]+(?:\s*(?:DZD|DA|دج|EUR|USD|€|\$))?)/i);
+    return m ? String(m[1] || '').replace(/[\s.،؛,;]+$/g, '').trim() : '';
+  }
+
+  function extractSiege(text) {
+    var raw = String(text || '');
+    if (!raw) return '';
+    var m = raw.match(/(?:si[eè]ge(?:\s+social)?|المقر(?:\s+الاجتماعي)?|adresse(?:\s+principale)?|العنوان)\s*[:\-]\s*([^\n\r]{5,120})/i);
+    return m ? String(m[1] || '').trim() : '';
+  }
+
+  function extractWebsite(text) {
+    var raw = String(text || '');
+    if (!raw) return '';
+    var m = raw.match(/(?:https?:\/\/[a-zA-Z0-9_\-.]+(?:\.[a-zA-Z]{2,})[^\s\n\r]*|www\.[a-zA-Z0-9_\-.]+(?:\.[a-zA-Z]{2,})[^\s\n\r]*)/i);
+    return m ? String(m[0] || '').trim() : '';
+  }
+
+  function extractBankName(text) {
+    var raw = String(text || '');
+    if (!raw) return '';
+    var m = raw.match(/\b(BEA|BNA|CPA|BADR|BDL|CNEP|SGA|AGB|BARAKA|NATIXIS|FRANSABANK|AL\s*SALAM|GULF\s*BANK|HOUSING\s*BANK|CITIBANK)\b/i);
+    return m ? m[0].toUpperCase() : '';
+  }
+
   global.OcrFieldExtractors = {
     pickFirstNonEmpty,
     extractRc,
@@ -141,6 +169,10 @@
     extractArt,
     extractAi,
     extractNin,
+    extractCapital,
+    extractSiege,
+    extractWebsite,
+    extractBankName,
     extractCustomerName,
     extractSupplierName
   };
@@ -501,7 +533,13 @@
         bankName: "اسم البنك",
         bankRib: "رقم الحساب / RIB",
         accountHolder: "صاحب الحساب",
-        companyName: "اسم الشركة / المؤسسة"
+        companyName: "اسم الشركة / المؤسسة",
+        siege: "المقر (العنوان)",
+        capital: "رأس المال",
+        website: "الموقع الإلكتروني",
+        bp: "صندوق البريد (BP)",
+        ag: "رقم الترخيص (N° AG)",
+        bankAccount: "الحساب البنكي"
       },
       fr: {
         modalTitle: "Copilote IA : Scan et extraction intelligente",
@@ -557,7 +595,13 @@
         bankName: "Nom Banque",
         bankRib: "RIB / Compte",
         accountHolder: "Titulaire Compte",
-        companyName: "Société / Entreprise"
+        companyName: "Société / Entreprise",
+        siege: "Siège (Adresse)",
+        capital: "Capital Social",
+        website: "Site Web",
+        bp: "Boîte Postale (BP)",
+        ag: "N° AG (Agrément)",
+        bankAccount: "Compte Bancaire"
       },
       en: {
         modalTitle: "AI Copilot: Smart Scan & Extraction",
@@ -613,7 +657,13 @@
         bankName: "Bank Name",
         bankRib: "RIB / Account No",
         accountHolder: "Account Holder",
-        companyName: "Company / Organization"
+        companyName: "Company / Organization",
+        siege: "Head Office (Address)",
+        capital: "Share Capital",
+        website: "Website",
+        bp: "P.O. Box (BP)",
+        ag: "License No (AG)",
+        bankAccount: "Bank Account"
       }
     },
 
@@ -985,23 +1035,99 @@
       }
     },
 
+    cleanOcrNum: function(val) {
+      if (val === null || val === undefined) return 0;
+      if (typeof val === 'number') return Number.isFinite(val) ? val : 0;
+      var s = String(val).trim();
+      if (!s) return 0;
+      for (var i = 0; i < 10; i++) {
+        s = s.replace(new RegExp(String.fromCharCode(0x0660 + i), 'g'), String(i));
+        s = s.replace(new RegExp(String.fromCharCode(0x06F0 + i), 'g'), String(i));
+      }
+      s = s.replace(/[\s\u00a0\u202f]/g, '');
+      if (s.indexOf('.') > -1 && s.indexOf(',') > -1) {
+        if (s.lastIndexOf(',') > s.lastIndexOf('.')) {
+          s = s.replace(/\./g, '').replace(',', '.');
+        } else {
+          s = s.replace(/,/g, '');
+        }
+      } else if (s.indexOf(',') > -1) {
+        var parts = s.split(',');
+        if (parts.length === 2 && parts[1].length <= 2) {
+          s = parts[0] + '.' + parts[1];
+        } else {
+          s = s.replace(/,/g, '');
+        }
+      } else if (s.indexOf('.') > -1) {
+        var dParts = s.split('.');
+        if (dParts.length > 2) {
+          var lastPart = dParts[dParts.length - 1];
+          var head = dParts.slice(0, dParts.length - 1).join('');
+          s = head + '.' + lastPart;
+        }
+      }
+      s = s.replace(/[^0-9.\-]/g, '');
+      var p = parseFloat(s);
+      return Number.isFinite(p) ? p : 0;
+    },
+
     parseDocumentData: function(payload, text, mode) {
+      var self = this;
+      var cleanOcrNum = function(v) { return self.cleanOcrNum(v); };
       var ext = global.OcrFieldExtractors || {};
       var raw = text || '';
       var fields = (payload.analysis && payload.analysis.fields) || {};
 
-      var customerName = payload.customer || fields.customer || (ext.extractCustomerName ? ext.extractCustomerName(raw) : '');
-      var supplierName = payload.supplier || fields.supplier || (ext.extractSupplierName ? ext.extractSupplierName(raw) : '');
-      var rc = payload.rc || fields.rc || (ext.extractRc ? ext.extractRc(raw) : '');
-      var nif = payload.nif || fields.nif || (ext.extractNif ? ext.extractNif(raw) : '');
-      var nis = payload.nis || fields.nis || (ext.extractNis ? ext.extractNis(raw) : '');
-      var ai = payload.ai || fields.ai || (ext.extractAi ? ext.extractAi(raw) : '');
-      var art = payload.art || fields.art || (ext.extractArt ? ext.extractArt(raw) : '');
+      // 1. Separate Customer and Supplier carefully
+      var customerName = payload.customer || fields.customer_name || fields.customer || '';
+      var customerRc = payload.customerRc || fields.customer_rc || '';
+      var customerNif = payload.customerTaxId || fields.customer_nif || '';
+      var customerNis = payload.customerNis || fields.customer_nis || '';
+      var customerArt = payload.customerArt || fields.customer_art || '';
+      var customerPhone = payload.customerPhone || fields.customer_phone || '';
+      var customerEmail = payload.customerEmail || fields.customer_email || '';
+      var customerAddress = payload.customerAddress || fields.customer_address || '';
+      var customerCity = payload.customerCity || fields.customer_city || '';
+
+      var supplierName = payload.supplier || fields.supplier_name || fields.company_name || fields.supplier || '';
+      var supplierRc = payload.supplierRc || fields.supplier_rc || '';
+      var supplierNif = payload.supplierTaxId || fields.supplier_nif || '';
+      var supplierNis = payload.supplierNis || fields.supplier_nis || '';
+      var supplierArt = payload.supplierArt || fields.supplier_art || '';
+      var supplierAi = payload.supplierAi || fields.supplier_ai || '';
+      var supplierPhone = payload.supplierPhone || fields.supplier_phone || '';
+      var supplierEmail = payload.supplierEmail || fields.supplier_email || '';
+      var supplierAddress = payload.supplierAddress || fields.supplier_address || '';
+      var supplierCity = payload.supplierCity || fields.supplier_city || '';
+
+      // Text fallbacks if fields are missing
+      if (!customerName && raw) {
+        var cm = raw.match(/(?:Client|Factur[eé]\s*[aà]|Acheteur|Destinataire|العميل|الزبون|المشتري)\s*[:\-]\s*([^\n\r]{3,80})/i);
+        if (cm) customerName = cm[1].trim();
+      }
+      if (!supplierName && raw) {
+        if (ext.extractSupplierName) supplierName = ext.extractSupplierName(raw);
+        else {
+          var sm = raw.match(/(?:Fournisseur|Vendeur|Soci[eé]t[eé]|المورد|البائع|الشركة)\s*[:\-]\s*([^\n\r]{3,80})/i);
+          if (sm) supplierName = sm[1].trim();
+        }
+      }
+      if (!supplierRc && raw && ext.extractRc) supplierRc = ext.extractRc(raw);
+      if (!supplierNif && raw && ext.extractNif) supplierNif = ext.extractNif(raw);
+      if (!supplierNis && raw && ext.extractNis) supplierNis = ext.extractNis(raw);
+      if (!supplierArt && raw && ext.extractArt) supplierArt = ext.extractArt(raw);
+      if (!supplierAi && raw && ext.extractAi) supplierAi = ext.extractAi(raw);
+
+      var rc = (mode === 'supplier' || mode === 'bill' || mode === 'po' || mode === 'company') ? (supplierRc || customerRc) : (customerRc || supplierRc);
+      var nif = (mode === 'supplier' || mode === 'bill' || mode === 'po' || mode === 'company') ? (supplierNif || customerNif) : (customerNif || supplierNif);
+      var nis = (mode === 'supplier' || mode === 'bill' || mode === 'po' || mode === 'company') ? (supplierNis || customerNis) : (customerNis || supplierNis);
+      var art = (mode === 'supplier' || mode === 'bill' || mode === 'po' || mode === 'company') ? (supplierArt || customerArt) : (customerArt || supplierArt);
+      var ai = supplierAi || '';
       var rib = payload.rib || fields.rib || (ext.extractRib ? ext.extractRib(raw) : '');
-      var phone = payload.phone || fields.phone || '';
-      var email = payload.email || fields.email || '';
-      var address = payload.address || fields.address || '';
-      var city = payload.city || fields.city || '';
+      var phone = (mode === 'supplier' || mode === 'bill' || mode === 'po' || mode === 'company') ? (supplierPhone || customerPhone) : (customerPhone || supplierPhone);
+      var email = (mode === 'supplier' || mode === 'bill' || mode === 'po' || mode === 'company') ? (supplierEmail || customerEmail) : (customerEmail || supplierEmail);
+      var address = (mode === 'supplier' || mode === 'bill' || mode === 'po' || mode === 'company') ? (supplierAddress || customerAddress) : (customerAddress || supplierAddress);
+      var city = (mode === 'supplier' || mode === 'bill' || mode === 'po' || mode === 'company') ? (supplierCity || customerCity) : (customerCity || supplierCity);
 
       // Tender extraction (with specialized Algerian Public Procurement patterns)
       var isTenderMode = (mode === 'tender' || mode === 'consultation');
@@ -1012,7 +1138,6 @@
       var candName = '';
 
       if (raw) {
-        // 1. Reference: Strip legal ordinances & penal codes to avoid false matches (e.g. ordonnance 66-156, 03-03, 15-247)
         var cleanRawForRef = raw.replace(/(?:ordonnance|d[eé]cret|loi|article|code\s+p[eé]nal|registre(?:\s+du\s+commerce)?)\s*(?:n[°oº]|r[eé]f)?\s*[:\.\s]*[0-9\-\/]+/gi, '');
         var rm = cleanRawForRef.match(/(?:AON?|AOI?|Consultation|Avis\s+d['’]appel\s+d['’]offres|Appel\s+d['’]offres|الصفقة|المناقصة|الاستشارة)\s*(?:N[°oº]|R[eé]f(?:\.|erence)?|رقم|مرجع)?\s*[:\/\-\s#№]+\s*([0-9]{1,4}\s*[\/\-]\s*[0-9]{2,4}|[A-Za-z0-9\/\-_]{3,30})/i);
         if (rm) {
@@ -1029,7 +1154,6 @@
           }
         }
 
-        // 2. Authority (Service contractant / APC / Commune / Wilaya / Ministère)
         var mService = raw.match(/(?:D[eé]signation\s+du\s+service\s+contractant|l['’]Assembl[eé]e\s+Populaire\s+Communale\s+d[e\'’]\s*[A-Za-zÀ-ÿ\-]+|المجلس\s+الشعبي\s+البلدي\s+ل?[^\n\r]+)\s*[:\-]?\s*([^\n\r]+)?/i);
         if (mService) {
           authority = (mService[1] || mService[0]).replace(/\s+/g, ' ').replace(/^[0-9\/\-.:\s]+/, '').replace(/[.;,]+$/, '').trim();
@@ -1048,7 +1172,6 @@
           }
         }
 
-        // 3. Title / Objet (Objet du marché public : ..., Objet de la consultation : ..., portant sur : ...)
         var tm = raw.match(/(?:Objet(?:\s+du\s+march[eé](?:\s+public)?|\s+de\s+la\s+consultation|\s+de\s+l['’]appel\s+d['’]offres|\s+de\s+la\s+prestation)?|portant(?:\s+sur)?|relatif\s+[aà]|intitul[eé]|موضوع(?:\s+الصفقة|\s+المناقصة|\s+الاستشارة)?|يتضمن|مشروع)\s*[:\-]\s*([^\n\r]+)/i);
         if (tm) {
           tenderTitle = tm[1].replace(/\s+/g, ' ').replace(/^[0-9\/\-.:\s]+/, '').replace(/[.;,]+$/, '').trim();
@@ -1067,19 +1190,16 @@
           if (tm2) tenderTitle = tm2[1].trim();
         }
 
-        // 4. Candidate / Company (SARL ..., EURL ...)
         var candMatch = raw.match(/\b(SARL|EURL|SPA|SNC|ETS)\s+[A-Z0-9\s\-]{3,35}\b/);
         candName = candMatch ? candMatch[0].trim() : '';
         if (candName && !customerName && !supplierName) {
           customerName = candName;
         }
 
-        // 5. Deadline (e.g. 15 jours, DD/MM/YYYY, etc.)
         var dm = raw.match(/(?:d[eé]lai\s+de\s+pr[eé]paration[^\n\r:]*[:\-]\s*([^\n\r.]{3,40})|deadline|échéance|date\s+limite|آخر\s+أجل|تاريخ\s+الإيداع|مدة\s+التحضير)\s*[:\-]?\s*(\d{1,2}[\/-]\d{1,2}[\/-]\d{2,4}|[^\n\r,.;]{3,35})/i);
         if (dm) deadline = (dm[1] || dm[2] || '').trim();
       }
 
-      // Line items normalization (Tender mode isolates tender lots; invoice mode parses invoices)
       var rawItems = [];
       if (isTenderMode) {
         if (raw) {
@@ -1093,7 +1213,6 @@
             });
           }
         }
-        // If no numbered lots found, tender title is the main item
         if (!rawItems.length && tenderTitle && tenderTitle.length > 2) {
           rawItems.push({
             description: tenderTitle,
@@ -1109,14 +1228,21 @@
           for (var li = 0; li < lines.length; li++) {
             var lineTrim = lines[li].trim();
             if (!lineTrim || lineTrim.length < 5) continue;
-            if (/(?:total|tva|sous-total|net|remise|montant|المجموع|الضريبة|الإجمالي|facture|client|date)/i.test(lineTrim)) continue;
-            var numMatches = lineTrim.match(/([0-9]+(?:[.,][0-9]{1,2})?)/g);
-            if (numMatches && numMatches.length >= 2) {
-              var descPart = lineTrim.replace(/[0-9]+(?:[.,][0-9]{1,2})?/g, '').replace(/[\s\t,;:\-_|]+/g, ' ').trim();
+            if (/(?:total|tva|sous-total|net\s*a\s*payer|remise|montant\s*total|المجموع|الضريبة|الإجمالي|facture|client|date|page|merci)/i.test(lineTrim)) continue;
+            var mEnd = lineTrim.match(/(\d[\d\s.,]*\d|\d+)\s+(\d[\d\s.,]*\d|\d+)(?:\s+(\d[\d\s.,]*\d|\d+))?\s*(?:DA|DZD|EUR|€|\$)?\s*$/i);
+            if (mEnd) {
+              var descPart = lineTrim.slice(0, mEnd.index).trim();
+              descPart = descPart.replace(/^(?:[0-9]{1,3}\s*[\.\-\/:\)]\s*)/, '').trim();
               if (descPart.length >= 2) {
-                var qVal = parseFloat(numMatches[0].replace(',', '.')) || 1;
-                var pVal = parseFloat(numMatches[1].replace(',', '.')) || 0;
-                var tVal = numMatches[2] ? parseFloat(numMatches[2].replace(',', '.')) : (qVal * pVal);
+                var v1 = cleanOcrNum(mEnd[1]);
+                var v2 = cleanOcrNum(mEnd[2]);
+                var v3 = mEnd[3] ? cleanOcrNum(mEnd[3]) : 0;
+                var qVal = 1, pVal = 0, tVal = 0;
+                if (v3 > 0) {
+                  qVal = v1; pVal = v2; tVal = v3;
+                } else if (v2 > 0) {
+                  qVal = v1; pVal = v2; tVal = v1 * v2;
+                }
                 rawItems.push({ description: descPart, quantity: qVal, unit_price: pVal, total: tVal });
               }
             }
@@ -1125,27 +1251,48 @@
       }
 
       var items = rawItems.map(function(it, idx) {
-        var q = parseFloat(String(it.quantity || 1).replace(',', '.').replace(/[^0-9.]/g, '')) || 1;
-        var p = parseFloat(String(it.unit_price || it.unitPrice || it.price || 0).replace(',', '.').replace(/[^0-9.]/g, '')) || 0;
-        var t = parseFloat(String(it.total || 0).replace(',', '.').replace(/[^0-9.]/g, '')) || (q * p);
+        var q = cleanOcrNum(it.quantity);
+        var p = cleanOcrNum(it.unit_price || it.unitPrice || it.price);
+        var t = cleanOcrNum(it.total || it.amount || it.totalHT);
+
+        if (q <= 0) q = 1;
+
+        if (q > 50 && p > 0 && p <= 50 && t > 0 && Math.abs(q * p - t) < Math.max(t * 0.1, 5)) {
+          var temp = q;
+          q = p;
+          p = temp;
+        }
+        if (p <= 0 && t > 0 && q > 0) {
+          p = t / q;
+        }
+        if (t <= 0 && p > 0 && q > 0) {
+          t = q * p;
+        }
+        if (q > 1 && p > 0 && t > 0 && Math.abs(p - t) < 0.01) {
+          p = t / q;
+        }
+
+        var desc = String(it.description || it.designation || it.name || ('Item #' + (idx + 1))).trim();
+        desc = desc.replace(/^(?:[0-9]{1,3}\s*[\.\-\/:\)]\s*)/, '').trim();
+
         return {
           id: idx,
-          description: String(it.description || it.name || ('Item #' + (idx + 1))).trim(),
+          description: desc || ('Article #' + (idx + 1)),
           quantity: q,
           unitPrice: p,
           total: t,
+          unit: it.unit || it.um || 'piece',
           selected: true
         };
       });
 
-      var subtotal = parseFloat(String(payload.subtotal || payload.totalHT || 0).replace(',', '.')) || 0;
-      var vat = parseFloat(String(payload.vat || payload.totalTVA || payload.tax || 0).replace(',', '.')) || 0;
-      var total = parseFloat(String(payload.total || payload.totalTTC || 0).replace(',', '.')) || 0;
+      var subtotal = cleanOcrNum(payload.subtotal || payload.totalHT || fields.subtotal || 0);
+      var vat = cleanOcrNum(payload.vat || payload.vatAmount || payload.totalTVA || payload.tax || fields.tax || 0);
+      var total = cleanOcrNum(payload.total || payload.amount || payload.totalTTC || fields.total || 0);
       if (!total && items.length && !isTenderMode) {
         total = items.reduce(function(acc, i) { return acc + i.total; }, 0);
       }
 
-      // Fallback phone/email extraction from raw text if missing
       if (!phone && raw) {
         var pm = raw.match(/(?:(?:0[567][0-9]{8})|(?:\+213\s?[567][0-9]{8})|(?:0[234][0-9]{7}))/);
         if (pm) phone = pm[0].replace(/\s+/g, '');
@@ -1155,7 +1302,6 @@
         if (em) email = em[0];
       }
 
-      // HR & Employee extraction
       var empName = payload.employeeName || fields.employee_name || customerName || '';
       var nin = payload.nin || fields.nin || '';
       if (!nin && raw) {
@@ -1173,36 +1319,82 @@
         if (jM) jobTitle = jM[1].trim();
       }
 
-      // Inventory & Product extraction
       var productName = payload.productName || fields.product_name || (items[0] && items[0].description) || '';
       var barcode = payload.barcode || fields.barcode || '';
       if (!barcode && raw) {
         var bcM = raw.match(/\b([0-9]{8,14})\b/);
         if (bcM) barcode = bcM[1];
       }
-      var purchasePrice = parseFloat(String(payload.purchasePrice || (items[0] && items[0].unitPrice) || 0).replace(',', '.')) || 0;
-      var sellingPrice = parseFloat(String(payload.sellingPrice || (payload.purchasePrice ? (payload.purchasePrice * 1.25).toFixed(2) : (items[0] && items[0].unitPrice ? (items[0].unitPrice * 1.25).toFixed(2) : 0))).replace(',', '.')) || 0;
-      var quantity = parseFloat(String(payload.quantity || (items[0] && items[0].quantity) || 1).replace(',', '.')) || 1;
+      var purchasePrice = cleanOcrNum(payload.purchasePrice || (items[0] && items[0].unitPrice) || 0);
+      var sellingPrice = cleanOcrNum(payload.sellingPrice || (payload.purchasePrice ? (payload.purchasePrice * 1.25) : (items[0] && items[0].unitPrice ? (items[0].unitPrice * 1.25) : 0)));
+      var quantity = cleanOcrNum(payload.quantity || (items[0] && items[0].quantity) || 1);
       var category = payload.category || fields.category || 'General';
 
-      // Finance, Journal & Bank extraction
-      var journalDate = payload.date || fields.date || new Date().toISOString().slice(0, 10);
-      var invoiceNumber = payload.invoiceNumber || payload.number || fields.invoice_number || '';
+      var journalDate = payload.billDate || payload.date || fields.invoice_date || fields.date || new Date().toISOString().slice(0, 10);
+      var invoiceNumber = payload.externalRef || payload.invoiceNumber || payload.number || fields.invoice_number || '';
       if (!invoiceNumber && raw) {
-        var invM = raw.match(/(?:(?:n[°º]|réf|ref|facture|quittance|reçu|رقم|مرجع)\s*[:\/\-]?\s*([A-Za-z0-9\/\-_]{3,30}))/i);
+        var invM = raw.match(/(?:(?:n[°º]|réf|ref|facture|proforma|quittance|reçu|رقم|مرجع)\s*[:\/\-]?\s*([A-Za-z0-9\/\-_]{3,30}))/i);
         if (invM) invoiceNumber = invM[1].trim();
       }
-      var bankName = payload.bankName || '';
+      var bankName = payload.bankName || payload.supplierBank || '';
       if (!bankName && raw) {
-        var bnkM = raw.match(/\b(BEA|BNA|CPA|BADR|BDL|CNEP|SGA|AGB|BARAKA|NATIXIS|FRANSABANK)\b/i);
-        if (bnkM) bankName = bnkM[1].toUpperCase();
+        if (ext.extractBankName) bankName = ext.extractBankName(raw);
+        else {
+          var bnkM = raw.match(/\b(BEA|BNA|CPA|BADR|BDL|CNEP|SGA|AGB|BARAKA|NATIXIS|FRANSABANK)\b/i);
+          if (bnkM) bankName = bnkM[1].toUpperCase();
+        }
       }
       var accountHolder = customerName || supplierName || empName || '';
       var company = payload.company || customerName || supplierName || '';
 
+      var companyName = payload.companyName || payload.company || fields.company_name || supplierName || '';
+      if (!companyName && raw) {
+        var cnM = raw.match(/(?:raison\s+sociale|d[eé]nomination(?:\s+sociale)?|nom\s+de\s+l['’]entreprise|اسم\s+الشركة|المؤسسة)\s*[:\-]?\s*([^\n\r]{3,80})/i);
+        if (cnM) companyName = cnM[1].trim();
+        else {
+          var sarlM = raw.match(/^[^\n\r]*\b(SARL|SPA|EURL|EPIC|SNC|SAS|ETS)\b[^\n\r]*/im);
+          if (sarlM) companyName = sarlM[0].trim().substring(0, 80);
+          else {
+            var firstCleanLine = raw.split(/\r?\n/).map(function(l){ return l.trim(); }).filter(function(l){ return l.length > 3 && !/^(facture|devis|bon|re[cç]u|date)/i.test(l); })[0];
+            if (firstCleanLine && firstCleanLine.length < 80) companyName = firstCleanLine;
+          }
+        }
+      }
+
+      var siege = payload.siege || supplierAddress || address || (ext.extractSiege ? ext.extractSiege(raw) : '');
+      var capital = payload.capital || (ext.extractCapital ? ext.extractCapital(raw) : '');
+      var website = payload.website || (ext.extractWebsite ? ext.extractWebsite(raw) : '');
+      var bp = payload.bp || payload.supplierBp || (ext.extractBp ? ext.extractBp(raw) : '');
+      var ag = payload.ag || (ext.extractAg ? ext.extractAg(raw) : '');
+
       return {
         customerName: customerName,
+        customerRc: customerRc,
+        customerNif: customerNif,
+        customerNis: customerNis,
+        customerArt: customerArt,
+        customerPhone: customerPhone,
+        customerEmail: customerEmail,
+        customerAddress: customerAddress,
+        customerCity: customerCity,
+
         supplierName: supplierName,
+        supplierRc: supplierRc,
+        supplierNif: supplierNif,
+        supplierNis: supplierNis,
+        supplierArt: supplierArt,
+        supplierAi: supplierAi,
+        supplierPhone: supplierPhone,
+        supplierEmail: supplierEmail,
+        supplierAddress: supplierAddress,
+        supplierCity: supplierCity,
+
+        companyName: companyName,
+        siege: siege,
+        capital: capital,
+        website: website,
+        bp: bp,
+        ag: ag,
         empName: empName,
         nin: nin,
         birthDate: birthDate,
@@ -1221,7 +1413,7 @@
         rib: rib,
         phone: phone,
         email: email,
-        address: address,
+        address: address || siege,
         city: city,
         items: items,
         totals: { subtotal: subtotal, vat: vat, total: total },
@@ -1258,49 +1450,72 @@
       var fieldsList = [];
       if (mode === 'customer' || mode === 'invoice' || mode === 'proforma') {
         if (data.customerName) fieldsList.push({ label: this.t('customerName'), val: data.customerName });
-      }
-      if (mode === 'supplier' || mode === 'po' || mode === 'bill') {
+        if (data.customerRc) fieldsList.push({ label: 'RC (Client)', val: data.customerRc });
+        if (data.customerNif) fieldsList.push({ label: 'NIF (Client)', val: data.customerNif });
+        if (data.customerPhone) fieldsList.push({ label: this.t('phone'), val: data.customerPhone });
+        if (data.customerAddress) fieldsList.push({ label: this.t('address'), val: data.customerAddress });
+
+        if (data.supplierName && data.supplierName !== data.customerName) {
+          fieldsList.push({ label: this.t('supplierName') + ' (Émetteur)', val: data.supplierName });
+        }
+        if (data.invoiceNumber) fieldsList.push({ label: this.t('journalRef'), val: data.invoiceNumber });
+        if (data.date) fieldsList.push({ label: this.t('journalDate'), val: data.date });
+      } else if (mode === 'supplier' || mode === 'po' || mode === 'bill') {
         if (data.supplierName) fieldsList.push({ label: this.t('supplierName'), val: data.supplierName });
-      }
-      if (mode === 'employee' || mode === 'cv') {
+        if (data.supplierRc || data.rc) fieldsList.push({ label: this.t('rc'), val: data.supplierRc || data.rc });
+        if (data.supplierNif || data.nif) fieldsList.push({ label: this.t('nif'), val: data.supplierNif || data.nif });
+        if (data.supplierNis || data.nis) fieldsList.push({ label: this.t('nis'), val: data.supplierNis || data.nis });
+        if (data.supplierArt || data.art) fieldsList.push({ label: this.t('art'), val: data.supplierArt || data.art });
+        if (data.supplierPhone || data.phone) fieldsList.push({ label: this.t('phone'), val: data.supplierPhone || data.phone });
+        if (data.supplierEmail || data.email) fieldsList.push({ label: this.t('email'), val: data.supplierEmail || data.email });
+        if (data.supplierAddress || data.address) fieldsList.push({ label: this.t('address'), val: data.supplierAddress || data.address });
+      } else if (mode === 'company' || mode === 'enterprise') {
+        if (data.companyName) fieldsList.push({ label: this.t('companyName'), val: data.companyName });
+        if (data.siege || data.address) fieldsList.push({ label: this.t('siege'), val: data.siege || data.address });
+        if (data.capital) fieldsList.push({ label: this.t('capital'), val: data.capital });
+        if (data.website) fieldsList.push({ label: this.t('website'), val: data.website });
+        if (data.bp) fieldsList.push({ label: this.t('bp'), val: data.bp });
+        if (data.ag) fieldsList.push({ label: this.t('ag'), val: data.ag });
+        if (data.bankName) fieldsList.push({ label: this.t('bankName'), val: data.bankName });
+        if (data.rib) fieldsList.push({ label: this.t('bankRib'), val: data.rib });
+        if (data.rc) fieldsList.push({ label: this.t('rc'), val: data.rc });
+        if (data.nif) fieldsList.push({ label: this.t('nif'), val: data.nif });
+        if (data.nis) fieldsList.push({ label: this.t('nis'), val: data.nis });
+        if (data.art) fieldsList.push({ label: this.t('art'), val: data.art });
+        if (data.phone) fieldsList.push({ label: this.t('phone'), val: data.phone });
+        if (data.email) fieldsList.push({ label: this.t('email'), val: data.email });
+      } else if (mode === 'employee' || mode === 'cv') {
         if (data.empName) fieldsList.push({ label: this.t('empName'), val: data.empName });
         if (data.nin) fieldsList.push({ label: this.t('nin'), val: data.nin });
         if (data.birthDate) fieldsList.push({ label: this.t('birthDate'), val: data.birthDate });
         if (data.jobTitle) fieldsList.push({ label: this.t('jobTitle'), val: data.jobTitle });
-      }
-      if (mode === 'tender') {
+      } else if (mode === 'tender') {
         if (data.tenderRef) fieldsList.push({ label: this.t('tenderRef'), val: data.tenderRef });
         if (data.tenderTitle) fieldsList.push({ label: this.t('tenderTitle'), val: data.tenderTitle });
         if (data.authority) fieldsList.push({ label: this.t('authority'), val: data.authority });
         if (data.deadline) fieldsList.push({ label: this.t('deadline'), val: data.deadline });
-      }
-      if (mode === 'consultation') {
+      } else if (mode === 'consultation') {
         if (data.customerName || data.client) fieldsList.push({ label: this.t('customerName'), val: data.customerName || data.client });
         if (data.subject) fieldsList.push({ label: this.t('tenderTitle'), val: data.subject });
-      }
-      if (mode === 'inventory' || mode === 'product') {
+      } else if (mode === 'inventory' || mode === 'product') {
         if (data.productName) fieldsList.push({ label: this.t('productName'), val: data.productName });
         if (data.barcode) fieldsList.push({ label: this.t('productBarcode'), val: data.barcode });
         if (data.purchasePrice > 0) fieldsList.push({ label: this.t('productCost'), val: data.purchasePrice.toFixed(2) + ' DZD' });
         if (data.sellingPrice > 0) fieldsList.push({ label: this.t('productPrice'), val: data.sellingPrice.toFixed(2) + ' DZD' });
         if (data.quantity > 0) fieldsList.push({ label: this.t('productQty'), val: String(data.quantity) });
         if (data.category) fieldsList.push({ label: this.t('category'), val: data.category });
-      }
-      if (mode === 'journal' || mode === 'finance') {
+      } else if (mode === 'journal' || mode === 'finance') {
         if (data.journalDate || data.date) fieldsList.push({ label: this.t('journalDate'), val: data.journalDate || data.date });
         if (data.reference || data.invoiceNumber) fieldsList.push({ label: this.t('journalRef'), val: data.reference || data.invoiceNumber });
         if (data.supplierName || data.customerName) fieldsList.push({ label: this.t('journalDesc'), val: data.supplierName || data.customerName });
-      }
-      if (mode === 'bank') {
+      } else if (mode === 'bank') {
         if (data.bankName) fieldsList.push({ label: this.t('bankName'), val: data.bankName });
         if (data.rib) fieldsList.push({ label: this.t('bankRib'), val: data.rib });
         if (data.accountHolder) fieldsList.push({ label: this.t('accountHolder'), val: data.accountHolder });
-      }
-      if (mode === 'crm' || mode === 'lead') {
+      } else if (mode === 'crm' || mode === 'lead') {
         if (data.customerName) fieldsList.push({ label: this.t('customerName'), val: data.customerName });
         if (data.company) fieldsList.push({ label: this.t('companyName'), val: data.company });
-      }
-      if (mode === 'universal') {
+      } else if (mode === 'universal') {
         if (data.customerName) fieldsList.push({ label: this.t('customerName'), val: data.customerName });
         if (data.supplierName) fieldsList.push({ label: this.t('supplierName'), val: data.supplierName });
         if (data.productName) fieldsList.push({ label: this.t('productName'), val: data.productName });
@@ -1308,15 +1523,11 @@
         if (data.reference || data.invoiceNumber) fieldsList.push({ label: this.t('journalRef'), val: data.reference || data.invoiceNumber });
         if (data.bankName) fieldsList.push({ label: this.t('bankName'), val: data.bankName });
         if (data.rib) fieldsList.push({ label: this.t('bankRib'), val: data.rib });
+        if (data.nif) fieldsList.push({ label: this.t('nif'), val: data.nif });
+        if (data.rc) fieldsList.push({ label: this.t('rc'), val: data.rc });
+        if (data.phone) fieldsList.push({ label: this.t('phone'), val: data.phone });
+        if (data.email) fieldsList.push({ label: this.t('email'), val: data.email });
       }
-      if (data.nif) fieldsList.push({ label: this.t('nif'), val: data.nif });
-      if (data.rc) fieldsList.push({ label: this.t('rc'), val: data.rc });
-      if (data.nis) fieldsList.push({ label: this.t('nis'), val: data.nis });
-      if (data.ai) fieldsList.push({ label: this.t('ai'), val: data.ai });
-      if (data.art) fieldsList.push({ label: this.t('art'), val: data.art });
-      if (data.phone) fieldsList.push({ label: this.t('phone'), val: data.phone });
-      if (data.email) fieldsList.push({ label: this.t('email'), val: data.email });
-      if (data.city) fieldsList.push({ label: this.t('city'), val: data.city });
 
       if (fieldsList.length) {
         html += '<div class="ocr-fields-grid">';
@@ -1393,14 +1604,14 @@
       if (!data) return;
 
       var opts = this.state.options || {};
+      this.close();
+
       if (typeof opts.onApply === 'function') {
         opts.onApply(data);
       } else {
         // Default handlers based on mode
         this.defaultApply(this.state.mode, data);
       }
-
-      this.close();
     },
 
     defaultApply: function(mode, data) {
@@ -1540,6 +1751,35 @@
             if ((ph.indexOf('city') !== -1 || lbl.indexOf('مدينة') !== -1) && data.city && !inp.value) inp.value = data.city;
           });
         }
+      } else if (mode === 'company' || mode === 'enterprise') {
+        setVal('companyName', data.companyName || data.supplierName);
+        setVal('companySiege', data.siege || data.address);
+        setVal('companyAddress', data.address || data.siege);
+        setVal('companyRC', data.rc);
+        setVal('companyArtNumber', data.art || data.ai);
+        setVal('companyNIF', data.nif);
+        setVal('companyNIS', data.nis);
+        setVal('companyBP', data.bp);
+        setVal('companyAG', data.ag);
+        setVal('companyNIN', data.nin);
+        setVal('companyPhone', data.phone);
+        setVal('companyEmail', data.email);
+        setVal('companyWebsite', data.website);
+        setVal('companyCity', data.city);
+        setVal('companyCapital', data.capital);
+        setVal('companyBankName', data.bankName);
+        setVal('companyRIB', data.rib);
+        setVal('companyBankAccount', data.bankAccount || data.rib);
+        if (data.vat) setVal('companyVAT', data.vat);
+
+        var logoName = document.getElementById('logoPreviewCompanyName');
+        if (logoName && (data.companyName || data.supplierName)) {
+          logoName.textContent = data.companyName || data.supplierName;
+        }
+
+        if (typeof window.showToast === 'function') {
+          window.showToast('تم تطبيق بيانات الشركة المستخرجة بنجاح عبر Copilot IA!', 'success');
+        }
       } else if (mode === 'universal') {
         if (typeof window.showToast === 'function') {
           window.showToast('تم الاستخراج بنجاح! يمكنك نسخ البيانات أو استخدامها.', 'success');
@@ -1549,6 +1789,7 @@
 
     open: function(options) {
       var opts = options || {};
+      this._previousActiveElement = document.activeElement;
       this.ensureStyles();
       this.state.file = null;
       this.state.dataUrl = null;
@@ -1562,6 +1803,7 @@
       modal.innerHTML = this.renderModalHtml(opts);
       this.bindEvents(modal);
 
+      modal.inert = false;
       modal.classList.add('is-active');
       modal.classList.add('active');
       modal.style.setProperty('display', 'flex', 'important');
@@ -1584,13 +1826,43 @@
 
     close: function() {
       var modal = document.getElementById('zeraldaUnifiedOcrModal');
+      var prev = this._previousActiveElement;
+      this._previousActiveElement = null;
+
       if (modal) {
+        modal.inert = true;
         modal.classList.remove('is-active');
         modal.classList.remove('active');
         modal.style.setProperty('display', 'none', 'important');
-        modal.setAttribute('aria-hidden', 'true');
       }
       if (document.body) document.body.classList.remove('modal-open');
+
+      // 1. Move focus outside modal FIRST
+      if (prev && document.contains(prev) && typeof prev.focus === 'function') {
+        try { prev.focus(); } catch(e) {}
+      } else if (modal && document.activeElement && modal.contains(document.activeElement)) {
+        try {
+          document.activeElement.blur();
+          if (document.body && typeof document.body.focus === 'function') {
+            document.body.focus();
+          }
+        } catch(e) {}
+      }
+
+      // 2. Defer aria-hidden to ensure click event loop has completely finished and focus has moved
+      if (modal) {
+        setTimeout(function() {
+          if (modal.contains(document.activeElement)) {
+            try {
+              if (document.activeElement) document.activeElement.blur();
+              if (document.body) document.body.focus();
+            } catch(e) {}
+          }
+          if (!modal.contains(document.activeElement)) {
+            modal.setAttribute('aria-hidden', 'true');
+          }
+        }, 0);
+      }
     },
 
     openModal: function(options) {

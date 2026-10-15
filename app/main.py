@@ -454,6 +454,14 @@ def main() -> None:
     _start_dns_responder()
     _start_browser_auto_opener()
 
+    # Start automated backup scheduler
+    try:
+        from app.services.cloud_backup import start_backup_scheduler
+        start_backup_scheduler()
+        print("[BACKUP] [OK] Automated backup scheduler active")
+    except Exception as e:
+        print(f"[BACKUP] [WARN] Could not start backup scheduler: {e}")
+
 
 
     # ── License status check at startup ──────────────────────────────────

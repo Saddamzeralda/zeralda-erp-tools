@@ -457,3 +457,80 @@ async def folder_list(request: Request):
     except OSError:
         pass
     return {"ok": True, "backups": backups, "folder": folder_path}
+
+
+# ── Automated Cloud Backup Endpoints ────────────────────────────────────────
+@router.get("/automated/status")
+async def automated_backup_status(request: Request):
+    """Get status and configuration of automated backups (admin only)."""
+    require_auth(request, required_role="admin")
+    from app.services.cloud_backup import get_cloud_backup_config
+    return {"ok": True, "config": get_cloud_backup_config()}
+
+
+@router.post("/automated/run")
+async def automated_backup_run(request: Request):
+    """Trigger an immediate automated cloud backup snapshot (admin only)."""
+    user = require_auth(request, required_role="admin")
+    from app.services.cloud_backup import execute_automated_backup
+    result = execute_automated_backup(triggered_by=user.get("email", "admin"))
+    return JSONResponse(status_code=200 if result.get("ok") else 500, content=result)
+
+
+@router.post("/automated/config")
+async def automated_backup_update_config(request: Request):
+    """Update automated backup interval and retention settings (admin only)."""
+    require_auth(request, required_role="admin")
+    data = await read_json_body(request)
+    from app.services.cloud_backup import update_cloud_backup_config
+    new_cfg = update_cloud_backup_config(data)
+    return {"ok": True, "config": new_cfg}
+
+
+# ── Server Snapshots Management (List / Download / Direct Restore) ─────────
+@router.get("/snapshots")
+async def list_snapshots(request: Request):
+    """List all available snapshots on the server."""
+    require_auth(request, required_role="admin")
+    from app.services.cloud_backup import list_all_snapshots
+    return {"ok": True, "snapshots": list_all_snapshots()}
+
+
+@router.get("/snapshots/{filename}")
+async def download_snapshot(filename: str, request: Request):
+    """Download a specific snapshot JSON file."""
+    require_auth(request, required_role="admin")
+    from app.services.cloud_backup import get_snapshot_path
+    path = get_snapshot_path(filename)
+    if not path or not os.path.isfile(path):
+        raise HTTPException(404, detail={"ok": False, "error": f"Snapshot '{filename}' not found."})
+    with open(path, "rb") as f:
+        content = f.read()
+    return Response(
+        content=content,
+        media_type="application/json; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"', "Cache-Control": "no-store"}
+    )
+
+
+@router.post("/snapshots/restore/{filename}")
+async def restore_snapshot(filename: str, request: Request):
+    """Restore the store directly from a server snapshot file."""
+    user = require_auth(request, required_role="admin")
+    from app.services.cloud_backup import restore_from_snapshot
+    res = restore_from_snapshot(filename, triggered_by=user.get("email", "admin"))
+    if not res.get("ok"):
+        raise HTTPException(400, detail=res)
+    return res
+
+
+@router.delete("/snapshots/{filename}")
+async def delete_snapshot_endpoint(filename: str, request: Request):
+    """Delete a specific snapshot file."""
+    require_auth(request, required_role="admin")
+    from app.services.cloud_backup import delete_snapshot
+    ok = delete_snapshot(filename)
+    if not ok:
+        raise HTTPException(404, detail={"ok": False, "error": f"Could not delete '{filename}'."})
+    return {"ok": True, "message": f"Snapshot '{filename}' deleted."}
+

@@ -333,3 +333,46 @@ async def get_network_info(request: Request):
     }
 
 
+# ── Alerts Management Endpoints ────────────────────────────────────────────
+@router.get("/alerts/inbox")
+async def get_alerts_inbox_endpoint(request: Request, limit: int = 50):
+    """Get recent alerts from the in-app alert inbox."""
+    require_auth(request)
+    from app.services.alerts import get_inbox_alerts
+    alerts = get_inbox_alerts(limit=min(limit, 100))
+    return {"ok": True, "count": len(alerts), "alerts": alerts}
+
+
+@router.get("/alerts/settings")
+async def get_alerts_settings_endpoint(request: Request):
+    """Get alert configuration settings (admin only)."""
+    require_auth(request, required_role="admin")
+    from app.services.alerts import get_alert_settings
+    return {"ok": True, "settings": get_alert_settings()}
+
+
+@router.post("/alerts/settings")
+async def update_alerts_settings_endpoint(request: Request):
+    """Update alert configuration settings (admin only)."""
+    require_auth(request, required_role="admin")
+    data = await read_json_body(request)
+    from app.services.alerts import update_alert_settings
+    updated = update_alert_settings(data)
+    return {"ok": True, "settings": updated}
+
+
+@router.post("/alerts/test")
+async def test_alert_endpoint(request: Request):
+    """Dispatch a test alert to verify webhook / Telegram configuration (admin only)."""
+    user = require_auth(request, required_role="admin")
+    from app.services.alerts import dispatch_alert
+    res = dispatch_alert(
+        category="system_test",
+        title="تجربة نظام التنبيهات الفورية",
+        details=f"تم إرسال هذا التنبيه التجريبي بنجاح بواسطة المسؤول: {user.get('email', 'admin')}",
+        level="info"
+    )
+    return {"ok": True, "result": res}
+
+
+

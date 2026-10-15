@@ -37,13 +37,21 @@ def create_app() -> FastAPI:
         redoc_url="/api/redoc" if ENVIRONMENT != "production" else None,
     )
 
-    # ── CORS (FIX #11: explicit whitelist, no "any private IP") ──────────
-    # We use a custom origin-check because the whitelist is built dynamically
-    # from env (incl. the configured PORT). CORSMiddleware supports a list, but
-    # we also need to reject disallowed origins explicitly (return no ACAO header).
+    # ── CORS (Strict Whitelist + Private LAN + Trusted Tunnels) ──────────
+    # Restrict origins to localhost, private LAN ranges, and trusted domains
+    SAFE_CORS_REGEX = (
+        r"^https?://("
+        r"localhost|"
+        r"127\.0\.0\.1|"
+        r"10\.\d{1,3}\.\d{1,3}\.\d{1,3}|"
+        r"192\.168\.\d{1,3}\.\d{1,3}|"
+        r"172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}|"
+        r"([a-zA-Z0-9-]+\.)*(trycloudflare\.com|railway\.app|up\.railway\.app|onrender\.com|zeralda-erp\.dz|zeralda\.local)"
+        r")(:\d+)?$"
+    )
     app.add_middleware(
         CORSMiddleware,
-        allow_origin_regex=r"^https?://.*",
+        allow_origin_regex=SAFE_CORS_REGEX,
         allow_credentials=True,
         allow_methods=["GET", "POST", "DELETE", "PATCH", "OPTIONS"],
         allow_headers=["Content-Type", "Authorization", "X-Session-Token", "X-Requested-With",
@@ -64,18 +72,24 @@ def create_app() -> FastAPI:
         else:
             response.headers["X-Frame-Options"] = "DENY"
         response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
         response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
         # COOP: same-origin-allow-popups allows Google OAuth / GSI client and popups
-        # to communicate without window.closed policy blocking.
-        host_hdr = (request.headers.get("host") or "").split(":", 1)[0].strip().lower()
+        # COOP enforcement for Google Identity Services popup auth
+        proto = (request.headers.get("x-forwarded-proto") or "").lower()
+        is_https = (
+            proto == "https"
+            or os.getenv("USE_HTTPS", "false").lower() == "true"
+            or request.url.scheme == "https"
+        )
         is_trustworthy_context = bool(
-            os.getenv("USE_HTTPS", "false").lower() == "true" or host_hdr in ("localhost", "127.0.0.1", "::1")
+            is_https or host_hdr in ("localhost", "127.0.0.1", "::1") or host_hdr.endswith((".railway.app", ".trycloudflare.com"))
         )
         if is_trustworthy_context:
             response.headers["Cross-Origin-Opener-Policy"] = "same-origin-allow-popups"
-        if os.getenv("USE_HTTPS", "false").lower() == "true":
+        if is_https:
             response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         # CSP for HTML pages
         if path.endswith(".html") or path == "/":
@@ -198,6 +212,7 @@ def create_app() -> FastAPI:
         "/api/auth/google",
         "/api/config/keygen-status",
         "/api/ping",
+        "/api/notifications/vapid-public-key",
     )
 
     @app.middleware("http")
@@ -252,16 +267,18 @@ def create_app() -> FastAPI:
         )
 
     # ── Routers ──────────────────────────────────────────────────────────
-    from app.handlers import auth, store, ai, backup, ocr, misc, license as license_handler
+    from app.handlers import auth, store, ai, backup, ocr, misc, license as license_handler, notifications as notifications_handler
 
     app.include_router(auth.router)
     app.include_router(auth.keys_router)
+    app.include_router(auth.audit_router)
     app.include_router(store.router)
     app.include_router(ai.router)
     app.include_router(backup.router)
     app.include_router(ocr.router)
     app.include_router(misc.router)
     app.include_router(license_handler.router)
+    app.include_router(notifications_handler.router)
 
     # ── Static files (serves HTML/JS/CSS/images from project root) ───────
     base_dir = Path(__file__).resolve().parent.parent

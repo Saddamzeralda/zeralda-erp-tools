@@ -372,24 +372,15 @@
     }
 
     if (!origin) {
-      return 'http://127.0.0.1/oauth_callback.html';
+      return 'http://127.0.0.1:8080/oauth_callback.html';
     }
 
     try {
       var url = new URL(origin);
-      var port = url.port ? ':' + url.port : '';
-      // Google Console يتطلب تسجيل redirect URIs مسبقاً
-      // النطاقات المسجلة في Google Console:
-      //   http://127.0.0.1:8080/oauth_callback.html
-      //   http://localhost:8080/oauth_callback.html
-      // أي نطاق آخر (مثل www.zeralda-erp.dz) غير مسجل → استخدم 127.0.0.1
-      if (url.hostname === '127.0.0.1' || url.hostname === 'localhost') {
-        return url.origin + '/oauth_callback.html';
-      }
-      // fallback: استخدم 127.0.0.1 (المسجل دائماً في Google Console)
-      return 'http://127.0.0.1' + port + '/oauth_callback.html';
+      // Support localhost, Railway, custom domains, and HTTPS
+      return url.origin.replace(/\/+$/, '') + '/oauth_callback.html';
     } catch (e) {
-      return 'http://127.0.0.1/oauth_callback.html';
+      return origin.replace(/\/+$/, '') + '/oauth_callback.html';
     }
   }
 
@@ -534,7 +525,12 @@
           else if (t === 'popup_closed') mapped.error = 'popup_closed_by_user';
           else mapped.error = t || 'oauth_error';
         }
-        console.log('[OAuth error_callback]', mapped);
+        console.warn('[OAuth error_callback]', mapped);
+        if (mapped.error === 'popup_failed_to_open') {
+          console.warn('[GoogleSync] Popup blocked by browser. Automatically falling back to direct redirect OAuth mode...');
+          startManualOAuth();
+          return;
+        }
         if (pendingTokenCallback) pendingTokenCallback(mapped);
         pendingTokenCallback = null;
       },

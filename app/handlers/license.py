@@ -166,28 +166,7 @@ async def get_hw_info():
 # ── Admin endpoints (require auth + admin role) ────────────────────────────
 async def _require_admin(request: Request):
     """Ensure the request is from an authenticated admin user."""
-    if not require_auth(request):
-        from app.services.security import AUTH_DISABLED_IN_DEV, ENVIRONMENT
-        if not (ENVIRONMENT == "development" and AUTH_DISABLED_IN_DEV):
-            raise HTTPException(401, detail={"ok": False, "error": "Authentication required"})
-
-    # Check admin role (skip in dev mode with auth disabled)
-    from app.services.security import AUTH_DISABLED_IN_DEV, ENVIRONMENT
-    if ENVIRONMENT == "development" and AUTH_DISABLED_IN_DEV:
-        return  # dev mode — allow
-
-    token = get_session_token(request)
-    if not token:
-        raise HTTPException(401, detail={"ok": False, "error": "No session token"})
-
-    session = validate_session(token)
-    if not session:
-        raise HTTPException(401, detail={"ok": False, "error": "Invalid session"})
-
-    user = session.get("user", {})
-    role = user.get("role", "user")
-    if role not in ("admin", "superadmin"):
-        raise HTTPException(403, detail={"ok": False, "error": "Admin access required"})
+    return require_auth(request, required_role="admin")
 
 
 @router.post("/create")

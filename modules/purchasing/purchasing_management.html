@@ -1203,6 +1203,11 @@
                 <div id="supplierPreviewContent"></div>
                 <div class="modal-footer" style="padding: 18px 0 0; border-top: none; justify-content: flex-start; gap: 10px;">
                     <button class="btn btn-secondary" onclick="closeModal('viewSupplierModal')">
+                    <button class="btn btn-warning" onclick="openSupplierStatementFromCurrentPreview()" style="background:#f59e0b; color:#fff;" title="عرض وطباعة كشف حساب المورد الدوري">
+                        <i class="fas fa-file-invoice-dollar" aria-hidden="true"></i>
+                        <span data-en="Account Statement" data-ar="كشف حساب المورد" data-fr="Relevé de Compte">كشف حساب المورد</span>
+                    </button>
+                    
                         <i class="fas fa-times" aria-hidden="true"></i>
                         <span data-en="Close" data-ar="إغلاق" data-fr="Fermer">Close</span>
                     </button>
@@ -1372,6 +1377,10 @@
                         <i class="fas fa-file-invoice-dollar" aria-hidden="true"></i>
                         <span data-en="Create Bill" data-ar="إنشاء فاتورة" data-fr="Créer facture">Create Bill</span>
                     </button>
+                    <button class="btn btn-warning" onclick="generateBonReceptionFromCurrentPO()" style="background:#f59e0b; color:#fff;" title="إنشاء وطباعة سند الاستلام المخزني ومحضر المطابقة (Bon de Réception)">
+                        <i class="fas fa-boxes-packing" aria-hidden="true"></i>
+                        <span data-en="Goods Receipt (BR)" data-ar="سند الاستلام (Bon de Réception)" data-fr="Bon de Réception (BR)">سند الاستلام (Bon de Réception)</span>
+                    </button>
                     <button class="btn btn-primary" onclick="printCurrentPOPreview()">
                         <i class="fas fa-print" aria-hidden="true"></i>
                         <span data-en="Print" data-ar="طباعة" data-fr="Imprimer">Print</span>
@@ -1403,6 +1412,10 @@
                     <button class="btn btn-info" onclick="payCurrentBillFromPreview()" id="billPreviewPayBtn">
                         <i class="fas fa-money-check-dollar" aria-hidden="true"></i>
                         <span data-en="Mark as Paid" data-ar="تحديد كمدفوعة" data-fr="Marquer comme payée">Mark as Paid</span>
+                    </button>
+                    <button class="btn btn-info" onclick="comptabiliserCurrentBillToFinance()" style="background:#0891b2; color:#fff;" title="ترحيل فاتورة الشراء إلى دفتر اليومية المحاسبي SCF">
+                        <i class="fas fa-book" aria-hidden="true"></i>
+                        <span data-en="Post to Finance" data-ar="ترحيل لليومية المحاسبية" data-fr="Comptabiliser">ترحيل لليومية المحاسبية</span>
                     </button>
                     <button class="btn btn-primary" onclick="printBillPreview()">
                         <i class="fas fa-print" aria-hidden="true"></i>
@@ -2041,21 +2054,37 @@
         function closeModal(modalId) {
             const modal = document.getElementById(modalId);
             if (!modal) return;
-            if (modal.contains(document.activeElement) && document.activeElement instanceof HTMLElement) {
-                document.activeElement.blur();
-            }
-            modal.classList.remove('active');
             modal.inert = true;
-            requestAnimationFrame(function() {
-                modal.setAttribute('aria-hidden', 'true');
-            });
+            modal.classList.remove('active');
             document.documentElement.classList.remove('modal-open');
+
             const lastFocused = modalFocusState.get(modalId);
-            if (lastFocused && document.contains(lastFocused)) {
-                requestAnimationFrame(function() {
-                    lastFocused.focus();
-                });
+            modalFocusState.delete(modalId);
+
+            if (lastFocused && document.contains(lastFocused) && typeof lastFocused.focus === 'function') {
+                try { lastFocused.focus(); } catch(e) {}
+            } else if (modal.contains(document.activeElement)) {
+                try {
+                    if (document.activeElement && typeof document.activeElement.blur === 'function') {
+                        document.activeElement.blur();
+                    }
+                    if (document.body && typeof document.body.focus === 'function') {
+                        document.body.focus();
+                    }
+                } catch(e) {}
             }
+
+            setTimeout(function() {
+                if (modal.contains(document.activeElement)) {
+                    try {
+                        if (document.activeElement) document.activeElement.blur();
+                        if (document.body) document.body.focus();
+                    } catch(e) {}
+                }
+                if (!modal.contains(document.activeElement)) {
+                    modal.setAttribute('aria-hidden', 'true');
+                }
+            }, 0);
         }
 
         // close modal on background click
@@ -3181,7 +3210,7 @@
                     '<td><span class="status-badge ' + statusClass + '">' + escHtml(statusLabel) + '</span></td>' +
                     '<td><span style="font-weight:700;color:var(--primary-color);">' + billCnt + '</span></td>' +
                     '<td><div class="action-icons" role="group">' +
-                        '<button class="action-icon view" onclick="viewSupplier('+realIdx+')" title="' + escHtml(tRuntime('action_view_details')) + '"><i class="fas fa-eye"></i></button>' +
+                        '<button class="action-icon" style="color:#d97706;" onclick="openSupplierStatement(\'' + escHtml(s.company||'').replace(/'/g, "\\'") + '\')" title="كشف حساب المورد (Relevé)"><i class="fas fa-file-invoice-dollar"></i></button>' + '<button class="action-icon view" onclick="viewSupplier('+realIdx+')" title="' + escHtml(tRuntime('action_view_details')) + '"><i class="fas fa-eye"></i></button>' +
                         '<button class="action-icon edit" onclick="editSupplier('+realIdx+')" title="' + escHtml(tRuntime('action_edit')) + '"><i class="fas fa-pen"></i></button>' +
                         '<button class="action-icon order" onclick="newPOForSupplier('+realIdx+')" title="' + escHtml(tRuntime('action_new_po')) + '" '+(isBlocked?'disabled':'')+' ><i class="fas fa-cart-plus"></i></button>' +
                         (s.email ? '<button class="action-icon email" onclick="emailSupplier('+realIdx+')" title="' + escHtml(tRuntime('action_send_email')) + '"><i class="fas fa-envelope"></i></button>' : '') +
@@ -6315,5 +6344,47 @@
     <script src="shared/erp_export_utils.js?v=20260721a" defer></script>
     <script src="shared/export_panel.js?v=20260721a" defer></script>
     <script src="shared/data_guard.js?v=20260802a" defer></script>
-    </body>
+    
+    <!-- Goods Receipt (Bon de Réception) Modal -->
+    <div id="goodsReceiptModal" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
+        <div class="modal-content" style="max-width: 860px;" role="document">
+            <div class="modal-header">
+                <h2><i class="fas fa-boxes-packing text-warning"></i> سند الاستلام ومحضر المطابقة (Bon de Réception)</h2>
+                <button type="button" class="close-modal" onclick="closeModal('goodsReceiptModal')" aria-label="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" style="padding: 16px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; background:#f8fafc; padding:10px 14px; border-radius:8px; border:1px solid #e2e8f0;">
+                    <span style="font-size:13px; color:#475569; font-weight:600;">وثيقة الاستلام المخزني الرسمية والمطابقة الفنية للبضائع</span>
+                    <div style="display:flex; gap:8px;">
+                        <button class="btn btn-secondary" onclick="closeModal('goodsReceiptModal')"><i class="fas fa-times"></i> إغلاق</button>
+                        <button class="btn btn-primary" onclick="printGoodsReceipt()"><i class="fas fa-print"></i> طباعة سند الاستلام</button>
+                    </div>
+                </div>
+                <div id="goodsReceiptPreviewArea"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Supplier Account Statement (Relevé de Compte Fournisseur) Modal -->
+    <div id="supplierStatementModal" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
+        <div class="modal-content" style="max-width: 900px;" role="document">
+            <div class="modal-header">
+                <h2><i class="fas fa-file-invoice-dollar text-primary"></i> كشف حساب المورد الدوري (Relevé de Compte Fournisseur)</h2>
+                <button type="button" class="close-modal" onclick="closeModal('supplierStatementModal')" aria-label="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" style="padding: 20px;">
+                <div id="supplierStatementContent"></div>
+            </div>
+            <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:8px;">
+                <button class="btn btn-secondary" onclick="closeModal('supplierStatementModal')"><i class="fas fa-times"></i> إغلاق</button>
+                <button class="btn btn-primary" onclick="printSupplierStatement()"><i class="fas fa-print"></i> طباعة كشف الحساب</button>
+            </div>
+        </div>
+    </div>
+
+</body>
 </html>

@@ -25,7 +25,7 @@
 #define AppNameFr      "Zeralda ERP"
 #define AppVersion     "3.0.0"
 #define AppPublisher   "Zeralda Industries"
-#define AppURL         "http://www.zeralda-erp.dz/login.html?next=%2Fzeralda_erp_dashboard.html"
+#define AppURL         "https://zeralda-erp-employees-main-production.up.railway.app/login.html?next=%2Fzeralda_erp_dashboard.html"
 #define AppCopyright   "© 2024-2026 Zeralda Industries"
 #define AppExe         "launcher\Zeralda_ERP_Launcher_core.exe"
 #define SourceDir      ".."

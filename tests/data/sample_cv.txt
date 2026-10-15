@@ -1,0 +1,23 @@
+CURRICULUM VITAE
+
+Nom: BOUDJEMAA Karim
+Adresse: 45 Cité Jolie Vue, Kouba, Alger
+Téléphone: 0551 23 45 67
+Email: karim.boudjemaa@email.dz
+
+EXPERIENCE PROFESSIONNELLE:
+- 2020-2026: Technicien Réseau, EURL OVERLINK
+  Installation et maintenance de systèmes de sécurité
+  Gestion de projets de caméras de surveillance
+
+- 2018-2020: Administrateur Système, SARL MULTIDEV
+  Maintenance informatique et support technique
+
+FORMATION:
+- 2018: Licence en Informatique, Université d'Alger
+- 2015: Baccalauréat Science, Lycée El Idrissi
+
+COMPÉTENCES:
+- Réseaux: Cisco, MikroTik, Ubiquiti
+- Systèmes: Windows Server, Linux
+- Sécurité: Hikvision, Dahua, Paradox
