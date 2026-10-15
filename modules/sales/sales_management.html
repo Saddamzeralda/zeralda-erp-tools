@@ -797,7 +797,6 @@
   <script src="shared/ocr.js?v=20261013f"></script>
   <script src="shared/erp_finance_utils.js" defer></script>
   <script src="modules/sales/sales_intelligence_plus.js" defer></script>
-  <script src="modules/consulting/tender_smart_matching.js?v=20261013f" defer></script>
     <link rel="stylesheet" href="styles/dark_theme.css">
 </head>
 <body>
@@ -1214,10 +1213,6 @@
         <div class="page-header">
             <div><h1 class="page-title" data-en="Sales Management" data-ar="إدارة المبيعات" data-fr="Gestion des ventes">Sales Management</h1><div class="breadcrumb"><i class="fas fa-home"></i><span data-en="Home" data-ar="الرئيسية" data-fr="Accueil">Home</span><i class="fas fa-chevron-right"></i><span data-en="Sales" data-ar="المبيعات" data-fr="Ventes">Sales</span></div></div>
             <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-                <button class="btn btn-primary" onclick="openTenderOcrModal()" title="Copilot IA Tender Scan & Pricing" style="background:linear-gradient(135deg, #2563eb 0%, #7c3aed 100%); border:none; box-shadow:0 2px 6px rgba(37,99,235,0.25);">
-                    <i class="fas fa-robot"></i>
-                    <span data-en="Copilot IA (Tenders)" data-ar="المساعد الذكي للمناقصات (Copilot)" data-fr="Copilote IA (Appels d'offres)">المساعد الذكي للمناقصات (Copilot)</span>
-                </button>
                 <button class="btn btn-warning" onclick="openCreateProforma()"><i class="fas fa-file-invoice-dollar"></i><span data-en="Proforma Invoice" data-ar="فاتورة شكلية" data-fr="Facture Proforma">Proforma Invoice</span></button>
                 <button class="btn btn-primary" onclick="openCreateInvoice()"><i class="fas fa-plus"></i><span data-en="New Invoice" data-ar="فاتورة جديدة" data-fr="Nouvelle Facture">New Invoice</span></button>
             </div>
@@ -1333,7 +1328,6 @@
                 <div style="margin-bottom: 20px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
                   <h3 data-en="Recent Invoices" data-ar="الفواتير الأخيرة" data-fr="Factures Récentes">Recent Invoices</h3>
                   <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-                    <button class="btn btn-primary" onclick="openTenderOcrModal()" title="Copilot IA Tender Scan & Pricing"><i class="fas fa-robot"></i><span data-en="Copilot IA (Tenders)" data-ar="المساعد الذكي للمناقصات (Copilot)" data-fr="Copilote IA (Appels d'offres)">المساعد الذكي للمناقصات (Copilot)</span></button>
                     <button class="btn btn-success" onclick="openQuotationAnalyzerModal()" title="AI-powered quotation analysis"><i class="fas fa-chart-bar"></i><span data-en="AI Analyzer" data-ar="محلل ذكي" data-fr="Analyseur IA">AI Analyzer</span></button>
                     <button class="btn btn-info" onclick="openModal('createProformaModal')"><i class="fas fa-plus"></i><span data-en="Proforma Invoice" data-ar="فاتورة شكلية" data-fr="Facture Proforma">New Quotation</span></button>
                     <button class="btn btn-warning" onclick="openCityReportDrawerWithSource('proformas')"><i class="fas fa-map-marker-alt"></i><span data-en="City Report" data-ar="تقرير المدن" data-fr="Rapport par ville">City Report</span></button>
@@ -4134,30 +4128,6 @@ function openCustomerOcrModal(){
 }
 window.openCustomerOcrModal = openCustomerOcrModal;
 
-function openTenderOcrModal(tenderIdx){
-  if (typeof window.openSmartPricingForTender === 'function') {
-    window.openSmartPricingForTender(tenderIdx != null ? tenderIdx : null, 'audit');
-    return;
-  }
-  if (window.ZeraldaOCR) {
-    window.ZeraldaOCR.open({
-      mode: 'tender',
-      title: (window.currentLanguage === 'fr' ? 'Analyser Appel d\'Offres (OCR)' : (window.currentLanguage === 'en' ? 'Analyze Tender Document (OCR)' : 'مسح وتحليل وثيقة المناقصة (OCR)')),
-      subtitle: (window.currentLanguage === 'fr' ? 'Scannez le cahier des charges ou avis pour extraire les détails de la soumission' : (window.currentLanguage === 'en' ? 'Scan tender notice or specs to extract bid details' : 'ارفع إعلان المناقصة أو دفتر الشروط لاستخراج المرجع، المصلحة المتعاقدة، والأجل')),
-      icon: 'fas fa-robot',
-      onApply: function(data) {
-        openModal('createProformaModal');
-        var titleEl = document.getElementById('proformaTitle') || document.getElementById('quotationTitle');
-        if (titleEl && (data.tenderTitle || data.rawText)) {
-          titleEl.value = (data.tenderTitle || data.customerName || 'Tender Quote').slice(0, 100);
-        }
-      }
-    });
-    return;
-  }
-  openModal('tenderOcrModal');
-}
-window.openTenderOcrModal = openTenderOcrModal;
 
 async function runSalesInvoiceOcrImport(type){
   const input = document.getElementById(type === 'proforma' ? 'proformaOcrFile' : 'invoiceOcrFile');
