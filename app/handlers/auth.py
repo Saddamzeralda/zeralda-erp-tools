@@ -143,11 +143,15 @@ async def google_login(request: Request):
     if not google_token:
         raise HTTPException(400, detail={"ok": False, "error": "Google token required", "code": "MISSING_TOKEN"})
 
-    # Verify with Google
-    google_userinfo_url = "https://www.googleapis.com/oauth2/v3/userinfo"
-    http_req = urllib.request.Request(
-        google_userinfo_url, headers={"Authorization": "Bearer " + google_token}
-    )
+    # Verify with Google: support both OAuth Access Tokens and Google One-Tap ID Tokens (JWT)
+    if google_token.count(".") == 2:
+        google_verify_url = f"https://oauth2.googleapis.com/tokeninfo?id_token={urllib.parse.quote(google_token)}"
+        http_req = urllib.request.Request(google_verify_url)
+    else:
+        google_userinfo_url = "https://www.googleapis.com/oauth2/v3/userinfo"
+        http_req = urllib.request.Request(
+            google_userinfo_url, headers={"Authorization": "Bearer " + google_token}
+        )
     try:
         with urllib.request.urlopen(http_req, timeout=10) as resp:
             userinfo = json.loads(resp.read().decode("utf-8"))
@@ -164,7 +168,8 @@ async def google_login(request: Request):
     google_email = str(userinfo.get("email", "")).strip().lower()
     google_name = str(userinfo.get("name", userinfo.get("given_name", ""))).strip()
     google_picture = str(userinfo.get("picture", "")).strip()
-    email_verified = bool(userinfo.get("email_verified", False))
+    raw_verified = userinfo.get("email_verified", False)
+    email_verified = True if raw_verified is True or str(raw_verified).strip().lower() in ("true", "1") else False
 
     if not google_email:
         raise HTTPException(400, detail={"ok": False, "error": "No email in Google account", "code": "NO_GOOGLE_EMAIL"})
@@ -175,6 +180,19 @@ async def google_login(request: Request):
 
     users = auth.load_users()
     user = users.get(google_email)
+    if not user:
+        for u_key, u in users.items():
+            if str(u.get("email", "")).strip().lower() == google_email or str(u_key).strip().lower() == google_email:
+                user = u
+                google_email = u_key
+                break
+    if not user:
+        for u_key, u in users.items():
+            rem = str(u.get("preferences", {}).get("zeralda-remembered-login", "")).lower()
+            if google_email in rem:
+                user = u
+                google_email = u_key
+                break
 
     if user:
         if not user.get("active", True):

@@ -884,18 +884,34 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
 
     function _detectPageModule() {
         var path = String((window.location && window.location.pathname) || '').toLowerCase();
+        // Strict path-based matching (authoritative & definitive)
+        if (path.indexOf('sales') !== -1) return 'sales';
+        if (path.indexOf('purchasing') !== -1) return 'purchasing';
+        if (path.indexOf('invent') !== -1) return 'inventory';
+        if (path.indexOf('hr') !== -1) return 'hr';
+        if (path.indexOf('finance') !== -1) return 'finance';
+        if (path.indexOf('crm') !== -1) return 'crm';
+        if (path.indexOf('consulting') !== -1 || path.indexOf('tender') !== -1) return 'tenders';
+        if (path.indexOf('service') !== -1) return 'services';
+        if (path.indexOf('report') !== -1) return 'reports';
+        if (path.indexOf('setting') !== -1) return 'settings';
+
+        // Secondary fallback for dynamic routing / SPAs based on page main heading and title
         var title = String(document.title || '').toLowerCase();
         var heading = '';
-        var hEl = document.querySelector('h1, .page-title, .module-title, .dashboard-title, .section-title');
+        var hEl = document.querySelector('h1, .page-title, .dashboard-title');
         if (hEl) heading = String(hEl.textContent || '').toLowerCase();
-        var combined = path + ' ' + title + ' ' + heading;
-        if (combined.indexOf('purchasing') !== -1 || combined.indexOf('achat') !== -1 || combined.indexOf('شراء') !== -1 || combined.indexOf('bon de commande') !== -1) return 'purchasing';
-        if (combined.indexOf('sales') !== -1 || combined.indexOf('vente') !== -1 || combined.indexOf('مبيعات') !== -1 || combined.indexOf('facture') !== -1 || combined.indexOf('invoice') !== -1 || combined.indexOf('proforma') !== -1) return 'sales';
-        if (combined.indexOf('invent') !== -1 || combined.indexOf('stock') !== -1 || combined.indexOf('مخزون') !== -1 || combined.indexOf('produit') !== -1) return 'inventory';
-        if (combined.indexOf('hr') !== -1 || combined.indexOf('employ') !== -1 || combined.indexOf('personnel') !== -1 || combined.indexOf('موظف') !== -1 || combined.indexOf('payroll') !== -1 || combined.indexOf('rh') !== -1) return 'hr';
-        if (combined.indexOf('finance') !== -1 || combined.indexOf('compt') !== -1 || combined.indexOf('مال') !== -1 || combined.indexOf('payment') !== -1 || combined.indexOf('paie') !== -1) return 'finance';
-        if (combined.indexOf('crm') !== -1 || combined.indexOf('customer') !== -1 || combined.indexOf('client') !== -1 || combined.indexOf('عميل') !== -1) return 'crm';
-        if (combined.indexOf('tender') !== -1 || combined.indexOf('consult') !== -1 || combined.indexOf('مناقصة') !== -1 || combined.indexOf('استشارة') !== -1) return 'tenders';
+        var combined = title + ' ' + heading;
+
+        if (combined.indexOf('purchas') !== -1 || combined.indexOf('achat') !== -1 || combined.indexOf('شراء') !== -1) return 'purchasing';
+        if (combined.indexOf('sales') !== -1 || combined.indexOf('vente') !== -1 || combined.indexOf('مبيعات') !== -1 || combined.indexOf('facture') !== -1 || combined.indexOf('proforma') !== -1) return 'sales';
+        if (combined.indexOf('invent') !== -1 || combined.indexOf('stock') !== -1 || combined.indexOf('مخزون') !== -1) return 'inventory';
+        if (combined.indexOf('human resources') !== -1 || combined.indexOf('ressources humaines') !== -1 || combined.indexOf('موارد بشرية') !== -1 || combined.indexOf('payroll') !== -1) return 'hr';
+        if (combined.indexOf('finance') !== -1 || combined.indexOf('comptabilit') !== -1 || combined.indexOf('محاسبة') !== -1) return 'finance';
+        if (combined.indexOf('crm') !== -1 || combined.indexOf('customer relations') !== -1 || combined.indexOf('علاقات العملاء') !== -1) return 'crm';
+        if (combined.indexOf('tenders pipeline') !== -1 || combined.indexOf('appels d\'offres') !== -1 || combined.indexOf('appel d\'offres') !== -1 || combined.indexOf('المناقصات') !== -1) return 'tenders';
+        if (combined.indexOf('services unit') !== -1 || combined.indexOf('وحدة الخدمات') !== -1) return 'services';
+        if (combined.indexOf('reports & analytics') !== -1 || combined.indexOf('التقارير') !== -1) return 'reports';
         return 'dashboard';
     }
 

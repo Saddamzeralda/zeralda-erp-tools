@@ -24,12 +24,19 @@
     // 1) Try zeralda-current-user (set at login)
     try {
       var cu = JSON.parse(ZS.getItem('zeralda-current-user') || '{}');
-      if (cu && cu.id) return String(cu.id);
+      if (cu) {
+        if (cu.id) return String(cu.id);
+        if (cu.email) return String(cu.email);
+        if (cu.username) return String(cu.username);
+      }
     } catch (_) {}
-    // 2) Try zeralda-settings.activeUserId
+    // 2) Try zeralda-settings.activeUserId or connectedEmail
     try {
       var s = JSON.parse(ZS.getItem(STORAGE_KEY) || '{}');
-      if (s && s.activeUserId) return String(s.activeUserId);
+      if (s) {
+        if (s.activeUserId) return String(s.activeUserId);
+        if (s.google && s.google.connectedEmail) return String(s.google.connectedEmail);
+      }
     } catch (_) {}
     return 'default';
   }
@@ -43,12 +50,12 @@
       var oldToken = ZS.getItem(GTOKEN_KEY_BASE);
       if (oldToken) {
         ZS.setItem(getGTokenKey(), oldToken);
-        ZS.removeItem(GTOKEN_KEY_BASE);
+        // Retain global key as shared fallback
       }
       var oldProfile = ZS.getItem(GPROFILE_KEY_BASE);
       if (oldProfile) {
         ZS.setItem(getGProfileKey(), oldProfile);
-        ZS.removeItem(GPROFILE_KEY_BASE);
+        // Retain global profile as shared fallback
       }
     } catch (_) {}
   }
@@ -248,7 +255,12 @@
       // Fallback: ابحث في مفاتيح مستخدمين آخرين
       if (!profile) {
         try {
-          var allKeys = ZS.keys ? ZS.keys() : [];
+          var allKeys = [];
+          if (typeof ZS.keys === 'function') {
+            allKeys = ZS.keys();
+          } else if (typeof localStorage !== 'undefined') {
+            allKeys = Object.keys(localStorage);
+          }
           for (var i = 0; i < allKeys.length; i++) {
             if (allKeys[i] && allKeys[i].indexOf(GPROFILE_KEY_BASE + '::') === 0 && allKeys[i] !== getGProfileKey()) {
               var rawVal = ZS.getItem(allKeys[i]);
@@ -273,11 +285,19 @@
   }
 
   function saveGoogleProfile(profile) {
-    ZS.setItem(getGProfileKey(), JSON.stringify(profile || {}));
+    var pStr = JSON.stringify(profile || {});
+    ZS.setItem(getGProfileKey(), pStr);
+    ZS.setItem(GPROFILE_KEY_BASE, pStr);
+    try {
+      var cu = JSON.parse(ZS.getItem('zeralda-current-user') || '{}');
+      if (cu.email) ZS.setItem(GPROFILE_KEY_BASE + '::' + cu.email, pStr);
+      if (cu.username) ZS.setItem(GPROFILE_KEY_BASE + '::' + cu.username, pStr);
+    } catch (_) {}
   }
 
   function clearGoogleProfile() {
     ZS.removeItem(getGProfileKey());
+    ZS.removeItem(GPROFILE_KEY_BASE);
   }
 
   function saveGoogleToken(token) {
@@ -288,13 +308,24 @@
     if (Number(normalized.expires_in) > 0) {
       normalized.expires_at = nowMs + (Number(normalized.expires_in) * 1000);
     }
-    ZS.setItem(getGTokenKey(), JSON.stringify(normalized));
+    var tStr = JSON.stringify(normalized);
+    ZS.setItem(getGTokenKey(), tStr);
+    ZS.setItem(GTOKEN_KEY_BASE, tStr);
+    try {
+      var cu = JSON.parse(ZS.getItem('zeralda-current-user') || '{}');
+      if (cu.email) ZS.setItem(GTOKEN_KEY_BASE + '::' + cu.email, tStr);
+      if (cu.username) ZS.setItem(GTOKEN_KEY_BASE + '::' + cu.username, tStr);
+    } catch (_) {}
     accessToken = normalized && normalized.access_token ? normalized.access_token : null;
   }
 
   function loadGoogleToken() {
     try {
-      var token = JSON.parse(ZS.getItem(getGTokenKey()));
+      var token = null;
+      var raw = ZS.getItem(getGTokenKey());
+      if (raw) {
+        try { token = JSON.parse(raw); } catch (_) {}
+      }
       // Fallback: ابحث في المفتاح العام أو مفاتيح مستخدمين آخرين
       if (!token) {
         var globalToken = ZS.getItem(GTOKEN_KEY_BASE);
@@ -305,17 +336,21 @@
       if (!token) {
         // ابحث في كل المفاتيح التي تبدأ بـ zeralda-google-token::
         try {
-          var allKeys = ZS.keys ? ZS.keys() : [];
+          var allKeys = [];
+          if (typeof ZS.keys === 'function') {
+            allKeys = ZS.keys();
+          } else if (typeof localStorage !== 'undefined') {
+            allKeys = Object.keys(localStorage);
+          }
           for (var i = 0; i < allKeys.length; i++) {
             if (allKeys[i] && allKeys[i].indexOf(GTOKEN_KEY_BASE + '::') === 0 && allKeys[i] !== getGTokenKey()) {
               var rawVal = ZS.getItem(allKeys[i]);
               if (rawVal) {
                 try {
                   var t = JSON.parse(rawVal);
-                  if (t && t.access_token) {
-                    // هجرة التوكن إلى المفتاح الحالي
-                    ZS.setItem(getGTokenKey(), rawVal);
+                  if (t && (t.access_token || t.expired)) {
                     token = t;
+                    ZS.setItem(getGTokenKey(), rawVal);
                     break;
                   }
                 } catch (_) {}
@@ -339,6 +374,7 @@
 
   function clearGoogleToken() {
     ZS.removeItem(getGTokenKey());
+    ZS.removeItem(GTOKEN_KEY_BASE);
     accessToken = null;
   }
 
@@ -400,7 +436,7 @@
       '&response_type=token' +
       '&scope=' + encodeURIComponent(SCOPES) +
       '&state=' + encodeURIComponent(state) +
-      '&prompt=consent' +
+      '&prompt=select_account' +
       '&include_granted_scopes=true';
 
     // Show loading overlay so user doesn't see white screen

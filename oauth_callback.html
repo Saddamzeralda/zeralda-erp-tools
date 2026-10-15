@@ -81,6 +81,7 @@
       ZS.setItem(GTOKEN_KEY, dataStr);
       // حفظ في المفتاح العام للتوافق
       ZS.setItem(GTOKEN_KEY_GLOBAL, dataStr);
+      ZS.setItem('zeralda-google-token::default', dataStr);
     }
 
     function fetchAndSaveProfile(token, cb) {
@@ -98,9 +99,22 @@
           ZS.setItem(GPROFILE_KEY, profileStr);
           // حفظ في المفتاح العام للتوافق
           ZS.setItem(GPROFILE_KEY_GLOBAL, profileStr);
+          ZS.setItem('zeralda-google-profile::default', profileStr);
+          if (info.email) {
+            ZS.setItem('zeralda-google-token::' + info.email, ZS.getItem(GTOKEN_KEY));
+            ZS.setItem('zeralda-google-profile::' + info.email, profileStr);
+          }
+          try {
+            var sRaw = ZS.getItem('zeralda-settings');
+            var sObj = sRaw ? JSON.parse(sRaw) : {};
+            sObj.google = sObj.google || {};
+            sObj.google.autoBackupEnabled = true;
+            sObj.google.connectedEmail = info.email || '';
+            ZS.setItem('zeralda-settings', JSON.stringify(sObj));
+          } catch (_) {}
         }
-        cb();
-      }).catch(function () { cb(); });
+        cb(info);
+      }).catch(function () { cb(null); });
     }
 
     var hash = window.location.hash;
@@ -145,11 +159,46 @@
 
     // Save token
     saveToken(token, expiresIn);
+    ZS.setItem('zeralda-drive-auto-sync-on-login', 'true');
 
     // Fetch profile then redirect back
     setMsg('Signed in! Redirecting...');
-    fetchAndSaveProfile(token, function () {
-      redirectBack();
+    fetchAndSaveProfile(token, function (info) {
+      var sessionToken = ZS.getItem('zeralda-session-token');
+      var from = ZS.getItem('zeralda-oauth-redirect-from') || '';
+      var isFromLogin = from.indexOf('login.html') !== -1 || !sessionToken;
+
+      if (isFromLogin) {
+        setMsg('Authenticating with Zeralda ERP...');
+        fetch('/api/auth/google-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+          body: JSON.stringify({ google_token: token })
+        })
+        .then(function(res) { return res.json().catch(function() { return {}; }); })
+        .then(function(data) {
+          if (data && data.ok && data.session_token) {
+            ZS.setItem('zeralda-session-token', data.session_token);
+            if (data.user) {
+              ZS.setItem('zeralda-current-user', JSON.stringify(data.user));
+              var uId = data.user.id || data.user.email || data.user.username;
+              if (uId) {
+                ZS.setItem('zeralda-google-token::' + uId, ZS.getItem(GTOKEN_KEY));
+                if (info) ZS.setItem('zeralda-google-profile::' + uId, JSON.stringify(info));
+              }
+            }
+            ZS.setItem('zeralda-drive-auto-sync-on-login', 'true');
+            window.location.href = '/zeralda_erp_dashboard.html';
+          } else {
+            redirectBack();
+          }
+        })
+        .catch(function() {
+          redirectBack();
+        });
+      } else {
+        redirectBack();
+      }
     });
   })();
   </script>

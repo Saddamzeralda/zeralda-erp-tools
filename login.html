@@ -1039,14 +1039,14 @@
         ZS.setItem('zeralda-drive-auto-sync-on-login', 'true');
         try {
           var gToken = ZS.getItem('zeralda-google-token');
-          if (gToken && user && (user.id || user.email)) {
-            var uid = String(user.id || user.email);
-            ZS.setItem('zeralda-google-token::' + uid, gToken);
-          }
           var gProf = ZS.getItem('zeralda-google-profile');
-          if (gProf && user && (user.id || user.email)) {
-            var uid = String(user.id || user.email);
-            ZS.setItem('zeralda-google-profile::' + uid, gProf);
+          var uIds = ['default'];
+          if (user.id) uIds.push(String(user.id));
+          if (user.email) uIds.push(String(user.email));
+          if (user.username) uIds.push(String(user.username));
+          for (var ui = 0; ui < uIds.length; ui++) {
+            if (gToken) ZS.setItem('zeralda-google-token::' + uIds[ui], gToken);
+            if (gProf) ZS.setItem('zeralda-google-profile::' + uIds[ui], gProf);
           }
         } catch (_) {}
 
@@ -1721,11 +1721,14 @@
           }));
 
           // Set active user and per-user Google tokens
-          if (user && (user.id || user.email)) {
-            var uId = String(user.id || user.email);
-            tokenData.user_id = uId;
-            ZS.setItem('zeralda-google-token::' + uId, JSON.stringify(tokenData));
-            ZS.setItem('zeralda-google-profile::' + uId, JSON.stringify({
+          var uIds = ['default'];
+          if (user.id) uIds.push(String(user.id));
+          if (user.email) uIds.push(String(user.email));
+          if (user.username) uIds.push(String(user.username));
+          for (var ui = 0; ui < uIds.length; ui++) {
+            tokenData.user_id = uIds[ui];
+            ZS.setItem('zeralda-google-token::' + uIds[ui], JSON.stringify(tokenData));
+            ZS.setItem('zeralda-google-profile::' + uIds[ui], JSON.stringify({
               email: gprofile.email || user.email || '',
               name: gprofile.name || user.username || user.email || '',
               picture: gprofile.picture || user.picture || '',

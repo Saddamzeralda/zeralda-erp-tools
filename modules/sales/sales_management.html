@@ -871,26 +871,7 @@
         </div>
     </div>
 
-    <!-- Modal: Tender Document OCR & Analysis -->
-    <div class="modal" id="tenderOcrModal">
-        <div class="modal-content" style="max-width:700px;">
-            <div class="modal-header"><h2 data-en="Scan Tender Document" data-ar="مسح وثيقة المناقصة" data-fr="Analyser l'Appel">Scan Tender Document</h2><span class="close-modal" onclick="closeModal('tenderOcrModal')">&times;</span></div>
-            <div style="padding: 20px;">
-                <div class="form-group" style="margin-bottom:18px;">
-                    <label class="form-label" data-en="Select Tender Document" data-ar="اختر وثيقة المناقصة" data-fr="Sélectionnez l'Appel">Select Tender Document</label>
-                    <input type="file" id="tenderOcrFile" accept="image/*,.pdf,.xlsx,.xls,.csv,.doc,.docx,.txt,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain" style="padding:10px; border:2px dashed var(--primary-color); border-radius:8px; width:100%; cursor:pointer;">
-                    <small style="color:#666; margin-top:8px; display:block;" data-en="Supported: JPG, PNG, PDF, XLSX, XLS, CSV" data-ar="المدعوم: JPG, PNG, PDF, XLSX, XLS, CSV" data-fr="Supportés : JPG, PNG, PDF, XLSX, XLS, CSV">Supported: JPG, PNG, PDF, XLSX, XLS, CSV</small>
-                </div>
-                <div id="tenderOcrStatus" style="margin:12px 0; padding:12px; border-radius:6px; display:none; font-size:14px;"></div>
-                <div id="tenderOcrPreview" style="margin:16px 0; max-height:400px; overflow-y:auto; background:#f9fafb; padding:12px; border-radius:6px; display:none; font-size:13px; white-space:pre-wrap; word-wrap:break-word;"></div>
-                <div style="display:flex; gap:10px; margin-top:20px; justify-content:flex-end;">
-                    <button class="btn btn-secondary" onclick="closeModal('tenderOcrModal')" style="margin:0;"><span data-en="Cancel" data-ar="إلغاء" data-fr="Annuler">Cancel</span></button>
-                    <button type="button" class="btn btn-primary" id="tenderOcrBtn" onclick="runTenderOcrExtraction()" style="margin:0;"><i class="fas fa-file"></i><span data-en="Scan & Extract" data-ar="مسح واستخراج" data-fr="Scanner & Extraire">Scan & Extract</span></button>
-                    <button type="button" class="btn" style="background:var(--success-color); color:white; display:none; margin:0;" id="tenderCreateBtn" onclick="createQuotationFromTender()"><i class="fas fa-file-invoice"></i><span data-en="Create Quotation" data-ar="إنشاء عرض أسعار" data-fr="Créer Devis">Create Quotation</span></button>
-                </div>
-            </div>
-        </div>
-    </div>
+
 
     <!-- Modal: AI Quotation Analyzer -->
     <div class="modal" id="quotationAnalyzerModal">
