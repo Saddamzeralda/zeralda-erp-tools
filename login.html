@@ -1034,6 +1034,22 @@
           picture: user.picture || ''
         });
 
+        // Set active user and flag automatic Google Drive sync on login
+        ZS.setItem('zeralda-current-user', JSON.stringify(user));
+        ZS.setItem('zeralda-drive-auto-sync-on-login', 'true');
+        try {
+          var gToken = ZS.getItem('zeralda-google-token');
+          if (gToken && user && (user.id || user.email)) {
+            var uid = String(user.id || user.email);
+            ZS.setItem('zeralda-google-token::' + uid, gToken);
+          }
+          var gProf = ZS.getItem('zeralda-google-profile');
+          if (gProf && user && (user.id || user.email)) {
+            var uid = String(user.id || user.email);
+            ZS.setItem('zeralda-google-profile::' + uid, gProf);
+          }
+        } catch (_) {}
+
         syncServerPrefsAndRedirect(token, nextPage);
       }).catch(function (err) {
         showError(err.message || 'Login failed');
@@ -1422,6 +1438,23 @@
           localStorage.setItem('zeralda-saved-phone', phone);
         } catch (_) {}
 
+        // Set active user and flag automatic Google Drive sync on login
+        var keyUser = data.user || { id: data.user_email || phone, email: data.user_email || phone, username: phone };
+        ZS.setItem('zeralda-current-user', JSON.stringify(keyUser));
+        ZS.setItem('zeralda-drive-auto-sync-on-login', 'true');
+        try {
+          var gToken = ZS.getItem('zeralda-google-token');
+          if (gToken && keyUser && (keyUser.id || keyUser.email)) {
+            var uid = String(keyUser.id || keyUser.email);
+            ZS.setItem('zeralda-google-token::' + uid, gToken);
+          }
+          var gProf = ZS.getItem('zeralda-google-profile');
+          if (gProf && keyUser && (keyUser.id || keyUser.email)) {
+            var uid = String(keyUser.id || keyUser.email);
+            ZS.setItem('zeralda-google-profile::' + uid, gProf);
+          }
+        } catch (_) {}
+
         syncServerPrefsAndRedirect(token, nextPage);
       }).catch(function (err) {
         showKeyError(err.message || 'Login failed');
@@ -1473,7 +1506,9 @@
         'zeralda-remembered-login',
         'zeralda-remembered-email',
         'zeralda-saved-accounts',
-        'zeralda-google-client-id'
+        'zeralda-google-client-id',
+        'zeralda-google-token',
+        'zeralda-google-profile'
       ];
       var bases = getAuthApiBases();
       var base = bases[0] || window.location.origin;
@@ -1523,7 +1558,7 @@
 
       googleTokenClient = google.accounts.oauth2.initTokenClient({
         client_id: GOOGLE_CLIENT_ID,
-        scope: 'openid email profile',
+        scope: 'openid email profile https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/contacts https://www.googleapis.com/auth/gmail.send',
         ux_mode: isWebView2 ? 'redirect' : 'popup',
         redirect_uri: isWebView2 ? (window.location.origin + '/oauth_callback.html') : undefined,
         error_callback: function (err) {
@@ -1535,7 +1570,7 @@
               '?client_id=' + encodeURIComponent(GOOGLE_CLIENT_ID) +
               '&redirect_uri=' + encodeURIComponent(window.location.origin + '/oauth_callback.html') +
               '&response_type=token' +
-              '&scope=' + encodeURIComponent('openid email profile') +
+              '&scope=' + encodeURIComponent('openid email profile https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/contacts https://www.googleapis.com/auth/gmail.send') +
               '&prompt=consent';
             window.location.href = redirectUrl;
             return;
@@ -1674,7 +1709,7 @@
           var expiresAt = Date.now() + sessionTimeoutMin * 60 * 1000;
 
           ZS.setItem(TOKEN_KEY, token);
-        ZS.setItem('zeralda-session-token', token);
+          ZS.setItem('zeralda-session-token', token);
           ZS.setItem(AUTH_META_KEY, JSON.stringify({
             failedByUser: {},
             userId: user.email || '',
@@ -1684,6 +1719,33 @@
             rememberMe: rememberChecked,
             googleLogin: true
           }));
+
+          // Set active user and per-user Google tokens
+          if (user && (user.id || user.email)) {
+            var uId = String(user.id || user.email);
+            tokenData.user_id = uId;
+            ZS.setItem('zeralda-google-token::' + uId, JSON.stringify(tokenData));
+            ZS.setItem('zeralda-google-profile::' + uId, JSON.stringify({
+              email: gprofile.email || user.email || '',
+              name: gprofile.name || user.username || user.email || '',
+              picture: gprofile.picture || user.picture || '',
+              sub: gprofile.sub || ''
+            }));
+          }
+          ZS.setItem('zeralda-current-user', JSON.stringify(user));
+
+          // Set flag to trigger automatic Google Drive sync on login
+          ZS.setItem('zeralda-drive-auto-sync-on-login', 'true');
+
+          // Enable auto-backup in settings by default
+          try {
+            var sRaw = ZS.getItem('zeralda-settings');
+            var sObj = sRaw ? JSON.parse(sRaw) : {};
+            sObj.google = sObj.google || {};
+            sObj.google.autoBackupEnabled = true;
+            sObj.google.connectedEmail = gprofile.email || user.email || '';
+            ZS.setItem('zeralda-settings', JSON.stringify(sObj));
+          } catch (_) {}
 
           // Save account in saved accounts list
           saveAccountIfRemember(user.email || '', {

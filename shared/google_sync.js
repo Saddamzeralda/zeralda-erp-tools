@@ -2136,7 +2136,11 @@
   
   function isAutoBackupEnabled() {
     var settings = getSettings();
-    return !!(settings && settings.google && settings.google.autoBackupEnabled === true);
+    if (settings && settings.google && typeof settings.google.autoBackupEnabled === 'boolean') {
+      return settings.google.autoBackupEnabled;
+    }
+    // Default to true when connected to Google so backup & sync is seamless
+    return true;
   }
   
   function setAutoBackupEnabled(enabled) {
@@ -2147,6 +2151,79 @@
     return settings.google.autoBackupEnabled;
   }
   
+  function _showGoogleSyncToast(message, type) {
+    if (typeof window.showToast === 'function') {
+      try {
+        window.showToast(message, type || 'info');
+        return;
+      } catch (_) {}
+    }
+    try {
+      var toastId = 'zeralda-google-sync-toast';
+      var existing = document.getElementById(toastId);
+      if (existing) existing.remove();
+      var t = document.createElement('div');
+      t.id = toastId;
+      var bg = type === 'success' ? '#10b981' : (type === 'error' ? '#ef4444' : '#2563eb');
+      t.style.cssText = 'position:fixed;bottom:24px;left:24px;background:' + bg + ';color:#fff;padding:12px 18px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 10px 25px rgba(0,0,0,0.25);z-index:999999;display:flex;align-items:center;gap:10px;animation:fadeIn 0.3s ease;direction:rtl;font-family:system-ui,-apple-system,sans-serif;';
+      t.innerHTML = '<i class="fab fa-google-drive" style="font-size:16px;"></i><span>' + message + '</span>';
+      document.body.appendChild(t);
+      setTimeout(function () {
+        if (t && t.parentNode) t.remove();
+      }, 4500);
+    } catch (_) {}
+  }
+
+  function autoSyncOnLogin(force) {
+    var flag = ZS.getItem('zeralda-drive-auto-sync-on-login');
+    if (!flag && !force) {
+      // If not flagged for login sync, just ensure silent reconnect in background
+      if (!isSignedIn()) {
+        tryAutoReconnect(function (ok) {
+          if (ok) {
+            console.log('[Google Drive] Auto-reconnected in background');
+            _emitGoogleSyncState({ connected: true, action: 'reconnect' });
+          }
+        });
+      }
+      return;
+    }
+
+    function doSync() {
+      if (!isSignedIn()) {
+        console.log('[Google Drive] Cannot auto-sync on login: not signed in');
+        ZS.removeItem('zeralda-drive-auto-sync-on-login');
+        return;
+      }
+
+      console.log('[Google Drive] Executing automatic sync upon login...');
+      _showGoogleSyncToast('جاري الاتصال بـ Google Drive ومزامنة البيانات تلقائياً...', 'info');
+
+      backupToDrive().then(function (res) {
+        ZS.removeItem('zeralda-drive-auto-sync-on-login');
+        console.log('[Google Drive] Auto-sync on login completed successfully!', res);
+        _showGoogleSyncToast('✅ اكتملت المزامنة والنسخ الاحتياطي السحابي على Google Drive بنجاح', 'success');
+        _emitGoogleSyncState({ connected: true, action: 'auto_sync_completed', timestamp: new Date().toISOString() });
+      }).catch(function (err) {
+        console.warn('[Google Drive] Auto-sync on login failed:', err);
+        ZS.removeItem('zeralda-drive-auto-sync-on-login');
+      });
+    }
+
+    if (isSignedIn()) {
+      doSync();
+    } else {
+      tryAutoReconnect(function (ok) {
+        if (ok) {
+          doSync();
+        } else {
+          console.log('[Google Drive] tryAutoReconnect failed, clearing login sync flag');
+          ZS.removeItem('zeralda-drive-auto-sync-on-login');
+        }
+      });
+    }
+  }
+
   function triggerAutoBackup() {
     if (!isAutoBackupEnabled()) {
       return Promise.resolve({ skipped: true, reason: 'auto_backup_disabled' });
@@ -2248,6 +2325,7 @@
     isAutoBackupEnabled: isAutoBackupEnabled,
     setAutoBackupEnabled: setAutoBackupEnabled,
     triggerAutoBackup: triggerAutoBackup,
+    autoSyncOnLogin: autoSyncOnLogin,
 
     // Pending server sync diagnostics/retry
     getPendingServerSyncStatus: getPendingServerSyncStatus,

@@ -708,9 +708,54 @@
     document.head.appendChild(s);
   }
 
+  function ensureGoogleDriveSync() {
+    function runSync() {
+      if (window.ZeraldaGoogle && typeof window.ZeraldaGoogle.init === 'function') {
+        window.ZeraldaGoogle.init({
+          onReady: function () {
+            if (typeof window.ZeraldaGoogle.autoSyncOnLogin === 'function') {
+              window.ZeraldaGoogle.autoSyncOnLogin();
+            }
+          }
+        });
+      }
+    }
+
+    if (window.ZeraldaGoogle) {
+      runSync();
+      return;
+    }
+
+    if (!document.querySelector('script[src*="google_sync.js"]')) {
+      if (!window.google || !window.google.accounts) {
+        var gsi = document.createElement('script');
+        gsi.src = 'https://accounts.google.com/gsi/client';
+        gsi.async = true;
+        gsi.defer = true;
+        document.head.appendChild(gsi);
+      }
+      var s = document.createElement('script');
+      s.src = 'shared/google_sync.js?v=20261015a';
+      s.defer = true;
+      s.onload = function () {
+        runSync();
+      };
+      document.head.appendChild(s);
+    } else {
+      var checkInterval = setInterval(function () {
+        if (window.ZeraldaGoogle) {
+          clearInterval(checkInterval);
+          runSync();
+        }
+      }, 100);
+      setTimeout(function () { clearInterval(checkInterval); }, 5000);
+    }
+  }
+
   /* ── Auto-initialise on DOMContentLoaded ─────────────── */
   function init() {
     ensureShareSyncHub();
+    ensureGoogleDriveSync();
     installExportDisableGuards();
     initNumberInputDigitFix();
     if (document.getElementById('sharedLayoutMount')) {
