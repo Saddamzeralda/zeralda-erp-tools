@@ -1546,41 +1546,35 @@
       if (typeof google === 'undefined' || !google.accounts || !google.accounts.oauth2) return;
       if (googleTokenClient) return;
 
-      // Check if running in WebView2 (use redirect mode) or normal browser (popup)
-      var isWebView2 = false;
+      // Only true WebView2 native hosts have chrome.webview.postMessage. Standard desktop Edge is a regular browser.
+      var isRealWebView2 = false;
       try {
-        if (window.chrome && window.chrome.webview) isWebView2 = true;
-        else {
-          var ua = String(navigator.userAgent || '');
-          if (/Edg\//.test(ua) && !(window.chrome && window.chrome.runtime)) isWebView2 = true;
+        if (window.chrome && window.chrome.webview && typeof window.chrome.webview.postMessage === 'function') {
+          isRealWebView2 = true;
         }
       } catch (_) {}
 
       googleTokenClient = google.accounts.oauth2.initTokenClient({
         client_id: GOOGLE_CLIENT_ID,
         scope: 'openid email profile https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/contacts https://www.googleapis.com/auth/gmail.send',
-        ux_mode: isWebView2 ? 'redirect' : 'popup',
-        redirect_uri: isWebView2 ? (window.location.origin + '/oauth_callback.html') : undefined,
+        ux_mode: isRealWebView2 ? 'redirect' : 'popup',
+        redirect_uri: isRealWebView2 ? (window.location.origin + '/oauth_callback.html') : undefined,
         error_callback: function (err) {
           var mapped = err || {};
           var type = String(mapped.type || '').toLowerCase();
+          setGoogleLoading(false);
+          isGoogleLogging = false;
+
           if (type === 'popup_failed_to_open') {
-            console.warn('[Google Login] Popup blocked by browser — falling back to redirect OAuth...');
-            var redirectUrl = 'https://accounts.google.com/o/oauth2/v2/auth' +
-              '?client_id=' + encodeURIComponent(GOOGLE_CLIENT_ID) +
-              '&redirect_uri=' + encodeURIComponent(window.location.origin + '/oauth_callback.html') +
-              '&response_type=token' +
-              '&scope=' + encodeURIComponent('openid email profile https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/contacts https://www.googleapis.com/auth/gmail.send') +
-              '&prompt=consent';
-            window.location.href = redirectUrl;
+            console.warn('[Google Login] Popup blocked by browser');
+            showError('تم حظر النافذة المنبثقة من قِبل المتصفح. يرجى السماح بالنوافذ المنبثقة (Pop-ups) من شريط العنوان ثم إعادة المحاولة.');
+            return;
+          }
+          if (type === 'popup_closed') {
             return;
           }
           var t = window._loginTr || TR.en;
-          var msg = t.googleErrPopup;
-          if (type === 'popup_closed') msg = t.googleErrPopup;
-          setGoogleLoading(false);
-          showError(msg);
-          isGoogleLogging = false;
+          showError(mapped.message || t.googleErrPopup || 'فشل فتح نافذة تسجيل الدخول بحساب Google');
         },
         callback: function (resp) {
           if (resp && resp.error) {
@@ -1595,6 +1589,26 @@
           }
         }
       });
+    }
+
+    function initGoogleOneTap() {
+      if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) return;
+      try {
+        google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: function (resp) {
+            if (resp && resp.credential) {
+              setGoogleLoading(true);
+              sendGoogleTokenToServer(resp.credential);
+            }
+          },
+          auto_select: false,
+          cancel_on_tap_outside: true
+        });
+        google.accounts.id.prompt();
+      } catch (e) {
+        console.warn('[Google One-Tap] Initialization error:', e);
+      }
     }
 
     function setGoogleLoading(on) {
@@ -1627,7 +1641,7 @@
           initGoogleTokenClient();
           if (googleTokenClient) {
             clearInterval(waitGis);
-            googleTokenClient.requestAccessToken({ prompt: '' });
+            googleTokenClient.requestAccessToken({ prompt: 'select_account' });
           } else if (retryCount > 20) {
             clearInterval(waitGis);
             setGoogleLoading(false);
@@ -1638,25 +1652,48 @@
         return;
       }
 
-      googleTokenClient.requestAccessToken({ prompt: '' });
+      googleTokenClient.requestAccessToken({ prompt: 'select_account' });
     }
 
-    function sendGoogleTokenToServer(accessToken) {
+    function sendGoogleTokenToServer(accessTokenOrCredential) {
       var t = window._loginTr || TR.en;
-      // Fetch Google profile (email, name, picture) using the access token
-      fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-        headers: { 'Authorization': 'Bearer ' + accessToken }
-      }).then(function (r) {
-        if (!r.ok) throw new Error('profile_fetch_failed');
-        return r.json();
-      }).catch(function () {
-        return { email: '', name: '', picture: '' };
-      }).then(function (gprofile) {
+      var token = String(accessTokenOrCredential || '').trim();
+      var isIdToken = token.split('.').length === 3;
+
+      var profilePromise;
+      if (isIdToken) {
+        try {
+          var b64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+          var payloadStr = decodeURIComponent(Array.prototype.map.call(atob(b64), function (c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+          }).join(''));
+          var payload = JSON.parse(payloadStr);
+          profilePromise = Promise.resolve({
+            email: payload.email || '',
+            name: payload.name || payload.given_name || '',
+            picture: payload.picture || '',
+            sub: payload.sub || ''
+          });
+        } catch (_) {
+          profilePromise = Promise.resolve({ email: '', name: '', picture: '', sub: '' });
+        }
+      } else {
+        profilePromise = fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        }).then(function (r) {
+          if (!r.ok) throw new Error('profile_fetch_failed');
+          return r.json();
+        }).catch(function () {
+          return { email: '', name: '', picture: '' };
+        });
+      }
+
+      profilePromise.then(function (gprofile) {
         // Save Google token and profile to localStorage in ZeraldaGoogle format
         // so the settings page recognizes the Google connection
         var nowMs = Date.now();
         var tokenData = {
-          access_token: accessToken,
+          access_token: token,
           issued_at: nowMs,
           expires_in: 3600,
           expires_at: nowMs + 3600 * 1000
@@ -1675,7 +1712,7 @@
           headers: { 'Content-Type': 'application/json' },
           credentials: 'omit',
           cache: 'no-store',
-          body: JSON.stringify({ google_token: accessToken })
+          body: JSON.stringify({ google_token: token })
         }).then(function (res) {
           return res.json().catch(function () { return {}; }).then(function (data) {
             return { status: res.status, data: data || {} };
@@ -1935,6 +1972,12 @@
           if (e.key === 'Enter') submit2FA();
         });
       }
+
+      // Eagerly pre-load Google Token Client and Google One-Tap for instant 1-click login
+      setTimeout(function () {
+        initGoogleTokenClient();
+        initGoogleOneTap();
+      }, 300);
     });
   </script>
 </body>

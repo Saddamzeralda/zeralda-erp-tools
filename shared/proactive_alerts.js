@@ -414,13 +414,13 @@
 
   // --- UI Injection ---
   function injectWidget() {
-    if (document.getElementById('zeraldaAlertsHubWrapper')) return;
+    var existing = document.getElementById('zeraldaAlertsHubWrapper');
+    if (existing && existing.parentNode) {
+      existing.parentNode.removeChild(existing);
+    }
+    // Floating alerts hub removed per user request
+    return;
 
-    var lang = getCurrentLang();
-    var isAr = lang === 'ar';
-
-    var wrapper = document.createElement('div');
-    wrapper.id = 'zeraldaAlertsHubWrapper';
     wrapper.innerHTML = `
       <div id="zeraldaAlertsButton"
            data-en-title="Smart Alerts & Notifications Hub"

@@ -385,15 +385,8 @@
 
   function isLikelyWebView2() {
     try {
-      // 1) Definitive: WebView2 host object (set by host app via AddHostObjectToScript)
-      if (window.chrome && window.chrome.webview) return true;
-      // 2) Reliable heuristic: Edge-based UA but chrome.runtime absent.
-      //    Real Edge browser always has chrome.runtime; WebView2 typically doesn't.
-      var ua = String(navigator.userAgent || '');
-      var isEdgeBased = /Edg\//.test(ua);
-      if (!isEdgeBased) return false;
-      var hasRuntime = !!(window.chrome && window.chrome.runtime);
-      return !hasRuntime;
+      // Real WebView2 host object with postMessage bridge (never true for normal desktop Edge browser)
+      return !!(window.chrome && window.chrome.webview && typeof window.chrome.webview.postMessage === 'function');
     } catch (e) {
       return false;
     }
