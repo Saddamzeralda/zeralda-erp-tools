@@ -2372,128 +2372,19 @@
 	});
 
 	// ============================================================
-	// LIVE SYNC & BACKUP CONTROL CENTER WIDGET
+	// SYNC STATUS CLEANUP
 	// ============================================================
-	var _syncState = { state: 'synced', pendingCount: 0, lastSync: Date.now() };
-
-	function _updateSyncPillUI() {
-		var pill = document.getElementById('zeraldaSyncPill');
-		if (pill && pill.parentNode) pill.parentNode.removeChild(pill);
-	}
-
-	window.addEventListener('zeralda-sync-status', function(e) {
-		if (e.detail) {
-			_syncState.state = e.detail.state || 'synced';
-			_syncState.pendingCount = e.detail.pendingCount || 0;
-			if (e.detail.lastSync) _syncState.lastSync = e.detail.lastSync;
-			_updateSyncPillUI();
+	(function () {
+		function _cleanPillAndModal() {
+			var pill = document.getElementById('zeraldaSyncPill');
+			if (pill && pill.parentNode) pill.parentNode.removeChild(pill);
+			var modal = document.getElementById('zeraldaSyncHubModal');
+			if (modal && modal.parentNode) modal.parentNode.removeChild(modal);
 		}
-	});
-
-	window.addEventListener('online', function() {
-		_syncState.state = 'syncing';
-		_updateSyncPillUI();
-	});
-
-	window.addEventListener('offline', function() {
-		_syncState.state = 'offline';
-		_updateSyncPillUI();
-	});
-
-	function _mountSyncIndicatorWidget() {
-		// Floating Sync & Backup pill and modal completely removed per user request
-		var pill = document.getElementById('zeraldaSyncPill');
-		if (pill && pill.parentNode) pill.parentNode.removeChild(pill);
-		var modal = document.getElementById('zeraldaSyncHubModal');
-		if (modal && modal.parentNode) modal.parentNode.removeChild(modal);
-	}
-
-	function _openSyncHubModal() {
-		var modal = document.getElementById('zeraldaSyncHubModal');
-		if (!modal) return;
-		var connEl = document.getElementById('hubConnStatus');
-		var pendEl = document.getElementById('hubPendingCount');
-		var timeEl = document.getElementById('hubLastSyncText');
-
-		if (connEl) {
-			connEl.textContent = navigator.onLine ? 'متصل بالإنترنت والخادم' : 'وضع عدم الاتصال (Offline)';
-			connEl.style.color = navigator.onLine ? '#15803d' : '#dc2626';
+		_cleanPillAndModal();
+		if (document.readyState === 'loading') {
+			document.addEventListener('DOMContentLoaded', _cleanPillAndModal);
 		}
-		if (pendEl) {
-			pendEl.textContent = _syncState.pendingCount + ' عملية معلقة';
-			pendEl.style.color = _syncState.pendingCount > 0 ? '#b91c1c' : '#15803d';
-		}
-		if (timeEl) {
-			var dt = new Date(_syncState.lastSync);
-			timeEl.textContent = 'آخر مزامنة: ' + dt.toLocaleTimeString('ar-DZ') + ' (' + dt.toLocaleDateString('ar-DZ') + ')';
-		}
-		modal.style.display = 'flex';
-	}
-
-	window._execForceSyncNow = async function() {
-		var btn = document.getElementById('btnForceSync');
-		if (btn) btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ المزامنة...';
-		try {
-			if (window.ZS && typeof window.ZS.flushOfflineQueue === 'function') {
-				window.ZS.flushOfflineQueue();
-			}
-			if (typeof pullAllToLocalStorage === 'function') {
-				await pullAllToLocalStorage();
-			}
-			alert('تمت المزامنة الفورية بنجاح مع الخادم المركزي!');
-		} catch(e) {
-			alert('حدث خطأ أثناء المزامنة: ' + (e.message || e));
-		}
-		if (btn) btn.innerHTML = '<i class="fas fa-rotate"></i> مزامنة فورية الآن';
-		_updateSyncPillUI();
-		_openSyncHubModal();
-	};
-
-	window._execInstantBackup = async function() {
-		var btn = document.getElementById('btnInstantCloudBackup');
-		if (btn) btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ إنشاء النسخة...';
-		try {
-			var res = await fetch('/api/backup/automated/run', {
-				method: 'POST',
-				headers: { 'X-Requested-With': 'XMLHttpRequest' }
-			});
-			var d = await res.json();
-			if (d.ok) {
-				alert('تم إنشاء نسخة احتياطية سحابية ناجحة على الخادم!\nالملف: ' + d.filename + '\nالحجم: ' + (d.size_bytes/1024).toFixed(1) + ' KB');
-			} else {
-				alert('تعذر إنشاء النسخة: ' + (d.error || 'خطأ غير معروف'));
-			}
-		} catch(e) {
-			alert('فشل الاتصال بالخادم لإنشاء النسخة السحابية.');
-		}
-		if (btn) btn.innerHTML = '<i class="fas fa-cloud-arrow-up"></i> إنشاء نسخة احتياطية سريعة';
-	};
-
-	window._execSetupMobilePush = async function() {
-		var btn = document.getElementById('btnMobileNotifPrompt');
-		if (!window.ZeraldaMobileNotifications) {
-			alert('جاري تهيئة نظام إشعارات الهاتف، يرجى المحاولة بعد لحظات...');
-			return;
-		}
-		if (btn) btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ التفعيل...';
-		try {
-			await window.ZeraldaMobileNotifications.subscribeCurrentDevice();
-			alert('تم تفعيل إشعارات الهاتف بنجاح! تم تسجيل هذا الجهاز لاستقبال التنبيهات الفورية.');
-			if (btn) {
-				btn.innerHTML = '<i class="fas fa-circle-check"></i> إشعارات هذا الجهاز مفعلة ✓';
-				btn.style.background = '#059669';
-			}
-			window.ZeraldaMobileNotifications.sendTestPush();
-		} catch(err) {
-			alert(err.message || 'تعذر تفعيل إشعارات الهاتف.');
-			if (btn) btn.innerHTML = '<i class="fas fa-mobile-screen-button"></i> إشعارات الهاتف الفورية (Web Push)';
-		}
-	};
-
-	if (document.readyState === 'loading') {
-		document.addEventListener('DOMContentLoaded', _mountSyncIndicatorWidget);
-	} else {
-		setTimeout(_mountSyncIndicatorWidget, 500);
-	}
+	})();
 
 })(window);

@@ -5,6 +5,43 @@
 (function () {
   'use strict';
 
+  // Immediately kill any floating sync indicator, alerts hub, or modal
+  try {
+    var hideStyle = document.createElement('style');
+    hideStyle.id = 'zeralda-kill-sync-pill-style';
+    hideStyle.textContent = '#zeraldaSyncPill, #zeraldaSyncHubModal, #zeraldaAlertsHubWrapper, #zeraldaAlertsButton, #zeraldaAlertsDropdown, #zeraldaMobileNotifBanner, .zeralda-sync-pill { display:none !important; visibility:hidden !important; pointer-events:none !important; opacity:0 !important; width:0 !important; height:0 !important; position:absolute !important; left:-99999px !important; }';
+    (document.head || document.documentElement).appendChild(hideStyle);
+
+    function __purgeFloatingWidgets() {
+      ['zeraldaSyncPill', 'zeraldaSyncHubModal', 'zeraldaAlertsHubWrapper', 'zeraldaAlertsButton', 'zeraldaAlertsDropdown', 'zeraldaMobileNotifBanner'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el && el.parentNode) el.parentNode.removeChild(el);
+      });
+    }
+    __purgeFloatingWidgets();
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', __purgeFloatingWidgets);
+    }
+    window.addEventListener('load', __purgeFloatingWidgets);
+    setInterval(__purgeFloatingWidgets, 400);
+
+    if (window.MutationObserver) {
+      new MutationObserver(function(muts) {
+        for (var i = 0; i < muts.length; i++) {
+          var nodes = muts[i].addedNodes;
+          for (var j = 0; j < nodes.length; j++) {
+            var n = nodes[j];
+            if (n && n.nodeType === 1) {
+              if (n.id === 'zeraldaSyncPill' || n.id === 'zeraldaSyncHubModal' || n.id === 'zeraldaAlertsHubWrapper') {
+                if (n.parentNode) n.parentNode.removeChild(n);
+              }
+            }
+          }
+        }
+      }).observe(document.documentElement, { childList: true, subtree: true });
+    }
+  } catch (_) {}
+
   var __clientLivenessTimer = null;
 
   function getClientSessionId() {
