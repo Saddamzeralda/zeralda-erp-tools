@@ -15,6 +15,7 @@ import json
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Request, HTTPException, status
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from app.services.security import (
@@ -248,6 +249,77 @@ async def validate(request: Request):
     if user:
         return {"ok": True, "user": user}
     raise HTTPException(401, detail={"ok": False, "error": "Invalid session"})
+
+
+# ── Two-Factor Authentication (2FA / TOTP) ─────────────────────────────────
+@router.post("/2fa/verify")
+async def verify_2fa(request: Request):
+    from backend import auth
+
+    client_ip = get_client_ip(request)
+    if auth_rate_limited(client_ip):
+        return JSONResponse(
+            status_code=429,
+            content={"ok": False, "error": "Too many verification attempts. Please wait.", "code": "RATE_LIMITED"},
+        )
+
+    data = await read_json_body(request, max_bytes=MAX_AUTH_BODY_BYTES)
+    temp_token = str(data.get("temp_token") or "").strip()
+    code = str(data.get("code") or "").strip()
+    if not temp_token or not code:
+        raise HTTPException(400, detail={"ok": False, "error": "temp_token and code are required"})
+
+    ip = request.client.host if request.client else ""
+    ua = request.headers.get("User-Agent", "")
+    res = auth.verify_2fa_login(temp_token, code, ip, ua)
+    return JSONResponse(status_code=200 if res.get("ok") else 400, content=res)
+
+
+@router.get("/2fa/status")
+async def get_2fa_status(request: Request):
+    user = require_auth(request)
+    from backend import auth
+
+    users = auth.load_users()
+    u = users.get(user.get("email", "").lower(), {})
+    return {
+        "ok": True,
+        "enabled": bool(u.get("totp_enabled")),
+        "has_secret": bool(u.get("totp_secret")),
+    }
+
+
+@router.get("/2fa/setup")
+async def setup_2fa(request: Request):
+    user = require_auth(request)
+    from backend import auth
+
+    res = auth.setup_user_2fa(user.get("email", ""))
+    return JSONResponse(status_code=200 if res.get("ok") else 400, content=res)
+
+
+@router.post("/2fa/enable")
+async def enable_2fa(request: Request):
+    user = require_auth(request)
+    from backend import auth
+
+    data = await read_json_body(request, max_bytes=MAX_AUTH_BODY_BYTES)
+    secret = str(data.get("secret") or "").strip()
+    code = str(data.get("code") or "").strip()
+    if not secret or not code:
+        raise HTTPException(400, detail={"ok": False, "error": "secret and code are required"})
+
+    res = auth.enable_user_2fa(user.get("email", ""), secret, code)
+    return JSONResponse(status_code=200 if res.get("ok") else 400, content=res)
+
+
+@router.post("/2fa/disable")
+async def disable_2fa(request: Request):
+    user = require_auth(request)
+    from backend import auth
+
+    res = auth.disable_user_2fa(user.get("email", ""))
+    return JSONResponse(status_code=200 if res.get("ok") else 400, content=res)
 
 
 @router.post("/register")

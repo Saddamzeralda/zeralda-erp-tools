@@ -231,18 +231,9 @@ Type: filesandordirs; Name: "{app}\launcher\Start_Toolkit.vbs"
 ; ============================================================================
 [Files]
 ; ============================================================================
-; ── Core application — root HTML pages ──────────────────────────────────────
-Source: "{#SourceDir}\index.html";                 DestDir: "{app}"; Components: core; Flags: ignoreversion
-Source: "{#SourceDir}\login.html";                 DestDir: "{app}"; Components: core; Flags: ignoreversion
-Source: "{#SourceDir}\license.html";               DestDir: "{app}"; Components: core; Flags: ignoreversion
-Source: "{#SourceDir}\oauth_callback.html";        DestDir: "{app}"; Components: core; Flags: ignoreversion
-Source: "{#SourceDir}\zeralda_erp_dashboard.html"; DestDir: "{app}"; Components: core; Flags: ignoreversion
-Source: "{#SourceDir}\settings.html";              DestDir: "{app}"; Components: core; Flags: ignoreversion
-Source: "{#SourceDir}\restore_backup.html";        DestDir: "{app}"; Components: core; Flags: ignoreversion
-Source: "{#SourceDir}\restore_session.html";       DestDir: "{app}"; Components: core; Flags: ignoreversion
-Source: "{#SourceDir}\usage_dashboard.html";       DestDir: "{app}"; Components: core; Flags: ignoreversion
-Source: "{#SourceDir}\connect.html";               DestDir: "{app}"; Components: core; Flags: ignoreversion
-Source: "{#SourceDir}\START_CONNECTION_HUB.cmd";   DestDir: "{app}"; Components: core; Flags: ignoreversion
+; ── Core application — web pages ───────────────────────────────────────────
+Source: "{#SourceDir}\pages\*";                  DestDir: "{app}\pages"; Components: core; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#SourceDir}\START_ERP.cmd";              DestDir: "{app}"; Components: core; Flags: ignoreversion
 
 ; ── Core application — Python & config ──────────────────────────────────────
 Source: "{#SourceDir}\server.py";                  DestDir: "{app}"; Components: core; Flags: ignoreversion
@@ -255,7 +246,7 @@ Source: "{#SourceDir}\LICENSE.txt";                DestDir: "{app}"; Components:
 Source: "{#SourceDir}\README.md";                  DestDir: "{app}"; Components: core; Flags: ignoreversion isreadme
 Source: "{#SourceDir}\VERSION";                    DestDir: "{app}"; Components: core; Flags: ignoreversion
 Source: "{#SourceDir}\CHANGELOG.md";               DestDir: "{app}"; Components: core; Flags: ignoreversion
-Source: "{#SourceDir}\deploy.cmd";                 DestDir: "{app}"; Components: core; Flags: ignoreversion
+Source: "{#SourceDir}\scripts\*";                  DestDir: "{app}\scripts"; Components: core; Flags: ignoreversion recursesubdirs createallsubdirs
 
 ; ── Subsystems (recursive) ─────────────────────────────────────────────────
 ; Excludes: __pycache__, *.pyc, test files, temp files, .venv, .vscode

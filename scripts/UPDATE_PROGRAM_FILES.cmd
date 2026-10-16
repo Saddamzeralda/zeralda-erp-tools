@@ -1,6 +1,6 @@
 @echo off
 title Zeralda ERP - Update C:\Program Files\Zeralda ERP
-cd /d "%~dp0"
+cd /d "%~dp0.."
 
 :: Elevate to Administrator
 net session >nul 2>&1

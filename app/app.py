@@ -77,8 +77,8 @@ def create_app() -> FastAPI:
         response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
         response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
         # COOP: same-origin-allow-popups allows Google OAuth / GSI client and popups
-        # COOP enforcement for Google Identity Services popup auth
         proto = (request.headers.get("x-forwarded-proto") or "").lower()
+        host_hdr = (request.headers.get("host") or "").split(":")[0].lower()
         is_https = (
             proto == "https"
             or os.getenv("USE_HTTPS", "false").lower() == "true"
@@ -283,7 +283,7 @@ def create_app() -> FastAPI:
     # ── Static files (serves HTML/JS/CSS/images from project root) ───────
     base_dir = Path(__file__).resolve().parent.parent
     # Mount individual static directories
-    for sub in ("shared", "styles", "modules"):
+    for sub in ("shared", "styles", "modules", "pages"):
         sub_path = base_dir / sub
         if sub_path.is_dir():
             app.mount(f"/{sub}", StaticFiles(directory=str(sub_path)), name=f"static-{sub}")
@@ -291,9 +291,9 @@ def create_app() -> FastAPI:
     # Root-level HTML files (index.html, login.html, settings.html, dashboard, etc.)
     @app.get("/", include_in_schema=False)
     async def root_index():
-        index_file = base_dir / "index.html"
-        if index_file.is_file():
-            return FileResponse(str(index_file))
+        for candidate_path in (base_dir / "pages" / "index.html", base_dir / "index.html"):
+            if candidate_path.is_file():
+                return FileResponse(str(candidate_path))
         return JSONResponse({"ok": True, "message": "Zeralda ERP API", "docs": "/api/docs"})
 
     @app.get("/{filename:path}", include_in_schema=False)
@@ -316,12 +316,22 @@ def create_app() -> FastAPI:
         try:
             candidate = candidate.resolve()
             # FIX: Use os.path commonpath for reliable cross-platform check
-            if not os.path.commonpath([str(candidate), str(base_dir.resolve())]) == str(base_dir.resolve()):
-                return JSONResponse(status_code=404, content={"ok": False, "error": "Not found"})
+            if os.path.commonpath([str(candidate), str(base_dir.resolve())]) == str(base_dir.resolve()):
+                if candidate.is_file():
+                    return FileResponse(str(candidate))
         except (ValueError, OSError):
-            return JSONResponse(status_code=404, content={"ok": False, "error": "Not found"})
-        if candidate.is_file():
-            return FileResponse(str(candidate))
+            pass
+
+        # Check pages/ directory for clean web page separation
+        pages_candidate = base_dir / "pages" / safe
+        try:
+            pages_candidate = pages_candidate.resolve()
+            pages_dir_resolved = (base_dir / "pages").resolve()
+            if os.path.commonpath([str(pages_candidate), str(pages_dir_resolved)]) == str(pages_dir_resolved):
+                if pages_candidate.is_file():
+                    return FileResponse(str(pages_candidate))
+        except (ValueError, OSError):
+            pass
 
         # Smart resolution / shortcut for module HTML pages requested at root level
         clean_fn = safe.lower().strip()

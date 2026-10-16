@@ -36,6 +36,11 @@ def get_cloud_backup_config() -> Dict[str, Any]:
                 "interval_hours": 24,
                 "keep_count": 14,
                 "encrypt": True,
+                "telegram_enabled": False,
+                "telegram_bot_token": "",
+                "telegram_chat_id": "",
+                "webhook_enabled": False,
+                "webhook_url": "",
                 "last_run": None,
                 "last_status": "none",
                 "last_file": None,
@@ -50,7 +55,14 @@ def get_cloud_backup_config() -> Dict[str, Any]:
 
         try:
             with open(_BACKUP_CONFIG_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
+                cfg = json.load(f)
+                # Ensure new keys exist
+                cfg.setdefault("telegram_enabled", False)
+                cfg.setdefault("telegram_bot_token", "")
+                cfg.setdefault("telegram_chat_id", "")
+                cfg.setdefault("webhook_enabled", False)
+                cfg.setdefault("webhook_url", "")
+                return cfg
         except Exception:
             return {"enabled": True, "interval_hours": 24, "keep_count": 14}
 
@@ -59,13 +71,49 @@ def update_cloud_backup_config(cfg_updates: Dict[str, Any]) -> Dict[str, Any]:
     with _cloud_backup_lock:
         current = get_cloud_backup_config()
         current.update({k: v for k, v in cfg_updates.items() if k in (
-            "enabled", "interval_hours", "keep_count", "encrypt"
+            "enabled", "interval_hours", "keep_count", "encrypt",
+            "telegram_enabled", "telegram_bot_token", "telegram_chat_id",
+            "webhook_enabled", "webhook_url"
         )})
         tmp = _BACKUP_CONFIG_FILE + ".tmp"
         with open(tmp, "w", encoding="utf-8") as f:
             json.dump(current, f, indent=2)
         os.replace(tmp, _BACKUP_CONFIG_FILE)
         return current
+
+
+def send_backup_to_telegram(filepath: str, bot_token: str, chat_id: str, caption: str = "") -> Dict[str, Any]:
+    """Send automated backup snapshot directly to Telegram chat/channel."""
+    import requests
+    url = f"https://api.telegram.org/bot{bot_token}/sendDocument"
+    with open(filepath, "rb") as f:
+        files = {"document": (os.path.basename(filepath), f, "application/json")}
+        data = {"chat_id": chat_id, "caption": caption, "parse_mode": "Markdown"}
+        resp = requests.post(url, data=data, files=files, timeout=35)
+        return resp.json()
+
+
+def test_telegram_connection(bot_token: str, chat_id: str) -> Dict[str, Any]:
+    """Test Telegram Bot credentials by sending a confirmation test message."""
+    import requests
+    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    payload = {
+        "chat_id": chat_id,
+        "text": "✅ *[Zeralda ERP]* تم اختبار الاتصال بنجاح!\nتم ربط النسخ الاحتياطي التلقائي بحساب تيليجرام بنجاح.",
+        "parse_mode": "Markdown"
+    }
+    resp = requests.post(url, json=payload, timeout=15)
+    return resp.json()
+
+
+def send_backup_to_webhook(filepath: str, webhook_url: str, metadata: Dict[str, Any]) -> Dict[str, Any]:
+    """Send backup snapshot to external HTTPS webhook."""
+    import requests
+    with open(filepath, "rb") as f:
+        files = {"file": (os.path.basename(filepath), f, "application/json")}
+        data = {"metadata": json.dumps(metadata)}
+        resp = requests.post(webhook_url, data=data, files=files, timeout=30)
+        return {"ok": resp.status_code < 400, "status_code": resp.status_code}
 
 
 def execute_automated_backup(triggered_by: str = "scheduler") -> Dict[str, Any]:
@@ -152,6 +200,38 @@ def execute_automated_backup(triggered_by: str = "scheduler") -> Dict[str, Any]:
         with open(tmp_cfg, "w", encoding="utf-8") as f:
             json.dump(cfg, f, indent=2)
         os.replace(tmp_cfg, _BACKUP_CONFIG_FILE)
+
+        # Dispatch to Telegram if configured
+        telegram_sent = False
+        if cfg.get("telegram_enabled") and cfg.get("telegram_bot_token") and cfg.get("telegram_chat_id"):
+            try:
+                caption = (
+                    f"📦 *نسخة احتياطية لـ Zeralda ERP*\n"
+                    f"📅 التاريخ: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+                    f"🏢 الشركات: {', '.join(companies) if companies else 'الافتراضية'}\n"
+                    f"📊 السجلات: {len(store_data)} | الحجم: {round(len(raw_bytes)/1024, 1)} KB\n"
+                    f"🔐 البصمة: `{sha256_hash[:16]}...`"
+                )
+                t_resp = send_backup_to_telegram(
+                    filepath,
+                    str(cfg["telegram_bot_token"]).strip(),
+                    str(cfg["telegram_chat_id"]).strip(),
+                    caption=caption
+                )
+                telegram_sent = bool(t_resp and t_resp.get("ok"))
+            except Exception:
+                pass
+
+        # Dispatch to Webhook if configured
+        if cfg.get("webhook_enabled") and cfg.get("webhook_url"):
+            try:
+                send_backup_to_webhook(
+                    filepath,
+                    str(cfg["webhook_url"]).strip(),
+                    {"filename": filename, "hash": sha256_hash, "companies": companies}
+                )
+            except Exception:
+                pass
 
         try:
             from app.services.audit import record_audit_event

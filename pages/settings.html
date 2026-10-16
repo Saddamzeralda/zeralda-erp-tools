@@ -2,6 +2,7 @@
 <html lang="en" dir="ltr">
 <head>
     <script src="shared/theme_manager.js"></script>
+    <script src="shared/qrcode.min.js"></script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <!-- External font removed on settings page to avoid cache-read failures; fallback stack is used. -->
@@ -1300,10 +1301,29 @@
                         <span data-en="Maintenance Mode" data-ar="وضع الصيانة" data-fr="Mode maintenance">Maintenance Mode</span>
                     </label>
 
-                    <label class="form-group" style="display: flex; align-items: center; gap: 8px;">
-                        <input id="twoFactorAuth" type="checkbox">
-                        <span data-en="Two-Factor Authentication" data-ar="المصادقة الثنائية" data-fr="Authentification 2FA">Two-Factor Auth</span>
-                    </label>
+                    <div class="form-group" style="grid-column: 1 / -1; margin-top: 8px;">
+                        <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:12px; padding:16px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                                <div style="display:flex; align-items:center; gap:12px;">
+                                    <div style="width:40px; height:40px; border-radius:10px; background:linear-gradient(135deg,#0f766e,#0d9488); display:flex; align-items:center; justify-content:center; color:#fff; font-size:18px;">
+                                        <i class="fas fa-shield-halved"></i>
+                                    </div>
+                                    <div>
+                                        <strong style="font-size:15px; color:#0f172a; display:block;" data-en="Two-Factor Authentication (2FA / TOTP)" data-ar="المصادقة الثنائية (2FA / TOTP)" data-fr="Authentification à deux facteurs">المصادقة الثنائية (2FA / TOTP)</strong>
+                                        <small style="color:#64748b;" data-en="Protects your account with Google Authenticator, Microsoft Authenticator or Apple Passwords." data-ar="حماية إضافية لحسابك باستخدام تطبيق Google Authenticator أو Microsoft Authenticator." data-fr="Sécurisez avec Google ou Microsoft Authenticator.">حماية إضافية لحسابك باستخدام تطبيق Google Authenticator أو Microsoft Authenticator.</small>
+                                    </div>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <span id="twoFactorStatusBadge" style="padding:4px 12px; border-radius:20px; font-size:12px; font-weight:700; background:#fee2e2; color:#991b1b;">
+                                        غير مفعل
+                                    </span>
+                                    <button id="twoFactorActionBtn" type="button" class="btn btn-primary" onclick="open2FASetupModal()" style="font-size:13px; padding:6px 14px;">
+                                        <i class="fas fa-key"></i> إعداد الآن
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
                     <label class="form-group" style="display: flex; align-items: center; gap: 8px;">
                         <input id="auditLogging" type="checkbox" checked>
@@ -6222,6 +6242,192 @@ if (_prevShowSectionNotif) {
     };
 }
 
+// ── 2FA Settings Management ──────────────────────────────────────────
+var _current2FASecret = '';
+var _is2FAEnabled = false;
+
+async function check2FAStatus() {
+    try {
+        var token = (window.ZS && window.ZS.getItem('zeralda-session-token')) || '';
+        var headers = { 'X-Requested-With': 'XMLHttpRequest' };
+        if (token) headers['X-Session-Token'] = token;
+        var res = await fetch('/api/auth/2fa/status', { headers: headers });
+        var d = await res.json();
+        if (d.ok) {
+            _is2FAEnabled = !!d.enabled;
+            var badge = document.getElementById('twoFactorStatusBadge');
+            var btn = document.getElementById('twoFactorActionBtn');
+            if (badge) {
+                if (_is2FAEnabled) {
+                    badge.style.background = '#d1fae5';
+                    badge.style.color = '#065f46';
+                    badge.innerHTML = '<i class="fas fa-check-circle"></i> مفعل';
+                } else {
+                    badge.style.background = '#fee2e2';
+                    badge.style.color = '#991b1b';
+                    badge.innerHTML = '<i class="fas fa-times-circle"></i> غير مفعل';
+                }
+            }
+            if (btn) {
+                if (_is2FAEnabled) {
+                    btn.className = 'btn btn-secondary';
+                    btn.innerHTML = '<i class="fas fa-ban"></i> تعطيل 2FA';
+                    btn.onclick = disable2FA;
+                } else {
+                    btn.className = 'btn btn-primary';
+                    btn.innerHTML = '<i class="fas fa-key"></i> إعداد الآن';
+                    btn.onclick = open2FASetupModal;
+                }
+            }
+        }
+    } catch(e) {}
+}
+
+async function open2FASetupModal() {
+    var modal = document.getElementById('modal2FASetup');
+    var qrEl = document.getElementById('twoFactorQrBox');
+    var secretEl = document.getElementById('twoFactorSecretText');
+    var errEl = document.getElementById('twoFactorModalError');
+    var inp = document.getElementById('twoFactorVerifyCode');
+    if (errEl) errEl.textContent = '';
+    if (inp) inp.value = '';
+    if (qrEl) qrEl.innerHTML = '<div style="padding:40px;color:#64748b;"><i class="fas fa-circle-notch fa-spin fa-2x"></i></div>';
+
+    if (modal) modal.style.display = 'flex';
+
+    try {
+        var token = (window.ZS && window.ZS.getItem('zeralda-session-token')) || '';
+        var headers = { 'X-Requested-With': 'XMLHttpRequest' };
+        if (token) headers['X-Session-Token'] = token;
+        var res = await fetch('/api/auth/2fa/setup', { headers: headers });
+        var d = await res.json();
+        if (d.ok && d.secret) {
+            _current2FASecret = d.secret;
+            if (secretEl) secretEl.textContent = d.secret;
+            if (qrEl) {
+                qrEl.innerHTML = '';
+                if (typeof QRCode !== 'undefined') {
+                    new QRCode(qrEl, {
+                        text: d.uri,
+                        width: 170,
+                        height: 170,
+                        colorDark: "#0f172a",
+                        colorLight: "#ffffff"
+                    });
+                } else {
+                    qrEl.innerHTML = '<div style="padding:20px;font-size:12px;color:#ef4444;">تعذر تحميل مكتبة QR Code</div>';
+                }
+            }
+            if (inp) inp.focus();
+        } else {
+            if (errEl) errEl.textContent = d.error || 'فشل توليد مفتاح الأمان';
+        }
+    } catch(err) {
+        if (errEl) errEl.textContent = 'تعذر الاتصال بالخادم لتوليد رمز 2FA';
+    }
+}
+
+function close2FASetupModal() {
+    var modal = document.getElementById('modal2FASetup');
+    if (modal) modal.style.display = 'none';
+}
+
+function copy2FASecret() {
+    if (!_current2FASecret) return;
+    navigator.clipboard.writeText(_current2FASecret).then(function() {
+        alert('تم نسخ المفتاح السري إلى الحافظة!');
+    }).catch(function() {
+        prompt('انسخ المفتاح السري يدوياً:', _current2FASecret);
+    });
+}
+
+async function submitEnable2FA() {
+    var inp = document.getElementById('twoFactorVerifyCode');
+    var code = (inp ? inp.value : '').trim();
+    var errEl = document.getElementById('twoFactorModalError');
+    if (code.length !== 6) {
+        if (errEl) errEl.textContent = 'الرجاء إدخال الرمز المكون من 6 أرقام من تطبيق المصادقة';
+        return;
+    }
+    var btn = document.getElementById('btnConfirmEnable2FA');
+    if (btn) btn.disabled = true;
+
+    try {
+        var token = (window.ZS && window.ZS.getItem('zeralda-session-token')) || '';
+        var headers = { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' };
+        if (token) headers['X-Session-Token'] = token;
+        var res = await fetch('/api/auth/2fa/enable', {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify({ secret: _current2FASecret, code: code })
+        });
+        var d = await res.json();
+        if (btn) btn.disabled = false;
+        if (d.ok) {
+            close2FASetupModal();
+            alert('تم تفعيل التحقق بخطوتين (2FA) بنجاح على حسابك!');
+            check2FAStatus();
+        } else {
+            if (errEl) errEl.textContent = d.error || 'رمز التحقق غير صحيح، يرجى المحاولة مرة أخرى.';
+        }
+    } catch(e) {
+        if (btn) btn.disabled = false;
+        if (errEl) errEl.textContent = 'فشل الاتصال بالخادم';
+    }
+}
+
+async function disable2FA() {
+    if (!confirm('هل أنت متأكد من رغبتك في تعطيل التحقق بخطوتين (2FA)؟ سيقلل هذا من أمان حسابك.')) {
+        return;
+    }
+    try {
+        var token = (window.ZS && window.ZS.getItem('zeralda-session-token')) || '';
+        var headers = { 'X-Requested-With': 'XMLHttpRequest' };
+        if (token) headers['X-Session-Token'] = token;
+        var res = await fetch('/api/auth/2fa/disable', { method: 'POST', headers: headers });
+        var d = await res.json();
+        if (d.ok) {
+            alert('تم تعطيل التحقق بخطوتين.');
+            check2FAStatus();
+        } else {
+            alert('فشل تعطيل 2FA: ' + (d.error || 'خطأ غير معروف'));
+        }
+    } catch(e) {
+        alert('تعذر الاتصال بالخادم.');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(check2FAStatus, 800);
+});
 </script>
+
+<!-- ── Modal Setup 2FA ────────────────────────────────────────────────── -->
+<div id="modal2FASetup" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.7); z-index:99999; align-items:center; justify-content:center; backdrop-filter:blur(6px);">
+    <div style="background:#fff; border-radius:18px; max-width:440px; width:92%; padding:28px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.25); text-align:center; position:relative; border:1px solid #e2e8f0; font-family:inherit;">
+        <div style="font-size:36px; color:#0f766e; margin-bottom:10px;"><i class="fas fa-qrcode"></i></div>
+        <h3 style="margin-bottom:6px; font-size:18px; font-weight:700; color:#0f172a;">إعداد التحقق بخطوتين (2FA)</h3>
+        <p style="font-size:13px; color:#64748b; margin-bottom:16px;">امسح رمز الاستجابة السريعة (QR Code) باستخدام Google Authenticator أو أدخل المفتاح يدوياً:</p>
+        
+        <div id="twoFactorQrBox" style="width:170px; height:170px; margin:0 auto 16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; display:flex; align-items:center; justify-content:center; overflow:hidden;"></div>
+
+        <div style="background:#f1f5f9; padding:8px 12px; border-radius:8px; font-size:12px; font-family:monospace; color:#334155; display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
+            <span id="twoFactorSecretText" style="letter-spacing:1px; font-weight:700;">--------</span>
+            <button type="button" onclick="copy2FASecret()" style="background:none; border:none; color:#0284c7; cursor:pointer; font-size:13px;" title="نسخ المفتاح"><i class="fas fa-copy"></i></button>
+        </div>
+
+        <div id="twoFactorModalError" style="color:#dc2626; font-size:12px; margin-bottom:12px; min-height:16px; font-weight:600;"></div>
+
+        <div style="margin-bottom:20px;">
+            <label style="display:block; font-size:12px; font-weight:700; color:#475569; margin-bottom:6px;">أدخل رمز التحقق (6 أرقام) للتأكيد:</label>
+            <input type="text" id="twoFactorVerifyCode" maxlength="6" pattern="[0-9]*" inputmode="numeric" placeholder="000000" style="width:100%; text-align:center; font-size:24px; letter-spacing:8px; font-weight:700; padding:10px; border:2px solid #cbd5e1; border-radius:10px; outline:none;" />
+        </div>
+
+        <div style="display:flex; gap:10px;">
+            <button type="button" onclick="close2FASetupModal()" style="flex:1; padding:10px; background:#e2e8f0; border:none; border-radius:8px; cursor:pointer; font-weight:600; color:#334155;">إلغاء</button>
+            <button type="button" id="btnConfirmEnable2FA" onclick="submitEnable2FA()" style="flex:2; padding:10px; background:#0f766e; color:#fff; border:none; border-radius:8px; cursor:pointer; font-weight:600;">تأكيد وتفعيل</button>
+        </div>
+    </div>
+</div>
 </body>
 </html>

@@ -24,7 +24,10 @@ Write-Host "3. Copying updated files to $dst..."
 Copy-Item -Path "$src\app\*" -Destination "$dst\app" -Recurse -Force -Exclude "__pycache__", "*.pyc"
 Copy-Item -Path "$src\shared\*" -Destination "$dst\shared" -Recurse -Force
 Copy-Item -Path "$src\launcher\*" -Destination "$dst\launcher" -Recurse -Force
-Copy-Item -Path "$src\connect.html" -Destination "$dst\connect.html" -Force
+Copy-Item -Path "$src\scripts\*" -Destination "$dst\scripts" -Recurse -Force
+if (Test-Path "$src\pages") { Copy-Item -Path "$src\pages\*" -Destination "$dst\pages" -Recurse -Force }
+if (Test-Path "$src\START_ERP.cmd") { Copy-Item -Path "$src\START_ERP.cmd" -Destination "$dst\START_ERP.cmd" -Force }
+Copy-Item -Path "$src\server.py" -Destination "$dst\server.py" -Force
 Copy-Item -Path "$src\.env.example" -Destination "$dst\.env.example" -Force
 Copy-Item -Path "$src\data\license_integrity.json" -Destination "$dst\data\license_integrity.json" -Force
 

@@ -1091,7 +1091,9 @@ class ToolkitHTTPHandler:
         import threading
         import webbrowser
 
-        html_path = os.path.join(BASE_DIR, "protection_toolkit.html")
+        html_path = os.path.join(BASE_DIR, "tools", "protection_toolkit.html")
+        if not os.path.exists(html_path):
+            html_path = os.path.join(BASE_DIR, "protection_toolkit.html")
         if not os.path.exists(html_path):
             print(f"ERROR: protection_toolkit.html not found at {html_path}")
             return

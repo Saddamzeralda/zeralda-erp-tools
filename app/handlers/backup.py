@@ -487,6 +487,20 @@ async def automated_backup_update_config(request: Request):
     return {"ok": True, "config": new_cfg}
 
 
+@router.post("/automated/test-telegram")
+async def test_telegram_endpoint(request: Request):
+    """Test Telegram Bot notification connection (admin only)."""
+    require_auth(request, required_role="admin")
+    data = await read_json_body(request)
+    bot_token = data.get("bot_token")
+    chat_id = data.get("chat_id")
+    if not bot_token or not chat_id:
+        raise HTTPException(400, detail={"ok": False, "error": "Bot token and Chat ID are required."})
+    from app.services.cloud_backup import test_telegram_connection
+    res = test_telegram_connection(str(bot_token).strip(), str(chat_id).strip())
+    return {"ok": bool(res and res.get("ok")), "result": res}
+
+
 # ── Server Snapshots Management (List / Download / Direct Restore) ─────────
 @router.get("/snapshots")
 async def list_snapshots(request: Request):

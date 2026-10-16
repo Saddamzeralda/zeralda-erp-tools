@@ -5,7 +5,7 @@ REM  Run this after every modification to update the installed ERP
 REM ====================================================================
 setlocal enabledelayedexpansion
 set "SCRIPT_DIR=%~dp0"
-cd /d "%SCRIPT_DIR%"
+cd /d "%~dp0.."
 
 echo ============================================================
 echo  Zeralda ERP - Build ^& Install
