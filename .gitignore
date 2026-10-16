@@ -22,6 +22,8 @@ data/*
 !data/users.json
 !data/shared_store.json
 !data/license_public_key.pem
+!data/keys.json
+!data/licenses.json
 data/*.backup*
 data/backups/
 data/sessions.json
