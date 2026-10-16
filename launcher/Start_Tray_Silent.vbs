@@ -98,7 +98,7 @@ If FSO.FileExists(RemoteInfoFile) Then
     rePub.Pattern = """public_url""\s*:\s*""(https://[^""]+)"""
     rePub.IgnoreCase = True
     If rePub.Test(rContent) Then
-        Url = rePub.Execute(rContent)(0).SubMatches(0) & "/login.html?next=%2Fzeralda_erp_dashboard.html"
+        Url = rePub.Execute(rContent)(0).SubMatches(0) & "/zeralda_erp_dashboard.html"
     End If
     On Error GoTo 0
 End If
@@ -106,7 +106,7 @@ If Len(Url) = 0 Then
     If Len(StartupUrl) > 0 Then
         Url = StartupUrl
     Else
-        Url = "https://zeralda-erp-employees-main-production.up.railway.app/login.html?next=%2Fzeralda_erp_dashboard.html"
+        Url = "https://zeralda-erp-employees-main-production.up.railway.app/zeralda_erp_dashboard.html"
     End If
 End If
 WShell.Run Url, 1, False

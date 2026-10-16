@@ -49,9 +49,9 @@ echo.
 
 echo ============================================================
 echo  ✅ Done! ERP installed and running.
-echo  URL: https://zeralda-erp-employees-main-production.up.railway.app/login.html?next=%%2Fzeralda_erp_dashboard.html
+echo  URL: https://zeralda-erp-employees-main-production.up.railway.app/zeralda_erp_dashboard.html
 echo ============================================================
 echo.
 REM Open browser
-start "https://zeralda-erp-employees-main-production.up.railway.app/login.html?next=%%2Fzeralda_erp_dashboard.html"
+start "https://zeralda-erp-employees-main-production.up.railway.app/zeralda_erp_dashboard.html"
 pause

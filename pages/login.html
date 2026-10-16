@@ -1050,6 +1050,15 @@
           }
         } catch (_) {}
 
+        if (data.must_change_password || user.must_change_password) {
+          showForceChangePasswordModal(token, password, function () {
+            syncServerPrefsAndRedirect(token, nextPage);
+          });
+          isLogging = false;
+          setLoading(false);
+          return;
+        }
+
         syncServerPrefsAndRedirect(token, nextPage);
       }).catch(function (err) {
         showError(err.message || 'Login failed');
@@ -1925,6 +1934,29 @@
     </div>
   </div>
 
+  <!-- ── Mandatory Password Change Modal ────────────────────────────────────── -->
+  <div id="modalForceChangePassword" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.85);z-index:999999;align-items:center;justify-content:center;backdrop-filter:blur(8px);">
+    <div style="background:var(--card-bg, #fff);padding:32px;border-radius:18px;max-width:440px;width:92%;box-shadow:0 24px 48px rgba(0,0,0,0.35);text-align:center;border:1px solid var(--border,#e2e8f0);position:relative;">
+      <div style="font-size:42px;color:#e11d48;margin-bottom:14px;"><i class="fas fa-lock"></i></div>
+      <h3 style="margin-bottom:8px;font-size:20px;font-weight:700;color:var(--ink,#1e293b);font-family:'Space Grotesk',sans-serif;">تغيير كلمة المرور إجباري</h3>
+      <p style="font-size:13px;color:var(--muted,#64748b);margin-bottom:18px;line-height:1.5;">
+        لحماية بيانات وأمان النظام، يجب استبدال كلمة مرور المشرف الافتراضية بكلمة مرور قوية جديدة قبل الدخول.
+      </p>
+      <div id="errorForcePwd" style="color:var(--error,#ef4444);font-size:13px;margin-bottom:14px;min-height:18px;font-weight:500;"></div>
+      <div style="text-align:right;margin-bottom:12px;">
+        <label style="font-size:12px;font-weight:600;color:var(--ink,#1e293b);display:block;margin-bottom:6px;">كلمة المرور الجديدة</label>
+        <input type="password" id="newPwdForce" placeholder="••••••••" style="width:100%;padding:12px;border:1.5px solid var(--border,#cbd5e1);border-radius:10px;outline:none;background:var(--bg,#f8fafc);color:var(--ink,#0f172a);font-size:14px;" />
+      </div>
+      <div style="text-align:right;margin-bottom:22px;">
+        <label style="font-size:12px;font-weight:600;color:var(--ink,#1e293b);display:block;margin-bottom:6px;">تأكيد كلمة المرور الجديدة</label>
+        <input type="password" id="confirmPwdForce" placeholder="••••••••" style="width:100%;padding:12px;border:1.5px solid var(--border,#cbd5e1);border-radius:10px;outline:none;background:var(--bg,#f8fafc);color:var(--ink,#0f172a);font-size:14px;" />
+      </div>
+      <button type="button" id="btnSubmitForcePwd" onclick="submitForcePasswordChange()" style="width:100%;padding:13px;background:var(--accent,#d36b2e);color:#fff;border:none;border-radius:10px;cursor:pointer;font-weight:700;font-size:15px;transition:background 0.2s;">
+        تحديث كلمة المرور والمتابعة
+      </button>
+    </div>
+  </div>
+
   <script>
     var _pending2FAToken = '';
     var _pending2FAEmail = '';
@@ -1985,6 +2017,12 @@
             expiresAt: Date.now() + (10 * 60 * 60 * 1000),
             rememberMe: false
           }));
+          if (data.must_change_password || user.must_change_password) {
+            showForceChangePasswordModal(token, '', function () {
+              syncServerPrefsAndRedirect(token, nextPage);
+            });
+            return;
+          }
           syncServerPrefsAndRedirect(token, nextPage);
         } else {
           if (err) err.textContent = (res.data && res.data.error) || 'رمز التحقق غير صحيح أو منتهي الصلاحية';
@@ -1995,11 +2033,100 @@
       });
     }
 
+    var _forcePwdToken = '';
+    var _forcePwdCurrentPwd = '';
+    var _forcePwdCallback = null;
+
+    function showForceChangePasswordModal(token, currentPwd, callback) {
+      _forcePwdToken = token;
+      _forcePwdCurrentPwd = currentPwd || '';
+      _forcePwdCallback = callback;
+      var modal = document.getElementById('modalForceChangePassword');
+      if (modal) {
+        modal.style.display = 'flex';
+        var p1 = document.getElementById('newPwdForce');
+        var p2 = document.getElementById('confirmPwdForce');
+        if (p1) { p1.value = ''; p1.focus(); }
+        if (p2) { p2.value = ''; }
+        var err = document.getElementById('errorForcePwd');
+        if (err) err.textContent = '';
+      }
+    }
+
+    function submitForcePasswordChange() {
+      var p1 = (document.getElementById('newPwdForce') ? document.getElementById('newPwdForce').value : '').trim();
+      var p2 = (document.getElementById('confirmPwdForce') ? document.getElementById('confirmPwdForce').value : '').trim();
+      var err = document.getElementById('errorForcePwd');
+      var btn = document.getElementById('btnSubmitForcePwd');
+
+      if (!p1 || !p2) {
+        if (err) err.textContent = 'الرجاء إدخال وتأكيد كلمة المرور الجديدة';
+        return;
+      }
+      if (p1 !== p2) {
+        if (err) err.textContent = 'كلمتا المرور غير متطابقتين';
+        return;
+      }
+      if (p1.length < 8) {
+        if (err) err.textContent = 'يجب أن تتكون كلمة المرور من 8 أحرف على الأقل وتكون قوية';
+        return;
+      }
+      if (p1 === _forcePwdCurrentPwd || p1 === 'Admin@2026!') {
+        if (err) err.textContent = 'لا يمكن استخدام كلمة المرور الافتراضية؛ يرجى اختيار كلمة سر قوية ومختلفة';
+        return;
+      }
+
+      if (btn) btn.disabled = true;
+      if (err) err.textContent = 'جاري تحديث كلمة المرور...';
+
+      authRequest('/api/auth/change-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + _forcePwdToken,
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({
+          current_password: _forcePwdCurrentPwd || 'Admin@2026!',
+          new_password: p1
+        })
+      }).then(function (res) {
+        return res.json().catch(function() { return {}; }).then(function (data) {
+          return { status: res.status, data: data };
+        });
+      }).then(function (res) {
+        if (btn) btn.disabled = false;
+        if (res.status === 200 && res.data && res.data.ok) {
+          var modal = document.getElementById('modalForceChangePassword');
+          if (modal) modal.style.display = 'none';
+          try {
+            var cu = JSON.parse(ZS.getItem('zeralda-current-user') || '{}');
+            cu.must_change_password = false;
+            ZS.setItem('zeralda-current-user', JSON.stringify(cu));
+          } catch (_) {}
+          if (typeof _forcePwdCallback === 'function') {
+            _forcePwdCallback();
+          }
+        } else {
+          if (err) err.textContent = (res.data && res.data.error) || 'فشل تحديث كلمة المرور';
+        }
+      }).catch(function (e) {
+        if (btn) btn.disabled = false;
+        if (err) err.textContent = e.message || 'خطأ في الاتصال بالخادم';
+      });
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
       var inp = document.getElementById('code2FA');
       if (inp) {
         inp.addEventListener('keyup', function (e) {
           if (e.key === 'Enter') submit2FA();
+        });
+      }
+      var inpPwd = document.getElementById('confirmPwdForce');
+      if (inpPwd) {
+        inpPwd.addEventListener('keyup', function (e) {
+          if (e.key === 'Enter') submitForcePasswordChange();
         });
       }
 

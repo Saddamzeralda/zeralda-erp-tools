@@ -34,6 +34,8 @@ from urllib.parse import quote_plus
 
 logger = logging.getLogger("zeralda.storage")
 
+from app.services import crypto_storage
+
 # Optional PostgreSQL support (mirrors legacy behavior)
 try:
     from sqlalchemy import create_engine, text
@@ -79,6 +81,21 @@ UNDO_STACK_FILE = DATA_DIR / "undo_stack.json"
 BACKUP_DIR = DATA_DIR / "backups"
 
 DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def _atomic_write_encrypted_json(target_path: Path, data: Any) -> None:
+    """Serialize data to JSON, encrypt via AES-256-GCM, and atomically replace target file."""
+    tmp_path = target_path.with_suffix(f"{target_path.suffix}.tmp")
+    encrypted_bytes = crypto_storage.encrypt_json(data)
+    tmp_path.write_bytes(encrypted_bytes)
+    os.replace(tmp_path, target_path)
+
+
+def _read_encrypted_or_plain_json(target_path: Path) -> Any:
+    """Read bytes from file and decrypt via AES-256-GCM (auto-detects plaintext legacy JSON)."""
+    raw_bytes = target_path.read_bytes()
+    return crypto_storage.decrypt_json(raw_bytes)
+
 
 # ── Limits (env-overridable) ────────────────────────────────────────────────
 MAX_STORE_VALUE_BYTES = int(os.getenv("MAX_STORE_VALUE_BYTES", "5242880"))  # 5MB
@@ -312,8 +329,7 @@ def read_store() -> Dict[str, Any]:
         if _store_cache is not None and mtime == _store_cache_mtime_ns:
             return _deep_copy(_store_cache)
         try:
-            with open(DATA_FILE, "r", encoding="utf-8") as f:
-                data = json.load(f)
+            data = _read_encrypted_or_plain_json(DATA_FILE)
             result = data if isinstance(data, dict) else {}
             _store_cache = result
             _store_cache_mtime_ns = mtime
@@ -333,8 +349,7 @@ def read_store() -> Dict[str, Any]:
                         key=lambda p: p.stat().st_mtime_ns,
                     )
                     if backups:
-                        with open(backups[-1], "r", encoding="utf-8") as f:
-                            data = json.load(f)
+                        data = _read_encrypted_or_plain_json(backups[-1])
                         if isinstance(data, dict):
                             logger.info("Recovered from backup: %s", backups[-1].name)
                             _store_cache = data
@@ -582,10 +597,7 @@ def _backup_store(store: Dict[str, Any]) -> None:
         BACKUP_DIR.mkdir(parents=True, exist_ok=True)
         ts = datetime.datetime.now().strftime("%Y%m%d-%H%M%S-%f")
         backup_path = BACKUP_DIR / f"shared_store-{ts}.json"
-        tmp_path = backup_path.with_suffix(".json.tmp")
-        with open(tmp_path, "w", encoding="utf-8") as f:
-            json.dump(store, f, ensure_ascii=False, indent=2)
-        os.replace(tmp_path, backup_path)
+        _atomic_write_encrypted_json(backup_path, store)
         # Prune old .json backups beyond the keep count
         json_backups = sorted(
             [p for p in BACKUP_DIR.iterdir()
@@ -630,12 +642,9 @@ def write_store(store: Dict[str, Any]) -> None:
     with _lock:
         _backup_store(store)
 
-        # JSON snapshot — authoritative fallback, always written first
-        tmp_file = DATA_FILE.with_suffix(".json.tmp")
+        # JSON snapshot — authoritative fallback, always written first (AES-256-GCM encrypted)
         try:
-            with open(tmp_file, "w", encoding="utf-8") as f:
-                json.dump(store, f, ensure_ascii=False, indent=2)
-            os.replace(tmp_file, DATA_FILE)
+            _atomic_write_encrypted_json(DATA_FILE, store)
         except Exception as e:
             logger.error("Failed to write JSON store: %s", e)
             raise
@@ -721,12 +730,9 @@ def write_key(key: str, value: Any) -> None:
         # Backup (throttled)
         _backup_store(store)
 
-        # JSON snapshot — write the full store (still needed as authoritative fallback)
-        tmp_file = DATA_FILE.with_suffix(".json.tmp")
+        # JSON snapshot — write the full store (AES-256-GCM encrypted)
         try:
-            with open(tmp_file, "w", encoding="utf-8") as f:
-                json.dump(store, f, ensure_ascii=False, indent=2)
-            os.replace(tmp_file, DATA_FILE)
+            _atomic_write_encrypted_json(DATA_FILE, store)
         except Exception as e:
             logger.error("Failed to write JSON store (write_key): %s", e)
             raise
@@ -772,11 +778,8 @@ def delete_key(key: str) -> None:
 
         _backup_store(store)
 
-        tmp_file = DATA_FILE.with_suffix(".json.tmp")
         try:
-            with open(tmp_file, "w", encoding="utf-8") as f:
-                json.dump(store, f, ensure_ascii=False, indent=2)
-            os.replace(tmp_file, DATA_FILE)
+            _atomic_write_encrypted_json(DATA_FILE, store)
         except Exception as e:
             logger.error("Failed to write JSON store (delete_key): %s", e)
             raise
@@ -937,8 +940,7 @@ def read_history() -> Dict[str, Any]:
         if _history_cache is not None and mtime == _history_cache_mtime_ns:
             return _deep_copy(_history_cache)
         try:
-            with open(HISTORY_FILE, "r", encoding="utf-8") as f:
-                data = json.load(f)
+            data = _read_encrypted_or_plain_json(HISTORY_FILE)
             result = data if isinstance(data, dict) else {}
             _history_cache = result
             _history_cache_mtime_ns = mtime
@@ -964,8 +966,7 @@ def read_undo_stack() -> List[Any]:
         if _undo_stack_cache is not None and mtime == _undo_stack_cache_mtime_ns:
             return _deep_copy(_undo_stack_cache)
         try:
-            with open(UNDO_STACK_FILE, "r", encoding="utf-8") as f:
-                data = json.load(f)
+            data = _read_encrypted_or_plain_json(UNDO_STACK_FILE)
             result = data if isinstance(data, list) else []
             _undo_stack_cache = result
             _undo_stack_cache_mtime_ns = mtime
@@ -1002,10 +1003,7 @@ def _flush_history_to_disk() -> None:
         _history_flush_timer = None
         if _history_dirty and _history_cache is not None:
             try:
-                tmp = HISTORY_FILE.with_suffix(".json.tmp")
-                with open(tmp, "w", encoding="utf-8") as f:
-                    json.dump(_history_cache, f, ensure_ascii=False, indent=2)
-                os.replace(tmp, HISTORY_FILE)
+                _atomic_write_encrypted_json(HISTORY_FILE, _history_cache)
                 global _history_cache_mtime_ns
                 _history_cache_mtime_ns = _mtime_ns(HISTORY_FILE)
                 _history_dirty = False
@@ -1013,10 +1011,7 @@ def _flush_history_to_disk() -> None:
                 logger.error("History flush failed: %s", e)
         if _undo_stack_dirty and _undo_stack_cache is not None:
             try:
-                tmp = UNDO_STACK_FILE.with_suffix(".json.tmp")
-                with open(tmp, "w", encoding="utf-8") as f:
-                    json.dump(_undo_stack_cache, f, ensure_ascii=False, indent=2)
-                os.replace(tmp, UNDO_STACK_FILE)
+                _atomic_write_encrypted_json(UNDO_STACK_FILE, _undo_stack_cache)
                 global _undo_stack_cache_mtime_ns
                 _undo_stack_cache_mtime_ns = _mtime_ns(UNDO_STACK_FILE)
                 _undo_stack_dirty = False

@@ -97,52 +97,67 @@ def _ensure_keys():
             except Exception:
                 pass
 
-    if priv_path.exists() and pub_path.exists():
-        # Load existing keys
-        from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.primitives import serialization
+
+    # Case 1: Private key exists (Developer / Keygen Workstation)
+    if priv_path.exists():
         priv_pem = priv_path.read_bytes()
         _rsa_private = serialization.load_pem_private_key(priv_pem, password=None)
         _rsa_public = _rsa_private.public_key()
+        if not pub_path.exists():
+            pub_pem = _rsa_public.public_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PublicFormat.SubjectPublicKeyInfo,
+            )
+            pub_path.write_bytes(pub_pem)
+        print(f"[LicenseService] RSA key pair ready ({KEY_BITS} bits - Developer Signing Mode)")
+    # Case 2: Only Public key exists (Client Installation - Verification Mode)
+    elif pub_path.exists():
+        pub_pem = pub_path.read_bytes()
+        _rsa_public = serialization.load_pem_public_key(pub_pem)
+        _rsa_private = None
+        print(f"[LicenseService] RSA Public Key ready ({KEY_BITS} bits - Client Verification Only)")
+    # Case 3: Neither exists
     else:
-        # Generate new key pair
-        from cryptography.hazmat.primitives.asymmetric import rsa
-        from cryptography.hazmat.primitives import serialization
+        from app.services.security import ENVIRONMENT
+        if ENVIRONMENT == "development" or os.getenv("ALLOW_KEY_GENERATION", "false").lower() == "true":
+            from cryptography.hazmat.primitives.asymmetric import rsa
 
-        _rsa_private = rsa.generate_private_key(
-            public_exponent=65537,
-            key_size=KEY_BITS,
-        )
-        _rsa_public = _rsa_private.public_key()
+            _rsa_private = rsa.generate_private_key(
+                public_exponent=65537,
+                key_size=KEY_BITS,
+            )
+            _rsa_public = _rsa_private.public_key()
 
-        # Save private key (restrictive permissions)
-        priv_pem = _rsa_private.private_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PrivateFormat.PKCS8,
-            encryption_algorithm=serialization.NoEncryption(),
-        )
-        priv_path.write_bytes(priv_pem)
-        try:
-            priv_path.chmod(0o600)  # owner read/write only
-        except (OSError, PermissionError):
-            pass  # Windows doesn't support Unix permissions
+            priv_pem = _rsa_private.private_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PrivateFormat.PKCS8,
+                encryption_algorithm=serialization.NoEncryption(),
+            )
+            priv_path.write_bytes(priv_pem)
+            try:
+                priv_path.chmod(0o600)
+            except (OSError, PermissionError):
+                pass
 
-        # Save public key
-        pub_pem = _rsa_public.public_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PublicFormat.SubjectPublicKeyInfo,
-        )
-        pub_path.write_bytes(pub_pem)
+            pub_pem = _rsa_public.public_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PublicFormat.SubjectPublicKeyInfo,
+            )
+            pub_path.write_bytes(pub_pem)
+            print(f"[LicenseService] Generated new development RSA keypair ({KEY_BITS} bits)")
+        else:
+            raise FileNotFoundError(
+                "Missing license_public_key.pem. Client installations require the vendor public key to verify licenses."
+            )
 
     # Cache the SPKI in base64 for serving to clients
-    from cryptography.hazmat.primitives import serialization
     import base64
     spki_der = _rsa_public.public_bytes(
         encoding=serialization.Encoding.DER,
         format=serialization.PublicFormat.SubjectPublicKeyInfo,
     )
     _public_key_spki_b64 = base64.b64encode(spki_der).decode("ascii")
-
-    print(f"[LicenseService] RSA key pair ready ({KEY_BITS} bits)")
 
 
 def get_public_key_spki_b64() -> str:
@@ -151,10 +166,14 @@ def get_public_key_spki_b64() -> str:
     return _public_key_spki_b64
 
 
-# ── License signing ────────────────────────────────────────────────────────
 def _sign_payload(payload: Dict[str, Any]) -> str:
     """Sign a payload with RSA-PSS + SHA-256. Returns 'base64url(payload).base64url(signature)'."""
     _ensure_keys()
+    if _rsa_private is None:
+        raise RuntimeError(
+            "License signing requires the developer RSA private key (license_private_key.pem), "
+            "which is kept exclusively by the software vendor and is not distributed to client installations."
+        )
     from cryptography.hazmat.primitives import hashes
     from cryptography.hazmat.primitives.asymmetric import padding
     import base64
@@ -460,7 +479,8 @@ def activate_license_for_hw(
             payload["hwFingerprint"] = hw_fingerprint
             payload["hwId"] = hw_id
             record["payload"] = payload
-            record["signedPayload"] = _sign_payload(payload)
+            if _rsa_private is not None:
+                record["signedPayload"] = _sign_payload(payload)
         elif bound_hw != hw_fingerprint:
             return {
                 "ok": False,

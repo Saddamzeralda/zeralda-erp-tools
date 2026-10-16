@@ -1164,14 +1164,21 @@
 				headers: {
 					'Content-Type': 'application/json',
 					'Authorization': 'Bearer ' + token,
-					'X-Session-Token': token
+					'X-Session-Token': token,
+					'X-Company-Id': companyId,
+					'X-Requested-With': 'XMLHttpRequest'
 				},
 				body: JSON.stringify({ keys: keysToFetch })
 			});
 			if (!res.ok) {
 				// Fallback to full store read if mget is unavailable (older server)
 				res = await fetch('/api/store', {
-					headers: { 'Authorization': 'Bearer ' + token, 'X-Session-Token': token }
+					headers: {
+						'Authorization': 'Bearer ' + token,
+						'X-Session-Token': token,
+						'X-Company-Id': companyId,
+						'X-Requested-With': 'XMLHttpRequest'
+					}
 				});
 				if (!res.ok) return;
 			}

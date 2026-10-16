@@ -2595,8 +2595,14 @@ def _fix_invoice_supplier_customer(analysis: Dict, text: str) -> Dict:
         # Primary: data/shared_store.json (the actual store used by the app)
         _store_path = os.path.join(project_root, 'data', 'shared_store.json')
         if os.path.exists(_store_path):
-            with open(_store_path, 'r', encoding='utf-8') as _f:
-                _store = _json.load(_f)
+            try:
+                from app.services import crypto_storage
+                with open(_store_path, 'rb') as _f:
+                    _raw = _f.read()
+                _store = crypto_storage.decrypt_json(_raw)
+            except Exception:
+                with open(_store_path, 'r', encoding='utf-8') as _f:
+                    _store = _json.load(_f)
             _company = _extract_company_name(_store)
             if _company and _company.lower() != supplier:
                 print(f'[Invoice] Using company name from shared_store as customer: "{_company}"')

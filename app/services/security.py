@@ -84,7 +84,8 @@ def _load_allowed_origins() -> set:
     hosts = [
         "localhost", "127.0.0.1", "::1",
         "www.zeralda-erp.dz", "zeralda-erp.dz",
-        "zeralda.local"
+        "zeralda.local",
+        "zeralda-erp-employees-main-production.up.railway.app"
     ]
     try:
         local_hn = socket.gethostname().lower()
@@ -97,6 +98,19 @@ def _load_allowed_origins() -> set:
     for lip in lan_ips:
         if lip not in hosts:
             hosts.append(lip)
+
+    # Add explicitly configured tunnel / custom domains from env
+    raw_custom = (os.getenv("CUSTOM_DOMAIN", "") + "," + os.getenv("TUNNEL_DOMAIN", "")).strip()
+    for cd in raw_custom.split(","):
+        cd_clean = cd.strip().lower()
+        if cd_clean:
+            if "://" in cd_clean:
+                from urllib.parse import urlparse
+                cd_host = urlparse(cd_clean).hostname or cd_clean
+            else:
+                cd_host = cd_clean
+            if cd_host and cd_host not in hosts:
+                hosts.append(cd_host)
 
     for host in hosts:
         origins.add(f"http://{host}:{port}")
@@ -112,7 +126,7 @@ ALLOWED_ORIGINS = _load_allowed_origins()
 
 
 def origin_is_allowed(origin: Optional[str]) -> bool:
-    """Comprehensive origin whitelist check supporting custom domain, private LAN IPs, and tunnels."""
+    """Comprehensive origin whitelist check supporting custom domain, private LAN IPs, and explicit tunnels."""
     if not origin:
         return False
     norm = origin.strip().lower().rstrip("/")
@@ -124,7 +138,7 @@ def origin_is_allowed(origin: Optional[str]) -> bool:
         host = (parsed.hostname or "").strip().lower()
         if not host:
             return False
-        if host in ("localhost", "127.0.0.1", "www.zeralda-erp.dz", "zeralda-erp.dz", "zeralda.local"):
+        if host in ("localhost", "127.0.0.1", "www.zeralda-erp.dz", "zeralda-erp.dz", "zeralda.local", "zeralda-erp-employees-main-production.up.railway.app"):
             return True
         try:
             import socket
@@ -132,13 +146,9 @@ def origin_is_allowed(origin: Optional[str]) -> bool:
                 return True
         except Exception:
             pass
-        if (
-            host.endswith(".trycloudflare.com")
-            or host.endswith(".railway.app")
-            or host.endswith(".up.railway.app")
-            or host.endswith(".onrender.com")
-        ):
-            return True
+        # Note: Generic wildcard match on shared public SaaS platforms (*.trycloudflare.com,
+        # *.railway.app, *.onrender.com) was REMOVED to prevent cross-origin data exfiltration.
+        # Explicit tunnels should be defined in ALLOWED_ORIGINS, TUNNEL_DOMAIN, or CUSTOM_DOMAIN.
         try:
             ip = ipaddress.ip_address(host)
             if ip.is_private or ip.is_loopback:
@@ -338,6 +348,21 @@ def require_auth(request: Request, required_role: Optional[str] = None) -> Dict[
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={"ok": False, "error": "Unauthorized", "code": "UNAUTHORIZED"},
         )
+    if user.get("must_change_password"):
+        allowed_prefixes = (
+            "/api/auth/change-password",
+            "/api/auth/me",
+            "/api/auth/logout",
+        )
+        if not any(request.url.path.startswith(p) for p in allowed_prefixes):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={
+                    "ok": False,
+                    "error": "Password change required before accessing the system",
+                    "code": "PASSWORD_CHANGE_REQUIRED",
+                },
+            )
     if required_role and user.get("role") != required_role and user.get("role") != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -348,6 +373,15 @@ def require_auth(request: Request, required_role: Optional[str] = None) -> Dict[
 
 def require_store_permission(user: Dict[str, Any], action: str) -> None:
     """Raise HTTPException if the user's role can't perform the storage action."""
+    if (user or {}).get("must_change_password"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={
+                "ok": False,
+                "error": "Password change required before accessing the system",
+                "code": "PASSWORD_CHANGE_REQUIRED",
+            },
+        )
     role = (user or {}).get("role", "viewer")
     email = (user or {}).get("email", "unknown")
 

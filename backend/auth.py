@@ -255,10 +255,11 @@ def initialize_default_users():
             'created_at': datetime.now().isoformat(),
             'active': True,
             'failed_attempts': 0,
-            'locked_until': None
+            'locked_until': None,
+            'must_change_password': True
         }
         save_users(users)
-        print(f"[AUTH] [OK] Initialized default admin: {admin_email}")
+        print(f"[AUTH] [OK] Initialized default admin: {admin_email} (password change required on first login)")
 
 
 # ══════════════════════════════════════════════════════════
@@ -675,13 +676,31 @@ def authenticate(identifier: str, password: str, ip_address: str = '', user_agen
     except Exception:
         pass
 
+    # Enforce mandatory password change if user has must_change_password or is using default admin password
+    default_pwd = os.getenv('DEFAULT_ADMIN_PASSWORD', 'Admin@2026!').strip()
+    is_using_default = (
+        user.get('role') == 'admin' and (
+            user.get('must_change_password') is True or
+            verify_password(default_pwd, user['password'], user['salt'])
+        )
+    )
+    if is_using_default and not user.get('must_change_password'):
+        user['must_change_password'] = True
+        try:
+            save_users(users)
+        except Exception:
+            pass
+
     # Return user data (without password or TOTP secret)
     safe_user = {k: v for k, v in user.items() if k not in ['password', 'salt', 'totp_secret']}
+    must_change = bool(user.get('must_change_password', False))
+    safe_user['must_change_password'] = must_change
 
     return {
         'ok': True,
         'session_token': session_token,
-        'user': safe_user
+        'user': safe_user,
+        'must_change_password': must_change
     }
 
 
@@ -719,10 +738,13 @@ def verify_2fa_login(temp_token: str, code: str, ip_address: str = '', user_agen
         pass
 
     safe_user = {k: v for k, v in user.items() if k not in ['password', 'salt', 'totp_secret']}
+    must_change = bool(user.get('must_change_password', False))
+    safe_user['must_change_password'] = must_change
     return {
         'ok': True,
         'session_token': session_token,
-        'user': safe_user
+        'user': safe_user,
+        'must_change_password': must_change
     }
 
 
@@ -910,10 +932,15 @@ def change_password(email: str, current_password: str, new_password: str) -> Dic
     if current_password == new_password:
         return {'ok': False, 'error': 'New password must differ from the current one', 'code': 'SAME_PASSWORD'}
 
+    default_pwd = os.getenv('DEFAULT_ADMIN_PASSWORD', 'Admin@2026!').strip()
+    if new_password == default_pwd:
+        return {'ok': False, 'error': 'New password cannot be the default administrator password', 'code': 'DEFAULT_PASSWORD_FORBIDDEN'}
+
     hashed, salt = hash_password(new_password)
     user['password'] = hashed
     user['salt'] = salt
     user['password_changed_at'] = datetime.now().isoformat()
+    user['must_change_password'] = False
     save_users(users)
     return {'ok': True, 'message': 'Password changed successfully'}
 

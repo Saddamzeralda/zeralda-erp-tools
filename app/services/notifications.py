@@ -19,8 +19,15 @@ from typing import Any, Dict, List, Optional
 import urllib.request
 import urllib.error
 
-from pywebpush import webpush, WebPushException
-from py_vapid import Vapid
+try:
+    from pywebpush import webpush, WebPushException
+    from py_vapid import Vapid
+    HAS_WEBPUSH = True
+except ImportError:
+    HAS_WEBPUSH = False
+    webpush = None
+    WebPushException = Exception
+    Vapid = None
 
 from app.services import storage
 
@@ -47,7 +54,11 @@ def _ensure_vapid_keys() -> Dict[str, str]:
             except Exception as e:
                 logger.warning(f"Failed to read existing VAPID keys, regenerating: {e}")
 
-        # Generate new VAPID keys
+        # Generate new VAPID keys if Vapid library is available
+        if not Vapid:
+            logger.info("py_vapid not installed; web push VAPID keys cannot be generated")
+            return {"public_key": "", "private_key": "", "claims_sub": "mailto:admin@zeralda-erp.dz"}
+
         from cryptography.hazmat.primitives import serialization
         vapid = Vapid()
         vapid.generate_keys()

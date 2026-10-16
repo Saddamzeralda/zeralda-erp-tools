@@ -22,10 +22,11 @@ python -m app.main            # or: uvicorn app.app:app --host 127.0.0.1 --port 
 ```
 
 ## Storage Architecture
-- **Server:** `data/shared_store.json` (authoritative) + optional PostgreSQL `kv_store` table
-- **History:** `data/shared_history.json` (deferred 5s flush, debounced)
-- **Undo:** `data/undo_stack.json` (max 200 entries)
-- **Backups:** `data/backups/shared_store-*.json` (keep last 20)
+- **Server:** `data/shared_store.json` (authoritative, AES-256-GCM encrypted at rest) + optional PostgreSQL `kv_store` table
+- **History:** `data/shared_history.json` (deferred 5s flush, debounced, AES-256-GCM encrypted)
+- **Undo:** `data/undo_stack.json` (max 200 entries, AES-256-GCM encrypted)
+- **Backups:** `data/backups/shared_store-*.json` (keep last 20, AES-256-GCM encrypted)
+- **Encryption Service:** `app/services/crypto_storage.py` (AES-256-GCM authenticated encryption with HKDF key derivation, automatic legacy plaintext detection)
 - **Client:** IndexedDB via `zeralda_db.js` + in-memory cache + WAL
 
 ## Key Design Decisions
@@ -201,10 +202,18 @@ python -m app.main            # or: uvicorn app.app:app --host 127.0.0.1 --port 
   2. Make changes
   3. Re-obfuscate: `python tools/obfuscate_py.py` (or run JS obfuscator)
   4. Re-register integrity: `python -c "import sys; sys.path.insert(0,'.'); from app.services import license_service; license_service.reset_integrity()"`
+- **Cython Native Compilation:** `tools/compile_protection_cython.py` — compiles critical
+  Python protection files (`license_service.py`, `keygen_service.py`, `handlers/license.py`,
+  `crypto_storage.py`) into native C extension libraries (`.pyd` on Windows, `.so` on Linux).
+  Strips source code, prevents decompilation, and enhances execution performance.
+  Commands:
+  - Compile: `python tools/compile_protection_cython.py`
+  - Restore: `python tools/compile_protection_cython.py --restore`
+  - Status:  `python tools/compile_protection_cython.py --status`
 - **Protection Toolkit:** `tools/protection_toolkit.py` — unified CLI for all protection features.
   Launch: `python tools/protection_toolkit.py` or double-click `START_TOOLKIT.cmd`.
   Features: keygen+license management, analytics dashboard, obfuscation (JS+Python),
-  integrity check, and full 21-test integration suite (option 18).
+  Cython compilation (options 19-21), integrity check, and full integration test suite.
 
 ## Installer
 - **Source:** `installer/Zeralda_ERP_Setup.iss` (Inno Setup 6.2+)

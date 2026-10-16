@@ -9,14 +9,30 @@
   try {
     var hideStyle = document.createElement('style');
     hideStyle.id = 'zeralda-kill-sync-pill-style';
-    hideStyle.textContent = '#zeraldaSyncPill, #zeraldaSyncHubModal, #zeraldaAlertsHubWrapper, #zeraldaAlertsButton, #zeraldaAlertsDropdown, #zeraldaMobileNotifBanner, .zeralda-sync-pill { display:none !important; visibility:hidden !important; pointer-events:none !important; opacity:0 !important; width:0 !important; height:0 !important; position:absolute !important; left:-99999px !important; }';
+    hideStyle.textContent = '#zeraldaSyncPill, #zeraldaSyncHubModal, #zeraldaAlertsHubWrapper, #zeraldaAlertsButton, #zeraldaAlertsDropdown, #zeraldaAlertsBadge, #zeraldaMobileNotifBanner, .zeralda-sync-pill, .alerts-hub-wrapper, .proactive-alerts-hub { display:none !important; visibility:hidden !important; pointer-events:none !important; opacity:0 !important; width:0 !important; height:0 !important; position:absolute !important; left:-99999px !important; top:-99999px !important; }';
     (document.head || document.documentElement).appendChild(hideStyle);
 
     function __purgeFloatingWidgets() {
-      ['zeraldaSyncPill', 'zeraldaSyncHubModal', 'zeraldaAlertsHubWrapper', 'zeraldaAlertsButton', 'zeraldaAlertsDropdown', 'zeraldaMobileNotifBanner'].forEach(function(id) {
+      ['zeraldaSyncPill', 'zeraldaSyncHubModal', 'zeraldaAlertsHubWrapper', 'zeraldaAlertsButton', 'zeraldaAlertsDropdown', 'zeraldaAlertsBadge', 'zeraldaMobileNotifBanner'].forEach(function(id) {
         var el = document.getElementById(id);
         if (el && el.parentNode) el.parentNode.removeChild(el);
       });
+      try {
+        var badNodes = document.querySelectorAll('[id*="zeraldaAlerts"], .alerts-hub-wrapper, .proactive-alerts-hub, .zeralda-alerts-dropdown');
+        for (var b = 0; b < badNodes.length; b++) {
+          if (badNodes[b] && badNodes[b].parentNode) badNodes[b].parentNode.removeChild(badNodes[b]);
+        }
+        var allDivs = document.querySelectorAll('div, section, aside, header');
+        for (var i = 0; i < allDivs.length; i++) {
+          var txt = allDivs[i].textContent || '';
+          if (txt.indexOf("Centre d'alertes") !== -1 || txt.indexOf("مركز التنبيهات الذكي") !== -1 || txt.indexOf("Smart Alerts Hub") !== -1 || txt.indexOf("مركز المزامنة") !== -1 || txt.indexOf("Sync & Backup") !== -1) {
+            var target = allDivs[i].closest('[style*="fixed"], [style*="absolute"], .zeralda-sync-pill, .alerts-hub-wrapper') || allDivs[i];
+            if (target && target.parentNode && target !== document.body && target !== document.documentElement && !target.closest('#backups') && !target.closest('.settings-content')) {
+              target.parentNode.removeChild(target);
+            }
+          }
+        }
+      } catch (_) {}
     }
     __purgeFloatingWidgets();
     if (document.readyState === 'loading') {
@@ -32,7 +48,7 @@
           for (var j = 0; j < nodes.length; j++) {
             var n = nodes[j];
             if (n && n.nodeType === 1) {
-              if (n.id === 'zeraldaSyncPill' || n.id === 'zeraldaSyncHubModal' || n.id === 'zeraldaAlertsHubWrapper') {
+              if (n.id === 'zeraldaSyncPill' || n.id === 'zeraldaSyncHubModal' || n.id === 'zeraldaAlertsHubWrapper' || (n.id && n.id.indexOf('zeraldaAlerts') !== -1)) {
                 if (n.parentNode) n.parentNode.removeChild(n);
               }
             }
@@ -697,12 +713,12 @@
         // Auto-load Unified Document Printer if not already loaded & permanently remove floating alerts
         try {
           // Permanently cleanup any floating Smart Alerts Hub or Sync & Backup floating pill
-          ['zeraldaAlertsHubWrapper', 'zeraldaAlertsButton', 'zeraldaAlertsDropdown', 'zeraldaSyncPill', 'zeraldaSyncHubModal', 'zeraldaMobileNotifBanner'].forEach(function(id) {
+          ['zeraldaAlertsHubWrapper', 'zeraldaAlertsButton', 'zeraldaAlertsDropdown', 'zeraldaAlertsBadge', 'zeraldaSyncPill', 'zeraldaSyncHubModal', 'zeraldaMobileNotifBanner'].forEach(function(id) {
             var el = document.getElementById(id);
             if (el && el.parentNode) el.parentNode.removeChild(el);
           });
           var hideStyle = document.createElement('style');
-          hideStyle.textContent = '#zeraldaAlertsHubWrapper, #zeraldaAlertsButton, #zeraldaAlertsDropdown, #zeraldaSyncPill, #zeraldaSyncHubModal, #zeraldaMobileNotifBanner { display:none !important; visibility:hidden !important; pointer-events:none !important; opacity:0 !important; }';
+          hideStyle.textContent = '#zeraldaAlertsHubWrapper, #zeraldaAlertsButton, #zeraldaAlertsDropdown, #zeraldaAlertsBadge, #zeraldaSyncPill, #zeraldaSyncHubModal, #zeraldaMobileNotifBanner, .alerts-hub-wrapper, .proactive-alerts-hub { display:none !important; visibility:hidden !important; pointer-events:none !important; opacity:0 !important; }';
           document.head.appendChild(hideStyle);
 
           if (!window.UnifiedDocumentPrinter) {

@@ -45,5 +45,5 @@ WShell.Run BatFile, 0, False
 
 ' Open browser immediately — the page will auto-retry until the server is ready
 Dim Url
-Url = "https://zeralda-erp-employees-main-production.up.railway.app/login.html?next=%2Fzeralda_erp_dashboard.html"
+Url = "https://zeralda-erp-employees-main-production.up.railway.app/zeralda_erp_dashboard.html"
 WShell.Run Url, 1, False

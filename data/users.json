@@ -42,12 +42,14 @@
   "admin@zeralda.dz": {
     "username": "Admin",
     "email": "admin@zeralda.dz",
-    "password": "3318f2570ee427aa3e23b32b8e9d21e7589ab099b3ad3f4a1a21688f32a1b062",
-    "salt": "27b005725a6c6af338303cf4f4015c0a523d4f43b238363156a30aac37933d8e",
+    "password": "021f49352efdfad968810c754b68d6a7445618b36100e7d795e2cfbf5c52a71c",
+    "salt": "a1697ebe20506f5851217cb2b0fa7a2d600a6e40387e8979cd159a8c7ef0ab70",
     "role": "admin",
     "created_at": "2026-10-12T22:43:20.977224",
     "active": true,
     "failed_attempts": 0,
-    "locked_until": null
+    "locked_until": null,
+    "must_change_password": true,
+    "password_changed_at": "2026-10-16T12:53:18.543092"
   }
 }

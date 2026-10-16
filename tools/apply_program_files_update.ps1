@@ -41,9 +41,9 @@ $envFile = "$dst\.env"
 if (Test-Path $envFile) {
     $content = Get-Content $envFile -Raw
     if ($content -match 'STARTUP_URL=') {
-        $content = $content -replace 'STARTUP_URL=.*', 'STARTUP_URL=https://zeralda-erp-employees-main-production.up.railway.app/login.html?next=%2Fzeralda_erp_dashboard.html'
+        $content = $content -replace 'STARTUP_URL=.*', 'STARTUP_URL=https://zeralda-erp-employees-main-production.up.railway.app/zeralda_erp_dashboard.html'
     } else {
-        $content += "`r`nSTARTUP_URL=https://zeralda-erp-employees-main-production.up.railway.app/login.html?next=%2Fzeralda_erp_dashboard.html`r`n"
+        $content += "`r`nSTARTUP_URL=https://zeralda-erp-employees-main-production.up.railway.app/zeralda_erp_dashboard.html`r`n"
     }
     Set-Content -Path $envFile -Value $content -Encoding UTF8
     Write-Host "   .env STARTUP_URL updated."

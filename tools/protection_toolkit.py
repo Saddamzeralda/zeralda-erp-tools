@@ -458,6 +458,40 @@ def mod_restore_all():
     _pause()
 
 
+def mod_compile_cython():
+    """تجميع ملفات الحماية إلى ثنائيات C (.pyd / .so) عبر Cython"""
+    _header("تجميع ثنائيات Cython Native (.pyd / .so)")
+    from tools.compile_protection_cython import compile_modules
+    success = compile_modules()
+    if success:
+        _ok("تم تجميع كل ملفات الحماية إلى وحدات C ثنائية بنجاح!")
+    else:
+        _warn("تعذر التجميع. تحقق من تثبيت Cython ومترجم C (GCC/MSVC).")
+    _pause()
+
+
+def mod_restore_cython():
+    """استرجاع الملفات الأصلية وإزالة ثنائيات Cython"""
+    _header("استرجاع ملفات Python الأصلية وإلغاء ثنائيات Cython")
+    from tools.compile_protection_cython import restore_originals
+    restore_originals()
+    _ok("تم استرجاع ملفات Python وإعادة تسجيل الـ hashes.")
+    _pause()
+
+
+def mod_status_cython():
+    """عرض حالة تجميع وحدات الحماية"""
+    _header("حالة تجميع وحدات الحماية (Cython / Obfuscation)")
+    from tools.compile_protection_cython import get_status
+    statuses = get_status()
+    print(f"  {'Module':<36} | {'State':<30}")
+    print("  " + "-" * 68)
+    for s in statuses:
+        color = C.GREEN if "Compiled" in s['state'] else (C.YELLOW if "Obfuscated" in s['state'] else C.CYAN)
+        print(f"  {s['module']:<36} | {color}{s['state']:<30}{C.R}")
+    _pause()
+
+
 # ═══════════════════════════════════════════════════════════════════════════
 #  MODULE 4: Integrity (فحص السلامة)
 # ═══════════════════════════════════════════════════════════════════════════
@@ -725,14 +759,19 @@ def main_menu():
         print(f"     15. فحص سلامة الملفات")
         print(f"     16. إعادة تسجيل الـ hashes")
         print()
-        print(f"  {C.BOLD}5️⃣  أدوات{C.R}")
+        print(f"  {C.BOLD}5️⃣  التجميع الثنائي (Cython Native .pyd/.so){C.R}")
+        print(f"     19. تجميع ثنائيات Cython Native (.pyd / .so)")
+        print(f"     20. استرجاع الملفات الأصلية من Cython")
+        print(f"     21. عرض حالة تجميع الوحدات (Status)")
+        print()
+        print(f"  {C.BOLD}6️⃣  أدوات{C.R}")
         print(f"     17. حالة الخادم والترخيص")
         print(f"     18. {C.GREEN}{C.BOLD}اختبار شامل (10 اختبارات){C.R}")
         print()
         print(f"     0. خروج")
         print()
 
-        choice = input(f"  {C.CYAN}اختر (0-18): {C.R}").strip()
+        choice = input(f"  {C.CYAN}اختر (0-21): {C.R}").strip()
 
         actions = {
             "1": mod_generate_key,
@@ -753,6 +792,9 @@ def main_menu():
             "16": mod_integrity_reset,
             "17": mod_server_status,
             "18": mod_full_test,
+            "19": mod_compile_cython,
+            "20": mod_restore_cython,
+            "21": mod_status_cython,
         }
 
         if choice == "0" or choice.lower() == "q":

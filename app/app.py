@@ -37,18 +37,42 @@ def create_app() -> FastAPI:
         redoc_url="/api/redoc" if ENVIRONMENT != "production" else None,
     )
 
-    # ── CORS (Strict Whitelist + Private LAN + Trusted Tunnels) ──────────
-    # Restrict origins to localhost, private LAN ranges, and trusted domains
-    SAFE_CORS_REGEX = (
-        r"^https?://("
-        r"localhost|"
-        r"127\.0\.0\.1|"
-        r"10\.\d{1,3}\.\d{1,3}\.\d{1,3}|"
-        r"192\.168\.\d{1,3}\.\d{1,3}|"
-        r"172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}|"
-        r"([a-zA-Z0-9-]+\.)*(trycloudflare\.com|railway\.app|up\.railway\.app|onrender\.com|zeralda-erp\.dz|zeralda\.local)"
-        r")(:\d+)?$"
-    )
+    # ── CORS (Strict Whitelist + Private LAN + Explicit Tunnels) ─────────
+    # Restrict origins to localhost, private LAN ranges, and explicitly trusted domains.
+    # Note: Generic wildcard subdomains (*.trycloudflare.com, *.railway.app, *.onrender.com)
+    # have been removed to prevent cross-origin data theft from untrusted third-party apps.
+    import re
+    from urllib.parse import urlparse
+
+    trusted_cors_patterns = [
+        r"localhost",
+        r"127\.0\.0\.1",
+        r"::1",
+        r"10\.\d{1,3}\.\d{1,3}\.\d{1,3}",
+        r"192\.168\.\d{1,3}\.\d{1,3}",
+        r"172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}",
+        r"([a-zA-Z0-9-]+\.)*zeralda-erp\.dz",
+        r"([a-zA-Z0-9-]+\.)*zeralda\.local",
+        r"zeralda-erp-employees-main-production\.up\.railway\.app",
+    ]
+
+    # Explicitly configured domains/tunnels in environment
+    configured_cors = (os.getenv("ALLOWED_ORIGINS", "") + "," +
+                       os.getenv("TUNNEL_DOMAIN", "") + "," +
+                       os.getenv("CUSTOM_DOMAIN", "")).strip()
+    for entry in configured_cors.split(","):
+        entry = entry.strip()
+        if not entry:
+            continue
+        if "://" in entry:
+            entry_host = urlparse(entry).hostname or entry
+        else:
+            entry_host = entry.split(":")[0]
+        escaped_host = re.escape(entry_host.lower())
+        if escaped_host and escaped_host not in trusted_cors_patterns:
+            trusted_cors_patterns.append(escaped_host)
+
+    SAFE_CORS_REGEX = rf"^https?://({'|'.join(trusted_cors_patterns)})(:\d+)?$"
     app.add_middleware(
         CORSMiddleware,
         allow_origin_regex=SAFE_CORS_REGEX,

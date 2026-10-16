@@ -25,7 +25,7 @@
 #define AppNameFr      "Zeralda ERP"
 #define AppVersion     "3.0.0"
 #define AppPublisher   "Zeralda Industries"
-#define AppURL         "https://zeralda-erp-employees-main-production.up.railway.app/login.html?next=%2Fzeralda_erp_dashboard.html"
+#define AppURL         "https://zeralda-erp-employees-main-production.up.railway.app/zeralda_erp_dashboard.html"
 #define AppCopyright   "© 2024-2026 Zeralda Industries"
 #define AppExe         "launcher\Zeralda_ERP_Launcher_core.exe"
 #define SourceDir      ".."
@@ -260,11 +260,9 @@ Source: "{#SourceDir}\scripts\*";  DestDir: "{app}\scripts";  Components: core; 
 Source: "{#SourceDir}\launcher\*"; DestDir: "{app}\launcher"; Components: core; Flags: ignoreversion recursesubdirs createallsubdirs; Excludes: "*.lnk,__pycache__,*.pyc,Start_Toolkit.vbs"
 Source: "{#SourceDir}\cert\*";     DestDir: "{app}\cert";     Components: core; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist
 
-; ── Critical data files (keys, licenses, RSA keys) — only if not already present ──
-; Use onlyifdoesntexist to preserve user data on upgrades
+; Critical data files: bundled with PUBLIC key only. Private key remains exclusively with developer.
 Source: "{#SourceDir}\data\keys.json";                DestDir: "{app}\data"; Components: core; Flags: ignoreversion onlyifdoesntexist
 Source: "{#SourceDir}\data\licenses.json";            DestDir: "{app}\data"; Components: core; Flags: ignoreversion onlyifdoesntexist
-Source: "{#SourceDir}\data\license_private_key.pem";  DestDir: "{app}\data"; Components: core; Flags: ignoreversion onlyifdoesntexist
 Source: "{#SourceDir}\data\license_public_key.pem";   DestDir: "{app}\data"; Components: core; Flags: ignoreversion onlyifdoesntexist
 Source: "{#SourceDir}\data\license_server_state.json";DestDir: "{app}\data"; Components: core; Flags: ignoreversion onlyifdoesntexist
 Source: "{#SourceDir}\data\license_integrity.json";   DestDir: "{app}\data"; Components: core; Flags: ignoreversion onlyifdoesntexist

@@ -3,6 +3,10 @@
 *.env
 .env.*
 !.env.example
+*.pem
+*.key
+.storage_key
+data/.storage_key
 
 # Python
 __pycache__/

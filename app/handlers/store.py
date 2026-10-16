@@ -54,32 +54,162 @@ def _user_or_raise(request: Request, action: str) -> Dict[str, Any]:
     return user
 
 
+def _extract_active_company(request: Request, user: Dict[str, Any], store: Optional[Dict[str, Any]] = None) -> Optional[str]:
+    """Determine the active company ID for data scoping."""
+    # 1. Custom headers
+    cid = request.headers.get("X-Company-Id") or request.headers.get("X-Active-Company")
+    if cid:
+        return cid.strip()
+    # 2. Query parameters
+    cid = request.query_params.get("companyId") or request.query_params.get("company_id")
+    if cid:
+        return cid.strip()
+    # 3. User session record
+    cid = user.get("companyId") or user.get("activeCompanyId")
+    if cid:
+        return str(cid).strip()
+    # 4. Fallback to activeCompanyId from store settings
+    if store and "zeralda-settings" in store:
+        try:
+            s_val = store["zeralda-settings"]
+            if isinstance(s_val, str):
+                s_val = json.loads(s_val)
+            if isinstance(s_val, dict) and s_val.get("activeCompanyId"):
+                return str(s_val["activeCompanyId"]).strip()
+        except Exception:
+            pass
+    return None
+
+
+def is_key_permitted_for_user(
+    key: str,
+    user: Dict[str, Any],
+    action: str = "read",  # "read" or "write"
+    active_company_id: Optional[str] = None,
+) -> bool:
+    """Evaluate whether a store key is accessible to the user on the server.
+    Enforces role boundaries, multi-company scoping, and prevents cross-tenant data leaks.
+    """
+    if not key or not isinstance(key, str):
+        return False
+
+    role = (user or {}).get("role", "viewer")
+    if role == "admin":
+        return True
+
+    clean_key = key.strip().lower()
+
+    # 1. System internal & security keys: strictly admin only
+    admin_only_prefixes = (
+        "zeralda-license-",
+        "zeralda-auth-token",
+        "zeralda-sessions",
+        "zeralda-users",
+        "zeralda-audit-log",
+        "zeralda-system-settings",
+        "server-clone-cleanup",
+    )
+    for p in admin_only_prefixes:
+        if clean_key.startswith(p):
+            return False
+
+    # 2. HR & Employee sensitive records: admin and manager only
+    if clean_key.startswith("employees-data") or clean_key.startswith("hr-"):
+        if role not in ("admin", "manager"):
+            return False
+
+    # 3. Settings write protection: only admin can modify canonical settings
+    if clean_key == "zeralda-settings" and action == "write":
+        if role != "admin":
+            return False
+
+    # 4. User-Private Drafts: only owner or admin can read/write
+    user_email = str((user or {}).get("email", "")).lower()
+    user_id = str((user or {}).get("id", "")).lower()
+    if "-draft-u_" in clean_key or "::u_" in clean_key:
+        owner_part = clean_key.split("-draft-u_")[-1] if "-draft-u_" in clean_key else clean_key.split("::u_")[-1]
+        owner_tag = f"u_{owner_part}"
+        if user_id and owner_tag != f"u_{user_id}":
+            if user_email and user_email not in clean_key:
+                return False
+
+    # 5. Multi-Company Scoping
+    if "::" in key:
+        parts = key.split("::", 1)
+        scoped_company = parts[1].strip()
+        target_company = active_company_id or (user or {}).get("companyId") or (user or {}).get("activeCompanyId")
+        if target_company and scoped_company != target_company:
+            # Different company data: strictly forbidden
+            return False
+
+    return True
+
+
+def sanitize_settings_for_user(settings_val: Any, user: Dict[str, Any]) -> Any:
+    """Filter sensitive administrative settings blocks before returning to non-admin users."""
+    role = (user or {}).get("role", "viewer")
+    if role == "admin":
+        return settings_val
+    try:
+        is_str = isinstance(settings_val, str)
+        parsed = json.loads(settings_val) if is_str else dict(settings_val)
+        if not isinstance(parsed, dict):
+            return settings_val
+
+        for sec in ("security", "secret_key", "jwt_secret", "audit", "system"):
+            parsed.pop(sec, None)
+        if "users" in parsed and isinstance(parsed["users"], list):
+            safe_list = []
+            for u in parsed["users"]:
+                if isinstance(u, dict):
+                    safe_list.append({k: v for k, v in u.items() if k not in ("password", "salt", "secret", "totp_secret")})
+                else:
+                    safe_list.append(u)
+            parsed["users"] = safe_list
+
+        return json.dumps(parsed, ensure_ascii=False) if is_str else parsed
+    except Exception:
+        return settings_val
+
+
 @router.get("")
 async def get_store(request: Request, key: Optional[str] = None):
     user = _user_or_raise(request, "read")
     with storage._lock:
         store = storage.read_store()
         hist = storage.read_history()
+
+    active_cid = _extract_active_company(request, user, store)
+
     if key:
-        return {"ok": True, "value": store.get(key),
+        if not is_key_permitted_for_user(key, user, action="read", active_company_id=active_cid):
+            raise HTTPException(403, detail={"ok": False, "error": "Access denied to requested key", "code": "KEY_ACCESS_DENIED"})
+        val = store.get(key)
+        if key == "zeralda-settings":
+            val = sanitize_settings_for_user(val, user)
+        return {"ok": True, "value": val,
                 "version": storage.current_key_version(hist, key)}
-    # Radical fix: return real per-key versions (was always {} — broke optimistic
-    # locking because the client never knew the current version).
-    versions = storage.all_key_versions(store, hist)
+
+    # Scoped dump: filter keys according to user role and active company
+    filtered_store = {}
+    versions = {}
+    is_admin = user.get("role") == "admin"
+    for k, v in store.items():
+        if is_admin or is_key_permitted_for_user(k, user, action="read", active_company_id=active_cid):
+            if k == "zeralda-settings":
+                v = sanitize_settings_for_user(v, user)
+            filtered_store[k] = v
+            versions[k] = storage.current_key_version(hist, k)
+
     log_structured("INFO", "Storage read", action="store_read",
-                   user=user.get("email"), role=user.get("role"), key="*", status="success")
-    return {"ok": True, "data": store, "versions": versions}
+                   user=user.get("email"), role=user.get("role"),
+                   keys_returned=len(filtered_store), status="success")
+    return {"ok": True, "data": filtered_store, "versions": versions}
 
 
 @router.post("/mget")
 async def mget_store(request: Request):
-    """Fetch only the requested keys from the store (incremental pull).
-
-    Returns ``{"ok": True, "data": {key: value, ...}, "versions": {key: version, ...}}``.
-    Keys not present in the store are omitted from the response. This avoids
-    pulling the entire store (which can be hundreds of MB) when the client only
-    needs its company-scoped keys.
-    """
+    """Fetch only requested keys from store with server-side access control."""
     user = _user_or_raise(request, "read")
     data = await read_json_body(request)
     try:
@@ -90,7 +220,6 @@ async def mget_store(request: Request):
     if not req.keys or not isinstance(req.keys, list):
         raise HTTPException(400, detail={"ok": False, "error": "keys list required"})
 
-    # Cap the number of keys to prevent abuse
     if len(req.keys) > 500:
         raise HTTPException(400, detail={"ok": False, "error": "too many keys (max 500)",
                                          "code": "TOO_MANY_KEYS"})
@@ -99,11 +228,19 @@ async def mget_store(request: Request):
         store = storage.read_store()
         hist = storage.read_history()
 
+    active_cid = _extract_active_company(request, user, store)
+    is_admin = user.get("role") == "admin"
+
     result: Dict[str, Any] = {}
     versions: Dict[str, int] = {}
     for k in req.keys:
         if k in store:
-            result[k] = store[k]
+            if not is_admin and not is_key_permitted_for_user(k, user, action="read", active_company_id=active_cid):
+                continue
+            val = store[k]
+            if k == "zeralda-settings":
+                val = sanitize_settings_for_user(val, user)
+            result[k] = val
             versions[k] = storage.current_key_version(hist, k)
 
     log_structured("INFO", "Storage mget", action="store_mget",
@@ -123,6 +260,13 @@ async def write_store(request: Request):
 
     if not req.key:
         raise HTTPException(400, detail={"ok": False, "error": "key required"})
+
+    active_cid = _extract_active_company(request, user)
+    if not is_key_permitted_for_user(req.key, user, action="write", active_company_id=active_cid):
+        log_structured("WARNING", "Storage write forbidden for user", action="store_write_blocked",
+                       user=user.get("email"), role=user.get("role"), key=req.key)
+        raise HTTPException(403, detail={"ok": False, "error": f"Permission denied to write key '{req.key}'",
+                                         "code": "KEY_WRITE_DENIED"})
 
     # FIX: reject __flushing keys — they are internal client markers, not real data.
     # Allowing them pollutes the store with infinite chains like key__flushing__flushing...
@@ -266,6 +410,14 @@ async def bulk_write_store(request: Request):
         raise HTTPException(400, detail={"ok": False,
                                          "error": f"Too many keys in bulk write (max {MAX_BULK_KEYS})",
                                          "code": "BULK_LIMIT_EXCEEDED"})
+    active_cid = _extract_active_company(request, user)
+    for k in req.data.keys():
+        if isinstance(k, str) and not is_key_permitted_for_user(k, user, action="write", active_company_id=active_cid):
+            log_structured("WARNING", "Bulk write forbidden key", action="store_bulk_write_blocked",
+                           user=user.get("email"), role=user.get("role"), key=k)
+            raise HTTPException(403, detail={"ok": False, "error": f"Permission denied to write key '{k}'",
+                                             "code": "KEY_WRITE_DENIED"})
+
     written = 0
     skipped = 0
     skipped_keys: List[Dict[str, Any]] = []
@@ -316,6 +468,13 @@ async def delete_store(request: Request, key: str = Query(...), expected_version
     user = _user_or_raise(request, "delete")
     if not key:
         raise HTTPException(400, detail={"ok": False, "error": "key required"})
+
+    active_cid = _extract_active_company(request, user)
+    if not is_key_permitted_for_user(key, user, action="write", active_company_id=active_cid):
+        log_structured("WARNING", "Store delete forbidden for user", action="store_delete_blocked",
+                       user=user.get("email"), role=user.get("role"), key=key)
+        raise HTTPException(403, detail={"ok": False, "error": f"Permission denied to delete key '{key}'",
+                                         "code": "KEY_DELETE_DENIED"})
 
     with storage._lock:
         store = storage.read_store()
