@@ -1625,6 +1625,10 @@
       }
     }
 
+    window.initGoogleTokenClient = initGoogleTokenClient;
+    window.initGoogleOneTap = initGoogleOneTap;
+    window.doGoogleSignIn = doGoogleSignIn;
+
     function setGoogleLoading(on) {
       var btn = document.getElementById('googleSignInBtn');
       if (!btn) return;
@@ -2132,8 +2136,8 @@
 
       // Eagerly pre-load Google Token Client and Google One-Tap for instant 1-click login
       setTimeout(function () {
-        initGoogleTokenClient();
-        initGoogleOneTap();
+        if (typeof window.initGoogleTokenClient === 'function') window.initGoogleTokenClient();
+        if (typeof window.initGoogleOneTap === 'function') window.initGoogleOneTap();
       }, 300);
     });
   </script>
