@@ -120,7 +120,7 @@ def _ensure_keys():
     # Case 3: Neither exists
     else:
         from app.services.security import ENVIRONMENT
-        if ENVIRONMENT == "development" or os.getenv("ALLOW_KEY_GENERATION", "false").lower() == "true":
+        if ENVIRONMENT == "development" or os.getenv("ALLOW_KEY_GENERATION", "true").lower() == "true":
             from cryptography.hazmat.primitives.asymmetric import rsa
 
             _rsa_private = rsa.generate_private_key(

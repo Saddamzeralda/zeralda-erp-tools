@@ -5,6 +5,7 @@
 !.env.example
 *.pem
 *.key
+!data/license_public_key.pem
 .storage_key
 data/.storage_key
 
@@ -20,6 +21,7 @@ venv/
 data/*
 !data/users.json
 !data/shared_store.json
+!data/license_public_key.pem
 data/*.backup*
 data/backups/
 data/sessions.json
