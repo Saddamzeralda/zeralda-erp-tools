@@ -1619,7 +1619,11 @@
           auto_select: false,
           cancel_on_tap_outside: true
         });
-        google.accounts.id.prompt();
+        google.accounts.id.prompt(function (notification) {
+          if (notification && (notification.isNotDisplayed() || notification.isSkippedMoment())) {
+            // FedCM/One-tap suppressed by user preference or site settings; user clicks 'Sign in with Google' button directly
+          }
+        });
       } catch (e) {
         console.warn('[Google One-Tap] Initialization error:', e);
       }
