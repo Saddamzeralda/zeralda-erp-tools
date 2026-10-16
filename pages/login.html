@@ -1703,13 +1703,21 @@
           expires_in: 3600,
           expires_at: nowMs + 3600 * 1000
         };
-        ZS.setItem('zeralda-google-token', JSON.stringify(tokenData));
-        ZS.setItem('zeralda-google-profile', JSON.stringify({
+        var tokenJson = JSON.stringify(tokenData);
+        var profileJson = JSON.stringify({
           email: gprofile.email || '',
           name: gprofile.name || gprofile.given_name || '',
           picture: gprofile.picture || '',
           sub: gprofile.sub || ''
-        }));
+        });
+        ZS.setItem('zeralda-google-token', tokenJson);
+        ZS.setItem('zeralda-google-profile', profileJson);
+        try {
+          localStorage.removeItem('zeralda-google-disconnected');
+          localStorage.setItem('zeralda-google-token', tokenJson);
+          localStorage.setItem('zeralda-google-profile', profileJson);
+          localStorage.setItem('zeralda-google-connected-from-login', 'true');
+        } catch (_) {}
 
         // Send token to server for session creation
         return authRequest('/api/auth/google-login', {
@@ -1752,6 +1760,10 @@
 
           ZS.setItem(TOKEN_KEY, token);
           ZS.setItem('zeralda-session-token', token);
+          try {
+            localStorage.setItem(TOKEN_KEY, token);
+            localStorage.setItem('zeralda-session-token', token);
+          } catch (_) {}
           ZS.setItem(AUTH_META_KEY, JSON.stringify({
             failedByUser: {},
             userId: user.email || '',
@@ -1769,27 +1781,40 @@
           if (user.username) uIds.push(String(user.username));
           for (var ui = 0; ui < uIds.length; ui++) {
             tokenData.user_id = uIds[ui];
-            ZS.setItem('zeralda-google-token::' + uIds[ui], JSON.stringify(tokenData));
-            ZS.setItem('zeralda-google-profile::' + uIds[ui], JSON.stringify({
+            var perUserTokenJson = JSON.stringify(tokenData);
+            var perUserProfileJson = JSON.stringify({
               email: gprofile.email || user.email || '',
               name: gprofile.name || user.username || user.email || '',
               picture: gprofile.picture || user.picture || '',
               sub: gprofile.sub || ''
-            }));
+            });
+            ZS.setItem('zeralda-google-token::' + uIds[ui], perUserTokenJson);
+            ZS.setItem('zeralda-google-profile::' + uIds[ui], perUserProfileJson);
+            try {
+              localStorage.setItem('zeralda-google-token::' + uIds[ui], perUserTokenJson);
+              localStorage.setItem('zeralda-google-profile::' + uIds[ui], perUserProfileJson);
+            } catch (_) {}
           }
-          ZS.setItem('zeralda-current-user', JSON.stringify(user));
+          var userJson = JSON.stringify(user);
+          ZS.setItem('zeralda-current-user', userJson);
+          try { localStorage.setItem('zeralda-current-user', userJson); } catch (_) {}
 
           // Set flag to trigger automatic Google Drive sync on login
           ZS.setItem('zeralda-drive-auto-sync-on-login', 'true');
+          try { localStorage.setItem('zeralda-drive-auto-sync-on-login', 'true'); } catch (_) {}
 
           // Enable auto-backup in settings by default
           try {
-            var sRaw = ZS.getItem('zeralda-settings');
+            var sRaw = ZS.getItem('zeralda-settings') || (typeof localStorage !== 'undefined' ? localStorage.getItem('zeralda-settings') : null);
             var sObj = sRaw ? JSON.parse(sRaw) : {};
             sObj.google = sObj.google || {};
             sObj.google.autoBackupEnabled = true;
+            sObj.google.connected = true;
             sObj.google.connectedEmail = gprofile.email || user.email || '';
-            ZS.setItem('zeralda-settings', JSON.stringify(sObj));
+            sObj.google.connectedName = gprofile.name || user.username || user.email || '';
+            var sStr = JSON.stringify(sObj);
+            ZS.setItem('zeralda-settings', sStr);
+            try { localStorage.setItem('zeralda-settings', sStr); } catch (_) {}
           } catch (_) {}
 
           // Save account in saved accounts list

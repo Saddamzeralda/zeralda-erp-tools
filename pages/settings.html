@@ -1519,10 +1519,10 @@
                 </div>
 
                 <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; border-top:1px solid #f1f5f9; padding-top:14px;">
-                    <button class="btn btn-primary" type="button" onclick="connectGoogleAccount()" style="display:inline-flex; align-items:center; gap:8px;">
+                    <button id="btnConnectGoogle" class="btn btn-primary" type="button" onclick="connectGoogleAccount()" style="display:inline-flex; align-items:center; gap:8px;">
                         <i class="fab fa-google"></i> <span data-en="Connect Google Account" data-ar="ربط حساب Google" data-fr="Connecter le compte Google">ربط حساب Google</span>
                     </button>
-                    <button class="btn btn-secondary" type="button" onclick="disconnectGoogleAccount()" style="display:inline-flex; align-items:center; gap:8px;">
+                    <button id="btnDisconnectGoogle" class="btn btn-secondary" type="button" onclick="disconnectGoogleAccount()" style="display:none; align-items:center; gap:8px;">
                         <i class="fas fa-unlink"></i> <span data-en="Disconnect" data-ar="قطع الاتصال" data-fr="Déconnecter">قطع الاتصال</span>
                     </button>
                 </div>
@@ -4735,70 +4735,104 @@
                 oauthModeEl.value = oauthMode;
             }
 
-            if (typeof ZeraldaGoogle === 'undefined') {
-                if (stateEl) stateEl.textContent = 'Google module loading...';
-                if (profileEl) profileEl.textContent = '-';
-                return;
-            }
+            var isExplicitlyDisconnected = (typeof localStorage !== 'undefined' && localStorage.getItem('zeralda-google-disconnected') === 'true');
 
-            var profile = ZeraldaGoogle.getProfile();
-            var connected = ZeraldaGoogle.isSignedIn();
-            var hasStoredToken = false;
-            try {
-                // Read per-user token key (matches google_sync.js getGTokenKey)
-                var gUserId = (typeof ZeraldaGoogle.getActiveUserId === 'function') ? ZeraldaGoogle.getActiveUserId() : 'default';
-                var rawStoredToken = ZS.getItem('zeralda-google-token::' + gUserId);
-                // Fallback: اقرأ من المفتاح العام (للتوافق مع oauth_callback.html القديم)
-                if (!rawStoredToken) {
-                    rawStoredToken = ZS.getItem('zeralda-google-token');
-                    if (rawStoredToken) {
-                        // هجرة المفتاح العام إلى مفتاح المستخدم
-                        ZS.setItem('zeralda-google-token::' + gUserId, rawStoredToken);
-                    }
-                }
-                if (rawStoredToken) {
-                    var parsedStoredToken = JSON.parse(rawStoredToken);
-                    hasStoredToken = !!(parsedStoredToken && (parsedStoredToken.access_token || parsedStoredToken.expired));
-                }
-                // Fallback للبروفايل أيضاً
+            var profile = (!isExplicitlyDisconnected && typeof ZeraldaGoogle !== 'undefined' && ZeraldaGoogle.getProfile) ? ZeraldaGoogle.getProfile() : null;
+            var connected = (!isExplicitlyDisconnected && typeof ZeraldaGoogle !== 'undefined' && ZeraldaGoogle.isSignedIn) ? ZeraldaGoogle.isSignedIn() : false;
+            var btnConnect = document.getElementById('btnConnectGoogle');
+            var btnDisconnect = document.getElementById('btnDisconnectGoogle');
+
+            if (!isExplicitlyDisconnected) {
+                // Fallback 1: اقرأ من zeralda-google-profile في ZS أو localStorage
                 if (!profile) {
-                    var rawProfile = ZS.getItem('zeralda-google-profile::' + gUserId);
-                    if (!rawProfile) rawProfile = ZS.getItem('zeralda-google-profile');
-                    if (rawProfile) {
-                        try {
-                            profile = JSON.parse(rawProfile);
-                            ZS.setItem('zeralda-google-profile::' + gUserId, rawProfile);
-                        } catch (_) {}
-                    }
+                    try {
+                        var rawProfile = ZS.getItem('zeralda-google-profile') || (typeof localStorage !== 'undefined' ? localStorage.getItem('zeralda-google-profile') : null);
+                        if (rawProfile) profile = JSON.parse(rawProfile);
+                    } catch (_) {}
                 }
-            } catch (_) {}
-
-            if (!connected && !window.__googleConnectInProgress && !window.__googleReconnectPending && typeof ZeraldaGoogle.tryAutoReconnect === 'function') {
-                window.__googleReconnectPending = true;
-                ZeraldaGoogle.tryAutoReconnect(function () {
-                    window.__googleReconnectPending = false;
-                    setTimeout(function () { refreshGoogleUI(); }, 50);
-                });
+                // Fallback 2: اقرأ من حساب المستخدم المسجل حالياً في ERP (صفحة الدخول)
+                if (!profile) {
+                    try {
+                        var cuRaw = ZS.getItem('zeralda-current-user') || (typeof localStorage !== 'undefined' ? localStorage.getItem('zeralda-current-user') : null);
+                        if (cuRaw) {
+                            var cu = JSON.parse(cuRaw);
+                            if (cu && cu.email && (cu.email.indexOf('@gmail.com') !== -1 || cu.googleLogin)) {
+                                profile = {
+                                    email: cu.email,
+                                    name: cu.name || cu.username || cu.email,
+                                    picture: cu.picture || ''
+                                };
+                                connected = true;
+                            }
+                        }
+                    } catch (_) {}
+                }
+                // Fallback 3: اقرأ من zeralda-settings
+                if (!profile && settings.google && settings.google.connectedEmail) {
+                    profile = {
+                        email: settings.google.connectedEmail,
+                        name: settings.google.connectedName || settings.google.connectedEmail,
+                        picture: ''
+                    };
+                    connected = true;
+                }
+                // إذا كان البروفايل موجود وفيه بريد إلكتروني، اعتبره متصلاً مباشرة
+                if (profile && profile.email) {
+                    connected = true;
+                }
+            } else {
+                profile = null;
+                connected = false;
             }
 
-                if (stateEl) stateEl.textContent = connected ? 'Connected' : (hasStoredToken ? 'Reconnecting...' : 'Not connected');
+            var currentLang = (typeof getLanguage === 'function' ? getLanguage() : '') || (typeof localStorage !== 'undefined' ? localStorage.getItem('preferred-language') : '') || 'ar';
+
+            if (stateEl) {
+                if (connected) {
+                    var connText = (currentLang === 'fr') ? 'Connecté' : (currentLang === 'en' ? 'Connected' : 'متصل');
+                    stateEl.innerHTML = '<i class="fas fa-check-circle" style="color:#16a34a;"></i> ' + connText;
+                    stateEl.style.background = '#dcfce7';
+                    stateEl.style.color = '#15803d';
+                    stateEl.style.border = '1px solid #86efac';
+                } else {
+                    var notConnText = (currentLang === 'fr') ? 'Non connecté' : (currentLang === 'en' ? 'Not connected' : 'غير متصل');
+                    stateEl.innerHTML = '<i class="fas fa-circle" style="font-size:8px; color:#94a3b8;"></i> ' + notConnText;
+                    stateEl.style.background = '#f1f5f9';
+                    stateEl.style.color = '#64748b';
+                    stateEl.style.border = '1px solid #e2e8f0';
+                }
+            }
+
             if (profileEl) {
-                profileEl.textContent = connected
-                    ? (profile ? ((profile.name || 'Google User') + ' | ' + (profile.email || '')) : 'Google account connected')
-                    : (hasStoredToken ? 'Google session found. Reconnecting...' : 'No Google account connected');
+                if (connected && profile) {
+                    var pName = profile.name || 'Google User';
+                    var pEmail = profile.email || '';
+                    profileEl.innerHTML = '<div style="display:flex; align-items:center; gap:8px;">' +
+                        '<i class="fab fa-google" style="color:#4285f4; font-size:14px;"></i>' +
+                        '<span style="font-weight:700; color:#0f172a;">' + pName + '</span>' +
+                        (pEmail ? '<span style="color:#64748b; font-size:13px;">(' + pEmail + ')</span>' : '') +
+                        '</div>';
+                } else {
+                    var noAccText = (currentLang === 'fr') ? 'Aucun compte Google connecté' : (currentLang === 'en' ? 'No Google account connected' : 'لا يوجد حساب Google متصل');
+                    profileEl.textContent = noAccText;
+                }
             }
+
+            // تبديل الأزرار: إخفاء Connect وإظهار Disconnect عند الاتصال، والعكس
+            if (btnConnect) btnConnect.style.display = connected ? 'none' : 'inline-flex';
+            if (btnDisconnect) btnDisconnect.style.display = connected ? 'inline-flex' : 'none';
 
             // Update unified sync & backup section status
             var syncStateEl = document.getElementById('googleSyncConnState');
             var syncProfileEl = document.getElementById('googleSyncProfile');
             if (syncStateEl) {
-                syncStateEl.textContent = connected ? 'Connected' : (hasStoredToken ? 'Reconnecting...' : 'Not connected');
-                syncStateEl.style.color = connected ? '#059669' : (hasStoredToken ? '#d97706' : '#dc2626');
+                syncStateEl.textContent = connected ? 'Connected' : 'Not connected';
+                syncStateEl.style.color = connected ? '#059669' : '#dc2626';
             }
             if (syncProfileEl) {
                 syncProfileEl.textContent = connected
                     ? (profile ? ((profile.name || '') + ' | ' + (profile.email || '')) : '')
-                    : (hasStoredToken ? 'Reconnecting...' : '');
+                    : '';
             }
             // Sync auto-backup checkbox
             var syncAutoEl = document.getElementById('backupAutoEnabled');
@@ -4971,6 +5005,14 @@
                     connectPoll = null;
                 }
 
+                if (ok) {
+                    try {
+                        if (typeof localStorage !== 'undefined') {
+                            localStorage.removeItem('zeralda-google-disconnected');
+                        }
+                    } catch (_) {}
+                }
+
                 setGoogleProgress(ok ? 'Connected.' : 'Connection failed.', false);
                 if (message) showToast(message, level || (ok ? 'success' : 'info'));
                 refreshGoogleUI();
@@ -5048,9 +5090,39 @@
         };
 
         window.disconnectGoogleAccount = function () {
-            if (typeof ZeraldaGoogle === 'undefined') return;
-            ZeraldaGoogle.signOut();
-            showToast(tSettings('google_disconnected'), 'success');
+            if (typeof ZeraldaGoogle !== 'undefined' && ZeraldaGoogle.signOut) {
+                ZeraldaGoogle.signOut();
+            }
+            try {
+                ZS.removeItem('zeralda-google-token');
+                ZS.removeItem('zeralda-google-profile');
+                if (typeof localStorage !== 'undefined') {
+                    localStorage.removeItem('zeralda-google-token');
+                    localStorage.removeItem('zeralda-google-profile');
+                    localStorage.removeItem('zeralda-google-connected-from-login');
+                    localStorage.setItem('zeralda-google-disconnected', 'true');
+                    Object.keys(localStorage).forEach(function (k) {
+                        if (k && (k.indexOf('zeralda-google-token') === 0 || k.indexOf('zeralda-google-profile') === 0)) {
+                            localStorage.removeItem(k);
+                        }
+                    });
+                }
+                if (typeof ZS.keys === 'function') {
+                    ZS.keys().forEach(function (k) {
+                        if (k && (k.indexOf('zeralda-google-token') === 0 || k.indexOf('zeralda-google-profile') === 0)) {
+                            ZS.removeItem(k);
+                        }
+                    });
+                }
+                var s = getSettings();
+                if (s && s.google) {
+                    delete s.google.connected;
+                    delete s.google.connectedEmail;
+                    delete s.google.connectedName;
+                    saveSettings(s);
+                }
+            } catch (_) {}
+            showToast(tSettings('google_disconnected') || 'تم قطع الاتصال بحساب Google.', 'success');
             refreshGoogleUI();
         };
 

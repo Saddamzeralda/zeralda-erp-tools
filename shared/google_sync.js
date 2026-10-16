@@ -241,10 +241,17 @@
 
   function getGoogleProfile() {
     try {
-      var profile = JSON.parse(ZS.getItem(getGProfileKey())) || null;
+      if (typeof localStorage !== 'undefined' && localStorage.getItem('zeralda-google-disconnected') === 'true') {
+        return null;
+      }
+      var profile = null;
+      var raw = ZS.getItem(getGProfileKey()) || (typeof localStorage !== 'undefined' ? localStorage.getItem(getGProfileKey()) : null);
+      if (raw) {
+        try { profile = JSON.parse(raw); } catch (_) {}
+      }
       // Fallback: ابحث في المفتاح العام
       if (!profile) {
-        var globalProfile = ZS.getItem(GPROFILE_KEY_BASE);
+        var globalProfile = ZS.getItem(GPROFILE_KEY_BASE) || (typeof localStorage !== 'undefined' ? localStorage.getItem(GPROFILE_KEY_BASE) : null);
         if (globalProfile) {
           try {
             profile = JSON.parse(globalProfile);
@@ -263,7 +270,7 @@
           }
           for (var i = 0; i < allKeys.length; i++) {
             if (allKeys[i] && allKeys[i].indexOf(GPROFILE_KEY_BASE + '::') === 0 && allKeys[i] !== getGProfileKey()) {
-              var rawVal = ZS.getItem(allKeys[i]);
+              var rawVal = ZS.getItem(allKeys[i]) || (typeof localStorage !== 'undefined' ? localStorage.getItem(allKeys[i]) : null);
               if (rawVal) {
                 try {
                   var p = JSON.parse(rawVal);
@@ -278,6 +285,35 @@
           }
         } catch (_) {}
       }
+      // Fallback: تحقق من المستخدم المسجل حالياً في ERP من صفحة الدخول
+      if (!profile) {
+        try {
+          var cuRaw = ZS.getItem('zeralda-current-user') || (typeof localStorage !== 'undefined' ? localStorage.getItem('zeralda-current-user') : null);
+          if (cuRaw) {
+            var cu = JSON.parse(cuRaw);
+            if (cu && cu.email && (cu.email.indexOf('@gmail.com') !== -1 || cu.googleLogin)) {
+              profile = {
+                email: cu.email,
+                name: cu.name || cu.username || cu.email,
+                picture: cu.picture || ''
+              };
+            }
+          }
+        } catch (_) {}
+      }
+      // Fallback: تحقق من إعدادات zeralda-settings
+      if (!profile) {
+        try {
+          var s = getSettings();
+          if (s && s.google && s.google.connectedEmail) {
+            profile = {
+              email: s.google.connectedEmail,
+              name: s.google.connectedName || s.google.connectedEmail,
+              picture: ''
+            };
+          }
+        } catch (_) {}
+      }
       return profile;
     } catch (e) {
       return null;
@@ -285,22 +321,53 @@
   }
 
   function saveGoogleProfile(profile) {
-    var pStr = JSON.stringify(profile || {});
-    ZS.setItem(getGProfileKey(), pStr);
-    ZS.setItem(GPROFILE_KEY_BASE, pStr);
     try {
-      var cu = JSON.parse(ZS.getItem('zeralda-current-user') || '{}');
-      if (cu.email) ZS.setItem(GPROFILE_KEY_BASE + '::' + cu.email, pStr);
-      if (cu.username) ZS.setItem(GPROFILE_KEY_BASE + '::' + cu.username, pStr);
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem('zeralda-google-disconnected');
+      }
+    } catch (_) {}
+    var pStr = JSON.stringify(profile || {});
+    try { ZS.setItem(getGProfileKey(), pStr); } catch (_) {}
+    try { ZS.setItem(GPROFILE_KEY_BASE, pStr); } catch (_) {}
+    try { if (typeof localStorage !== 'undefined') { localStorage.setItem(getGProfileKey(), pStr); localStorage.setItem(GPROFILE_KEY_BASE, pStr); } } catch (_) {}
+    try {
+      var cu = JSON.parse(ZS.getItem('zeralda-current-user') || (typeof localStorage !== 'undefined' ? localStorage.getItem('zeralda-current-user') : null) || '{}');
+      if (cu.email) {
+        ZS.setItem(GPROFILE_KEY_BASE + '::' + cu.email, pStr);
+        if (typeof localStorage !== 'undefined') localStorage.setItem(GPROFILE_KEY_BASE + '::' + cu.email, pStr);
+      }
+      if (cu.username) {
+        ZS.setItem(GPROFILE_KEY_BASE + '::' + cu.username, pStr);
+        if (typeof localStorage !== 'undefined') localStorage.setItem(GPROFILE_KEY_BASE + '::' + cu.username, pStr);
+      }
     } catch (_) {}
   }
 
   function clearGoogleProfile() {
-    ZS.removeItem(getGProfileKey());
-    ZS.removeItem(GPROFILE_KEY_BASE);
+    try { ZS.removeItem(getGProfileKey()); } catch (_) {}
+    try { ZS.removeItem(GPROFILE_KEY_BASE); } catch (_) {}
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem(getGProfileKey());
+        localStorage.removeItem(GPROFILE_KEY_BASE);
+        Object.keys(localStorage).forEach(function (k) {
+          if (k && k.indexOf(GPROFILE_KEY_BASE) === 0) localStorage.removeItem(k);
+        });
+      }
+      if (typeof ZS.keys === 'function') {
+        ZS.keys().forEach(function (k) {
+          if (k && k.indexOf(GPROFILE_KEY_BASE) === 0) ZS.removeItem(k);
+        });
+      }
+    } catch (_) {}
   }
 
   function saveGoogleToken(token) {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem('zeralda-google-disconnected');
+      }
+    } catch (_) {}
     var normalized = Object.assign({}, token || {});
     var nowMs = Date.now();
     normalized.issued_at = nowMs;
@@ -309,12 +376,19 @@
       normalized.expires_at = nowMs + (Number(normalized.expires_in) * 1000);
     }
     var tStr = JSON.stringify(normalized);
-    ZS.setItem(getGTokenKey(), tStr);
-    ZS.setItem(GTOKEN_KEY_BASE, tStr);
+    try { ZS.setItem(getGTokenKey(), tStr); } catch (_) {}
+    try { ZS.setItem(GTOKEN_KEY_BASE, tStr); } catch (_) {}
+    try { if (typeof localStorage !== 'undefined') { localStorage.setItem(getGTokenKey(), tStr); localStorage.setItem(GTOKEN_KEY_BASE, tStr); } } catch (_) {}
     try {
-      var cu = JSON.parse(ZS.getItem('zeralda-current-user') || '{}');
-      if (cu.email) ZS.setItem(GTOKEN_KEY_BASE + '::' + cu.email, tStr);
-      if (cu.username) ZS.setItem(GTOKEN_KEY_BASE + '::' + cu.username, tStr);
+      var cu = JSON.parse(ZS.getItem('zeralda-current-user') || (typeof localStorage !== 'undefined' ? localStorage.getItem('zeralda-current-user') : null) || '{}');
+      if (cu.email) {
+        ZS.setItem(GTOKEN_KEY_BASE + '::' + cu.email, tStr);
+        if (typeof localStorage !== 'undefined') localStorage.setItem(GTOKEN_KEY_BASE + '::' + cu.email, tStr);
+      }
+      if (cu.username) {
+        ZS.setItem(GTOKEN_KEY_BASE + '::' + cu.username, tStr);
+        if (typeof localStorage !== 'undefined') localStorage.setItem(GTOKEN_KEY_BASE + '::' + cu.username, tStr);
+      }
     } catch (_) {}
     accessToken = normalized && normalized.access_token ? normalized.access_token : null;
   }
@@ -322,13 +396,13 @@
   function loadGoogleToken() {
     try {
       var token = null;
-      var raw = ZS.getItem(getGTokenKey());
+      var raw = ZS.getItem(getGTokenKey()) || (typeof localStorage !== 'undefined' ? localStorage.getItem(getGTokenKey()) : null);
       if (raw) {
         try { token = JSON.parse(raw); } catch (_) {}
       }
       // Fallback: ابحث في المفتاح العام أو مفاتيح مستخدمين آخرين
       if (!token) {
-        var globalToken = ZS.getItem(GTOKEN_KEY_BASE);
+        var globalToken = ZS.getItem(GTOKEN_KEY_BASE) || (typeof localStorage !== 'undefined' ? localStorage.getItem(GTOKEN_KEY_BASE) : null);
         if (globalToken) {
           try { token = JSON.parse(globalToken); } catch (_) {}
         }
@@ -344,13 +418,14 @@
           }
           for (var i = 0; i < allKeys.length; i++) {
             if (allKeys[i] && allKeys[i].indexOf(GTOKEN_KEY_BASE + '::') === 0 && allKeys[i] !== getGTokenKey()) {
-              var rawVal = ZS.getItem(allKeys[i]);
+              var rawVal = ZS.getItem(allKeys[i]) || (typeof localStorage !== 'undefined' ? localStorage.getItem(allKeys[i]) : null);
               if (rawVal) {
                 try {
                   var t = JSON.parse(rawVal);
                   if (t && (t.access_token || t.expired)) {
                     token = t;
                     ZS.setItem(getGTokenKey(), rawVal);
+                    if (typeof localStorage !== 'undefined') localStorage.setItem(getGTokenKey(), rawVal);
                     break;
                   }
                 } catch (_) {}
@@ -373,8 +448,22 @@
   }
 
   function clearGoogleToken() {
-    ZS.removeItem(getGTokenKey());
-    ZS.removeItem(GTOKEN_KEY_BASE);
+    try { ZS.removeItem(getGTokenKey()); } catch (_) {}
+    try { ZS.removeItem(GTOKEN_KEY_BASE); } catch (_) {}
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem(getGTokenKey());
+        localStorage.removeItem(GTOKEN_KEY_BASE);
+        Object.keys(localStorage).forEach(function (k) {
+          if (k && k.indexOf(GTOKEN_KEY_BASE) === 0) localStorage.removeItem(k);
+        });
+      }
+      if (typeof ZS.keys === 'function') {
+        ZS.keys().forEach(function (k) {
+          if (k && k.indexOf(GTOKEN_KEY_BASE) === 0) ZS.removeItem(k);
+        });
+      }
+    } catch (_) {}
     accessToken = null;
   }
 
@@ -782,6 +871,19 @@
     }
     clearGoogleToken();
     clearGoogleProfile();
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem('zeralda-google-connected-from-login');
+        localStorage.setItem('zeralda-google-disconnected', 'true');
+      }
+      var s = getSettings();
+      if (s && s.google) {
+        delete s.google.connected;
+        delete s.google.connectedEmail;
+        delete s.google.connectedName;
+        saveSettings(s);
+      }
+    } catch (_) {}
     accessToken = null;
   }
 
@@ -2096,11 +2198,14 @@
   }
 
   function isSignedIn() {
+    if (typeof localStorage !== 'undefined' && localStorage.getItem('zeralda-google-disconnected') === 'true') {
+      return false;
+    }
     if (accessToken) return true;
     var savedToken = loadGoogleToken();
-    // Consider user "signed in" if they have a token (even expired),
-    // because tryAutoReconnect will silently refresh it.
-    return !!(savedToken && (savedToken.access_token || savedToken.expired));
+    if (savedToken && (savedToken.access_token || savedToken.expired)) return true;
+    var profile = getGoogleProfile();
+    return !!(profile && profile.email);
   }
 
   function init(callbacks) {
