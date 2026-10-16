@@ -112,7 +112,10 @@ def create_app() -> FastAPI:
             is_https or host_hdr in ("localhost", "127.0.0.1", "::1") or host_hdr.endswith((".railway.app", ".trycloudflare.com"))
         )
         if is_trustworthy_context:
-            response.headers["Cross-Origin-Opener-Policy"] = "same-origin-allow-popups"
+            if path.endswith("login.html") or path == "/" or "login" in path:
+                response.headers["Cross-Origin-Opener-Policy"] = "unsafe-none"
+            else:
+                response.headers["Cross-Origin-Opener-Policy"] = "same-origin-allow-popups"
         if is_https:
             response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         # CSP for HTML pages
@@ -121,8 +124,8 @@ def create_app() -> FastAPI:
                 "default-src 'self'; "
                 "script-src 'self' 'unsafe-inline' https://accounts.google.com https://apis.google.com "
                 "https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; "
-                "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; "
-                "style-src-elem 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; "
+                "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com https://accounts.google.com; "
+                "style-src-elem 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com https://accounts.google.com; "
                 "font-src 'self' data: https: https://fonts.gstatic.com https://cdnjs.cloudflare.com "
                 "https://at.alicdn.com http://at.alicdn.com; "
                 "img-src 'self' data: https: blob: https://lh3.googleusercontent.com; "
