@@ -181,17 +181,10 @@
 
     // ── Floating Mobile In-App Invitation Pill ──────────────────────────────
     showMobilePromptIfNeeded: async function() {
-      // Don't show if already subscribed or explicitly dismissed in this session
-      if (localStorage.getItem('zeralda_mobile_push_subscribed') === 'true') return;
-      if (sessionStorage.getItem('zeralda_push_prompt_dismissed') === 'true') return;
-      if (!this.isSupported()) return;
-      if (Notification.permission === 'denied') return;
-
-      const sub = await this.getCurrentSubscription();
-      if (sub) {
-        localStorage.setItem('zeralda_mobile_push_subscribed', 'true');
-        return;
-      }
+      // Floating banner disabled per user request
+      var banner = document.getElementById('zeraldaMobileNotifBanner');
+      if (banner && banner.parentNode) banner.parentNode.removeChild(banner);
+      return;
 
       // Check if mobile or small screen
       const isMobile = window.innerWidth <= 820 || /android|iphone|ipad|mobile/i.test(navigator.userAgent);

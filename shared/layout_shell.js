@@ -659,13 +659,13 @@
 
         // Auto-load Unified Document Printer if not already loaded & permanently remove floating alerts
         try {
-          // Permanently cleanup any floating Smart Alerts Hub (Centre d'alertes intelligent)
-          ['zeraldaAlertsHubWrapper', 'zeraldaAlertsButton', 'zeraldaAlertsDropdown'].forEach(function(id) {
+          // Permanently cleanup any floating Smart Alerts Hub or Sync & Backup floating pill
+          ['zeraldaAlertsHubWrapper', 'zeraldaAlertsButton', 'zeraldaAlertsDropdown', 'zeraldaSyncPill', 'zeraldaSyncHubModal', 'zeraldaMobileNotifBanner'].forEach(function(id) {
             var el = document.getElementById(id);
             if (el && el.parentNode) el.parentNode.removeChild(el);
           });
           var hideStyle = document.createElement('style');
-          hideStyle.textContent = '#zeraldaAlertsHubWrapper, #zeraldaAlertsButton, #zeraldaAlertsDropdown { display:none !important; visibility:hidden !important; pointer-events:none !important; opacity:0 !important; }';
+          hideStyle.textContent = '#zeraldaAlertsHubWrapper, #zeraldaAlertsButton, #zeraldaAlertsDropdown, #zeraldaSyncPill, #zeraldaSyncHubModal, #zeraldaMobileNotifBanner { display:none !important; visibility:hidden !important; pointer-events:none !important; opacity:0 !important; }';
           document.head.appendChild(hideStyle);
 
           if (!window.UnifiedDocumentPrinter) {
