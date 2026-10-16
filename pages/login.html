@@ -1554,11 +1554,9 @@
         }
       } catch (_) {}
 
-      googleTokenClient = google.accounts.oauth2.initTokenClient({
+      var tokenConfig = {
         client_id: GOOGLE_CLIENT_ID,
-        scope: 'openid email profile https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/contacts https://www.googleapis.com/auth/gmail.send',
-        ux_mode: isRealWebView2 ? 'redirect' : 'popup',
-        redirect_uri: isRealWebView2 ? (window.location.origin + '/oauth_callback.html') : undefined,
+        scope: 'openid email profile',
         error_callback: function (err) {
           var mapped = err || {};
           var type = String(mapped.type || '').toLowerCase();
@@ -1588,7 +1586,14 @@
             sendGoogleTokenToServer(resp.access_token);
           }
         }
-      });
+      };
+
+      if (isRealWebView2) {
+        tokenConfig.ux_mode = 'redirect';
+        tokenConfig.redirect_uri = window.location.origin + '/oauth_callback.html';
+      }
+
+      googleTokenClient = google.accounts.oauth2.initTokenClient(tokenConfig);
     }
 
     function initGoogleOneTap() {

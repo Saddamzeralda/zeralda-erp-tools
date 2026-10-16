@@ -540,12 +540,9 @@
 
     var useRedirect = preferredMode === 'redirect' || (preferredMode === 'auto' && isLikelyWebView2());
 
-    tokenClient = google.accounts.oauth2.initTokenClient({
+    var tokenConfig = {
       client_id: resolvedClientId,
       scope: SCOPES,
-      // Use redirect mode for WebView2 (no popup support) or if explicitly set
-      ux_mode: useRedirect ? 'redirect' : 'popup',
-      redirect_uri: useRedirect ? getManualOAuthRedirectUri() : undefined,
       error_callback: function (err) {
         var mapped = err || {};
         var t = String(mapped.type || '').toLowerCase();
@@ -593,7 +590,14 @@
           pendingTokenCallback = null;
         });
       }
-    });
+    };
+
+    if (useRedirect) {
+      tokenConfig.ux_mode = 'redirect';
+      tokenConfig.redirect_uri = getManualOAuthRedirectUri();
+    }
+
+    tokenClient = google.accounts.oauth2.initTokenClient(tokenConfig);
 
     lastClientIdUsed = resolvedClientId;
   }
