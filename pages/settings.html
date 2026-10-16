@@ -533,6 +533,12 @@
                 </div>
 
                 <div class="settings-nav-item" role="button" tabindex="0"
+                     onclick="showSection('backups', this)" onkeydown="if(event.key==='Enter' || event.key===' ') showSection('backups', this)" style="border:1.5px solid #0284c7; background:linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);">
+                    <div class="settings-icon cyan" style="background:#0284c7; color:#fff;"><i class="fas fa-cloud-upload-alt" aria-hidden="true"></i></div>
+                    <div><strong data-en="Sync & Backup Center" data-ar="مركز المزامنة والنسخ الاحتياطي" data-fr="Centre de synchronisation et sauvegardes" style="color:#0369a1;">مركز المزامنة والنسخ الاحتياطي</strong></div>
+                </div>
+
+                <div class="settings-nav-item" role="button" tabindex="0"
                      onclick="showSection('notifications', this)" onkeydown="if(event.key==='Enter' || event.key===' ') showSection('notifications', this)">
                     <div class="settings-icon cyan"><i class="fas fa-bell" aria-hidden="true"></i></div>
                     <div><strong data-en="Notifications" data-ar="الإشعارات" data-fr="Notifications">Notifications</strong></div>
@@ -560,12 +566,6 @@
                      onclick="showSection('modules', this)" onkeydown="if(event.key==='Enter' || event.key===' ') showSection('modules', this)">
                     <div class="settings-icon green"><i class="fas fa-cubes" aria-hidden="true"></i></div>
                     <div><strong data-en="Module Settings" data-ar="إعدادات الوحدات" data-fr="Paramètres des Modules">Module Settings</strong></div>
-                </div>
-
-                <div class="settings-nav-item" role="button" tabindex="0"
-                     onclick="showSection('backups', this)" onkeydown="if(event.key==='Enter' || event.key===' ') showSection('backups', this)">
-                    <div class="settings-icon cyan"><i class="fas fa-cloud-upload-alt" aria-hidden="true"></i></div>
-                    <div><strong data-en="Sync & Backup Center" data-ar="مركز المزامنة والنسخ الاحتياطي" data-fr="Centre de synchronisation et sauvegardes">مركز المزامنة والنسخ الاحتياطي</strong></div>
                 </div>
 
                 </div>
@@ -6157,6 +6157,9 @@
             if (sectionId === 'backups') {
                 if (typeof loadBackupFolderSettings === 'function') loadBackupFolderSettings();
                 if (typeof loadFolderBackupsList === 'function') loadFolderBackupsList();
+                if (typeof loadCloudBackupStatusUI === 'function') loadCloudBackupStatusUI();
+                if (typeof loadServerSnapshotsUI === 'function') loadServerSnapshotsUI();
+                if (typeof refreshGoogleUI === 'function') refreshGoogleUI();
             }
         };
 

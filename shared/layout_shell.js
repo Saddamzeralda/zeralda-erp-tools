@@ -657,14 +657,17 @@
         // Notify other scripts that the shared layout is ready
         document.dispatchEvent(new CustomEvent('sharedLayoutLoaded'));
 
-        // Auto-load Proactive Smart Alerts Hub & Unified Document Printer if not already loaded
+        // Auto-load Unified Document Printer if not already loaded & permanently remove floating alerts
         try {
-          if (!window.ProactiveAlerts) {
-            var sa = document.createElement('script');
-            sa.src = 'shared/proactive_alerts.js?v=20261013a';
-            sa.defer = true;
-            document.head.appendChild(sa);
-          }
+          // Permanently cleanup any floating Smart Alerts Hub (Centre d'alertes intelligent)
+          ['zeraldaAlertsHubWrapper', 'zeraldaAlertsButton', 'zeraldaAlertsDropdown'].forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el && el.parentNode) el.parentNode.removeChild(el);
+          });
+          var hideStyle = document.createElement('style');
+          hideStyle.textContent = '#zeraldaAlertsHubWrapper, #zeraldaAlertsButton, #zeraldaAlertsDropdown { display:none !important; visibility:hidden !important; pointer-events:none !important; opacity:0 !important; }';
+          document.head.appendChild(hideStyle);
+
           if (!window.UnifiedDocumentPrinter) {
             var sp = document.createElement('script');
             sp.src = 'shared/unified_document_printer.js?v=20261009a';
