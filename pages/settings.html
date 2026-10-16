@@ -533,9 +533,9 @@
                 </div>
 
                 <div class="settings-nav-item" role="button" tabindex="0"
-                     onclick="showSection('backups', this)" onkeydown="if(event.key==='Enter' || event.key===' ') showSection('backups', this)" style="border:1.5px solid #0284c7; background:linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);">
-                    <div class="settings-icon cyan" style="background:#0284c7; color:#fff;"><i class="fas fa-cloud-upload-alt" aria-hidden="true"></i></div>
-                    <div><strong data-en="Sync & Backup Center" data-ar="مركز المزامنة والنسخ الاحتياطي" data-fr="Centre de synchronisation et sauvegardes" style="color:#0369a1;">مركز المزامنة والنسخ الاحتياطي</strong></div>
+                     onclick="showSection('backups', this)" onkeydown="if(event.key==='Enter' || event.key===' ') showSection('backups', this)" style="border:1.5px solid #4285f4; background:linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%);">
+                    <div class="settings-icon cyan" style="background:#4285f4; color:#fff;"><i class="fab fa-google-drive" aria-hidden="true"></i></div>
+                    <div><strong data-en="Google Drive Backup & Sync" data-ar="النسخ الاحتياطي والمزامنة (Google Drive)" data-fr="Sauvegarde & Sync Google Drive" style="color:#1d4ed8;">النسخ الاحتياطي والمزامنة (Google Drive)</strong></div>
                 </div>
 
                 <div class="settings-nav-item" role="button" tabindex="0"
@@ -1480,378 +1480,184 @@
         </div><!-- /ai section -->
 
         <!-- ════════════════════════════════════════════════════════════════════ -->
-        <!-- BACKUPS & RESTORE | النسخ الاحتياطية والاستعادة -->
-        <!-- ════════════════════════════════════════════════════════════════════ -->
-        <!-- ════════════════════════════════════════════════════════════════════ -->
-        <!-- SYNC & BACKUP CENTER | مركز المزامنة والنسخ الاحتياطي -->
+        <!-- GOOGLE DRIVE BACKUP & SYNC | النسخ الاحتياطي والمزامنة على Google Drive -->
         <!-- ════════════════════════════════════════════════════════════════════ -->
         <div id="backups" class="settings-section">
             <div class="section-header">
                 <div class="section-title">
-                    <i class="fas fa-cloud-upload-alt" style="color:#0284c7;"></i>
-                    <span data-en="Sync & Backup Center" data-ar="مركز المزامنة والنسخ الاحتياطي" data-fr="Centre de synchronisation et sauvegardes">مركز المزامنة والنسخ الاحتياطي</span>
-                </div>
-                <div style="display:flex; gap:8px;">
-                    <a href="restore_backup.html" class="btn btn-primary" style="text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
-                        <i class="fas fa-shield-halved"></i> <span data-en="Disaster Recovery" data-ar="مركز الاستعادة الشامل" data-fr="Centre de Restauration">مركز الاستعادة الشامل</span>
-                    </a>
+                    <i class="fab fa-google-drive" style="color:#4285f4; font-size:24px;"></i>
+                    <span data-en="Google Drive Backup & Sync" data-ar="النسخ الاحتياطي والمزامنة (Google Drive)" data-fr="Sauvegarde & Synchronisation Google Drive">النسخ الاحتياطي والمزامنة (Google Drive)</span>
                 </div>
             </div>
 
-            <div class="alert-box alert-info">
-                <i class="fas fa-shield-alt" style="font-size:22px;"></i>
+            <!-- Header Info Banner -->
+            <div class="alert-box alert-info" style="background:linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%); border:1px solid #7dd3fc; border-radius:12px; padding:18px;">
+                <i class="fab fa-google-drive" style="font-size:28px; color:#0284c7;"></i>
                 <div>
-                    <strong data-en="Enterprise Cloud Sync & Automated Backup Hub" data-ar="المركز المتكامل للمزامنة السحابية والنسخ الاحتياطي الذكي" data-fr="Centre unifié de sauvegarde et synchronisation">المركز المتكامل للمزامنة السحابية والنسخ الاحتياطي الذكي</strong>
-                    <p data-en="Protects your ERP data with automated Telegram Bot deliveries, Webhooks, Google Drive cloud sync, scheduled server snapshots, and local exports." data-ar="حماية شاملة لبيانات نظامك عبر الإرسال التلقائي لبوت تيليجرام، وWebhooks، ومزامنة Google Drive، والنسخ الدوري على الخادم، والتصدير المحلي." data-fr="Protection complète des données via Telegram, Webhooks, Google Drive, instantanés serveur et exportations locales.">حماية شاملة لبيانات نظامك عبر الإرسال التلقائي لبوت تيليجرام، وWebhooks، ومزامنة Google Drive، والنسخ الدوري على الخادم، والتصدير المحلي.</p>
+                    <strong style="color:#0369a1; font-size:15px;" data-en="Secure Google Drive Cloud Storage & Synchronization" data-ar="مركز النسخ الاحتياطي والمزامنة السحابية الحصري عبر Google Drive" data-fr="Sauvegarde Cloud sécurisée et synchronisation Google Drive">مركز النسخ الاحتياطي والمزامنة السحابية الحصري عبر Google Drive</strong>
+                    <p style="margin:4px 0 0 0; color:#334155; font-size:13px; line-height:1.6;" data-en="All system backups, automated saves, and data recovery are safely encrypted and synchronized directly with your Google Drive account." data-ar="تتم حماية كافة بيانات نظامك وتخزين النسخ الاحتياطية المشفرة والمزامنة التلقائية حصرياً ومباشرةً على حسابك في Google Drive." data-fr="Toutes les sauvegardes et synchronisations sont chiffrées et stockées exclusivement sur votre compte Google Drive.">تتم حماية كافة بيانات نظامك وتخزين النسخ الاحتياطية المشفرة والمزامنة التلقائية حصرياً ومباشرةً على حسابك في Google Drive.</p>
                 </div>
             </div>
 
-            <!-- 1️⃣ Telegram Cloud Backup & Webhooks Card -->
-            <div style="margin-top:16px; padding:18px; background:linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border:1px solid #7dd3fc; border-radius:12px; box-shadow:0 2px 8px rgba(2,132,199,0.06);">
-                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <div style="width:40px; height:40px; border-radius:10px; background:linear-gradient(135deg,#0284c7,#0369a1); display:flex; align-items:center; justify-content:center; color:#fff; font-size:20px;">
-                            <i class="fab fa-telegram-plane"></i>
+            <!-- 1️⃣ Google Account Connection Card -->
+            <div style="margin-top:16px; padding:20px; background:#ffffff; border:1px solid #cbd5e1; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,0.04);">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; margin-bottom:14px;">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <div style="width:44px; height:44px; border-radius:12px; background:linear-gradient(135deg, #4285f4, #34a853); display:flex; align-items:center; justify-content:center; color:#fff; font-size:22px;">
+                            <i class="fab fa-google"></i>
                         </div>
                         <div>
-                            <h4 style="margin:0; font-size:16px; font-weight:700; color:#0369a1;" data-en="Automated Telegram & Webhook Cloud Backup" data-ar="النسخ السحابي الآلي وإشعارات تيليجرام" data-fr="Sauvegarde Cloud Telegram & Webhook">النسخ السحابي الآلي وإشعارات تيليجرام</h4>
-                            <small style="color:#0284c7;" data-en="Sends full encrypted store backups directly to your private Telegram chat." data-ar="إرسال ملفات النسخ الاحتياطي المشفرة تلقائياً إلى محادثة تيليجرام الخاصة بك." data-fr="Envoie les sauvegardes chiffrées sur votre Telegram.">إرسال ملفات النسخ الاحتياطي المشفرة تلقائياً إلى محادثة تيليجرام الخاصة بك.</small>
+                            <h4 style="margin:0; font-size:16px; font-weight:700; color:#0f172a;" data-en="Connected Google Account" data-ar="حساب Google المتصل" data-fr="Compte Google connecté">حساب Google المتصل</h4>
+                            <div id="googleProfileLine" style="font-size:13px; color:#64748b; margin-top:2px;">لا يوجد حساب متصل حالياً</div>
                         </div>
                     </div>
-                    <div id="cloudBackupStatusBadge" style="padding:5px 14px; border-radius:20px; font-size:12.5px; font-weight:700; background:#fef3c7; color:#b45309; display:inline-flex; align-items:center; gap:6px;">
-                        <i class="fas fa-spinner fa-spin"></i> جاري فحص حالة السحابة...
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span id="googleConnectionState" style="padding:6px 16px; border-radius:20px; font-size:12.5px; font-weight:700; background:#f1f5f9; color:#64748b; display:inline-flex; align-items:center; gap:6px;">
+                            <i class="fas fa-circle" style="font-size:8px;"></i> Not connected
+                        </span>
                     </div>
                 </div>
 
-                <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:12px; margin-bottom:14px;">
-                    <div class="form-group" style="margin-bottom:0;">
-                        <label class="form-label" style="font-weight:600; color:#0f172a;"><i class="fab fa-telegram" style="color:#0284c7;"></i> <span data-en="Telegram Bot Token" data-ar="رمز بوت تيليجرام (Bot Token)" data-fr="Token Bot Telegram">رمز بوت تيليجرام (Bot Token)</span></label>
-                        <div style="position:relative; display:flex; align-items:center;">
-                            <input id="cloudBackupTgToken" type="password" class="form-input" placeholder="123456789:ABCDefGhIJKlmNoPQRsTUVwxyZ" style="padding-right:38px;">
-                            <button type="button" onclick="togglePassVisibility('cloudBackupTgToken', this)" style="position:absolute; right:8px; background:none; border:none; color:#64748b; cursor:pointer;"><i class="fas fa-eye"></i></button>
-                        </div>
-                    </div>
-
-                    <div class="form-group" style="margin-bottom:0;">
-                        <label class="form-label" style="font-weight:600; color:#0f172a;"><i class="fas fa-id-badge" style="color:#0284c7;"></i> <span data-en="Telegram Chat ID" data-ar="معرّف المحادثة (Chat ID)" data-fr="ID Discussion Telegram">معرّف المحادثة (Chat ID)</span></label>
-                        <input id="cloudBackupTgChatId" type="text" class="form-input" placeholder="e.g. 123456789 or -100123456789">
-                    </div>
-
-                    <div class="form-group" style="margin-bottom:0;">
-                        <label class="form-label" style="font-weight:600; color:#0f172a;"><i class="fas fa-globe" style="color:#0284c7;"></i> <span data-en="Webhook URL (Optional)" data-ar="رابط Webhook خارجي (اختياري)" data-fr="URL Webhook (Optionnel)">رابط Webhook خارجي (اختياري)</span></label>
-                        <input id="cloudBackupWhUrl" type="url" class="form-input" placeholder="https://your-webhook-endpoint.com/backup">
-                    </div>
-
-                    <div class="form-group" style="margin-bottom:0;">
-                        <label class="form-label" style="font-weight:600; color:#0f172a;"><i class="fas fa-clock" style="color:#0284c7;"></i> <span data-en="Backup Frequency" data-ar="التكرار الدوري التلقائي" data-fr="Fréquence de sauvegarde">التكرار الدوري التلقائي</span></label>
-                        <select id="cloudBackupInterval" class="form-select">
-                            <option value="1">كل ساعة (1 Hour)</option>
-                            <option value="3">كل 3 ساعات (3 Hours)</option>
-                            <option value="6" selected>كل 6 ساعات (6 Hours - موصى به)</option>
-                            <option value="12">كل 12 ساعة (12 Hours)</option>
-                            <option value="24">كل 24 ساعة (يومياً)</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group" style="margin-bottom:0;">
-                        <label class="form-label" style="font-weight:600; color:#0f172a;"><i class="fas fa-archive" style="color:#0284c7;"></i> <span data-en="Retention Count" data-ar="الاحتفاظ بأحدث النسخ" data-fr="Rétention des sauvegardes">الاحتفاظ بأحدث النسخ</span></label>
-                        <select id="cloudBackupRetention" class="form-select">
-                            <option value="5">آخر 5 نسخ</option>
-                            <option value="10">آخر 10 نسخ</option>
-                            <option value="20" selected>آخر 20 نسخة (افتراضي)</option>
-                            <option value="50">آخر 50 نسخة</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:center; margin-bottom:14px;">
-                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:600; color:#0f172a;">
-                        <input id="cloudBackupTgEnabled" type="checkbox" style="width:17px; height:17px;" checked>
-                        <span>تفعيل الإرسال السحابي إلى Telegram</span>
-                    </label>
-                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:600; color:#0f172a;">
-                        <input id="cloudBackupWhEnabled" type="checkbox" style="width:17px; height:17px;">
-                        <span>تفعيل Webhook السحابي</span>
-                    </label>
-                </div>
-
-                <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-                    <button class="btn btn-primary" type="button" onclick="saveCloudBackupConfigUI()">
-                        <i class="fas fa-save"></i> <span>حفظ إعدادات السحابة</span>
+                <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; border-top:1px solid #f1f5f9; padding-top:14px;">
+                    <button class="btn btn-primary" type="button" onclick="connectGoogleAccount()" style="display:inline-flex; align-items:center; gap:8px;">
+                        <i class="fab fa-google"></i> <span data-en="Connect Google Account" data-ar="ربط حساب Google" data-fr="Connecter le compte Google">ربط حساب Google</span>
                     </button>
-                    <button class="btn btn-info" type="button" onclick="testTelegramConnectionUI()">
-                        <i class="fab fa-telegram-plane"></i> <span>اختبار اتصال تيليجرام</span>
-                    </button>
-                    <button class="btn btn-success" type="button" onclick="runImmediateCloudBackupUI()">
-                        <i class="fas fa-cloud-upload-alt"></i> <span>إنشاء نسخة سحابية فورية الآن</span>
+                    <button class="btn btn-secondary" type="button" onclick="disconnectGoogleAccount()" style="display:inline-flex; align-items:center; gap:8px;">
+                        <i class="fas fa-unlink"></i> <span data-en="Disconnect" data-ar="قطع الاتصال" data-fr="Déconnecter">قطع الاتصال</span>
                     </button>
                 </div>
-                <div id="cloudBackupActionResult" style="margin-top:10px; font-size:13px; font-weight:600;"></div>
-            </div>
 
-            <!-- 2️⃣ Server Snapshots & Instant Rollback Card -->
-            <div style="margin-top:20px; padding:18px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:12px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
-                    <h4 style="margin:0; font-size:16px; font-weight:700; color:#0f172a;">
-                        <i class="fas fa-server" style="color:#0284c7;"></i>
-                        <span data-en="Server Snapshots & Instant Rollback" data-ar="لقطات السيرفر والاستعادة الفورية" data-fr="Instantanés serveur et restauration">لقطات السيرفر والاستعادة الفورية</span>
-                    </h4>
-                    <div style="display:flex; gap:8px;">
-                        <button class="btn btn-success" type="button" onclick="runImmediateCloudBackupUI()" style="font-size:13px; padding:6px 12px;">
-                            <i class="fas fa-camera"></i> <span>أخذ لقطة جديدة</span>
-                        </button>
-                        <button class="btn btn-secondary" type="button" onclick="loadServerSnapshotsUI()" style="font-size:13px; padding:6px 12px;">
-                            <i class="fas fa-sync"></i> <span>تحديث</span>
-                        </button>
-                    </div>
-                </div>
-                <p style="margin:0 0 12px 0; font-size:12px; color:#475569;">
-                    نسخ احتياطية كاملة ومحمية مخزنة على السيرفر، يمكنك تحميلها أو استعادتها فوراً بنقرة زر واحدة.
-                </p>
-                <div id="settingsSnapshotsList" style="max-height:260px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:8px; background:#fff;">
-                    <div style="padding:14px; text-align:center; color:#64748b;">
-                        <i class="fas fa-spinner fa-spin"></i> جاري تحميل لقطات السيرفر...
-                    </div>
-                </div>
-            </div>
-
-
-            <!-- Local Backup -->
-            <div style="margin-top:16px;">
-                <h4 style="margin:0 0 12px 0;font-size:15px;font-weight:600;color:#374151;">
-                    <i class="fas fa-hdd" style="color:#6b7280;"></i>
-                    <span data-en="Local Backup" data-ar="نسخ احتياطي محلي" data-fr="Sauvegarde locale">Local Backup</span>
-                </h4>
-                <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                    <button class="btn btn-primary" type="button" onclick="doLocalBackupExport()">
-                        <i class="fas fa-download"></i> <span data-en="Export Backup" data-ar="تصدير النسخة" data-fr="Exporter la sauvegarde">Export Backup</span>
-                    </button>
-                    <button class="btn btn-warning" type="button" onclick="doLocalBackupImport()">
-                        <i class="fas fa-upload"></i> <span data-en="Import / Restore" data-ar="استيراد / استعادة" data-fr="Importer / Restaurer">Import / Restore</span>
-                    </button>
-                </div>
-                <input type="file" id="localBackupFileInput" accept=".json" style="display:none;" onchange="handleLocalBackupFile(this)">
-                <small id="localBackupStatus" style="display:block; color:#6b7280; margin-top:8px;" data-en="No recent local backup." data-ar="لا توجد نسخة محلية حديثة." data-fr="Aucune sauvegarde locale récente.">No recent local backup.</small>
-            </div>
-
-            <!-- Data Guard — نظام حماية البيانات -->
-            <div style="margin-top:20px; padding:16px; background:#f0f9ff; border:1px solid #bae6fd; border-radius:10px;">
-                <h4 style="margin:0 0 12px 0;font-size:15px;font-weight:700;color:#0c4a6e;">
-                    <i class="fas fa-shield-alt" style="color:#0284c7;"></i>
-                    <span data-en="Data Guard (Auto-Protection)" data-ar="حارس البيانات (حماية تلقائية)" data-fr="Gardien de donnees (protection auto)">Data Guard (Auto-Protection)</span>
-                </h4>
-                <p style="margin:0 0 12px 0;font-size:12px;color:#475569;" data-en="Automatically backs up your data every 15 minutes and before every save. Detects data loss and auto-restores. Independent from app updates." data-ar="نسخ احتياطي تلقائي كل 15 دقيقة وقبل كل حفظ. يكشف فقدان البيانات ويسترجعها تلقائياً. مستقل عن تحديثات البرنامج." data-fr="Sauvegarde automatique toutes les 15 minutes et avant chaque enregistrement. Detecte la perte de donnees et restaure automatiquement. Independant des mises a jour.">
-                    Automatically backs up your data every 15 minutes and before every save. Detects data loss and auto-restores. Independent from app updates.
-                </p>
-                <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
-                    <button class="btn btn-primary" type="button" onclick="DataGuardUI.createSnapshot()">
-                        <i class="fas fa-camera"></i> <span data-en="Create Snapshot" data-ar="إنشاء نسخة الآن" data-fr="Creer un instantane">Create Snapshot</span>
-                    </button>
-                    <button class="btn btn-success" type="button" onclick="DataGuardUI.exportAll()">
-                        <i class="fas fa-file-export"></i> <span data-en="Export Full Backup" data-ar="تصدير نسخة كاملة" data-fr="Exporter sauvegarde complete">Export Full Backup</span>
-                    </button>
-                    <button class="btn btn-warning" type="button" onclick="DataGuardUI.importBackup()">
-                        <i class="fas fa-file-import"></i> <span data-en="Import Backup" data-ar="استيراد نسخة" data-fr="Importer sauvegarde">Import Backup</span>
-                    </button>
-                    <button class="btn btn-info" type="button" onclick="DataGuardUI.checkIntegrity()">
-                        <i class="fas fa-heartbeat"></i> <span data-en="Check Integrity" data-ar="فحص السلامة" data-fr="Verifier l'integrite">Check Integrity</span>
-                    </button>
-                </div>
-                <input type="file" id="dataGuardImportInput" accept=".json" style="display:none;" onchange="DataGuardUI.handleImportFile(this)">
-                <div id="dataGuardSnapshotsList" style="margin-top:12px;max-height:300px;overflow-y:auto;">
-                    <small style="color:#6b7280;" data-en="Loading snapshots..." data-ar="جاري تحميل النسخ..." data-fr="Chargement des instantanes...">Loading snapshots...</small>
-                </div>
-                <div id="dataGuardIntegrityResult" style="margin-top:12px;"></div>
-            </div>
-
-            <!-- Google Drive Backup & Sync (merged from Google Integration tab) -->
-            <div style="margin-top:20px; padding:16px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px;">
-                <h4 style="margin:0 0 12px 0;font-size:15px;font-weight:700;color:#166534;">
-                    <i class="fab fa-google-drive" style="color:#4285f4;"></i>
-                    <span data-en="Google Drive Backup & Sync" data-ar="نسخ احتياطي ومزامنة Google Drive" data-fr="Sauvegarde et Sync Google Drive">Google Drive Backup & Sync</span>
-                </h4>
-                <p style="margin:0 0 12px 0;font-size:12px;color:#475569;" data-en="Connect your Google account to enable Drive backup, Contacts sync, and Gmail sending." data-ar="اربط حسابك لتمكين نسخ احتياطي على Drive ومزامنة جهات الاتصال وإرسال Gmail." data-fr="Connectez votre compte pour activer la sauvegarde Drive, la synchronisation des contacts et l'envoi Gmail.">
-                    Connect your Google account to enable Drive backup, Contacts sync, and Gmail sending.
-                </p>
-
-                <!-- Connection status (dual IDs for JS compatibility) -->
-                <div style="margin-bottom:12px; padding:10px 12px; background:#fff; border:1px solid #eadcc8; border-radius:10px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
-                    <div>
-                        <strong id="googleConnectionState">Not connected</strong>
-                        <div id="googleProfileLine" style="font-size:13px; color:#6b7280; margin-top:4px;">-</div>
-                    </div>
-                    <div style="display:flex; gap:8px;">
-                        <button class="btn btn-info" type="button" onclick="connectGoogleAccount()">
-                            <i class="fab fa-google"></i> <span data-en="Connect Google" data-ar="ربط Google" data-fr="Connecter Google">Connect Google</span>
-                        </button>
-                        <button class="btn btn-secondary" type="button" onclick="disconnectGoogleAccount()">
-                            <i class="fas fa-unlink"></i> <span data-en="Disconnect" data-ar="قطع الاتصال" data-fr="Deconnecter">Disconnect</span>
-                        </button>
-                    </div>
-                </div>
-                <!-- Hidden duplicate status for sync UI JS compatibility -->
+                <!-- Compatibility placeholders -->
                 <div id="googleSyncStatus" style="display:none;">
-                    <span id="googleSyncConnState" style="font-weight:600;">Not connected</span>
-                    <span id="googleSyncProfile" style="color:#6b7280; margin-left:8px;">-</span>
-                </div>
-
-                <!-- Backup / Restore / Sync buttons -->
-                <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">
-                    <button class="btn btn-primary" type="button" onclick="doGoogleBackup()">
-                        <i class="fas fa-cloud-upload-alt"></i> <span data-en="Backup to Drive" data-ar="نسخ إلى Drive" data-fr="Sauvegarder sur Drive">Backup to Drive</span>
-                    </button>
-                    <button class="btn btn-warning" type="button" onclick="doGoogleRestore()">
-                        <i class="fas fa-cloud-download-alt"></i> <span data-en="Restore from Drive" data-ar="استعادة من Drive" data-fr="Restaurer depuis Drive">Restore from Drive</span>
-                    </button>
-                    <button class="btn btn-secondary" type="button" onclick="retryGooglePendingSync()">
-                        <i class="fas fa-redo"></i> <span data-en="Retry Pending Sync" data-ar="إعادة المزامنة المعلقة" data-fr="Sync en attente">Retry Pending Sync</span>
-                    </button>
-                </div>
-
-                <!-- Auto backup checkboxes -->
-                <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:center; margin-bottom:10px;">
-                    <label style="display:flex; align-items:center; gap:8px;">
-                        <input id="backupAutoEnabled" type="checkbox" onchange="saveGoogleAutoBackupSettings()">
-                        <span data-en="Auto backup on every save" data-ar="نسخ تلقائي عند كل حفظ" data-fr="Sauvegarde auto à chaque sauvegarde">Auto backup on every save</span>
-                    </label>
-                </div>
-                <div style="margin-bottom:10px;">
-                    <label style="display:flex; align-items:center; gap:8px;">
-                        <input id="googleAutoBackupEnabledSync" type="checkbox" onchange="saveGoogleAutoBackupSettings()">
-                        <span data-en="Sync to server after backup" data-ar="مزامنة مع الخادم بعد النسخ" data-fr="Sync avec le serveur apres sauvegarde">Sync to server after backup</span>
-                    </label>
-                </div>
-                <!-- Hidden checkbox for JS compatibility (refreshGoogleUI references googleAutoBackupEnabled) -->
-                <input id="googleAutoBackupEnabled" type="checkbox" style="display:none;" onchange="saveGoogleAutoBackupSettings()">
-
-                <!-- OAuth Client ID (hidden by default, same as original) -->
-                <div class="form-group" style="grid-column:1/-1; display:none; margin-bottom:10px;">
-                    <label class="form-label"><span data-en="Google OAuth Client ID" data-ar="معرّف عميل Google OAuth" data-fr="ID client Google OAuth">Google OAuth Client ID</span></label>
-                    <div style="display:flex; gap:8px; flex-wrap:wrap; position:relative; z-index:1;">
-                        <input id="googleClientIdInput" class="form-input" type="text" placeholder="xxxx.apps.googleusercontent.com" data-en-placeholder="xxxx.apps.googleusercontent.com" data-ar-placeholder="xxxx.apps.googleusercontent.com" data-fr-placeholder="xxxx.apps.googleusercontent.com" autocomplete="off" style="flex:1; min-width:260px; pointer-events:auto !important; user-select:text !important; z-index:2; position:relative;" onfocus="console.log('Client ID input focused')" oninput="console.log('Client ID input:', this.value)">
-                        <button class="btn btn-primary" type="button" onclick="saveGoogleClientId()" style="z-index:2; position:relative;"><i class="fas fa-save"></i> <span data-en="Save ID" data-ar="حفظ المعرف" data-fr="Enregistrer ID">Save ID</span></button>
-                    </div>
-                    <small style="color:#6b7280;" data-en="Leave empty to use the built-in default ID." data-ar="اترك فارغًا لاستخدام المعرف الافتراضي المدمج." data-fr="Laissez vide pour utiliser l'ID par defaut integre.">Leave empty to use the built-in default ID.</small>
-                </div>
-
-                <!-- Backup Encryption Passphrase (hidden by default, same as original) -->
-                <div class="form-group" style="grid-column:1/-1; display:none; margin-bottom:10px;">
-                    <label class="form-label"><span data-en="Backup Encryption Passphrase (optional)" data-ar="عبارة مرور تشفير النسخ الاحتياطي (اختياري)" data-fr="Phrase de passe de chiffrement de sauvegarde (optionnel)">Backup Encryption Passphrase (optional)</span></label>
-                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                        <input id="googleBackupPassphraseInput" class="form-input" type="password" autocomplete="new-password" placeholder="Set passphrase to encrypt Google Drive backups" data-en-placeholder="Set passphrase to encrypt Google Drive backups" data-ar-placeholder="عيّن عبارة مرور لتشفير النسخ الاحتياطي في Google Drive" data-fr-placeholder="Definissez une phrase de passe pour chiffrer les sauvegardes Google Drive" style="flex:1; min-width:260px;">
-                        <button class="btn btn-primary" type="button" onclick="saveGoogleBackupPassphrase()"><i class="fas fa-shield-alt"></i> <span data-en="Save Passphrase" data-ar="حفظ عبارة المرور" data-fr="Enregistrer la phrase de passe">Save Passphrase</span></button>
-                    </div>
-                    <small style="color:#6b7280;" data-en="If set, Google backups are encrypted with AES-GCM before upload. Keep this passphrase safe." data-ar="عند تعيينها، تُشفَّر نسخ Google الاحتياطية بـ AES-GCM قبل الرفع. احتفظ بهذه العبارة بأمان." data-fr="Si elle est definie, les sauvegardes Google sont chiffrees avec AES-GCM avant televersement. Conservez cette phrase en lieu sur.">If set, Google backups are encrypted with AES-GCM before upload. Keep this passphrase safe.</small>
-                </div>
-
-                <!-- OAuth Mode (hidden by default, same as original) -->
-                <div class="form-group" style="grid-column:1/-1; display:none; margin-bottom:10px;">
-                    <label class="form-label"><span data-en="OAuth Mode" data-ar="وضع OAuth" data-fr="Mode OAuth">OAuth Mode</span></label>
-                    <select id="googleOAuthMode" class="form-input" onchange="saveGoogleOAuthMode()" style="max-width:300px;">
-                        <option value="auto" data-en="Auto-detect (Popup for Chrome, Redirect for Launcher)" data-ar="اكتشاف تلقائي (نافذة منبثقة لـ Chrome، إعادة توجيه للمُشغّل)" data-fr="Auto-détection (Popup pour Chrome, Redirection pour Launcher)">Auto-detect (Popup for Chrome, Redirect for Launcher)</option>
-                        <option value="popup" data-en="Popup (Chrome/Edge only)" data-ar="نافذة منبثقة (Chrome/Edge فقط)" data-fr="Popup (Chrome/Edge uniquement)">Popup (Chrome/Edge only)</option>
-                        <option value="redirect" data-en="Redirect (Launcher/WebView2)" data-ar="إعادة توجيه (المُشغّل/WebView2)" data-fr="Redirection (Launcher/WebView2)">Redirect (Launcher/WebView2)</option>
-                    </select>
-                    <small style="color:#6b7280; display:block; margin-top:4px;" data-en="If login popup appears white in Launcher, select 'Redirect' mode." data-ar="إذا ظهرت نافذة تسجيل الدخول بيضاء في اللانشر، اختر وضع 'Redirect'." data-fr="Si la fenêtre de connexion apparaît blanche dans le Launcher, sélectionnez le mode 'Redirect'.">If login popup appears white in Launcher, select 'Redirect' mode.</small>
-                </div>
-
-                <!-- Gmail -->
-                <div class="form-group" style="grid-column:1/-1; margin-bottom:10px;">
-                    <label class="form-label"><span data-en="Gmail" data-ar="Gmail" data-fr="Gmail">Gmail</span></label>
-                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                        <button class="btn btn-danger" type="button" onclick="testGmailSend()"><i class="fas fa-paper-plane"></i> <span data-en="Send Test Email" data-ar="إرسال بريد تجريبي" data-fr="Envoyer email test">Send Test Email</span></button>
-                    </div>
-                </div>
-
-                <!-- Progress message -->
-                <div class="form-group" style="grid-column:1/-1;">
-                    <div id="googleProgressMsg" class="alert-box alert-info" style="display:none; margin:0;">
-                        <i class="fas fa-sync fa-spin" style="font-size:16px;"></i>
-                        <div id="googleProgressText">Working...</div>
-                    </div>
-                </div>
-
-                <!-- Popup blocked help box -->
-                <div class="form-group" style="grid-column:1/-1;">
-                    <div id="googlePopupBlockedHelp" style="display:none; padding:16px; background:#fff8e1; border:1px solid #f59e0b; border-radius:10px; font-size:13px; color:#333; line-height:1.7;">
-                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
-                            <span style="font-size:20px;">🚫</span>
-                            <strong style="font-size:15px;" data-en="Popups are blocked by the browser" data-ar="المتصفح يمنع النوافذ المنبثقة" data-fr="Les popups sont bloqués par le navigateur">Popups are blocked by the browser</strong>
-                        </div>
-                        <p data-en="Google Sign-In needs a popup window. Please allow popups for this site:" data-ar="يحتاج تسجيل دخول Google إلى نافذة منبثقة. الرجاء السماح بالنوافذ المنبثقة لهذا الموقع:" data-fr="La connexion Google nécessite une fenêtre popup. Autorisez les popups pour ce site:">Google Sign-In needs a popup window. Please allow popups for this site:</p>
-                        <ol style="margin:8px 0 12px 24px; padding:0;">
-                            <li data-en="Look for the blocked popup icon 🔒 in the address bar (top right)" data-ar="ابحث عن أيقونة النافذة المحظورة 🔒 في شريط العنوان (أعلى اليمين)" data-fr="Cherchez l'icône de popup bloqué 🔒 dans la barre d'adresse">Look for the blocked popup icon 🔒 in the address bar (top right)</li>
-                            <li data-en="Click it and choose: Always allow popups from this site" data-ar="انقر عليها، ثم اختر: السماح دائماً بالنوافذ المنبثقة من هذا الموقع" data-fr="Cliquez dessus et choisissez: Toujours autoriser les popups de ce site">Click it and choose: <strong>Always allow popups from this site</strong></li>
-                            <li data-en="Click the Connect button again" data-ar="انقر على زر الاتصال مرة أخرى" data-fr="Cliquez à nouveau sur le bouton Connecter">Click the <strong>Connect</strong> button again</li>
-                        </ol>
-                        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-                            <button class="btn btn-primary" onclick="hidePopupBlockedHelp(); connectGoogleAccount();" style="font-size:13px; padding:7px 16px;">
-                                <i class="fab fa-google"></i>
-                                <span data-en="Try Again" data-ar="حاول مجدداً" data-fr="Réessayer">Try Again</span>
-                            </button>
-                            <button class="btn btn-secondary" onclick="document.getElementById('googlePopupBlockedHelp').style.display='none';" style="font-size:13px; padding:7px 16px;">
-                                <span data-en="Dismiss" data-ar="إغلاق" data-fr="Fermer">Dismiss</span>
-                            </button>
-                        </div>
-                    </div>
+                    <span id="googleSyncConnState">Not connected</span>
+                    <span id="googleSyncProfile">-</span>
                 </div>
             </div>
 
-            <!-- Folder Backup (PDF Invoices + JSON) -->
-            <div style="margin-top:20px; padding-top:16px; border-top:1px solid #e5e7eb;">
-                <h4 style="margin:0 0 12px 0;font-size:15px;font-weight:600;color:#374151;">
-                    <i class="fas fa-folder-open" style="color:#0891b2;"></i>
-                    <span data-en="Folder Backup (PDF Invoices + Data)" data-ar="نسخ احتياطي في مجلد (فواتير PDF + بيانات)" data-fr="Sauvegarde dossier (factures PDF + donnees)">Folder Backup (PDF Invoices + Data)</span>
+            <!-- 2️⃣ Quick Actions & Operations Card -->
+            <div style="margin-top:16px; padding:20px; background:#ffffff; border:1px solid #cbd5e1; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,0.04);">
+                <h4 style="margin:0 0 14px 0; font-size:16px; font-weight:700; color:#0f172a; display:flex; align-items:center; gap:8px;">
+                    <i class="fas fa-bolt" style="color:#eab308;"></i>
+                    <span data-en="Instant Actions & Operations" data-ar="عمليات النسخ والمزامنة الفورية" data-fr="Actions instantanées et opérations">عمليات النسخ والمزامنة الفورية</span>
                 </h4>
-                <div class="alert-box alert-info" style="margin-bottom:12px;">
-                    <i class="fas fa-info-circle" style="font-size:16px;"></i>
-                    <div>
-                        <p data-en="Export all ERP data as JSON and all invoices as PDF files to a folder on your computer." data-ar="صدّر جميع بيانات ERP كـ JSON وجميع الفواتير كملفات PDF إلى مجلد على حاسوبك." data-fr="Exportez toutes les donnees ERP en JSON et toutes les factures en PDF vers un dossier.">Export all ERP data as JSON and all invoices as PDF files to a folder on your computer.</p>
-                    </div>
-                </div>
-                <div class="form-group" style="margin-bottom:10px;">
-                    <label class="form-label"><span data-en="Backup Folder Path" data-ar="مسار مجلد النسخ الاحتياطي" data-fr="Chemin du dossier de sauvegarde">Backup Folder Path</span></label>
-                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                        <input id="backupFolderPath" class="form-input" type="text" placeholder="C:\Backups\Zeralda  /  /home/user/backups" data-en-placeholder="C:\Backups\Zeralda  /  /home/user/backups" data-ar-placeholder="C:\Backups\Zeralda  /  /home/user/backups" data-fr-placeholder="C:\Backups\Zeralda  /  /home/user/backups" style="flex:1; min-width:260px;">
-                        <button class="btn btn-secondary" type="button" onclick="browseBackupFolder()">
-                            <i class="fas fa-folder"></i> <span data-en="Browse" data-ar="استعراض" data-fr="Parcourir">استعراض</span>
-                        </button>
-                        <button class="btn btn-secondary" type="button" onclick="saveBackupFolderSettings()">
-                            <i class="fas fa-save"></i> <span data-en="Save" data-ar="حفظ" data-fr="Enregistrer">حفظ</span>
-                        </button>
-                    </div>
-                </div>
-                <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:center; margin-bottom:10px;">
-                    <label style="display:flex; align-items:center; gap:8px;">
-                        <input id="backupFolderExportPdf" type="checkbox" checked>
-                        <span data-en="Export invoices as PDF" data-ar="تصدير الفواتير كـ PDF" data-fr="Exporter les factures en PDF">Export invoices as PDF</span>
-                    </label>
-                    <label style="display:flex; align-items:center; gap:8px;">
-                        <input id="backupFolderAuto" type="checkbox">
-                        <span data-en="Auto backup daily" data-ar="نسخ تلقائي يومي" data-fr="Sauvegarde auto quotidienne">Auto backup daily</span>
-                    </label>
-                </div>
-                <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                    <button class="btn btn-primary" type="button" onclick="runFolderBackup()">
-                        <i class="fas fa-play"></i> <span data-en="Run Backup Now" data-ar="تنفيذ النسخ الآن" data-fr="Lancer la sauvegarde">Run Backup Now</span>
+                <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px;">
+                    <button class="btn btn-success" type="button" onclick="doGoogleBackup()" style="display:inline-flex; align-items:center; gap:8px; padding:10px 18px; font-weight:600;">
+                        <i class="fas fa-cloud-upload-alt"></i> <span data-en="Create Drive Backup Now" data-ar="إنشاء نسخة احتياطية على Drive الآن" data-fr="Créer une sauvegarde sur Drive">إنشاء نسخة احتياطية على Drive الآن</span>
                     </button>
-                    <button class="btn btn-secondary" type="button" onclick="loadFolderBackupsList()">
-                        <i class="fas fa-list"></i> <span data-en="Refresh List" data-ar="تحديث القائمة" data-fr="Rafraichir">Refresh List</span>
+                    <button class="btn btn-warning" type="button" onclick="doGoogleRestore()" style="display:inline-flex; align-items:center; gap:8px; padding:10px 18px; font-weight:600;">
+                        <i class="fas fa-cloud-download-alt"></i> <span data-en="Restore Latest Backup" data-ar="استعادة أحدث نسخة من Drive" data-fr="Restaurer la dernière sauvegarde">استعادة أحدث نسخة من Drive</span>
+                    </button>
+                    <button class="btn btn-secondary" type="button" onclick="retryGooglePendingSync()" style="display:inline-flex; align-items:center; gap:8px; padding:10px 16px;">
+                        <i class="fas fa-redo"></i> <span data-en="Retry Pending Sync" data-ar="إعادة مزامنة المعلقات" data-fr="Réessayer la sync en attente">إعادة مزامنة المعلقات</span>
+                    </button>
+                    <button class="btn btn-info" type="button" onclick="syncGoogleContactsUI()" style="display:inline-flex; align-items:center; gap:8px; padding:10px 16px;">
+                        <i class="fas fa-address-book"></i> <span data-en="Sync Customers to Google Contacts" data-ar="مزامنة العملاء مع Google Contacts" data-fr="Synchroniser les contacts">مزامنة العملاء مع Google Contacts</span>
+                    </button>
+                    <button class="btn btn-danger" type="button" onclick="testGmailSend()" style="display:inline-flex; align-items:center; gap:8px; padding:10px 16px;">
+                        <i class="fas fa-paper-plane"></i> <span data-en="Send Test Email (Gmail)" data-ar="إرسال بريد تجريبي (Gmail)" data-fr="Envoyer email test">إرسال بريد تجريبي (Gmail)</span>
                     </button>
                 </div>
-                <small id="folderBackupStatus" style="display:block; color:#6b7280; margin-top:8px;"></small>
-                <div id="folderBackupsList" style="margin-top:12px; display:none;">
-                    <h5 style="font-size:13px; font-weight:600; color:#374151; margin-bottom:8px;">
-                        <span data-en="Existing Backups" data-ar="النسخ الموجودة" data-fr="Sauvegardes existantes">Existing Backups</span>
-                    </h5>
-                    <div id="folderBackupsTable" style="display:flex; flex-direction:column; gap:6px;"></div>
+
+                <!-- Automation Checkboxes -->
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:14px; margin-top:14px; display:flex; flex-direction:column; gap:10px;">
+                    <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-weight:600; color:#1e293b;">
+                        <input id="backupAutoEnabled" type="checkbox" style="width:18px; height:18px;" onchange="saveGoogleAutoBackupSettings()">
+                        <span data-en="Automatically backup to Google Drive on every save" data-ar="تفعيل النسخ الاحتياطي التلقائي إلى Google Drive عند كل عملية حفظ" data-fr="Sauvegarde automatique sur Google Drive à chaque enregistrement">تفعيل النسخ الاحتياطي التلقائي إلى Google Drive عند كل عملية حفظ</span>
+                    </label>
+                    <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-weight:600; color:#1e293b;">
+                        <input id="googleAutoBackupEnabledSync" type="checkbox" style="width:18px; height:18px;" onchange="saveGoogleAutoBackupSettings()">
+                        <span data-en="Sync with server after Google Drive backup" data-ar="مزامنة التغييرات مع الخادم بعد النسخ إلى Google Drive" data-fr="Synchroniser avec le serveur après sauvegarde">مزامنة التغييرات مع الخادم بعد النسخ إلى Google Drive</span>
+                    </label>
+                    <input id="googleAutoBackupEnabled" type="checkbox" style="display:none;" onchange="saveGoogleAutoBackupSettings()">
                 </div>
             </div>
 
-            <!-- Backup Progress -->
+            <!-- 3️⃣ Google Drive Backups List Table -->
+            <div style="margin-top:16px; padding:20px; background:#ffffff; border:1px solid #cbd5e1; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,0.04);">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
+                    <h4 style="margin:0; font-size:16px; font-weight:700; color:#0f172a; display:flex; align-items:center; gap:8px;">
+                        <i class="fab fa-google-drive" style="color:#4285f4;"></i>
+                        <span data-en="Backups Stored on Google Drive" data-ar="النسخ الاحتياطية المتوفرة على Google Drive" data-fr="Sauvegardes stockées sur Google Drive">النسخ الاحتياطية المتوفرة على Google Drive</span>
+                    </h4>
+                    <button class="btn btn-secondary" type="button" onclick="loadGoogleDriveBackupsList()" style="display:inline-flex; align-items:center; gap:6px; font-size:13px; padding:6px 14px;">
+                        <i class="fas fa-sync-alt"></i> <span data-en="Refresh List" data-ar="تحديث القائمة" data-fr="Actualiser">تحديث القائمة</span>
+                    </button>
+                </div>
+                <div id="googleDriveBackupsContainer" style="max-height:360px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:10px; background:#fafafa;">
+                    <div style="padding:20px; text-align:center; color:#64748b;">
+                        <i class="fas fa-spinner fa-spin"></i> جاري فحص النسخ على Google Drive...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Advanced / Developer Settings Collapsible -->
+            <details style="margin-top:16px; padding:14px 18px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:12px;">
+                <summary style="font-weight:700; color:#475569; cursor:pointer; display:flex; align-items:center; gap:8px;">
+                    <i class="fas fa-cog"></i> <span data-en="Advanced Google Drive Settings" data-ar="إعدادات متقدمة (تشفير وOAuth)" data-fr="Paramètres avancés Google Drive">إعدادات متقدمة (تشفير وOAuth)</span>
+                </summary>
+                <div style="margin-top:14px; display:flex; flex-direction:column; gap:14px;">
+                    <!-- OAuth Client ID -->
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label" style="font-weight:600;"><span data-en="Google OAuth Client ID" data-ar="معرّف عميل Google OAuth" data-fr="ID client Google OAuth">معرّف عميل Google OAuth</span></label>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                            <input id="googleClientIdInput" class="form-input" type="text" placeholder="xxxx.apps.googleusercontent.com" style="flex:1; min-width:260px;">
+                            <button class="btn btn-primary" type="button" onclick="saveGoogleClientId()"><i class="fas fa-save"></i> <span data-en="Save ID" data-ar="حفظ" data-fr="Enregistrer">حفظ</span></button>
+                        </div>
+                        <small style="color:#6b7280;">اترك فارغاً لاستخدام المعرف الافتراضي المدمج للنظام.</small>
+                    </div>
+
+                    <!-- Passphrase -->
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label" style="font-weight:600;"><span data-en="Backup Encryption Passphrase (Optional)" data-ar="عبارة مرور تشفير النسخ الاحتياطي (اختياري)" data-fr="Phrase de passe de chiffrement (Optionnel)">عبارة مرور تشفير النسخ الاحتياطي (اختياري)</span></label>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                            <input id="googleBackupPassphraseInput" class="form-input" type="password" placeholder="عيّن عبارة مرور لتشفير النسخ الاحتياطي في Google Drive" style="flex:1; min-width:260px;">
+                            <button class="btn btn-primary" type="button" onclick="saveGoogleBackupPassphrase()"><i class="fas fa-shield-alt"></i> <span data-en="Save Passphrase" data-ar="حفظ العبارة" data-fr="Enregistrer">حفظ العبارة</span></button>
+                        </div>
+                        <small style="color:#6b7280;">عند تعيينها، تُشفَّر نسخ Google الاحتياطية بـ AES-GCM قبل الرفع لحماية قصوى.</small>
+                    </div>
+
+                    <!-- OAuth Mode -->
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label" style="font-weight:600;"><span data-en="OAuth Mode" data-ar="وضع تسجيل الدخول (OAuth Mode)" data-fr="Mode OAuth">وضع تسجيل الدخول (OAuth Mode)</span></label>
+                        <select id="googleOAuthMode" class="form-select" onchange="saveGoogleOAuthMode()" style="max-width:320px;">
+                            <option value="auto">اكتشاف تلقائي (Auto-detect Popup / Redirect)</option>
+                            <option value="popup">نافذة منبثقة (Popup - Chrome/Edge)</option>
+                            <option value="redirect">إعادة توجيه كاملة (Redirect - Launcher)</option>
+                        </select>
+                    </div>
+                </div>
+            </details>
+
+            <!-- Popup blocked help box -->
+            <div id="googlePopupBlockedHelp" style="display:none; margin-top:14px; padding:16px; background:#fff8e1; border:1px solid #f59e0b; border-radius:10px; font-size:13px; color:#333; line-height:1.7;">
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+                    <span style="font-size:20px;">🚫</span>
+                    <strong style="font-size:15px;">المتصفح يمنع النوافذ المنبثقة</strong>
+                </div>
+                <p>يحتاج تسجيل دخول Google إلى نافذة منبثقة. الرجاء السماح بالنوافذ المنبثقة لهذا الموقع:</p>
+                <ol style="margin:8px 0 12px 24px; padding:0;">
+                    <li>ابحث عن أيقونة النافذة المحظورة في شريط العنوان (أعلى اليمين).</li>
+                    <li>انقر عليها، ثم اختر: <strong>السماح دائماً بالنوافذ المنبثقة من هذا الموقع</strong>.</li>
+                    <li>انقر على زر ربط حساب Google مرة أخرى.</li>
+                </ol>
+                <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                    <button class="btn btn-primary" onclick="hidePopupBlockedHelp(); connectGoogleAccount();" style="font-size:13px; padding:7px 16px;">
+                        <i class="fab fa-google"></i> حاول مجدداً
+                    </button>
+                    <button class="btn btn-secondary" onclick="hidePopupBlockedHelp();" style="font-size:13px; padding:7px 16px;">
+                        إغلاق
+                    </button>
+                </div>
+            </div>
+
+            <!-- Progress message -->
+            <div id="googleProgressMsg" class="alert-box alert-info" style="display:none; margin-top:14px;">
+                <i class="fas fa-sync fa-spin" style="font-size:16px;"></i>
+                <div id="googleProgressText">Working...</div>
+            </div>
             <div id="backupProgressArea" style="display:none; margin-top:14px; padding:12px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px;">
                 <i class="fas fa-sync fa-spin" style="color:#10b981;"></i>
-                <span id="backupProgressText" data-en="Working..." data-ar="جارٍ..." data-fr="En cours...">Working...</span>
+                <span id="backupProgressText">Working...</span>
             </div>
         </div>
 
@@ -4874,6 +4680,7 @@
             ZeraldaGoogle.retryPendingServerSync().then(function (result) {
                 setGoogleProgress('Pending sync retry completed.', false);
                 updateGooglePendingSyncUI();
+            if (typeof loadGoogleDriveBackupsList === "function") loadGoogleDriveBackupsList();
                 if (result && result.ok) {
                     var left = Number(result.pendingCount || 0);
                     showToast(left > 0
@@ -5319,6 +5126,129 @@
                 showToast(tSettings('send_failed', {msg: (err.message || err)}), 'info');
             });
         };
+
+        window.retryGooglePendingSync = function () {
+            if (typeof ZeraldaGoogle === 'undefined') {
+                showToast(tSettings('google_module_not_loaded'), 'info');
+                return;
+            }
+            setGoogleProgress('جاري مزامنة التغييرات المعلقة مع الخادم...', true);
+            ZeraldaGoogle.retryPendingServerSync().then(function (res) {
+                setGoogleProgress('اكتملت المزامنة.', false);
+                showToast('تمت مزامنة العمليات المعلقة بنجاح.', 'success');
+            }).catch(function (err) {
+                setGoogleProgress('فشلت المزامنة.', false);
+                showToast('فشلت المزامنة المعلقة: ' + (err.message || err), 'info');
+            });
+        };
+
+        window.syncGoogleContactsUI = function () {
+            if (typeof ZeraldaGoogle === 'undefined') {
+                showToast(tSettings('google_module_not_loaded'), 'info');
+                return;
+            }
+            if (!ZeraldaGoogle.isSignedIn()) {
+                showToast('يرجى ربط حساب Google أولاً.', 'info');
+                return;
+            }
+            setGoogleProgress('جاري مزامنة جهات الاتصال مع Google Contacts...', true);
+            ZeraldaGoogle.syncCustomersToGoogle(function (curr, total) {
+                setGoogleProgress('مزامنة جهات الاتصال: ' + curr + ' / ' + total, true);
+            }).then(function (res) {
+                setGoogleProgress('اكتملت المزامنة.', false);
+                showToast('تمت مزامنة ' + (res && res.synced ? res.synced : 'جهات الاتصال') + ' بنجاح مع Google Contacts.', 'success');
+            }).catch(function (err) {
+                setGoogleProgress('فشلت المزامنة.', false);
+                showToast('خطأ في مزامنة جهات الاتصال: ' + (err.message || err), 'info');
+            });
+        };
+
+        window.loadGoogleDriveBackupsList = function () {
+            var container = document.getElementById('googleDriveBackupsContainer');
+            if (!container) return;
+
+            if (typeof ZeraldaGoogle === 'undefined' || !ZeraldaGoogle.isSignedIn || !ZeraldaGoogle.isSignedIn()) {
+                container.innerHTML = '<div style="padding:24px; text-align:center; color:#64748b;">' +
+                    '<i class="fab fa-google-drive" style="font-size:32px; color:#cbd5e1; margin-bottom:8px; display:block;"></i>' +
+                    '<div>الرجاء ربط حساب Google لعرض النسخ الاحتياطية المتوفرة على Google Drive</div>' +
+                    '</div>';
+                return;
+            }
+
+            container.innerHTML = '<div style="padding:20px; text-align:center; color:#64748b;">' +
+                '<i class="fas fa-spinner fa-spin" style="font-size:20px; color:#4285f4; margin-bottom:8px; display:block;"></i>' +
+                '<div>جاري فحص النسخ الاحتياطية على Google Drive...</div>' +
+                '</div>';
+
+            ZeraldaGoogle.listDriveBackups().then(function (files) {
+                if (!files || files.length === 0) {
+                    container.innerHTML = '<div style="padding:24px; text-align:center; color:#64748b;">' +
+                        '<i class="fas fa-folder-open" style="font-size:32px; color:#cbd5e1; margin-bottom:8px; display:block;"></i>' +
+                        '<div>لا توجد نسخ احتياطية على Google Drive حتى الآن. يمكنك إنشاء نسخة جديدة الآن.</div>' +
+                        '</div>';
+                    return;
+                }
+
+                var html = '<table style="width:100%; border-collapse:collapse; font-size:13px; text-align:right;">';
+                html += '<thead><tr style="background:#f1f5f9; color:#475569; border-bottom:1px solid #cbd5e1;">' +
+                    '<th style="padding:10px 14px; text-align:right;">اسم ملف النسخة</th>' +
+                    '<th style="padding:10px 14px; text-align:right;">تاريخ الحفظ</th>' +
+                    '<th style="padding:10px 14px; text-align:center;">الحجم</th>' +
+                    '<th style="padding:10px 14px; text-align:center;">الإجراء</th>' +
+                    '</tr></thead><tbody>';
+
+                files.forEach(function (file) {
+                    var dateStr = file.modifiedTime ? new Date(file.modifiedTime).toLocaleString() : '-';
+                    var sizeStr = file.size ? (file.size > 1048576 ? (file.size / 1048576).toFixed(2) + ' MB' : (file.size / 1024).toFixed(1) + ' KB') : '-';
+                    var escapedName = (file.name || '').replace(/'/g, "\'");
+                    var escapedId = (file.id || '').replace(/'/g, "\'");
+
+                    html += '<tr style="border-bottom:1px solid #f1f5f9; transition:background 0.15s;" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'transparent\'">' +
+                        '<td style="padding:10px 14px; font-weight:600; color:#1e293b;"><i class="fab fa-google-drive" style="color:#4285f4; margin-left:6px;"></i> ' + (file.name || 'backup.json') + '</td>' +
+                        '<td style="padding:10px 14px; color:#64748b;">' + dateStr + '</td>' +
+                        '<td style="padding:10px 14px; text-align:center; color:#64748b;">' + sizeStr + '</td>' +
+                        '<td style="padding:10px 14px; text-align:center;">' +
+                        '<button class="btn btn-warning" type="button" onclick="doGoogleRestoreFromFile(\'' + escapedId + '\', \'' + escapedName + '\')" style="padding:4px 10px; font-size:12px; display:inline-flex; align-items:center; gap:4px;">' +
+                        '<i class="fas fa-undo-alt"></i> <span>استعادة</span>' +
+                        '</button>' +
+                        '</td>' +
+                        '</tr>';
+                });
+
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            }).catch(function (err) {
+                container.innerHTML = '<div style="padding:20px; text-align:center; color:#dc2626;">' +
+                    '<i class="fas fa-exclamation-triangle" style="font-size:24px; margin-bottom:8px; display:block;"></i>' +
+                    '<div>تعذر جلب النسخ الاحتياطية من Google Drive: ' + (err.message || err) + '</div>' +
+                    '</div>';
+            });
+        };
+
+        window.doGoogleRestoreFromFile = function (fileId, fileName) {
+            if (typeof ZeraldaGoogle === 'undefined') {
+                showToast(tSettings('google_module_not_loaded'), 'info');
+                return;
+            }
+            if (!confirm('هل أنت متأكد من استعادة النسخة الاحتياطية: ' + (fileName || 'المحددة') + '؟\nسيتم استبدال البيانات الحالية ببيانات هذه النسخة.')) {
+                return;
+            }
+
+            setGoogleProgress('جاري استعادة النسخة (' + (fileName || '') + ') من Google Drive...', true);
+            ZeraldaGoogle.restoreFromDrive(function (step) {
+                if (step === 'downloading') setGoogleProgress('جاري تنزيل ملف النسخة من Drive...', true);
+                if (step === 'decrypting') setGoogleProgress('جاري فك التشفير...', true);
+                if (step === 'restoring') setGoogleProgress('جاري تطبيق البيانات محلياً...', true);
+            }, fileId).then(function () {
+                setGoogleProgress('اكتملت الاستعادة بنجاح.', false);
+                showToast('تمت استعادة البيانات بنجاح من Google Drive!', 'success');
+                setTimeout(function () { location.reload(); }, 1200);
+            }).catch(function (err) {
+                setGoogleProgress('فشلت الاستعادة.', false);
+                showToast('فشلت الاستعادة من Google Drive: ' + (err.message || err), 'info');
+            });
+        };
+
 
         // Pre-load Google Identity Services eagerly so user gesture is NOT broken later.
         loadGoogleApisOnDemand().then(function () {
@@ -6155,11 +6085,8 @@
                 loadAiSettings();
             }
             if (sectionId === 'backups') {
-                if (typeof loadBackupFolderSettings === 'function') loadBackupFolderSettings();
-                if (typeof loadFolderBackupsList === 'function') loadFolderBackupsList();
-                if (typeof loadCloudBackupStatusUI === 'function') loadCloudBackupStatusUI();
-                if (typeof loadServerSnapshotsUI === 'function') loadServerSnapshotsUI();
                 if (typeof refreshGoogleUI === 'function') refreshGoogleUI();
+                if (typeof loadGoogleDriveBackupsList === 'function') loadGoogleDriveBackupsList();
             }
         };
 

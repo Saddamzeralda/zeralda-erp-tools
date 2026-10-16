@@ -1858,34 +1858,38 @@
     });
   }
 
-  function restoreFromDrive(onProgress) {
+  function restoreFromDrive(onProgress, specificFileId) {
     if (!accessToken) return Promise.reject(new Error('Not signed in'));
     if (onProgress) onProgress('finding_folder');
 
-    return findOrCreateFolder().then(function (folderId) {
-      var driveFileName = getDriveFileNameForActiveCompany();
-      var q = "name='" + driveFileName + "' and '" + folderId + "' in parents and trashed=false";
+    var getFilePromise = specificFileId
+      ? Promise.resolve(specificFileId)
+      : findOrCreateFolder().then(function (folderId) {
+          var driveFileName = getDriveFileNameForActiveCompany();
+          var q = "name='" + driveFileName + "' and '" + folderId + "' in parents and trashed=false";
 
-      return gFetch('https://www.googleapis.com/drive/v3/files?q=' + encodeURIComponent(q) + '&fields=files(id,name,modifiedTime)')
-        .then(function (r) { return r.json(); })
-        .then(function (res) {
-          if (!res.files || res.files.length === 0) throw new Error('No backup found');
-          if (onProgress) onProgress('downloading');
-
-          var fileId = res.files[0].id;
-          return gFetch('https://www.googleapis.com/drive/v3/files/' + fileId + '?alt=media');
-        })
-        .then(function (r) { return r.json(); })
-        .then(function (payload) {
-          if (onProgress) onProgress('decrypting');
-          return maybeDecryptBackupPayload(payload);
-        })
-        .then(function (decryptedPayload) {
-          if (onProgress) onProgress('restoring');
-          return restoreAllData(decryptedPayload).then(function (count) {
-            return { restoredKeys: count, exportedAt: decryptedPayload.exportedAt };
-          });
+          return gFetch('https://www.googleapis.com/drive/v3/files?q=' + encodeURIComponent(q) + '&fields=files(id,name,modifiedTime)')
+            .then(function (r) { return r.json(); })
+            .then(function (res) {
+              if (!res.files || res.files.length === 0) throw new Error('No backup found');
+              return res.files[0].id;
+            });
         });
+
+    return getFilePromise.then(function (fileId) {
+      if (onProgress) onProgress('downloading');
+      return gFetch('https://www.googleapis.com/drive/v3/files/' + fileId + '?alt=media');
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (payload) {
+      if (onProgress) onProgress('decrypting');
+      return maybeDecryptBackupPayload(payload);
+    })
+    .then(function (decryptedPayload) {
+      if (onProgress) onProgress('restoring');
+      return restoreAllData(decryptedPayload).then(function (count) {
+        return { restoredKeys: count, exportedAt: decryptedPayload.exportedAt };
+      });
     });
   }
 
