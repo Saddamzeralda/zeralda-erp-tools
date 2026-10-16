@@ -13,7 +13,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi.responses import JSONResponse, FileResponse, RedirectResponse
 
 from app.services.security import (
     ALLOWED_ORIGINS,
@@ -310,10 +310,15 @@ def create_app() -> FastAPI:
     # ── Static files (serves HTML/JS/CSS/images from project root) ───────
     base_dir = Path(__file__).resolve().parent.parent
     # Mount individual static directories
-    for sub in ("shared", "styles", "modules", "pages"):
+    for sub in ("shared", "styles", "modules"):
         sub_path = base_dir / sub
         if sub_path.is_dir():
             app.mount(f"/{sub}", StaticFiles(directory=str(sub_path)), name=f"static-{sub}")
+
+    # Redirect /pages/{page} to /{page} for clean relative asset imports
+    @app.get("/pages/{page_name:path}", include_in_schema=False)
+    async def redirect_pages_to_root(page_name: str):
+        return RedirectResponse(url=f"/{page_name}", status_code=302)
 
     # Root-level HTML files (index.html, login.html, settings.html, dashboard, etc.)
     @app.get("/", include_in_schema=False)
