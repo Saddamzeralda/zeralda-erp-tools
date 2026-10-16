@@ -1,21 +1,11 @@
-// Zeralda ERP Service Worker v1.0
-const CACHE_NAME = 'zeralda-erp-cache-v1';
+// Zeralda ERP Service Worker v3.0 (Network-first to guarantee live updates)
+const CACHE_NAME = 'zeralda-erp-cache-v3';
 const STATIC_ASSETS = [
-  '/',
   '/manifest.json',
-  '/favicon.ico',
-  '/login.html',
-  '/shared/qrcode.min.js',
-  '/shared/app_sync.js',
-  '/shared/zeralda_db.js'
+  '/favicon.ico'
 ];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS).catch(() => {});
-    })
-  );
   self.skipWaiting();
 });
 
@@ -23,7 +13,7 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
-        keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))
+        keys.map((k) => caches.delete(k))
       );
     })
   );
@@ -33,26 +23,29 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // Never cache API calls or auth or SSE
-  if (url.pathname.startsWith('/api/') || url.pathname.includes('/sse')) {
-    return;
+  // Never cache API calls, SSE, JS scripts, HTML pages, or CSS
+  if (
+    url.pathname.startsWith('/api/') ||
+    url.pathname.includes('/sse') ||
+    url.pathname.endsWith('.js') ||
+    url.pathname.endsWith('.html') ||
+    url.pathname.endsWith('.css') ||
+    url.pathname === '/'
+  ) {
+    return; // Pass through directly to network
   }
 
-  // Stale-while-revalidate for static assets
+  // Network-first with cache fallback only for static media/fonts
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      const fetchPromise = fetch(event.request).then((networkResponse) => {
-        if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
-          const responseToCache = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
-        }
-        return networkResponse;
-      }).catch(() => cachedResponse);
-
-      return cachedResponse || fetchPromise;
-    })
+    fetch(event.request).then((networkResponse) => {
+      if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+        const responseToCache = networkResponse.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, responseToCache);
+        });
+      }
+      return networkResponse;
+    }).catch(() => caches.match(event.request))
   );
 });
 

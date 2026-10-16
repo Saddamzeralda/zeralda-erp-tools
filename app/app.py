@@ -138,15 +138,21 @@ def create_app() -> FastAPI:
                 "object-src 'none'"
             )
             response.headers["Content-Security-Policy"] = csp
-        # Smart caching for mobile and network acceleration
+        # Smart caching: Never cache JS, CSS, or HTML in production to guarantee immediate UI updates
         if path.startswith("/api/"):
             response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
             response.headers["Pragma"] = "no-cache"
             response.headers["Expires"] = "0"
-        elif path.endswith((".js", ".css", ".png", ".jpg", ".jpeg", ".ico", ".svg", ".woff", ".woff2", ".ttf")):
-            response.headers["Cache-Control"] = "public, max-age=86400, stale-while-revalidate=604800"
+        elif path.endswith((".js", ".css")):
+            response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"
+            response.headers["Pragma"] = "no-cache"
+            response.headers["Expires"] = "0"
+        elif path.endswith((".png", ".jpg", ".jpeg", ".ico", ".svg", ".woff", ".woff2", ".ttf")):
+            response.headers["Cache-Control"] = "public, max-age=86400"
         elif path.endswith(".html") or path == "/":
-            response.headers["Cache-Control"] = "no-cache, must-revalidate"
+            response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"
+            response.headers["Pragma"] = "no-cache"
+            response.headers["Expires"] = "0"
         return response
 
     # ── CSRF protection middleware ──────────────────────────────────────

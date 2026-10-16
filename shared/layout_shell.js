@@ -7,6 +7,17 @@
 
   // Immediately kill any floating sync indicator, alerts hub, or modal
   try {
+    if (typeof window !== 'undefined' && 'caches' in window && !sessionStorage.getItem('zeralda_bust_20261017')) {
+      caches.keys().then(function (names) {
+        names.forEach(function (name) { caches.delete(name); });
+      });
+      sessionStorage.setItem('zeralda_bust_20261017', '1');
+    }
+    if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function (regs) {
+        regs.forEach(function (reg) { reg.update(); });
+      });
+    }
     var hideStyle = document.createElement('style');
     hideStyle.id = 'zeralda-kill-sync-pill-style';
     hideStyle.textContent = '#zeraldaSyncPill, #zeraldaSyncHubModal, #zeraldaAlertsHubWrapper, #zeraldaAlertsButton, #zeraldaAlertsDropdown, #zeraldaAlertsBadge, #zeraldaMobileNotifBanner, .zeralda-sync-pill, .alerts-hub-wrapper, .proactive-alerts-hub { display:none !important; visibility:hidden !important; pointer-events:none !important; opacity:0 !important; width:0 !important; height:0 !important; position:absolute !important; left:-99999px !important; top:-99999px !important; }';
