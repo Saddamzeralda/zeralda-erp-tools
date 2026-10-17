@@ -407,6 +407,48 @@ def read_store_value(key: str, default: Any = None) -> Any:
 _MIGRATION_DONE = False
 
 
+def init_db_schema() -> None:
+    """Ensure PostgreSQL kv_store table exists and auto-seed from JSON if empty."""
+    global DB_CONNECTED
+    if not DB_CONNECTED or not _engine:
+        return
+    try:
+        with _engine.connect() as conn:
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS kv_store (
+                    key VARCHAR(255) PRIMARY KEY,
+                    value JSONB NOT NULL,
+                    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                );
+                CREATE INDEX IF NOT EXISTS idx_kv_store_updated_at ON kv_store (updated_at DESC);
+            """))
+            conn.commit()
+
+            # Check if kv_store is empty and DATA_FILE has data
+            count_res = conn.execute(text("SELECT COUNT(*) FROM kv_store")).scalar()
+            if (count_res == 0 or count_res is None) and DATA_FILE.exists():
+                try:
+                    data = _read_encrypted_or_plain_json(DATA_FILE)
+                    if isinstance(data, dict) and data:
+                        logger.info("Auto-seeding PostgreSQL kv_store with %d keys from authoritative store", len(data))
+                        upsert_stmt = text(
+                            "INSERT INTO kv_store (key, value, updated_at) "
+                            "VALUES (:key, :val, CURRENT_TIMESTAMP) "
+                            "ON CONFLICT (key) DO NOTHING"
+                        )
+                        items = list(data.items())
+                        for i in range(0, len(items), 500):
+                            chunk = items[i:i + 500]
+                            params = [{"key": k, "val": json.dumps(v, ensure_ascii=False)} for k, v in chunk]
+                            conn.execute(upsert_stmt, params)
+                        conn.commit()
+                        logger.info("Successfully seeded PostgreSQL kv_store with %d keys.", len(data))
+                except Exception as seed_err:
+                    logger.warning("Error seeding DB from JSON: %s", seed_err)
+    except Exception as e:
+        logger.warning("Failed to initialize database schema: %s", e)
+
+
 def migrate_unified_settings() -> None:
     """Merge legacy standalone keys into zeralda-settings (canonical source).
 
@@ -421,6 +463,7 @@ def migrate_unified_settings() -> None:
     After merge, standalone keys are kept as shadows (synced copies) so
     legacy client code that reads them still works.
     """
+    init_db_schema()
     with _lock:
         store = read_store()
         settings = store.get("zeralda-settings")

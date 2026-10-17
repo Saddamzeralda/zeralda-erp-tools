@@ -5279,7 +5279,10 @@
                         '<td style="padding:10px 14px; font-weight:600; color:#1e293b;"><i class="fab fa-google-drive" style="color:#4285f4; margin-left:6px;"></i> ' + (file.name || 'backup.json') + '</td>' +
                         '<td style="padding:10px 14px; color:#64748b;">' + dateStr + '</td>' +
                         '<td style="padding:10px 14px; text-align:center; color:#64748b;">' + sizeStr + '</td>' +
-                        '<td style="padding:10px 14px; text-align:center;">' +
+                        '<td style="padding:10px 14px; text-align:center; display:flex; justify-content:center; gap:6px;">' +
+                        '<button class="btn btn-secondary" type="button" onclick="previewGoogleDriveBackup(\'' + escapedId + '\', \'' + escapedName + '\')" style="padding:4px 10px; font-size:12px; display:inline-flex; align-items:center; gap:4px; border:1px solid #0284c7; color:#0284c7; background:#f0f9ff;">' +
+                        '<i class="fas fa-eye"></i> <span>معاينة</span>' +
+                        '</button>' +
                         '<button class="btn btn-warning" type="button" onclick="doGoogleRestoreFromFile(\'' + escapedId + '\', \'' + escapedName + '\')" style="padding:4px 10px; font-size:12px; display:inline-flex; align-items:center; gap:4px;">' +
                         '<i class="fas fa-undo-alt"></i> <span>استعادة</span>' +
                         '</button>' +
@@ -5295,6 +5298,130 @@
                     '<div>تعذر جلب النسخ الاحتياطية من Google Drive: ' + (err.message || err) + '</div>' +
                     '</div>';
             });
+        };
+
+        window.previewGoogleDriveBackup = function (fileId, fileName) {
+            if (typeof ZeraldaGoogle === 'undefined') {
+                showToast(tSettings('google_module_not_loaded'), 'info');
+                return;
+            }
+
+            var existingModal = document.getElementById('googleBackupPreviewModal');
+            if (existingModal) existingModal.remove();
+
+            var modal = document.createElement('div');
+            modal.id = 'googleBackupPreviewModal';
+            modal.style.cssText = 'position:fixed; inset:0; z-index:999999; background:rgba(15,23,42,0.6); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; direction:rtl; padding:20px;';
+            modal.innerHTML = '<div style="background:#fff; border-radius:14px; max-width:550px; width:100%; box-shadow:0 20px 40px rgba(0,0,0,0.25); overflow:hidden; font-family:inherit;">' +
+                '<div style="background:linear-gradient(135deg, #0284c7, #0369a1); color:#fff; padding:16px 20px; display:flex; justify-content:space-between; align-items:center;">' +
+                '<h4 style="margin:0; font-size:16px; font-weight:700;"><i class="fab fa-google-drive" style="margin-left:8px;"></i>معاينة محتوى النسخة السحابية</h4>' +
+                '<button type="button" onclick="document.getElementById(\'googleBackupPreviewModal\').remove()" style="background:none; border:none; color:#fff; font-size:20px; cursor:pointer;">&times;</button>' +
+                '</div>' +
+                '<div id="googleBackupPreviewBody" style="padding:24px; text-align:center; color:#64748b;">' +
+                '<i class="fas fa-spinner fa-spin" style="font-size:28px; color:#0284c7; margin-bottom:12px; display:block;"></i>' +
+                '<div>جاري فحص وتفريغ بيانات النسخة الاحتياطية (' + (fileName || 'Google Drive') + ')...</div>' +
+                '</div>' +
+                '</div>';
+            document.body.appendChild(modal);
+
+            if (typeof gapi !== 'undefined' && gapi.client && gapi.client.drive) {
+                gapi.client.drive.files.get({ fileId: fileId, alt: 'media' }).then(function (res) {
+                    var data = res.result || res.body;
+                    if (typeof data === 'string') {
+                        try { data = JSON.parse(data); } catch (_) {}
+                    }
+                    renderPreviewDetails(data, fileId, fileName);
+                }).catch(function (err) {
+                    var body = document.getElementById('googleBackupPreviewBody');
+                    if (body) {
+                        body.innerHTML = '<div style="color:#dc2626; padding:10px;"><i class="fas fa-exclamation-circle" style="font-size:24px; margin-bottom:8px; display:block;"></i>تعذر قراءة محتوى النسخة: ' + (err.message || err) + '</div>' +
+                            '<button class="btn btn-secondary" onclick="document.getElementById(\'googleBackupPreviewModal\').remove()" style="margin-top:14px;">إغلاق</button>';
+                    }
+                });
+            } else {
+                var body = document.getElementById('googleBackupPreviewBody');
+                if (body) {
+                    body.innerHTML = '<div style="color:#dc2626;">خدمة Google Drive غير مهيأة للمعاينة المباشرة.</div>' +
+                        '<button class="btn btn-secondary" onclick="document.getElementById(\'googleBackupPreviewModal\').remove()" style="margin-top:14px;">إغلاق</button>';
+                }
+            }
+
+            function renderPreviewDetails(data, fId, fName) {
+                var body = document.getElementById('googleBackupPreviewBody');
+                if (!body) return;
+
+                if (!data || typeof data !== 'object') {
+                    body.innerHTML = '<div>ملف النسخة غير صالح أو تالف.</div>';
+                    return;
+                }
+
+                var store = data.store || data.data || data;
+                var keys = Object.keys(store);
+
+                var invoicesCount = 0;
+                var totalTurnover = 0;
+                var customersCount = 0;
+                var productsCount = 0;
+                var companyNames = [];
+
+                var settings = store['zeralda-settings'];
+                if (typeof settings === 'string') {
+                    try { settings = JSON.parse(settings); } catch (_) {}
+                }
+                if (settings && Array.isArray(settings.companies)) {
+                    companyNames = settings.companies.map(function (c) { return c.name; });
+                }
+
+                keys.forEach(function (k) {
+                    if (k.indexOf('invoices') !== -1) {
+                        var val = store[k];
+                        if (typeof val === 'string') {
+                            try { val = JSON.parse(val); } catch (_) {}
+                        }
+                        if (Array.isArray(val)) {
+                            invoicesCount += val.length;
+                            val.forEach(function (inv) {
+                                totalTurnover += Number(inv.total || inv.totalTTC || 0);
+                            });
+                        }
+                    } else if (k.indexOf('customers') !== -1) {
+                        var val = store[k];
+                        if (typeof val === 'string') {
+                            try { val = JSON.parse(val); } catch (_) {}
+                        }
+                        if (Array.isArray(val)) customersCount += val.length;
+                    } else if (k.indexOf('products') !== -1) {
+                        var val = store[k];
+                        if (typeof val === 'string') {
+                            try { val = JSON.parse(val); } catch (_) {}
+                        }
+                        if (Array.isArray(val)) productsCount += val.length;
+                    }
+                });
+
+                var html = '<div style="text-align:right;">' +
+                    '<div style="font-size:13px; color:#475569; margin-bottom:12px;"><strong>اسم الملف:</strong> ' + (fName || 'backup.json') + '</div>' +
+                    '<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px;">' +
+                    '<div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px;"><div style="font-size:11px; color:#64748b;">إجمالي الفواتير</div><div style="font-size:18px; font-weight:700; color:#0284c7;">' + invoicesCount + '</div></div>' +
+                    '<div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px;"><div style="font-size:11px; color:#64748b;">إجمالي المبيعات (د.ج)</div><div style="font-size:18px; font-weight:700; color:#10b981;">' + totalTurnover.toLocaleString('fr-DZ') + '</div></div>' +
+                    '<div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px;"><div style="font-size:11px; color:#64748b;">الزبائن المسجلون</div><div style="font-size:18px; font-weight:700; color:#8b5cf6;">' + customersCount + '</div></div>' +
+                    '<div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px;"><div style="font-size:11px; color:#64748b;">المنتجات والخدمات</div><div style="font-size:18px; font-weight:700; color:#f59e0b;">' + productsCount + '</div></div>' +
+                    '</div>';
+
+                if (companyNames.length) {
+                    html += '<div style="margin-bottom:16px; font-size:12.5px; color:#334155;"><strong>الشركات المتضمنة:</strong> ' + companyNames.join('، ') + '</div>';
+                }
+
+                html += '<div style="display:flex; justify-content:flex-end; gap:10px; border-top:1px solid #f1f5f9; padding-top:14px; margin-top:10px;">' +
+                    '<button class="btn btn-secondary" onclick="document.getElementById(\'googleBackupPreviewModal\').remove()" style="padding:8px 16px;">إلغاء</button>' +
+                    '<button class="btn btn-warning" onclick="document.getElementById(\'googleBackupPreviewModal\').remove(); doGoogleRestoreFromFile(\'' + fId + '\', \'' + fName + '\')" style="padding:8px 18px; display:inline-flex; align-items:center; gap:6px;">' +
+                    '<i class="fas fa-undo-alt"></i> استعادة هذه النسخة الآن' +
+                    '</button>' +
+                    '</div>' +
+                    '</div>';
+
+                body.innerHTML = html;
+            }
         };
 
         window.doGoogleRestoreFromFile = function (fileId, fileName) {

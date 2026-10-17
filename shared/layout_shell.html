@@ -64,6 +64,16 @@
     </div>
     <div class="header-right">
       <div class="header-row row-1">
+        <button id="headerQuickSearchBtn" class="header-fullscreen-btn" type="button"
+                onclick="window.openCommandPalette && window.openCommandPalette()"
+                data-en-title="Quick Search & Spotlight (Ctrl + K)"
+                data-ar-title="البحث السريع والتنقل الذكي (Ctrl + K)"
+                data-fr-title="Recherche Rapide & Navigation (Ctrl + K)"
+                title="البحث السريع (Ctrl + K)"
+                aria-label="Quick Search"
+                style="color:#38bdf8;">
+          <i class="fas fa-search" aria-hidden="true"></i>
+        </button>
         <button id="headerUniversalScanBtn" class="header-fullscreen-btn" type="button"
                 onclick="window.openUniversalOcrModal && window.openUniversalOcrModal()"
                 data-en-title="AI Smart Scan (Camera / File)"

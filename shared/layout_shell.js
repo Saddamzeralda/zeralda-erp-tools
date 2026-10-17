@@ -738,6 +738,13 @@
             sp.defer = true;
             document.head.appendChild(sp);
           }
+
+          if (!document.querySelector('script[src*="command_palette.js"]')) {
+            var cp = document.createElement('script');
+            cp.src = 'shared/command_palette.js?v=20261017_v1';
+            cp.defer = true;
+            document.head.appendChild(cp);
+          }
         } catch (_) {}
 
         // Keep server alive while page is open and allow auto-shutdown after close.

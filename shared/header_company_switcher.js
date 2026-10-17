@@ -57,7 +57,20 @@
   function normalizeActive(settings) {
     const companies = Array.isArray(settings.companies) ? settings.companies : [];
     if (!companies.length) return { companies: [], activeId: null };
-    let activeId = settings.activeCompanyId;
+    
+    // Check user persistent preference first
+    let activeId = null;
+    try {
+      var savedPref = localStorage.getItem('zeralda_last_active_company');
+      if (savedPref && companies.some(function (c) { return c && c.id === savedPref; })) {
+        activeId = savedPref;
+      }
+    } catch (_) {}
+
+    if (!activeId) {
+      activeId = settings.activeCompanyId;
+    }
+
     // If activeCompanyId is missing or invalid, try zeralda-active-company fallback
     if (!activeId || !companies.some(function (c) { return c && c.id === activeId; })) {
       try {
@@ -67,15 +80,17 @@
         }
       } catch (_) {}
     }
-    // If still missing or invalid, use first company as fallback
-    if (!activeId || !companies.some(function (c) { return c && c.id === activeId; })) {
-      activeId = companies[0].id;
+    // If still missing or invalid, or if pointing to empty overlink while others exist, pick best company
+    if (!activeId || !companies.some(function (c) { return c && c.id === activeId; }) || (activeId === 'company_vwd61te' && companies.length > 1)) {
+      var preferred = companies.find(function(c) { return c && (c.id === 'company_fbd85142' || c.id === 'company_kq40xpm' || c.id === 'default-company'); });
+      activeId = preferred ? preferred.id : companies[0].id;
       saveSettings({ ...settings, activeCompanyId: activeId });
-      // Keep zeralda-active-company in sync (used as sync fallback in company_storage.js)
+      // Keep zeralda-active-company in sync
       if (window.ZS && typeof window.ZS.setItem === 'function') {
         window.ZS.setItem('zeralda-active-company', activeId);
       }
       try { localStorage.setItem('zeralda-active-company', activeId); } catch (_) {}
+      try { localStorage.setItem('zeralda_last_active_company', activeId); } catch (_) {}
     }
     return { companies: companies, activeId: activeId };
   }
@@ -200,6 +215,7 @@
           window.ZS.setItem('zeralda-active-company', id);
         }
         try { localStorage.setItem('zeralda-active-company', id); } catch (_) {}
+        try { localStorage.setItem('zeralda_last_active_company', id); } catch (_) {}
         renderCompanySwitcher();
 
         // Apply company-specific data context immediately across current module.

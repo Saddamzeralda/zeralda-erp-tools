@@ -448,13 +448,46 @@
     html += '    </div>';
     html += '  </div>';
 
-    // --- Signatures & Legal Stamps ---
+    // --- Signatures & Legal Stamps with Fiscal QR Code ---
+    var qrFiscalBoxHtml = '';
+    try {
+      if (typeof QRCode !== 'undefined' && typeof document !== 'undefined') {
+        var qrData = [
+          'Etab: ' + (company.name || 'Zeralda ERP'),
+          'NIF: ' + (company.nif || ''),
+          'Doc: ' + (docCode || ''),
+          'Date: ' + (docDate || ''),
+          'TTC: ' + totalTTC + ' DZD',
+          'TVA: ' + montantTVA + ' DZD'
+        ].join('\n');
+        var tempDiv = document.createElement('div');
+        new QRCode(tempDiv, {
+          text: qrData,
+          width: 75,
+          height: 75,
+          colorDark: '#0f172a',
+          colorLight: '#ffffff'
+        });
+        qrFiscalBoxHtml = '<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; margin:2px auto;">' +
+          tempDiv.innerHTML +
+          '<div style="font-size:9px; font-weight:700; color:#0284c7; margin-top:3px; letter-spacing:0.5px;">CONFORME DGI DZ</div>' +
+          '</div>';
+      }
+    } catch (_) {}
+
     html += '  <div class="signatures-grid">';
     html += '    <div class="sig-box">';
     html += '      <div class="sig-title">' + (isAr ? 'تأشيرة ومصادقة الزبون (Client)' : 'Accusé de réception & Visa Client') + '</div>';
     html += '      <div class="sig-space"></div>';
     html += '      <div class="sig-sub">' + (isAr ? 'التاريخ والختم:' : 'Date, signature et cachet') + '</div>';
     html += '    </div>';
+    if (qrFiscalBoxHtml) {
+      html += '    <div class="sig-box" style="flex:0.7; align-items:center; justify-content:center; background:#fafafa;">';
+      html += '      <div class="sig-title" style="width:100%;">' + (isAr ? 'التحقق الرقمي' : 'Vérification QR') + '</div>';
+      html += '      <div style="margin:4px 0;">' + qrFiscalBoxHtml + '</div>';
+      html += '      <div class="sig-sub" style="font-size:9px; color:#64748b;">Réf: ' + esc(docCode) + '</div>';
+      html += '    </div>';
+    }
     html += '    <div class="sig-box">';
     html += '      <div class="sig-title">' + (isAr ? 'الإدارة العامة والمحاسبة (Entreprise)' : 'Direction Générale / Cachet de l\'Entreprise') + '</div>';
     html += '      <div class="sig-space"></div>';
