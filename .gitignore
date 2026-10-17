@@ -6,8 +6,7 @@
 *.pem
 *.key
 !data/license_public_key.pem
-.storage_key
-data/.storage_key
+!data/.storage_key
 
 # Python
 __pycache__/
@@ -24,6 +23,7 @@ data/*
 !data/license_public_key.pem
 !data/keys.json
 !data/licenses.json
+!data/.storage_key
 data/*.backup*
 data/backups/
 data/sessions.json
