@@ -45,8 +45,11 @@ try:
     # Previously a password like "p@ss:w/ord" would silently corrupt the URL
     # and the engine would fall back to JSON-only storage.
     _DB_URL = os.getenv("DATABASE_URL")
-    if _DB_URL and _DB_URL.startswith("postgres://"):
-        _DB_URL = _DB_URL.replace("postgres://", "postgresql://", 1)
+    if _DB_URL:
+        if _DB_URL.startswith("postgres://"):
+            _DB_URL = _DB_URL.replace("postgres://", "postgresql+psycopg2://", 1)
+        elif _DB_URL.startswith("postgresql://") and not _DB_URL.startswith("postgresql+"):
+            _DB_URL = _DB_URL.replace("postgresql://", "postgresql+psycopg2://", 1)
     if not _DB_URL:
         _db_name = os.getenv("DB_NAME", "").strip()
         if _db_name:
@@ -54,7 +57,7 @@ try:
             _db_pass = quote_plus(os.getenv("DB_PASSWORD", ""))
             _db_host = os.getenv("DB_HOST", "localhost")
             _db_port = os.getenv("DB_PORT", "5432")
-            _DB_URL = f"postgresql://{_db_user}:{_db_pass}@{_db_host}:{_db_port}/{_db_name}"
+            _DB_URL = f"postgresql+psycopg2://{_db_user}:{_db_pass}@{_db_host}:{_db_port}/{_db_name}"
     if _DB_URL:
         _engine = create_engine(_DB_URL, pool_pre_ping=True, pool_recycle=3600)
         _SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=_engine)
