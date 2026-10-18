@@ -570,6 +570,7 @@
     '  .unified-doc-table th { background: #0f172a !important; color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }',
     '  .doc-type-badge, .grand-total-row td { background: #0284c7 !important; color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }',
     '  .signatures-grid, .doc-footer-legal, .financial-summary-grid { page-break-inside: avoid; break-inside: avoid; }',
+    '  .financial-summary-grid { margin-top: auto; }',
     '  .preview-scale-content, .preview-zoom-viewport { transform: none !important; width: 100% !important; overflow: visible !important; }',
     '}'
   ].join('\n');

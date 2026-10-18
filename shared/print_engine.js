@@ -49,7 +49,10 @@
       '.preview-table th,.preview-table td{text-align:' + align + ';border-color:#cbd5e1;padding:6px 8px !important;font-size:10.5pt !important;}' +
       '.preview-hero{background:#1e293b !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}' +
       '.preview-table th,.preview-summary-item,.preview-notes,.preview-totals-card{-webkit-print-color-adjust:exact;print-color-adjust:exact;}' +
-      '.facture-container{box-shadow:none !important;border:0 !important;max-width:100% !important;width:100% !important;min-height:auto;max-height:none !important;box-sizing:border-box;border-radius:0 !important;overflow:visible !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;padding:0 !important;margin:0 auto;page-break-inside:auto !important;break-inside:auto !important;}' +
+      '.facture-container{box-shadow:none !important;border:0 !important;max-width:100% !important;width:100% !important;min-height:265mm !important;display:flex !important;flex-direction:column !important;justify-content:space-between !important;max-height:none !important;box-sizing:border-box;border-radius:0 !important;overflow:visible !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;padding:0 !important;margin:0 auto;page-break-inside:auto !important;break-inside:auto !important;}' +
+      '.facture-container .facture-content-area{flex:1 0 auto !important;display:flex !important;flex-direction:column !important;justify-content:space-between !important;box-sizing:border-box !important;}' +
+      '.facture-container .facture-table-wrap{flex:1 0 auto !important;min-height:90mm !important;display:flex !important;flex-direction:column !important;}' +
+      '.facture-container .facture-footer-area{margin-top:auto !important;page-break-inside:avoid !important;break-inside:avoid !important;}' +
       '.facture-container table{width:100% !important;border-collapse:collapse !important;page-break-inside:auto !important;break-inside:auto !important;}' +
       '.facture-container table thead tr,.facture-container .grand-total,.facture-container tr[style*="background:#1e2b3c"]{-webkit-print-color-adjust:exact;print-color-adjust:exact;}' +
       '.facture-container table th,.facture-container table td{border-color:#cbd5e1 !important;}' +
