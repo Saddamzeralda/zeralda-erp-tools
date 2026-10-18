@@ -49,6 +49,24 @@ window.hideLoadingOverlay = hideLoadingOverlay;
 window.showNotification = showNotification;
 
 
+function downloadExportFile(filename, content, mimeType) {
+  try {
+    const blob = new Blob([content], { type: mimeType || 'text/plain;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
+    return true;
+  } catch (err) {
+    console.error('downloadExportFile error:', err);
+    return false;
+  }
+}
+
 /**
  * Export invoices to CSV format
  * Supports: Invoice #, Customer, Date, Items, Amount, Status
@@ -109,15 +127,8 @@ function exportToCSV(type = 'invoices') {
       }
     });
 
-    // Share via Share Hub
-    if (window.ZeraldaShareHub && typeof window.ZeraldaShareHub.sharePayload === 'function') {
-      window.ZeraldaShareHub.sharePayload({
-        title: `${type}_export_${new Date().toISOString().split('T')[0]}.csv`,
-        payload: csv
-      });
-      return;
-    }
-    alert('Share system is not loaded yet.');
+    const filename = `${type}_export_${new Date().toISOString().split('T')[0]}.csv`;
+    downloadExportFile(filename, csv, 'text/csv;charset=utf-8;');
   } catch (error) {
     console.error('CSV export error:', error);
     alert('Failed to export CSV');
@@ -145,15 +156,8 @@ function exportToJSON(type = 'invoices') {
       company: getActiveCompanyFromSettings()
     };
 
-    // Share via Share Hub
-    if (window.ZeraldaShareHub && typeof window.ZeraldaShareHub.sharePayload === 'function') {
-      window.ZeraldaShareHub.sharePayload({
-        title: `${type}_backup_${new Date().toISOString().split('T')[0]}.json`,
-        payload: JSON.stringify(exportData, null, 2)
-      });
-      return;
-    }
-    alert('Share system is not loaded yet.');
+    const filename = `${type}_backup_${new Date().toISOString().split('T')[0]}.json`;
+    downloadExportFile(filename, JSON.stringify(exportData, null, 2), 'application/json;charset=utf-8;');
   } catch (error) {
     console.error('JSON export error:', error);
     alert('Failed to export JSON');
@@ -218,15 +222,8 @@ function exportToXML(type = 'invoices') {
 
     xml += `</${type}>`;
 
-    // Share via Share Hub
-    if (window.ZeraldaShareHub && typeof window.ZeraldaShareHub.sharePayload === 'function') {
-      window.ZeraldaShareHub.sharePayload({
-        title: `${type}_export_${new Date().toISOString().split('T')[0]}.xml`,
-        payload: xml
-      });
-      return;
-    }
-    alert('Share system is not loaded yet.');
+    const filename = `${type}_export_${new Date().toISOString().split('T')[0]}.xml`;
+    downloadExportFile(filename, xml, 'application/xml;charset=utf-8;');
   } catch (error) {
     console.error('XML export error:', error);
     alert('Failed to export XML');

@@ -166,40 +166,10 @@
   }
 
   function upgradeLegacyShareLabels(root) {
-    var scope = root && root.querySelectorAll ? root : document;
-    var nodes = scope.querySelectorAll('button, .btn, [role="button"]');
-    for (var i = 0; i < nodes.length; i += 1) {
-      var el = nodes[i];
-      var onclickAttr = safeString(el.getAttribute && el.getAttribute('onclick')).toLowerCase();
-      if (!onclickAttr) continue;
-      if (onclickAttr.indexOf('import') >= 0) continue;
-      if (onclickAttr.indexOf('export') < 0 && onclickAttr.indexOf('download') < 0) continue;
-
-      var icon = el.querySelector('i');
-      if (icon) icon.className = 'fas fa-share-alt';
-
-      var span = el.querySelector('span');
-      if (span) {
-        span.textContent = 'Share';
-        span.setAttribute('data-en', 'Share');
-        span.setAttribute('data-ar', 'مشاركة');
-        span.setAttribute('data-fr', 'Partager');
-      } else {
-        el.textContent = 'Share';
-      }
-    }
+    // Disabled: Do not override native export/download buttons across ERP modules
   }
 
   function isLegacyExportAction(actionText) {
-    var a = safeString(actionText).toLowerCase();
-    if (!a) return false;
-    if (a.indexOf('import') >= 0) return false;
-    if (a.indexOf('restore') >= 0) return false;
-    if (a.indexOf('backup') >= 0) return false;
-    if (a.indexOf('sync') >= 0) return false;
-    if (a.indexOf('export') >= 0) return true;
-    if (a.indexOf('download') >= 0) return true;
-    if (a.indexOf('share') >= 0) return true;
     return false;
   }
 
@@ -212,35 +182,7 @@
   }
 
   function installLegacyActionInterceptor() {
-    if (document.documentElement.dataset.shareInterceptorBound === '1') return;
-    document.documentElement.dataset.shareInterceptorBound = '1';
-
-    document.addEventListener('click', function (event) {
-      var target = event.target;
-      if (!(target instanceof Element)) return;
-      var clickable = target.closest('button, .btn, a, [role="button"], [onclick]');
-      if (!clickable) return;
-      if (clickable.hasAttribute('data-modern-share')) return;
-
-      var action = safeString(clickable.getAttribute && clickable.getAttribute('onclick'));
-      if (!isLegacyExportAction(action)) return;
-
-      event.preventDefault();
-      event.stopPropagation();
-      if (typeof event.stopImmediatePropagation === 'function') {
-        event.stopImmediatePropagation();
-      }
-
-      sharePayload({
-        title: extractButtonLabel(clickable),
-        payload: {
-          page: window.location.pathname,
-          action: action,
-          sharedAt: new Date().toISOString(),
-          message: 'Legacy export/share action replaced with Email share.'
-        }
-      });
-    }, true);
+    // Disabled: Do not intercept clicks on export/download buttons
   }
 
   function triggerDailySyncNow() {
@@ -259,19 +201,4 @@
     upgradeLegacyShareLabels: upgradeLegacyShareLabels,
     installLegacyActionInterceptor: installLegacyActionInterceptor
   };
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function () {
-      upgradeLegacyShareLabels(document);
-      installLegacyActionInterceptor();
-    });
-  } else {
-    upgradeLegacyShareLabels(document);
-    installLegacyActionInterceptor();
-  }
-
-  document.addEventListener('sharedLayoutLoaded', function () {
-    upgradeLegacyShareLabels(document);
-    installLegacyActionInterceptor();
-  });
 })();
