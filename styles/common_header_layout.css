@@ -1496,6 +1496,25 @@ body.rtl.sidebar-collapsed > .main-content {
     font-size: 12px !important;
 }
 
+/* Permanently hide top statistical cards across all pages */
+.main-content > .stats-grid,
+.main-content > .kpi-grid,
+.page-header + .stats-grid,
+.page-header + .kpi-grid,
+.header-stats,
+.reports-bar .stats,
+#forecastCard,
+#hrAlertCard {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    overflow: hidden !important;
+    pointer-events: none !important;
+}
+
 
 
 
