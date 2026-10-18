@@ -5255,23 +5255,6 @@ function buildFactureHTML(opts){
     h += '</div>';
   }
 
-  // Signatures
-  h += '<div class="signatures-grid" style="display:flex;justify-content:space-between;gap:20px;margin-top:12px;padding-top:8px;page-break-inside:avoid;break-inside:avoid;">';
-  h += '<div style="flex:1;text-align:center;border:1px solid #cbd5e1;background:#fcfdfe;border-radius:6px;padding:8px 10px;min-height:75px;display:flex;flex-direction:column;justify-content:space-between;">';
-  h += '<div style="font-size:10.5px;font-weight:700;color:#475569;text-transform:uppercase;border-bottom:1px dashed #e2e8f0;padding-bottom:3px;">' + (isAr ? 'تأشيرة وختم الزبون (Bon pour accord)' : 'Visa & Cachet Client (Bon pour accord)') + '</div>';
-  h += '<div style="font-size:9.5px;color:#94a3b8;">' + (isAr ? 'التاريخ والتوقيع:' : 'Date et signature:') + '</div>';
-  h += '</div>';
-  h += '<div style="flex:1;text-align:center;border:1px solid #cbd5e1;background:#fcfdfe;border-radius:6px;padding:8px 10px;min-height:75px;display:flex;flex-direction:column;justify-content:space-between;">';
-  h += '<div style="font-size:10.5px;font-weight:700;color:#0f172a;text-transform:uppercase;border-bottom:1px dashed #e2e8f0;padding-bottom:3px;">' + (isAr ? 'ختم وتوقيع المؤسسة' : 'Direction Générale / Cachet de l\'Entreprise') + '</div>';
-  h += '<div style="font-size:10px;color:#475569;font-weight:600;">' + escapeHTML(compName) + '</div>';
-  h += '</div>';
-  h += '</div>';
-
-  // Legal footer
-  h += '<div style="text-align:center;border-top:1px solid #e2e8f0;padding-top:8px;margin-top:10px;font-size:9.5px;color:#94a3b8;page-break-inside:avoid;break-inside:avoid;">';
-  h += escapeHTML(compName) + ' | NIF: ' + escapeHTML(compNif || '-') + ' | RC: ' + escapeHTML(compRc || '-') + ' | NIS: ' + escapeHTML(compNis || '-') + ' | Zeralda ERP';
-  h += '</div>';
-
   h += '</div>'; // close facture-footer-area
   h += '</div>'; // close content area
   h += '</div>'; // close facture-container

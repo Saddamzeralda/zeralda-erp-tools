@@ -475,33 +475,37 @@
       }
     } catch (_) {}
 
-    html += '  <div class="signatures-grid">';
-    html += '    <div class="sig-box">';
-    html += '      <div class="sig-title">' + (isAr ? 'تأشيرة ومصادقة الزبون (Client)' : 'Accusé de réception & Visa Client') + '</div>';
-    html += '      <div class="sig-space"></div>';
-    html += '      <div class="sig-sub">' + (isAr ? 'التاريخ والختم:' : 'Date, signature et cachet') + '</div>';
-    html += '    </div>';
-    if (qrFiscalBoxHtml) {
-      html += '    <div class="sig-box" style="flex:0.7; align-items:center; justify-content:center; background:#fafafa;">';
-      html += '      <div class="sig-title" style="width:100%;">' + (isAr ? 'التحقق الرقمي' : 'Vérification QR') + '</div>';
-      html += '      <div style="margin:4px 0;">' + qrFiscalBoxHtml + '</div>';
-      html += '      <div class="sig-sub" style="font-size:9px; color:#64748b;">Réf: ' + esc(docCode) + '</div>';
+    if (docTypeKey !== 'INVOICE' && docTypeKey !== 'PROFORMA' && opts.showSignatures !== false) {
+      html += '  <div class="signatures-grid">';
+      html += '    <div class="sig-box">';
+      html += '      <div class="sig-title">' + (isAr ? 'تأشيرة ومصادقة الزبون (Client)' : 'Accusé de réception & Visa Client') + '</div>';
+      html += '      <div class="sig-space"></div>';
+      html += '      <div class="sig-sub">' + (isAr ? 'التاريخ والختم:' : 'Date, signature et cachet') + '</div>';
       html += '    </div>';
-    }
-    html += '    <div class="sig-box">';
-    html += '      <div class="sig-title">' + (isAr ? 'الإدارة العامة والمحاسبة (Entreprise)' : 'Direction Générale / Cachet de l\'Entreprise') + '</div>';
-    html += '      <div class="sig-space"></div>';
-    html += '      <div class="sig-sub">' + esc(company.name) + '</div>';
-    html += '    </div>';
-    html += '  </div>';
+      if (qrFiscalBoxHtml) {
+        html += '    <div class="sig-box" style="flex:0.7; align-items:center; justify-content:center; background:#fafafa;">';
+        html += '      <div class="sig-title" style="width:100%;">' + (isAr ? 'التحقق الرقمي' : 'Vérification QR') + '</div>';
+        html += '      <div style="margin:4px 0;">' + qrFiscalBoxHtml + '</div>';
+        html += '      <div class="sig-sub" style="font-size:9px; color:#64748b;">Réf: ' + esc(docCode) + '</div>';
+        html += '    </div>';
+      }
+      html += '    <div class="sig-box">';
+      html += '      <div class="sig-title">' + (isAr ? 'الإدارة العامة والمحاسبة (Entreprise)' : 'Direction Générale / Cachet de l\'Entreprise') + '</div>';
+      html += '      <div class="sig-space"></div>';
+      html += '      <div class="sig-sub">' + esc(company.name) + '</div>';
+      html += '    </div>';
+      html += '  </div>';
 
-    // --- Footer bar ---
-    html += '  <div class="doc-footer-legal">';
-    html += '    <span>Zeralda ERP Standard DZ</span> | ';
-    html += '    <span>' + esc(company.name) + '</span> | ';
-    html += '    <span>NIF: ' + esc(company.nif) + '</span> | ';
-    html += '    <span>RC: ' + esc(company.rc) + '</span>';
-    html += '  </div>';
+      // --- Footer bar ---
+      html += '  <div class="doc-footer-legal">';
+      html += '    <span>Zeralda ERP Standard DZ</span> | ';
+      html += '    <span>' + esc(company.name) + '</span> | ';
+      html += '    <span>NIF: ' + esc(company.nif) + '</span> | ';
+      html += '    <span>RC: ' + esc(company.rc) + '</span>';
+      html += '  </div>';
+    } else if (qrFiscalBoxHtml) {
+      html += '  <div style="margin:12px auto; display:flex; justify-content:center;">' + qrFiscalBoxHtml + '</div>';
+    }
 
     html += '</div>';
 
