@@ -656,7 +656,7 @@
   /* ── Load Shared Layout via fetch ────────────────────── */
   // Cache the layout HTML in ZS to avoid re-fetching on every page navigation.
   // ZS is synchronous (in-memory cache) and survives navigation within the same tab.
-  var _layoutCacheVersion = '20261011d';
+  var _layoutCacheVersion = '20261018e';
   var _cachedLayoutHTML = null;
   try {
     var cachedVersion = ZS.getItem('zeralda-layout-shell-version');
@@ -679,7 +679,7 @@
     // Use cached HTML if available (avoids fetch on every page navigation)
     var fetchPromise = _cachedLayoutHTML
       ? Promise.resolve(_cachedLayoutHTML)
-      : fetch('shared/layout_shell.html?v=20261012a')
+      : fetch('shared/layout_shell.html?v=20261018e')
           .then(function (res) {
             if (!res.ok) throw new Error('Failed to load layout_shell.html: ' + res.status);
             return res.text();
@@ -696,17 +696,15 @@
         mount.insertAdjacentHTML('afterend', html);
         mount.remove();
 
-        var mainContent = document.querySelector('.main-content');
-        if (mainContent && !document.querySelector('.shell-global-footer')) {
-          var footerHTML = '<footer class="shell-global-footer">' +
-            '<span><span data-en="Developed by:" data-ar="تطوير:" data-fr="Développé par :">Développé par :</span> <strong>zitouni abdelhakim</strong></span>' +
-            '<span class="footer-sep">|</span>' +
-            '<a href="tel:0696409083"><i class="fas fa-phone-alt"></i> 0696409083</a>' +
-            '<span class="footer-sep">|</span>' +
-            '<a href="mailto:saddamzeralda@gmail.com"><i class="fas fa-envelope"></i> saddamzeralda@gmail.com</a>' +
-            '</footer>';
-          mainContent.insertAdjacentHTML('beforeend', footerHTML);
-        }
+        // Eliminate redundant developer credit duplicates (keep single official card in sidebar footer)
+        try {
+          var dupCredits = document.querySelectorAll('.shell-global-footer, .shell-developer-credit');
+          for (var dc = 0; dc < dupCredits.length; dc++) {
+            if (dupCredits[dc] && dupCredits[dc].parentNode) {
+              dupCredits[dc].parentNode.removeChild(dupCredits[dc]);
+            }
+          }
+        } catch (_) {}
 
         initHeaderLanguageSelector();
         initHeaderZoomControls();
