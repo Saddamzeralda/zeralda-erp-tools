@@ -10,7 +10,7 @@
     <script>
       // Auto-redirect to versioned URL to bust browser cache
       (function () {
-        var REQUIRED_VERSION = '20261018h';
+        var REQUIRED_VERSION = '20261018i';
         var url = new URL(window.location.href);
         var currentVersion = url.searchParams.get('v');
         if (currentVersion !== REQUIRED_VERSION) {
@@ -1033,6 +1033,86 @@
             </div>
           </div>
         </div>
+    </div>
+
+    <!-- Modal: Send Invoice/Doc by Email -->
+    <div class="modal" id="sendInvoiceEmailModal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="sendEmailModalTitle">
+      <div class="modal-content" style="max-width: 620px; border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.25); overflow: hidden; padding: 0;">
+        <div class="modal-header" style="background: #0f172a; color: #ffffff; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #0284c7;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="background: rgba(2, 132, 199, 0.2); color: #38bdf8; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px;">
+              <i class="fas fa-envelope-open-text"></i>
+            </div>
+            <h3 id="sendEmailModalTitle" style="margin: 0; font-size: 16px; font-weight: 700; color: #ffffff;" data-en="Send Document by Email" data-ar="إرسال الوثيقة عبر البريد الإلكتروني" data-fr="Envoyer le document par e-mail">Send Document by Email</h3>
+          </div>
+          <span class="close-modal" onclick="closeModal('sendInvoiceEmailModal')" style="color: #94a3b8; font-size: 24px; cursor: pointer; line-height: 1;">&times;</span>
+        </div>
+        <div style="padding: 20px 24px; background: #ffffff;">
+          <!-- Doc Info Chip -->
+          <div id="sendEmailDocBadge" style="margin-bottom: 16px; padding: 10px 14px; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; font-size: 13.5px; color: #0369a1;">
+            <span id="sendEmailDocNumber" style="font-weight: 700;"></span>
+            <span id="sendEmailDocTotal" style="font-weight: 800; color: #0284c7;"></span>
+          </div>
+
+          <!-- Recipient -->
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label class="form-label" style="font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 6px; display: block;">
+              <i class="fas fa-user-circle" style="color: #0284c7; margin-inline-end: 6px;"></i>
+              <span data-en="Recipient Email" data-ar="البريد الإلكتروني للمستلم" data-fr="E-mail du destinataire">Recipient Email</span>
+            </label>
+            <input type="email" id="sendEmailTo" class="form-input" style="width: 100%; padding: 10px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 14px;" placeholder="client@example.com" />
+          </div>
+
+          <!-- Subject -->
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label class="form-label" style="font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 6px; display: block;">
+              <i class="fas fa-heading" style="color: #0284c7; margin-inline-end: 6px;"></i>
+              <span data-en="Subject" data-ar="موضوع الرسالة" data-fr="Objet">Subject</span>
+            </label>
+            <input type="text" id="sendEmailSubject" class="form-input" style="width: 100%; padding: 10px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 14px;" />
+          </div>
+
+          <!-- Message Text -->
+          <div class="form-group" style="margin-bottom: 16px;">
+            <label class="form-label" style="font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between;">
+              <span>
+                <i class="fas fa-align-left" style="color: #0284c7; margin-inline-end: 6px;"></i>
+                <span data-en="Message" data-ar="نص الرسالة" data-fr="Message">Message</span>
+              </span>
+              <button type="button" class="btn btn-secondary" onclick="copyEmailBodyToClipboard()" style="padding: 3px 8px; font-size: 11.5px; border-radius: 4px;">
+                <i class="fas fa-copy"></i> <span data-en="Copy Text" data-ar="نسخ النص" data-fr="Copier le texte">Copy Text</span>
+              </button>
+            </label>
+            <textarea id="sendEmailBody" class="form-input" rows="8" style="width: 100%; padding: 10px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-family: monospace, sans-serif; font-size: 12.5px; line-height: 1.5; resize: vertical;"></textarea>
+          </div>
+
+          <!-- Quick Action Buttons -->
+          <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 18px;">
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <!-- 1. Gmail Web Direct: 100% reliable in browser -->
+              <button type="button" class="btn" onclick="dispatchEmailViaGmailWeb()" style="flex: 1; min-width: 180px; background: #ea4335; color: #ffffff; padding: 11px 16px; border-radius: 6px; font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 2px 4px rgba(234,67,53,0.3);">
+                <i class="fab fa-google"></i>
+                <span data-en="Open in Gmail (Web)" data-ar="فتح والإرسال عبر Gmail" data-fr="Ouvrir dans Gmail">Open in Gmail</span>
+              </button>
+
+              <!-- 2. System Mail App (Mailto) -->
+              <button type="button" class="btn btn-primary" onclick="dispatchEmailViaMailto()" style="flex: 1; min-width: 180px; padding: 11px 16px; border-radius: 6px; font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <i class="fas fa-envelope"></i>
+                <span data-en="Default Mail Client" data-ar="تطبيق البريد الافتراضي" data-fr="Client de messagerie">Default Mail Client</span>
+              </button>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+              <button type="button" class="btn btn-secondary" onclick="closeModal('sendInvoiceEmailModal')" style="padding: 8px 16px; font-size: 13px;">
+                <i class="fas fa-times"></i> <span data-en="Close" data-ar="إغلاق" data-fr="Fermer">Close</span>
+              </button>
+              <span style="font-size: 12px; color: #64748b;">
+                <i class="fas fa-info-circle"></i> <span data-en="Choose Gmail Web or your local email client" data-ar="اختر Gmail أو تطبيق البريد لإرسال الفاتورة" data-fr="Choisissez Gmail ou votre client mail">Choose Gmail or your email client</span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="modal" id="invoicePaymentModal">
@@ -5133,9 +5213,9 @@ function buildFactureHTML(opts){
     '</tr>';
   }
 
-  totalsHtml += '<tr style="background:#0f172a;color:#ffffff;font-weight:700;-webkit-print-color-adjust:exact;print-color-adjust:exact;page-break-inside:avoid;break-inside:avoid;">' +
-    '<td colspan="5" style="padding:12px 14px;text-align:right;font-size:16.5px;font-weight:800;border:1px solid #0f172a;color:#ffffff;">' + escapeHTML(t.total_label||tr('total_label','TOTAL TTC (NET À PAYER)')) + ' :</td>' +
-    '<td style="padding:12px 14px;text-align:right;font-size:18px;font-weight:900;padding-right:14px;font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate;white-space:nowrap;border:1px solid #0f172a;color:#ffffff;">' + numLtr(fmtNum(total) + ' ' + c) + '</td>' +
+  totalsHtml += '<tr style="background:#f8fafc;font-weight:700;-webkit-print-color-adjust:exact;print-color-adjust:exact;page-break-inside:avoid;break-inside:avoid;border-top:2px solid #0284c7;">' +
+    '<td colspan="5" style="padding:12px 14px;text-align:right;font-size:15.5px;font-weight:800;border:1px solid #cbd5e1;border-top:2px solid #0284c7;color:#0f172a;">' + escapeHTML(t.total_label||tr('total_label','TOTAL TTC (NET À PAYER)')) + ' :</td>' +
+    '<td style="padding:12px 14px;text-align:right;font-size:18px;font-weight:900;padding-right:14px;font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate;white-space:nowrap;border:1px solid #cbd5e1;border-top:2px solid #0284c7;color:#0284c7;">' + numLtr(fmtNum(total) + ' ' + c) + '</td>' +
   '</tr>';
 
   // Build clean Facture HTML container
@@ -5178,7 +5258,7 @@ function buildFactureHTML(opts){
   h += '<div class="coordonnees" style="display:flex;justify-content:space-between;gap:16px;margin-bottom:16px;page-break-inside:avoid;break-inside:avoid;">';
   
   // Fournisseur
-  h += '<div class="fournisseur" style="background:#f8fafc;padding:12px 16px;border-radius:8px;flex:1;min-width:220px;border:1.5px solid #cbd5e1;border-left:5px solid #0f172a;">';
+  h += '<div class="fournisseur" style="background:#f8fafc;padding:12px 16px;border-radius:8px;flex:1;min-width:220px;border:1.5px solid #cbd5e1;border-left:5px solid #0284c7;">';
   h += '<strong style="display:block;font-size:13px;font-weight:800;color:#0284c7;text-transform:uppercase;margin-bottom:6px;letter-spacing:0.5px;">' + escapeHTML(t.supplier_label||tr('supplier_label','Émetteur / Fournisseur')) + '</strong>';
   h += '<div style="font-size:13.5px;color:#1e293b;line-height:1.5;">';
   h += '<strong style="font-size:16px;font-weight:800;color:#0f172a;display:block;margin-bottom:2px;">' + escapeHTML(compName) + '</strong>';
@@ -5218,13 +5298,13 @@ function buildFactureHTML(opts){
   // TABLEAU DES ARTICLES (AVEC COLONNE UNITÉ)
   h += '<div class="facture-table-wrap" style="width:100%;margin:12px 0;">';
   h += '<table class="facture-table" style="width:100%;border-collapse:collapse;margin:6px 0;font-size:14px;border:1.5px solid #cbd5e1;page-break-inside:auto;break-inside:auto;">';
-  h += '<thead><tr style="background:#0f172a;color:#ffffff;-webkit-print-color-adjust:exact;print-color-adjust:exact;">' +
-    '<th style="width:5%;padding:10px 8px;text-align:center;font-weight:700;border:1px solid #0f172a;font-size:13.5px;color:#ffffff;">#</th>' +
-    '<th style="width:45%;padding:10px 10px;text-align:left;font-weight:700;border:1px solid #0f172a;font-size:13.5px;color:#ffffff;">' + escapeHTML(t.designation||tr('designation','Désignation des Prestations / Articles')) + '</th>' +
-    '<th style="width:10%;padding:10px 8px;text-align:center;font-weight:700;border:1px solid #0f172a;font-size:13.5px;color:#ffffff;">' + (isAr ? 'الوحدة' : 'Unité') + '</th>' +
-    '<th style="width:8%;padding:10px 8px;text-align:center;font-weight:700;border:1px solid #0f172a;font-size:13.5px;color:#ffffff;white-space:nowrap;">' + escapeHTML(t.quantity||tr('quantity','Qté')) + '</th>' +
-    '<th style="width:16%;padding:10px 8px;text-align:right;font-weight:700;border:1px solid #0f172a;font-size:13.5px;color:#ffffff;white-space:nowrap;">' + escapeHTML(t.unit_price||tr('unit_price','P.U HT (DA)')) + '</th>' +
-    '<th style="width:16%;padding:10px 10px;text-align:right;font-weight:700;padding-right:12px;border:1px solid #0f172a;font-size:13.5px;color:#ffffff;white-space:nowrap;">' + escapeHTML(t.amount||tr('amount','Total HT (DA)')) + '</th>' +
+  h += '<thead><tr style="background:#f1f5f9;color:#1e293b;-webkit-print-color-adjust:exact;print-color-adjust:exact;">' +
+    '<th style="width:5%;padding:10px 8px;text-align:center;font-weight:700;border:1px solid #cbd5e1;font-size:13.5px;color:#1e293b;">#</th>' +
+    '<th style="width:45%;padding:10px 10px;text-align:left;font-weight:700;border:1px solid #cbd5e1;font-size:13.5px;color:#1e293b;">' + escapeHTML(t.designation||tr('designation','Désignation des Prestations / Articles')) + '</th>' +
+    '<th style="width:10%;padding:10px 8px;text-align:center;font-weight:700;border:1px solid #cbd5e1;font-size:13.5px;color:#1e293b;">' + (isAr ? 'الوحدة' : 'Unité') + '</th>' +
+    '<th style="width:8%;padding:10px 8px;text-align:center;font-weight:700;border:1px solid #cbd5e1;font-size:13.5px;color:#1e293b;white-space:nowrap;">' + escapeHTML(t.quantity||tr('quantity','Qté')) + '</th>' +
+    '<th style="width:16%;padding:10px 8px;text-align:right;font-weight:700;border:1px solid #cbd5e1;font-size:13.5px;color:#1e293b;white-space:nowrap;">' + escapeHTML(t.unit_price||tr('unit_price','P.U HT (DA)')) + '</th>' +
+    '<th style="width:16%;padding:10px 10px;text-align:right;font-weight:700;padding-right:12px;border:1px solid #cbd5e1;font-size:13.5px;color:#1e293b;white-space:nowrap;">' + escapeHTML(t.amount||tr('amount','Total HT (DA)')) + '</th>' +
   '</tr></thead>';
   h += '<tbody style="page-break-inside:auto;break-inside:auto;">' + rowsHtml + totalsHtml + '</tbody>';
   h += '</table>';
@@ -5571,6 +5651,7 @@ function printDocument(element, title) {
     '.facture-table-wrap{width:100% !important;margin:12px 0 !important;}' +
     'table, .facture-table{width:100% !important;border-collapse:collapse !important;page-break-inside:auto !important;break-inside:auto !important;}' +
     'thead{display:table-header-group !important;}' +
+    'thead th{background:#f1f5f9 !important;color:#1e293b !important;border:1px solid #cbd5e1 !important;-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;}' +
     'tr, tbody tr{page-break-inside:avoid !important;break-inside:avoid !important;}' +
     'th, td{border:1px solid #cbd5e1 !important;}' +
     '.invoice-header-banner{width:100% !important;background:#0f172a !important;-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;break-inside:avoid !important;page-break-inside:avoid !important;}' +
@@ -5638,33 +5719,162 @@ function downloadPdfFromPreview(previewElementId, filenameBase){
   alert(tr('share_system_not_loaded','Share system is not loaded yet.'));
 }
 
-function sendInvoiceEmailFromPreview(){
-  if(!currentInvoice) return;
-  // If user has connected Google/Gmail account, send directly via Gmail API
-  if (typeof window.ZeraldaGoogle !== 'undefined' && typeof window.ZeraldaGoogle.isSignedIn === 'function' && window.ZeraldaGoogle.isSignedIn()) {
-    if (typeof sendInvoiceViaGmail === 'function') {
-      sendInvoiceViaGmail();
-      return;
+// ═══════════════════════════════════════════════════════════════
+// EMAIL DISPATCH SYSTEM (GMAIL WEB, MAILTO, CLIPBOARD COPY)
+// ═══════════════════════════════════════════════════════════════
+var _emailModalCurrentDoc = null;
+
+function openInvoiceEmailModal(doc) {
+  if (!doc) {
+    if (typeof showToast === 'function') showToast(tr('no_document_selected', 'Aucun document sélectionné'), 'warning');
+    else alert('No document selected');
+    return;
+  }
+  _emailModalCurrentDoc = doc;
+
+  var rawId = doc.id || '';
+  var isPro = (rawId && String(rawId).startsWith('PRO-')) || (doc.type === 'proforma');
+  var shownId = isPro ? getProformaDisplayNumber(doc) : getInvoiceDisplayNumber(doc);
+  var docTitle = isPro ? (tr('doc_label_proforma', 'Facture Proforma')) : (tr('doc_label_invoice', 'Facture'));
+
+  var compName = '';
+  try {
+    var stored = ZS.getItem('zeralda-settings');
+    if (stored) {
+      var s = JSON.parse(stored);
+      compName = (s.companyName || s.name || '');
+    }
+  } catch(_) {}
+  if (!compName) compName = 'Zeralda ERP';
+
+  var toEmail = (doc.customer && doc.customer.email) || '';
+  var subject = docTitle + ' ' + shownId + (compName ? (' - ' + compName) : '');
+  var body = generateInvoiceText(doc);
+
+  var totalVal = Number(doc.total || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  var curSym = getCurrencySymbol();
+
+  var badgeNum = document.getElementById('sendEmailDocNumber');
+  if (badgeNum) badgeNum.textContent = docTitle + ' N° ' + shownId;
+  var badgeTot = document.getElementById('sendEmailDocTotal');
+  if (badgeTot) badgeTot.textContent = totalVal + ' ' + curSym;
+
+  var toInput = document.getElementById('sendEmailTo');
+  if (toInput) toInput.value = toEmail;
+  var subjInput = document.getElementById('sendEmailSubject');
+  if (subjInput) subjInput.value = subject;
+  var bodyInput = document.getElementById('sendEmailBody');
+  if (bodyInput) bodyInput.value = body;
+
+  openModal('sendInvoiceEmailModal');
+}
+window.openInvoiceEmailModal = openInvoiceEmailModal;
+
+function dispatchEmailViaGmailWeb() {
+  var to = (document.getElementById('sendEmailTo')?.value || '').trim();
+  var subject = (document.getElementById('sendEmailSubject')?.value || '').trim();
+  var body = (document.getElementById('sendEmailBody')?.value || '').trim();
+
+  var gmailUrl = 'https://mail.google.com/mail/?view=cm&fs=1' +
+    '&to=' + encodeURIComponent(to) +
+    '&su=' + encodeURIComponent(subject) +
+    '&body=' + encodeURIComponent(body);
+
+  var win = window.open(gmailUrl, '_blank');
+  if (!win) {
+    window.location.href = gmailUrl;
+  }
+  if (typeof showToast === 'function') {
+    showToast(tr('email_opened_gmail', 'Ouverture dans Gmail...'), 'info', 3000);
+  }
+}
+window.dispatchEmailViaGmailWeb = dispatchEmailViaGmailWeb;
+
+function dispatchEmailViaMailto() {
+  var to = (document.getElementById('sendEmailTo')?.value || '').trim();
+  var subject = (document.getElementById('sendEmailSubject')?.value || '').trim();
+  var body = (document.getElementById('sendEmailBody')?.value || '').trim();
+
+  openMailTo(to, subject, body);
+  if (typeof showToast === 'function') {
+    showToast(tr('email_client_launched', 'Lancement du client de messagerie...'), 'info', 3000);
+  }
+}
+window.dispatchEmailViaMailto = dispatchEmailViaMailto;
+
+function copyEmailBodyToClipboard() {
+  var subject = (document.getElementById('sendEmailSubject')?.value || '').trim();
+  var body = (document.getElementById('sendEmailBody')?.value || '').trim();
+  var fullText = (subject ? ('Objet: ' + subject + '\n\n') : '') + body;
+
+  function onCopied() {
+    if (typeof showToast === 'function') {
+      showToast(tr('email_text_copied', 'نص الرسالة تم نسخه بنجاح!'), 'success', 3000);
+    } else {
+      alert('تم نسخ نص الفاتورة بنجاح!');
     }
   }
-  const subject = tr('email_subject_invoice','Invoice {id} - Zeralda ERP').replace('{id}', getInvoiceDisplayNumber(currentInvoice));
-  const body = generateInvoiceText(currentInvoice);
-  const to = currentInvoice.customer?.email || "";
-  if (!to) {
-    if (!confirm(tr('customer_no_email_confirm','Customer has no email. Open mail client without recipient?'))) return;
-  }
-  openMailTo(to, subject, body);
-}
 
-function sendInvoiceEmail(id){
-  const inv = invoicesData.find(i => i.id === id);
-  if(!inv){ alert(tr('invoice_not_found','Invoice not found!')); return; }
-  const subject = tr('email_subject_invoice','Invoice {id} - Zeralda ERP').replace('{id}', getInvoiceDisplayNumber(inv));
-  const body = generateInvoiceText(inv);
-  const to = inv.customer?.email || "";
-  if(!to && !confirm(tr('customer_no_email_confirm','Customer has no email. Open mail client without recipient?'))) return;
-  openMailTo(to, subject, body);
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(fullText).then(onCopied).catch(function() {
+      fallbackCopy(fullText);
+    });
+  } else {
+    fallbackCopy(fullText);
+  }
+
+  function fallbackCopy(text) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+      document.execCommand('copy');
+      onCopied();
+    } catch(_) {
+      alert('Unable to copy automatically.');
+    }
+    document.body.removeChild(ta);
+  }
 }
+window.copyEmailBodyToClipboard = copyEmailBodyToClipboard;
+
+function sendInvoiceEmailFromPreview() {
+  if (!currentInvoice) {
+    alert(tr('no_invoice_selected', 'No invoice selected'));
+    return;
+  }
+  openInvoiceEmailModal(currentInvoice);
+}
+window.sendInvoiceEmailFromPreview = sendInvoiceEmailFromPreview;
+
+function sendInvoiceEmail(id) {
+  var inv = (typeof invoicesData !== 'undefined' && invoicesData) ? invoicesData.find(function(i) { return String(i.id) === String(id); }) : null;
+  if (!inv && currentInvoice && String(currentInvoice.id) === String(id)) {
+    inv = currentInvoice;
+  }
+  if (!inv) {
+    alert(tr('invoice_not_found', 'Invoice not found!'));
+    return;
+  }
+  openInvoiceEmailModal(inv);
+}
+window.sendInvoiceEmail = sendInvoiceEmail;
+
+function sendProformaEM(id, email) {
+  var prof = (typeof proformasData !== 'undefined' && proformasData) ? proformasData.find(function(p) { return String(p.id) === String(id); }) : null;
+  if (!prof && currentProforma && String(currentProforma.id) === String(id)) {
+    prof = currentProforma;
+  }
+  if (!prof) {
+    alert(tr('proforma_not_found', 'Proforma not found!'));
+    return;
+  }
+  openInvoiceEmailModal(prof);
+}
+window.sendProformaEM = sendProformaEM;
 
 function generateInvoiceText(doc) {
   const c = getCurrencySymbol();
@@ -5701,10 +5911,21 @@ function generateInvoiceText(doc) {
 }
 
 function openMailTo(email, subject, body) {
-  const mailto = "mailto:" + encodeURIComponent(email || "") +
-    "?subject=" + encodeURIComponent(subject || "") +
-    "&body=" + encodeURIComponent(body || "");
-  window.location.href = mailto;
+  var mailto = 'mailto:' + encodeURIComponent(email || '') +
+    '?subject=' + encodeURIComponent(subject || '') +
+    '&body=' + encodeURIComponent(body || '');
+  try {
+    var a = document.createElement('a');
+    a.href = mailto;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function() {
+      if (a.parentNode) a.parentNode.removeChild(a);
+    }, 1000);
+  } catch(_) {
+    window.location.href = mailto;
+  }
 }
 
 function editInvoice(id){
