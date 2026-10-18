@@ -563,14 +563,14 @@
     '.sig-sub { font-size: 10px; color: #94a3b8; }',
     '.doc-footer-legal { text-align: center; border-top: 1px solid #e2e8f0; padding-top: 12px; font-size: 10px; color: #94a3b8; }',
     '@media print {',
-    '  @page { size: A4 portrait; margin: 8mm 10mm 10mm 10mm; }',
+    '  @page { size: A4 portrait; margin: 0 !important; }',
     '  html, body { margin: 0; padding: 0; background: #fff; width: 100%; min-height: 100%; }',
-    '  .unified-doc-container { width: 100% !important; max-width: 100% !important; padding: 0 !important; min-height: 270mm; display: flex; flex-direction: column; justify-content: space-between; }',
+    '  .unified-doc-container { width: 100% !important; max-width: 100% !important; padding: 8mm 10mm 10mm 10mm !important; }',
     '  .unified-doc-table { width: 100%; }',
     '  .unified-doc-table th { background: #0f172a !important; color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }',
     '  .doc-type-badge, .grand-total-row td { background: #0284c7 !important; color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }',
     '  .signatures-grid, .doc-footer-legal, .financial-summary-grid { page-break-inside: avoid; break-inside: avoid; }',
-    '  .financial-summary-grid { margin-top: auto; }',
+    '  .financial-summary-grid { margin-top: 14px; }',
     '  .preview-scale-content, .preview-zoom-viewport { transform: none !important; width: 100% !important; overflow: visible !important; }',
     '}'
   ].join('\n');

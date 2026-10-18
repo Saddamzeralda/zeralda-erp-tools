@@ -30,8 +30,8 @@
     var align = dir === 'rtl' ? 'right' : 'left';
     var numCss = 'body{font-feature-settings:"lnum" 1;font-variant-numeric:lining-nums tabular-nums;}';
     return '' +
-      '@page{size:A4 portrait;margin:8mm 10mm 10mm 10mm;}' +
-      'html,body{margin:0 !important;padding:0 !important;background:#fff !important;color:#0f172a;direction:' + dir + ';font-size:11pt;line-height:1.35;width:100% !important;min-height:100% !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}' +
+      '@page{size:A4 portrait;margin:0 !important;}' +
+      'html,body{margin:0 !important;padding:0 !important;background:#fff !important;color:#0f172a;direction:' + dir + ';font-size:12pt;line-height:1.4;width:100% !important;min-height:100% !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}' +
       numCss +
       'button,.no-print,.modal-footer,.modal-actions,.btn,.preview-zoom-toolbar,.zoom-mobile-hint{display:none !important;}' +
       '.preview-scale-content,.preview-zoom-viewport{transform:none !important;transform-origin:top left !important;width:100% !important;max-width:100% !important;min-width:100% !important;overflow:visible !important;padding:0 !important;margin:0 !important;}' +
@@ -45,21 +45,21 @@
       '.preview-signatures{page-break-inside:avoid !important;break-inside:avoid !important;}' +
       '.preview-card,.preview-totals-card,.preview-notes{box-shadow:none !important;page-break-inside:avoid !important;break-inside:avoid !important;}' +
       '.preview-table-wrap{border-radius:0;border:1px solid #cbd5e1;page-break-inside:auto;}' +
-      '.preview-table{width:100% !important;border-collapse:collapse !important;font-size:10pt !important;page-break-inside:auto !important;break-inside:auto !important;}' +
-      '.preview-table th,.preview-table td{text-align:' + align + ';border-color:#cbd5e1;padding:6px 8px !important;font-size:10.5pt !important;}' +
+      '.preview-table{width:100% !important;border-collapse:collapse !important;font-size:10.5pt !important;page-break-inside:auto !important;break-inside:auto !important;}' +
+      '.preview-table th,.preview-table td{text-align:' + align + ';border-color:#cbd5e1;padding:8px 10px !important;font-size:11pt !important;}' +
       '.preview-hero{background:#1e293b !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}' +
       '.preview-table th,.preview-summary-item,.preview-notes,.preview-totals-card{-webkit-print-color-adjust:exact;print-color-adjust:exact;}' +
-      '.facture-container{box-shadow:none !important;border:0 !important;max-width:100% !important;width:100% !important;min-height:265mm !important;display:flex !important;flex-direction:column !important;justify-content:space-between !important;max-height:none !important;box-sizing:border-box;border-radius:0 !important;overflow:visible !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;padding:0 !important;margin:0 auto;page-break-inside:auto !important;break-inside:auto !important;}' +
-      '.facture-container .facture-content-area{flex:1 0 auto !important;display:flex !important;flex-direction:column !important;justify-content:space-between !important;box-sizing:border-box !important;}' +
-      '.facture-container .facture-table-wrap{flex:1 0 auto !important;min-height:90mm !important;display:flex !important;flex-direction:column !important;}' +
-      '.facture-container .facture-footer-area{margin-top:auto !important;page-break-inside:avoid !important;break-inside:avoid !important;}' +
+      '.facture-container{box-shadow:none !important;border:0 !important;max-width:100% !important;width:100% !important;min-height:auto !important;max-height:none !important;box-sizing:border-box !important;border-radius:0 !important;overflow:visible !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;padding:8mm 10mm 10mm 10mm !important;margin:0 auto !important;page-break-inside:auto !important;break-inside:auto !important;}' +
+      '.facture-container .facture-content-area{padding:12px 0 0 0 !important;box-sizing:border-box !important;}' +
+      '.facture-container .facture-table-wrap{width:100% !important;margin:12px 0 !important;}' +
+      '.facture-container .facture-footer-area{margin-top:12px !important;page-break-inside:avoid !important;break-inside:avoid !important;}' +
       '.facture-container table{width:100% !important;border-collapse:collapse !important;page-break-inside:auto !important;break-inside:auto !important;}' +
       '.facture-container table thead tr,.facture-container .grand-total,.facture-container tr[style*="background:#1e2b3c"]{-webkit-print-color-adjust:exact;print-color-adjust:exact;}' +
       '.facture-container table th,.facture-container table td{border-color:#cbd5e1 !important;}' +
       '.facture-container .coordonnees .fournisseur,.facture-container .coordonnees .client,.facture-container .notes,.facture-container .total-row{-webkit-print-color-adjust:exact;print-color-adjust:exact;}' +
       // When content is inside a wrapper (#doc-page or #pf-page), reset inner padding to avoid double padding
       '#doc-page .preview-paper,#doc-page .facture-container,#pf-page .preview-paper,#pf-page .facture-container{padding:0 !important;width:100% !important;}' +
-      '@media print{html,body{margin:0 !important;padding:0 !important;background:#fff !important;width:100% !important;} tr, tbody tr { page-break-inside:avoid !important; break-inside:avoid !important; } table, tbody, .facture-container { page-break-inside:auto !important; break-inside:auto !important; } .preview-scale-content{transform:none !important;width:100% !important;}}';
+      '@media print{html,body{margin:0 !important;padding:0 !important;background:#fff !important;width:100% !important;} @page{size:A4 portrait;margin:0 !important;} tr, tbody tr { page-break-inside:avoid !important; break-inside:avoid !important; } table, tbody, .facture-container { page-break-inside:auto !important; break-inside:auto !important; } .preview-scale-content{transform:none !important;width:100% !important;} .facture-container{padding:8mm 10mm 10mm 10mm !important;width:100% !important;box-sizing:border-box !important;} .facture-footer-area{margin-top:12px !important;}}';
   }
 
   function buildPrintHtml(content, title, options) {
@@ -185,31 +185,28 @@
 
   function openPrintWindow(htmlContent, options) {
     var opts = options || {};
-    if (isRunningInWebView2()) {
+    // Use iframe printing directly: eliminates opening an about:blank tab and prevents "about:blank" from header
+    try {
       printViaIframe(htmlContent);
       return true;
+    } catch (e) {
+      console.warn('[print_engine] iframe print failed, falling back to window.open', e);
     }
 
     try {
       var width = Number(opts.width || 900);
       var height = Number(opts.height || 700);
       var popup = window.open('', '_blank', 'height=' + height + ',width=' + width + ',menubar=no,toolbar=no,location=no,status=no');
-
-      if (!popup || popup.closed || typeof popup.closed === 'undefined') {
-        // Popup was blocked by browser -> fallback to invisible iframe print immediately!
-        printViaIframe(htmlContent);
+      if (popup) {
+        popup.document.open();
+        popup.document.write(htmlContent);
+        popup.document.close();
         return true;
       }
-
-      popup.document.open();
-      popup.document.write(htmlContent);
-      popup.document.close();
-      return true;
     } catch (err) {
-      console.error('[print_engine] window print failed, falling back to iframe', err);
-      printViaIframe(htmlContent);
-      return true;
+      console.error('[print_engine] window print failed', err);
     }
+    return false;
   }
 
   function printHtml(htmlContent, options) {
