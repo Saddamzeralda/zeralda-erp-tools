@@ -47,10 +47,24 @@
     var str = JSON.stringify(next);
     if (window.ZS && typeof window.ZS.setItem === 'function') {
       window.ZS.setItem('zeralda-settings', str);
+      if (next.activeCompanyId) {
+        window.ZS.setItem('zeralda-active-company', next.activeCompanyId);
+      }
     }
-    try { localStorage.setItem('zeralda-settings', str); } catch (_) {}
+    try {
+      localStorage.setItem('zeralda-settings', str);
+      if (next.activeCompanyId) {
+        localStorage.setItem('zeralda-active-company', next.activeCompanyId);
+        localStorage.setItem('zeralda_last_active_company', next.activeCompanyId);
+      }
+    } catch (_) {}
     if (window.ZDB && typeof window.ZDB.setItem === 'function') {
-      try { window.ZDB.setItem('zeralda-settings', str); } catch (_) {}
+      try {
+        window.ZDB.setItem('zeralda-settings', str);
+        if (next.activeCompanyId) {
+          window.ZDB.setItem('zeralda-active-company', next.activeCompanyId);
+        }
+      } catch (_) {}
     }
   }
 
@@ -80,17 +94,10 @@
         }
       } catch (_) {}
     }
-    // If still missing or invalid, or if pointing to empty overlink while others exist, pick best company
-    if (!activeId || !companies.some(function (c) { return c && c.id === activeId; }) || (activeId === 'company_vwd61te' && companies.length > 1)) {
-      var preferred = companies.find(function(c) { return c && (c.id === 'company_fbd85142' || c.id === 'company_kq40xpm' || c.id === 'default-company'); });
-      activeId = preferred ? preferred.id : companies[0].id;
+    // If still missing or invalid, pick first available company
+    if (!activeId || !companies.some(function (c) { return c && c.id === activeId; })) {
+      activeId = companies[0].id;
       saveSettings({ ...settings, activeCompanyId: activeId });
-      // Keep zeralda-active-company in sync
-      if (window.ZS && typeof window.ZS.setItem === 'function') {
-        window.ZS.setItem('zeralda-active-company', activeId);
-      }
-      try { localStorage.setItem('zeralda-active-company', activeId); } catch (_) {}
-      try { localStorage.setItem('zeralda_last_active_company', activeId); } catch (_) {}
     }
     return { companies: companies, activeId: activeId };
   }
@@ -219,31 +226,10 @@
         renderCompanySwitcher();
 
         // Apply company-specific data context immediately across current module.
-        // company_storage.js listens for this event, waits for ZDB.flush(),
-        // then reloads the page. We no longer reload here to avoid a double
-        // reload race (the flush may take longer than 60ms).
+        // company_storage.js listens for this event, flushes pending state,
+        // and safely reloads the page.
         console.log('[header_company_switcher] Dispatching activeCompanyChanged event for company:', id);
         window.dispatchEvent(new CustomEvent('activeCompanyChanged', { detail: { companyId: id } }));
-
-        // Auto-login to Google when company changes (best-effort, non-blocking).
-        // The reload is handled by company_storage.js after ZDB.flush() completes.
-        setTimeout(function () {
-          if (typeof ZeraldaGoogle !== 'undefined' && typeof ZeraldaGoogle.init === 'function') {
-            try {
-              var profile = ZeraldaGoogle.getProfile();
-              if (!profile) {
-                // Auto-login silently to Google
-                ZeraldaGoogle.init();
-                ZeraldaGoogle.requestToken(function(p) {
-                  // Silent auto-login - no notification
-                  console.log('Auto-login to Google:',  p ? 'success' : 'failed');
-                });
-              }
-            } catch (e) {
-              console.error('Auto-login error:', e);
-            }
-          }
-        }, 60);
       });
     };
   }

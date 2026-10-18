@@ -33,16 +33,6 @@
         for (var b = 0; b < badNodes.length; b++) {
           if (badNodes[b] && badNodes[b].parentNode) badNodes[b].parentNode.removeChild(badNodes[b]);
         }
-        var allDivs = document.querySelectorAll('div, section, aside, header');
-        for (var i = 0; i < allDivs.length; i++) {
-          var txt = allDivs[i].textContent || '';
-          if (txt.indexOf("Centre d'alertes") !== -1 || txt.indexOf("مركز التنبيهات الذكي") !== -1 || txt.indexOf("Smart Alerts Hub") !== -1 || txt.indexOf("مركز المزامنة") !== -1 || txt.indexOf("Sync & Backup") !== -1) {
-            var target = allDivs[i].closest('[style*="fixed"], [style*="absolute"], .zeralda-sync-pill, .alerts-hub-wrapper') || allDivs[i];
-            if (target && target.parentNode && target !== document.body && target !== document.documentElement && !target.closest('#backups') && !target.closest('.settings-content')) {
-              target.parentNode.removeChild(target);
-            }
-          }
-        }
       } catch (_) {}
     }
     __purgeFloatingWidgets();
@@ -50,7 +40,6 @@
       document.addEventListener('DOMContentLoaded', __purgeFloatingWidgets);
     }
     window.addEventListener('load', __purgeFloatingWidgets);
-    setInterval(__purgeFloatingWidgets, 400);
 
     if (window.MutationObserver) {
       new MutationObserver(function(muts) {
@@ -656,7 +645,7 @@
   /* ── Load Shared Layout via fetch ────────────────────── */
   // Cache the layout HTML in ZS to avoid re-fetching on every page navigation.
   // ZS is synchronous (in-memory cache) and survives navigation within the same tab.
-  var _layoutCacheVersion = '20261018k';
+  var _layoutCacheVersion = '20261018L';
   var _cachedLayoutHTML = null;
   try {
     var cachedVersion = ZS.getItem('zeralda-layout-shell-version');
@@ -679,7 +668,7 @@
     // Use cached HTML if available (avoids fetch on every page navigation)
     var fetchPromise = _cachedLayoutHTML
       ? Promise.resolve(_cachedLayoutHTML)
-      : fetch('shared/layout_shell.html?v=20261018h')
+      : fetch('shared/layout_shell.html?v=20261018L')
           .then(function (res) {
             if (!res.ok) throw new Error('Failed to load layout_shell.html: ' + res.status);
             return res.text();

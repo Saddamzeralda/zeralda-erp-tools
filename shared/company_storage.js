@@ -86,14 +86,27 @@
         }
       } catch (_) {}
     }
+    // Priority 5: localStorage fallback
+    if (!cid) {
+      try {
+        var ac3 = localStorage.getItem('zeralda-active-company') || localStorage.getItem('zeralda_last_active_company');
+        if (ac3) {
+          try { cid = String(JSON.parse(ac3).id || ''); } catch (_) { cid = String(ac3); }
+        }
+      } catch (_) {}
+    }
     if (!cid) cid = 'default-company';
     _cachedCompanyId = cid;
     return cid;
   }
 
-  // إصلاح: إلغاء التخزين المؤقت فوراً عند تغيير الشركة (بدون TTL)
-  window.addEventListener('activeCompanyChanged', function () {
-    _cachedCompanyId = null;
+  // إصلاح: تحديث التخزين المؤقت فوراً عند تغيير الشركة
+  window.addEventListener('activeCompanyChanged', function (e) {
+    if (e && e.detail && e.detail.companyId) {
+      _cachedCompanyId = e.detail.companyId;
+    } else {
+      _cachedCompanyId = null;
+    }
   });
 
   function isScoped(key) {
@@ -105,102 +118,51 @@
     return key + '::' + getActiveCompanyId();
   }
 
-  /* ── Company change: pull new data BEFORE reload ──────────────────── */
-  // إصلاح جذري: اسحب بيانات الشركة الجديدة من السيرفر BEFORE إعادة التحميل
-  // بدلاً من إعادة التحميل ثم السحب (مما يسبب عرض بيانات قديمة)
-  // التدفق:
-  //   1) flush البيانات الحالية للسيرفر
-  //   2) امسح بيانات الشركة القديمة من الـ cache (لمنع الدمج مع البيانات الجديدة)
-  //   3) اسحب بيانات الشركة الجديدة من السيرفر → اكتبها في ZDB cache + IndexedDB
-  //   4) أعد تحميل الصفحة → cacheReady() → initSalesScopedData() يقرأ البيانات الجديدة
-  window.addEventListener('activeCompanyChanged', function () {
-    console.log('[company_storage] Company changed — pulling new data before reload');
+  /* ── Company change: fast transition & reload ──────────────────── */
+  window.addEventListener('activeCompanyChanged', function (e) {
+    var newCompanyId = (e && e.detail && e.detail.companyId) || getActiveCompanyId();
+    _cachedCompanyId = newCompanyId;
+    try { localStorage.setItem('zeralda-active-company', newCompanyId); } catch (_) {}
+    try { localStorage.setItem('zeralda_last_active_company', newCompanyId); } catch (_) {}
 
-    // عرض مؤشر تحميل أثناء السحب
+    console.log('[company_storage] Company changed to:', newCompanyId);
+
+    // عرض مؤشر تحميل سريع ومريح للعين
     var overlay = document.createElement('div');
     overlay.id = 'company-switch-overlay';
-    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:99999;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;font-family:sans-serif;';
-    overlay.innerHTML = '<div style="text-align:center"><div style="margin-bottom:10px">⏳ جاري تبديل الشركة...</div><div style="font-size:14px;opacity:0.8">جاري تحميل بيانات الشركة الجديدة</div></div>';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,0.65);backdrop-filter:blur(4px);z-index:99999;display:flex;align-items:center;justify-content:center;color:#fff;font-family:sans-serif;';
+    overlay.innerHTML = '<div style="text-align:center;background:rgba(30,41,59,0.95);padding:20px 32px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.1);"><div style="font-size:17px;margin-bottom:8px;font-weight:600;">⏳ جاري تبديل الشركة...</div><div style="font-size:13px;opacity:0.8;">تحديث البيانات وسياق العمل</div></div>';
     document.body.appendChild(overlay);
 
-    // Safety timeout: if pull takes too long, reload anyway (10 seconds)
-    var safetyTimer = setTimeout(function () {
-      console.warn('[company_storage] Pull timeout — forcing reload');
-      doReload();
-    }, 10000);
-
+    var reloaded = false;
     function doReload() {
+      if (reloaded) return;
+      reloaded = true;
       clearTimeout(safetyTimer);
       console.log('[company_storage] Reloading page with new company data');
       location.reload();
     }
 
-    // 1) Flush pending writes — header_company_switcher.js flushes OLD writes
-    //    BEFORE changing company ID, but saveSettings() + ZS.setItem() create
-    //    NEW pending writes (zeralda-settings + zeralda-active-company) that
-    //    haven't been sent yet. We must flush these BEFORE pull, otherwise the
-    //    server returns stale zeralda-settings with the OLD activeCompanyId.
+    // حد أقصى للانتظار: 400 ميلي ثانية حتى لا يتعطل المستخدم
+    var safetyTimer = setTimeout(doReload, 400);
 
-    Promise.resolve().then(function () {
-        var newCompanyId = getActiveCompanyId();
-
-        // إصلاح جذري: لا نمسح بيانات الشركة من الكاش أو IndexedDB!
-        // كان الكود القديم يستدعي ZDB.removeItem(scopedK) لكل مفتاح scoped،
-        // وهذا يحذف البيانات نهائياً من IndexedDB. إذا لم تكن البيانات
-        // موجودة على السيرفر (مثلاً لم تُرفع بعد)، تُفقد للأبد.
-        // المفاتيح الـ scoped (key::companyId) تضمن عزل البيانات بين الشركات
-        // تلقائياً — ZS.getItem('invoices-data') يقرأ فقط بيانات الشركة النشطة.
-        // دمج pullAllToLocalStorage يتعامل مع تحديث البيانات المحلية ببيانات السيرفر.
-
-        // إصلاح جذري: flush pending writes BEFORE pull.
-        // saveSettings() في header_company_switcher.js / settings.html تكتب
-        // activeCompanyId الجديد في الكاش المحلي وتضيفه لـ _pendingWrites،
-        // لكنها لا تُرسله للسيرفر فوراً (يُرسل بعد 2 ثانية via setTimeout).
-        // إذا استدعينا pullAllToLocalStorage قبل flush، فإن السيرفر سيرجع
-        // zeralda-settings القديم بـ activeCompanyId القديم، وسيُدمج فوق
-        // القيمة المحلية الجديدة (السيرفر يأخذ الأسبقية في الدمج!) →
-        // يُلغي تبديل الشركة → تظهر بيانات الشركة القديمة بعد إعادة التحميل.
-        var prePullPromise = Promise.resolve();
-        if (window.AppSync && typeof window.AppSync.flushPending === 'function') {
-          prePullPromise = prePullPromise.then(function () {
-            console.log('[company_storage] Flushing pending writes before pull...');
-            return window.AppSync.flushPending().catch(function () {});
-          });
-        }
-
-        // 3) Pull new company data from server (after flush so server has latest activeCompanyId)
-        return prePullPromise.then(function () {
-          if (window.AppSync && typeof window.AppSync.pullAllToLocalStorage === 'function') {
-            console.log('[company_storage] Pulling new company data for company:', newCompanyId);
-            // تحقق من البيانات قبل السحب
-            var beforeInvoices = ZS.getItem('invoices-data');
-            console.log('[company_storage] BEFORE pull - invoices-data:', beforeInvoices ? (JSON.parse(beforeInvoices).length + ' records') : 'null');
-            return window.AppSync.pullAllToLocalStorage()
-              .then(function () {
-                // تحقق من البيانات بعد السحب
-                var afterInvoices = ZS.getItem('invoices-data');
-                console.log('[company_storage] AFTER pull - invoices-data:', afterInvoices ? (JSON.parse(afterInvoices).length + ' records') : 'null');
-                console.log('[company_storage] Pull complete — flushing to IndexedDB...');
-                // 4) Flush new data to IndexedDB
-                if (window.ZDB && typeof window.ZDB.flush === 'function') {
-                  return window.ZDB.flush().then(function () {
-                    console.log('[company_storage] Flush complete — reloading');
-                    doReload();
-                  }).catch(function () { doReload(); });
-                } else {
-                  doReload();
-                }
-              });
-          } else {
-            // AppSync not available — just reload
-            doReload();
-          }
-        });
-      })
-      .catch(function (err) {
-        console.warn('[company_storage] Company switch failed, reloading anyway:', err);
-        doReload();
+    var flushPromise = Promise.resolve();
+    if (window.AppSync && typeof window.AppSync.flushPending === 'function') {
+      flushPromise = flushPromise.then(function () {
+        return window.AppSync.flushPending().catch(function () {});
       });
+    }
+    if (window.ZDB && typeof window.ZDB.flush === 'function') {
+      flushPromise = flushPromise.then(function () {
+        return window.ZDB.flush().catch(function () {});
+      });
+    }
+
+    flushPromise.then(function () {
+      doReload();
+    }).catch(function () {
+      doReload();
+    });
   });
 
   /* ── Public API ─────────────────────────────────────── */

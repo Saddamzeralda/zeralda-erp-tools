@@ -7,18 +7,6 @@
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
   <base href="../../" />
-    <script>
-      // Auto-redirect to versioned URL to bust browser cache
-      (function () {
-        var REQUIRED_VERSION = '20261018k';
-        var url = new URL(window.location.href);
-        var currentVersion = url.searchParams.get('v');
-        if (currentVersion !== REQUIRED_VERSION) {
-          url.searchParams.set('v', REQUIRED_VERSION);
-          window.location.replace(url.toString());
-        }
-      })();
-    </script>
     <script src="shared/theme_manager.js"></script>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap">
     <title data-en="Sales Management - Zeralda ERP Tools" data-ar="إدارة المبيعات - أدوات زيرالدا ERP" data-fr="Gestion des ventes - Outils Zeralda ERP">Sales Management - Zeralda ERP Tools</title>

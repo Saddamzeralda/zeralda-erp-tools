@@ -7,18 +7,6 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
-    <script>
-      // Auto-redirect to versioned URL to bust browser cache
-      (function () {
-        var REQUIRED_VERSION = '20261018k';
-        var url = new URL(window.location.href);
-        var currentVersion = url.searchParams.get('v');
-        if (currentVersion !== REQUIRED_VERSION) {
-          url.searchParams.set('v', REQUIRED_VERSION);
-          window.location.replace(url.toString());
-        }
-      })();
-    </script>
     <link rel="icon" href="/favicon.ico" sizes="any">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap">
     <title>Dashboard - Zeralda ERP Tools</title>
@@ -667,27 +655,27 @@
                     <i class="fas fa-cash-register" style="font-size:24px; color:#0f766e;"></i>
                     <span data-en="POS Cashier" data-ar="نقطة البيع (الكاشير)" data-fr="Caisse POS">نقطة البيع (الكاشير)</span>
                 </a>
-                <a href="modules/sales/sales_management.html?v=20260806a" class="action-btn">
+                <a href="modules/sales/sales_management.html" class="action-btn">
                     <i class="fas fa-plus-circle"></i>
                     <span data-en="New Invoice" data-ar="فاتورة جديدة" data-fr="Nouvelle Facture">New Invoice</span>
                 </a>
-                <a href="modules/crm/crm_management.html?v=20260806a" class="action-btn">
+                <a href="modules/crm/crm_management.html" class="action-btn">
                     <i class="fas fa-user-plus"></i>
                     <span data-en="Add Customer" data-ar="إضافة عميل" data-fr="Ajouter Client">Add Customer</span>
                 </a>
-                <a href="modules/inventory/inventory_management.html?v=20260806a" class="action-btn">
+                <a href="modules/inventory/inventory_management.html" class="action-btn">
                     <i class="fas fa-box"></i>
                     <span data-en="Add Product" data-ar="إضافة منتج" data-fr="Ajouter Produit">Add Product</span>
                 </a>
-                <a href="modules/purchasing/purchasing_management.html?v=20260806a" class="action-btn">
+                <a href="modules/purchasing/purchasing_management.html" class="action-btn">
                     <i class="fas fa-file-invoice"></i>
                     <span data-en="Purchase Order" data-ar="طلب شراء" data-fr="Bon Commande">Purchase Order</span>
                 </a>
-                <a href="modules/hr/hr_management.html?v=20260806a" class="action-btn">
+                <a href="modules/hr/hr_management.html" class="action-btn">
                     <i class="fas fa-user-check"></i>
                     <span data-en="Mark Attendance" data-ar="تسجيل الحضور" data-fr="Marquer Présence">Mark Attendance</span>
                 </a>
-                <a href="modules/reports/reports_analytics.html?v=20260806a" class="action-btn">
+                <a href="modules/reports/reports_analytics.html" class="action-btn">
                     <i class="fas fa-file-alt"></i>
                     <span data-en="Generate Report" data-ar="إنشاء تقرير" data-fr="Générer Rapport">Generate Report</span>
                 </a>
@@ -703,7 +691,7 @@
 
             <div class="modules-grid">
                 <!-- Sales Management -->
-                <a href="modules/sales/sales_management.html?v=20260806a" class="module-card blue">
+                <a href="modules/sales/sales_management.html" class="module-card blue">
                     <div class="module-header">
                         <div class="module-icon" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">
                             <i class="fas fa-shopping-cart"></i>
@@ -722,7 +710,7 @@
                 </a>
 
                 <!-- Purchasing Management -->
-                <a href="modules/purchasing/purchasing_management.html?v=20260806a" class="module-card green">
+                <a href="modules/purchasing/purchasing_management.html" class="module-card green">
                     <div class="module-header">
                         <div class="module-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
                             <i class="fas fa-shopping-bag"></i>
@@ -741,7 +729,7 @@
                 </a>
 
                 <!-- Inventory Management -->
-                <a href="modules/inventory/inventory_management.html?v=20260806a" class="module-card orange">
+                <a href="modules/inventory/inventory_management.html" class="module-card orange">
                     <div class="module-header">
                         <div class="module-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
                             <i class="fas fa-boxes"></i>
@@ -760,7 +748,7 @@
                 </a>
 
                 <!-- Finance & Accounting -->
-                <a href="modules/finance/finance_accounting.html?v=20260806a" class="module-card purple">
+                <a href="modules/finance/finance_accounting.html" class="module-card purple">
                     <div class="module-header">
                         <div class="module-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
                             <i class="fas fa-dollar-sign"></i>
@@ -779,7 +767,7 @@
                 </a>
 
                 <!-- Human Resources -->
-                <a href="modules/hr/hr_management.html?v=20260806a" class="module-card cyan">
+                <a href="modules/hr/hr_management.html" class="module-card cyan">
                     <div class="module-header">
                         <div class="module-icon" style="background: linear-gradient(135deg, #06b6d4, #0891b2);">
                             <i class="fas fa-users"></i>
@@ -798,7 +786,7 @@
                 </a>
 
                 <!-- CRM -->
-                <a href="modules/crm/crm_management.html?v=20260806a" class="module-card red">
+                <a href="modules/crm/crm_management.html" class="module-card red">
                     <div class="module-header">
                         <div class="module-icon" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
                             <i class="fas fa-user-friends"></i>
@@ -817,7 +805,7 @@
                 </a>
 
                 <!-- Reports & Analytics -->
-                <a href="modules/reports/reports_analytics.html?v=20260806a" class="module-card pink">
+                <a href="modules/reports/reports_analytics.html" class="module-card pink">
                     <div class="module-header">
                         <div class="module-icon" style="background: linear-gradient(135deg, #ec4899, #db2777);">
                             <i class="fas fa-chart-line"></i>
@@ -836,7 +824,7 @@
                 </a>
 
                 <!-- Settings -->
-                <a href="modules/services/services_management.html?v=20260806a" class="module-card cyan">
+                <a href="modules/services/services_management.html" class="module-card cyan">
                     <div class="module-header">
                         <div class="module-icon" style="background: linear-gradient(135deg, #06b6d4, #0891b2);">
                             <i class="fas fa-concierge-bell"></i>
@@ -853,7 +841,7 @@
                     </ul>
                 </a>
 
-                <a href="modules/consulting/consulting_tenders_management.html?v=20260806a" class="module-card orange">
+                <a href="modules/consulting/consulting_tenders_management.html" class="module-card orange">
                     <div class="module-header">
                         <div class="module-icon" style="background: linear-gradient(135deg, #f97316, #ea580c);">
                             <i class="fas fa-file-signature"></i>
