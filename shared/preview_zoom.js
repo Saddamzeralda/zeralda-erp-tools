@@ -246,6 +246,14 @@
     var targetId = targetEl.id || getTargetId(targetEl);
     if (!targetEl.id) targetEl.id = targetId;
 
+    // Completely skip invoice and proforma previews as requested by user
+    if (targetId === 'invoicePreview' || targetId === 'proformaPreview' || targetId === 'quotationPreview') {
+      var parentEl = targetEl.parentElement;
+      var prevToolbar = parentEl ? parentEl.querySelector('.preview-zoom-toolbar[data-target="' + targetId + '"]') : null;
+      if (prevToolbar) prevToolbar.remove();
+      return;
+    }
+
     var opts = options || {};
     var forceAutoFit = opts.forceAutoFit !== undefined ? opts.forceAutoFit : (window.innerWidth <= 768);
 
@@ -273,7 +281,7 @@
 
   // Auto-init for common preview IDs whenever modals or views open
   function autoAttachAll() {
-    var commonIds = ['invoicePreview', 'quotationPreview', 'proformaPreview', 'poPreview', 'billPreview', 'payslipContent'];
+    var commonIds = ['poPreview', 'billPreview', 'payslipContent'];
     commonIds.forEach(function(id) {
       var el = document.getElementById(id);
       if (el && el.innerHTML.trim().length > 20) {
