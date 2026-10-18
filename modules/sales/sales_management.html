@@ -10,7 +10,7 @@
     <script>
       // Auto-redirect to versioned URL to bust browser cache
       (function () {
-        var REQUIRED_VERSION = '20261018c';
+        var REQUIRED_VERSION = '20261018d';
         var url = new URL(window.location.href);
         var currentVersion = url.searchParams.get('v');
         if (currentVersion !== REQUIRED_VERSION) {
@@ -5067,8 +5067,8 @@ function buildFactureHTML(opts){
     try { var rawP = ZS.getItem("products-data"); if(rawP) _previewProducts = JSON.parse(rawP)||[]; } catch(e){ _previewProducts=[]; }
   }
 
-  var cellPad = '10px 10px';
-  var cellFont = '12.5px';
+  var cellPad = '10px 11px';
+  var cellFont = '14px';
   var cellLineH = '1.45';
 
   var rowsHtml = '';
@@ -5089,53 +5089,53 @@ function buildFactureHTML(opts){
 
     rowsHtml += '<tr style="page-break-inside:avoid;break-inside:avoid;">' +
       '<td style="padding:' + cellPad + ';border:1px solid #cbd5e1;font-size:' + cellFont + ';line-height:' + cellLineH + ';direction:ltr;unicode-bidi:isolate;text-align:center;color:#64748b;font-weight:600;">' + numLtr(numStr) + '</td>' +
-      '<td style="padding:' + cellPad + ';border:1px solid #cbd5e1;font-size:13px;line-height:' + cellLineH + ';vertical-align:middle;"><strong style="color:#0f172a;font-size:13px;">' + escapeHTML(displayName) + '</strong></td>' +
-      '<td style="padding:' + cellPad + ';border:1px solid #cbd5e1;text-align:center;font-size:' + cellFont + ';line-height:' + cellLineH + ';white-space:nowrap;color:#475569;font-weight:500;">' + escapeHTML(unitName) + '</td>' +
+      '<td style="padding:' + cellPad + ';border:1px solid #cbd5e1;font-size:14.5px;line-height:' + cellLineH + ';vertical-align:middle;"><strong style="color:#0f172a;font-size:14.5px;">' + escapeHTML(displayName) + '</strong></td>' +
+      '<td style="padding:' + cellPad + ';border:1px solid #cbd5e1;text-align:center;font-size:' + cellFont + ';line-height:' + cellLineH + ';white-space:nowrap;color:#475569;font-weight:600;">' + escapeHTML(unitName) + '</td>' +
       '<td style="padding:' + cellPad + ';border:1px solid #cbd5e1;text-align:center;font-size:' + cellFont + ';line-height:' + cellLineH + ';direction:ltr;unicode-bidi:isolate;white-space:nowrap;font-weight:700;color:#0f172a;">' + numLtr(String(qty)) + '</td>' +
-      '<td style="padding:' + cellPad + ';border:1px solid #cbd5e1;text-align:right;font-size:' + cellFont + ';line-height:' + cellLineH + ';font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate;white-space:nowrap;color:#1e293b;">' + numLtr(fmtNum(unitPrice)) + '</td>' +
-      '<td style="padding:' + cellPad + ';border:1px solid #cbd5e1;text-align:right;font-size:13px;line-height:' + cellLineH + ';padding-right:12px;font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate;white-space:nowrap;font-weight:700;color:#0f172a;">' + numLtr(fmtNum(lineTotal)) + '</td>' +
+      '<td style="padding:' + cellPad + ';border:1px solid #cbd5e1;text-align:right;font-size:' + cellFont + ';line-height:' + cellLineH + ';font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate;white-space:nowrap;color:#1e293b;font-weight:600;">' + numLtr(fmtNum(unitPrice)) + '</td>' +
+      '<td style="padding:' + cellPad + ';border:1px solid #cbd5e1;text-align:right;font-size:14.5px;line-height:' + cellLineH + ';padding-right:12px;font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate;white-space:nowrap;font-weight:800;color:#0f172a;">' + numLtr(fmtNum(lineTotal)) + '</td>' +
     '</tr>';
   });
 
   if(!rowsHtml){
-    rowsHtml = '<tr><td colspan="6" style="padding:16px 10px;text-align:center;color:#64748b;font-style:italic;font-size:12.5px;">' + escapeHTML(t.preview_not_provided||tr('preview_not_provided','Aucun article enregistré')) + '</td></tr>';
+    rowsHtml = '<tr><td colspan="6" style="padding:16px 10px;text-align:center;color:#64748b;font-style:italic;font-size:14px;">' + escapeHTML(t.preview_not_provided||tr('preview_not_provided','Aucun article enregistré')) + '</td></tr>';
   }
 
   // Totals rows with Algerian fiscal precision
   var totalsHtml = '';
   totalsHtml += '<tr style="background:#f8fafc;font-weight:600;-webkit-print-color-adjust:exact;print-color-adjust:exact;page-break-inside:avoid;break-inside:avoid;">' +
-    '<td colspan="5" style="padding:9px 12px;text-align:right;font-size:12.5px;border:1px solid #cbd5e1;color:#1e293b;">' + escapeHTML(t.subtotal_label||tr('subtotal_label','TOTAL HORS TAXE (HT)')) + ' :</td>' +
-    '<td style="padding:9px 12px;text-align:right;font-size:13px;font-weight:700;padding-right:12px;font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate;white-space:nowrap;border:1px solid #cbd5e1;color:#0f172a;">' + numLtr(fmtNum(subtotal)) + '</td>' +
+    '<td colspan="5" style="padding:10px 12px;text-align:right;font-size:14px;font-weight:700;border:1px solid #cbd5e1;color:#1e293b;">' + escapeHTML(t.subtotal_label||tr('subtotal_label','TOTAL HORS TAXE (HT)')) + ' :</td>' +
+    '<td style="padding:10px 12px;text-align:right;font-size:14.5px;font-weight:700;padding-right:12px;font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate;white-space:nowrap;border:1px solid #cbd5e1;color:#0f172a;">' + numLtr(fmtNum(subtotal)) + '</td>' +
   '</tr>';
 
   if (discount > 0) {
     totalsHtml += '<tr style="page-break-inside:avoid;break-inside:avoid;">' +
-      '<td colspan="5" style="padding:8px 12px;text-align:right;font-size:12.5px;color:#dc2626;border:1px solid #cbd5e1;">' + (isAr ? 'الخصم التجاري' : 'Remise commerciale') + ' :</td>' +
-      '<td style="padding:8px 12px;text-align:right;font-size:12.5px;font-weight:700;color:#dc2626;padding-right:12px;font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate;white-space:nowrap;border:1px solid #cbd5e1;">-' + numLtr(fmtNum(discount)) + '</td>' +
+      '<td colspan="5" style="padding:9px 12px;text-align:right;font-size:14px;color:#dc2626;border:1px solid #cbd5e1;">' + (isAr ? 'الخصم التجاري' : 'Remise commerciale') + ' :</td>' +
+      '<td style="padding:9px 12px;text-align:right;font-size:14px;font-weight:700;color:#dc2626;padding-right:12px;font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate;white-space:nowrap;border:1px solid #cbd5e1;">-' + numLtr(fmtNum(discount)) + '</td>' +
     '</tr>';
     totalsHtml += '<tr style="background:#f8fafc;font-weight:600;page-break-inside:avoid;break-inside:avoid;">' +
-      '<td colspan="5" style="padding:8px 12px;text-align:right;font-size:12.5px;border:1px solid #cbd5e1;color:#1e293b;">' + (isAr ? 'الصافي التجاري (Net HT)' : 'Net Commercial HT') + ' :</td>' +
-      '<td style="padding:8px 12px;text-align:right;font-size:13px;font-weight:700;padding-right:12px;font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate;white-space:nowrap;border:1px solid #cbd5e1;color:#0f172a;">' + numLtr(fmtNum(netSubtotal)) + '</td>' +
+      '<td colspan="5" style="padding:9px 12px;text-align:right;font-size:14px;font-weight:700;border:1px solid #cbd5e1;color:#1e293b;">' + (isAr ? 'الصافي التجاري (Net HT)' : 'Net Commercial HT') + ' :</td>' +
+      '<td style="padding:9px 12px;text-align:right;font-size:14.5px;font-weight:700;padding-right:12px;font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate;white-space:nowrap;border:1px solid #cbd5e1;color:#0f172a;">' + numLtr(fmtNum(netSubtotal)) + '</td>' +
     '</tr>';
   }
 
   if (taxAmount > 0 || taxRate > 0) {
     totalsHtml += '<tr style="page-break-inside:avoid;break-inside:avoid;">' +
-      '<td colspan="5" style="padding:8px 12px;text-align:right;font-size:12.5px;border:1px solid #cbd5e1;color:#1e293b;">' + escapeHTML((t.tax_short||tr('tax_short','TVA')) + ' (' + taxRate.toFixed(0) + '%)') + ' :</td>' +
-      '<td style="padding:8px 12px;text-align:right;font-size:12.5px;font-weight:600;padding-right:12px;font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate;white-space:nowrap;border:1px solid #cbd5e1;color:#0f172a;">' + numLtr(fmtNum(taxAmount)) + '</td>' +
+      '<td colspan="5" style="padding:9px 12px;text-align:right;font-size:14px;font-weight:700;border:1px solid #cbd5e1;color:#1e293b;">' + escapeHTML((t.tax_short||tr('tax_short','TVA')) + ' (' + taxRate.toFixed(0) + '%)') + ' :</td>' +
+      '<td style="padding:9px 12px;text-align:right;font-size:14.5px;font-weight:700;padding-right:12px;font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate;white-space:nowrap;border:1px solid #cbd5e1;color:#0f172a;">' + numLtr(fmtNum(taxAmount)) + '</td>' +
     '</tr>';
   }
 
   if (stampAmount > 0) {
     totalsHtml += '<tr style="page-break-inside:avoid;break-inside:avoid;">' +
-      '<td colspan="5" style="padding:8px 12px;text-align:right;font-size:12.5px;border:1px solid #cbd5e1;color:#1e293b;">' + escapeHTML(t.stamp_label||tr('stamp_label','Droit de Timbre Fiscal')) + ' (' + stampRate.toFixed(0) + '%) :</td>' +
-      '<td style="padding:8px 12px;text-align:right;font-size:12.5px;font-weight:600;padding-right:12px;font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate;white-space:nowrap;border:1px solid #cbd5e1;color:#0f172a;">' + numLtr(fmtNum(stampAmount)) + '</td>' +
+      '<td colspan="5" style="padding:9px 12px;text-align:right;font-size:14px;font-weight:700;border:1px solid #cbd5e1;color:#1e293b;">' + escapeHTML(t.stamp_label||tr('stamp_label','Droit de Timbre Fiscal')) + ' (' + stampRate.toFixed(0) + '%) :</td>' +
+      '<td style="padding:9px 12px;text-align:right;font-size:14.5px;font-weight:700;padding-right:12px;font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate;white-space:nowrap;border:1px solid #cbd5e1;color:#0f172a;">' + numLtr(fmtNum(stampAmount)) + '</td>' +
     '</tr>';
   }
 
   totalsHtml += '<tr style="background:#0f172a;color:#ffffff;font-weight:700;-webkit-print-color-adjust:exact;print-color-adjust:exact;page-break-inside:avoid;break-inside:avoid;">' +
-    '<td colspan="5" style="padding:12px 14px;text-align:right;font-size:14.5px;border:1px solid #0f172a;color:#ffffff;">' + escapeHTML(t.total_label||tr('total_label','TOTAL TTC (NET À PAYER)')) + ' :</td>' +
-    '<td style="padding:12px 14px;text-align:right;font-size:15px;font-weight:800;padding-right:14px;font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate;white-space:nowrap;border:1px solid #0f172a;color:#ffffff;">' + numLtr(fmtNum(total) + ' ' + c) + '</td>' +
+    '<td colspan="5" style="padding:12px 14px;text-align:right;font-size:16.5px;font-weight:800;border:1px solid #0f172a;color:#ffffff;">' + escapeHTML(t.total_label||tr('total_label','TOTAL TTC (NET À PAYER)')) + ' :</td>' +
+    '<td style="padding:12px 14px;text-align:right;font-size:18px;font-weight:900;padding-right:14px;font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate;white-space:nowrap;border:1px solid #0f172a;color:#ffffff;">' + numLtr(fmtNum(total) + ' ' + c) + '</td>' +
   '</tr>';
 
   // Build clean Facture HTML container
@@ -5152,21 +5152,21 @@ function buildFactureHTML(opts){
     h += '</div>';
   }
   h += '<div>';
-  h += '<h1 style="font-size:19px;font-weight:800;color:#ffffff;letter-spacing:0.5px;margin:0;line-height:1.2;text-transform:uppercase;">' + escapeHTML(compName) + '</h1>';
-  if(compCapital) h += '<div style="font-size:12px;color:#94a3b8;margin-top:3px;font-weight:500;">Capital Social: ' + escapeHTML(compCapital) + '</div>';
+  h += '<h1 style="font-size:20px;font-weight:800;color:#ffffff;letter-spacing:0.5px;margin:0;line-height:1.2;text-transform:uppercase;">' + escapeHTML(compName) + '</h1>';
+  if(compCapital) h += '<div style="font-size:12.5px;color:#94a3b8;margin-top:3px;font-weight:600;">Capital Social: ' + escapeHTML(compCapital) + '</div>';
   h += '</div>';
   h += '</div>';
 
   // Right: Title + Number + Date + Payment
   h += '<div style="text-align:right;direction:ltr;display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end;">';
-  h += '<div style="background:#0284c7;color:#ffffff;font-size:14px;font-weight:800;padding:6px 14px;border-radius:6px;letter-spacing:0.5px;text-transform:uppercase;">' + escapeHTML(heading) + '</div>';
-  h += '<span style="font-size:13px;color:#ffffff;background:rgba(255,255,255,0.2);padding:4px 10px;border-radius:5px;font-weight:700;white-space:nowrap;">N° ' + escapeHTML(docNumber) + '</span>';
+  h += '<div style="background:#0284c7;color:#ffffff;font-size:15px;font-weight:800;padding:6px 14px;border-radius:6px;letter-spacing:0.5px;text-transform:uppercase;">' + escapeHTML(heading) + '</div>';
+  h += '<span style="font-size:14.5px;color:#ffffff;background:rgba(255,255,255,0.2);padding:4px 10px;border-radius:5px;font-weight:800;white-space:nowrap;">N° ' + escapeHTML(docNumber) + '</span>';
   if(showDate && dateStr) {
-    h += '<span style="font-size:12.5px;color:#e2e8f0;background:rgba(255,255,255,0.12);padding:4px 10px;border-radius:5px;font-weight:500;white-space:nowrap;">Date: ' + escapeHTML(dateStr) + '</span>';
+    h += '<span style="font-size:13.5px;color:#e2e8f0;background:rgba(255,255,255,0.12);padding:4px 10px;border-radius:5px;font-weight:600;white-space:nowrap;">Date: ' + escapeHTML(dateStr) + '</span>';
   }
   if(paymentMethod){
     var pmLabel = t.payment_method || tr('payment_method','Règlement');
-    h += '<span style="font-size:12px;color:#e2e8f0;background:rgba(255,255,255,0.12);padding:4px 8px;border-radius:5px;font-weight:500;white-space:nowrap;">' + escapeHTML(pmLabel) + ': ' + escapeHTML(paymentMethod) + '</span>';
+    h += '<span style="font-size:13px;color:#e2e8f0;background:rgba(255,255,255,0.12);padding:4px 8px;border-radius:5px;font-weight:600;white-space:nowrap;">' + escapeHTML(pmLabel) + ': ' + escapeHTML(paymentMethod) + '</span>';
   }
   h += '</div>';
   h += '</div>';
@@ -5179,13 +5179,13 @@ function buildFactureHTML(opts){
   
   // Fournisseur
   h += '<div class="fournisseur" style="background:#f8fafc;padding:12px 16px;border-radius:8px;flex:1;min-width:220px;border:1.5px solid #cbd5e1;border-left:5px solid #0f172a;">';
-  h += '<strong style="display:block;font-size:12px;font-weight:800;color:#0284c7;text-transform:uppercase;margin-bottom:6px;letter-spacing:0.5px;">' + escapeHTML(t.supplier_label||tr('supplier_label','Émetteur / Fournisseur')) + '</strong>';
-  h += '<div style="font-size:12.5px;color:#1e293b;line-height:1.5;">';
-  h += '<strong style="font-size:15px;font-weight:800;color:#0f172a;display:block;margin-bottom:2px;">' + escapeHTML(compName) + '</strong>';
+  h += '<strong style="display:block;font-size:13px;font-weight:800;color:#0284c7;text-transform:uppercase;margin-bottom:6px;letter-spacing:0.5px;">' + escapeHTML(t.supplier_label||tr('supplier_label','Émetteur / Fournisseur')) + '</strong>';
+  h += '<div style="font-size:13.5px;color:#1e293b;line-height:1.5;">';
+  h += '<strong style="font-size:16px;font-weight:800;color:#0f172a;display:block;margin-bottom:2px;">' + escapeHTML(compName) + '</strong>';
   if(compAddr) h += '<div style="color:#334155;">' + escapeHTML(compAddr) + '</div>';
   if(compPhone) h += '<div style="color:#334155;">' + escapeHTML(t.tel_label||tr('tel_label','Tél')) + ' : <strong>' + escapeHTML(compPhone) + '</strong></div>';
   if(compEmail) h += '<div style="color:#334155;">Email : ' + escapeHTML(compEmail) + '</div>';
-  h += '<div style="margin-top:8px;padding-top:8px;border-top:1px dashed #cbd5e1;font-size:11.5px;line-height:1.6;color:#1e293b;">';
+  h += '<div style="margin-top:8px;padding-top:8px;border-top:1px dashed #cbd5e1;font-size:13px;line-height:1.6;color:#1e293b;">';
   if(compNif) h += 'NIF: <strong>' + escapeHTML(compNif) + '</strong> ';
   if(compRc) h += '| RC: <strong>' + escapeHTML(compRc) + '</strong> ';
   if(compNis) h += '<br>NIS: <strong>' + escapeHTML(compNis) + '</strong> ';
@@ -5197,14 +5197,14 @@ function buildFactureHTML(opts){
 
   // Client
   h += '<div class="client" style="background:#f0f9ff;padding:12px 16px;border-radius:8px;flex:1;min-width:220px;border:1.5px solid #bae6fd;border-left:5px solid #0284c7;">';
-  h += '<strong style="display:block;font-size:12px;font-weight:800;color:#0284c7;text-transform:uppercase;margin-bottom:6px;letter-spacing:0.5px;">' + escapeHTML(t.client_label||tr('client_label','Client / Acheteur')) + '</strong>';
-  h += '<div style="font-size:12.5px;color:#1e293b;line-height:1.5;">';
-  h += '<strong style="font-size:15px;font-weight:800;color:#0f172a;display:block;margin-bottom:2px;">' + escapeHTML(customer.name||'-') + '</strong>';
+  h += '<strong style="display:block;font-size:13px;font-weight:800;color:#0284c7;text-transform:uppercase;margin-bottom:6px;letter-spacing:0.5px;">' + escapeHTML(t.client_label||tr('client_label','Client / Acheteur')) + '</strong>';
+  h += '<div style="font-size:13.5px;color:#1e293b;line-height:1.5;">';
+  h += '<strong style="font-size:16px;font-weight:800;color:#0f172a;display:block;margin-bottom:2px;">' + escapeHTML(customer.name||'-') + '</strong>';
   if(customer.address) h += '<div style="color:#334155;">' + escapeHTML(customer.address) + '</div>';
   if(customer.phone) h += '<div style="color:#334155;">' + escapeHTML(t.tel_label||tr('tel_label','Tél')) + ' : <strong>' + escapeHTML(customer.phone) + '</strong></div>';
   if(customer.email) h += '<div style="color:#334155;">Email : ' + escapeHTML(customer.email) + '</div>';
   if(customer.rc || customer.nif || customer.nis || customer.art || customer.artNumber){
-    h += '<div style="margin-top:8px;padding-top:8px;border-top:1px dashed #bae6fd;font-size:11.5px;line-height:1.6;color:#1e293b;">';
+    h += '<div style="margin-top:8px;padding-top:8px;border-top:1px dashed #bae6fd;font-size:13px;line-height:1.6;color:#1e293b;">';
     if(customer.nif) h += 'NIF: <strong>' + escapeHTML(customer.nif) + '</strong> ';
     if(customer.rc) h += '| RC: <strong>' + escapeHTML(customer.rc) + '</strong> ';
     if(customer.nis) h += '<br>NIS: <strong>' + escapeHTML(customer.nis) + '</strong> ';
@@ -5217,14 +5217,14 @@ function buildFactureHTML(opts){
 
   // TABLEAU DES ARTICLES (AVEC COLONNE UNITÉ)
   h += '<div class="facture-table-wrap" style="width:100%;margin:12px 0;">';
-  h += '<table class="facture-table" style="width:100%;border-collapse:collapse;margin:6px 0;font-size:12.5px;border:1.5px solid #cbd5e1;page-break-inside:auto;break-inside:auto;">';
+  h += '<table class="facture-table" style="width:100%;border-collapse:collapse;margin:6px 0;font-size:14px;border:1.5px solid #cbd5e1;page-break-inside:auto;break-inside:auto;">';
   h += '<thead><tr style="background:#0f172a;color:#ffffff;-webkit-print-color-adjust:exact;print-color-adjust:exact;">' +
-    '<th style="width:5%;padding:10px 8px;text-align:center;font-weight:700;border:1px solid #0f172a;font-size:12.5px;color:#ffffff;">#</th>' +
-    '<th style="width:45%;padding:10px 10px;text-align:left;font-weight:700;border:1px solid #0f172a;font-size:12.5px;color:#ffffff;">' + escapeHTML(t.designation||tr('designation','Désignation des Prestations / Articles')) + '</th>' +
-    '<th style="width:10%;padding:10px 8px;text-align:center;font-weight:700;border:1px solid #0f172a;font-size:12.5px;color:#ffffff;">' + (isAr ? 'الوحدة' : 'Unité') + '</th>' +
-    '<th style="width:8%;padding:10px 8px;text-align:center;font-weight:700;border:1px solid #0f172a;font-size:12.5px;color:#ffffff;white-space:nowrap;">' + escapeHTML(t.quantity||tr('quantity','Qté')) + '</th>' +
-    '<th style="width:16%;padding:10px 8px;text-align:right;font-weight:700;border:1px solid #0f172a;font-size:12.5px;color:#ffffff;white-space:nowrap;">' + escapeHTML(t.unit_price||tr('unit_price','P.U HT (DA)')) + '</th>' +
-    '<th style="width:16%;padding:10px 10px;text-align:right;font-weight:700;padding-right:12px;border:1px solid #0f172a;font-size:12.5px;color:#ffffff;white-space:nowrap;">' + escapeHTML(t.amount||tr('amount','Total HT (DA)')) + '</th>' +
+    '<th style="width:5%;padding:10px 8px;text-align:center;font-weight:700;border:1px solid #0f172a;font-size:13.5px;color:#ffffff;">#</th>' +
+    '<th style="width:45%;padding:10px 10px;text-align:left;font-weight:700;border:1px solid #0f172a;font-size:13.5px;color:#ffffff;">' + escapeHTML(t.designation||tr('designation','Désignation des Prestations / Articles')) + '</th>' +
+    '<th style="width:10%;padding:10px 8px;text-align:center;font-weight:700;border:1px solid #0f172a;font-size:13.5px;color:#ffffff;">' + (isAr ? 'الوحدة' : 'Unité') + '</th>' +
+    '<th style="width:8%;padding:10px 8px;text-align:center;font-weight:700;border:1px solid #0f172a;font-size:13.5px;color:#ffffff;white-space:nowrap;">' + escapeHTML(t.quantity||tr('quantity','Qté')) + '</th>' +
+    '<th style="width:16%;padding:10px 8px;text-align:right;font-weight:700;border:1px solid #0f172a;font-size:13.5px;color:#ffffff;white-space:nowrap;">' + escapeHTML(t.unit_price||tr('unit_price','P.U HT (DA)')) + '</th>' +
+    '<th style="width:16%;padding:10px 10px;text-align:right;font-weight:700;padding-right:12px;border:1px solid #0f172a;font-size:13.5px;color:#ffffff;white-space:nowrap;">' + escapeHTML(t.amount||tr('amount','Total HT (DA)')) + '</th>' +
   '</tr></thead>';
   h += '<tbody style="page-break-inside:auto;break-inside:auto;">' + rowsHtml + totalsHtml + '</tbody>';
   h += '</table>';
@@ -5237,19 +5237,19 @@ function buildFactureHTML(opts){
   if(amountWords){
     var tafqeetPrefix = isAr ? 'أوقفت هذه الوثيقة عند مبلغ:' : (t.amount_in_words||'Arrêtée la présente pièce à la somme de :');
     var tafqeetSuffix = isAr ? 'دينار جزائري.' : 'Dinars Algériens.';
-    h += '<div style="margin-top:8px;padding:10px 14px;background:#f8fafc;border:1.5px solid #cbd5e1;border-left:5px solid #0284c7;border-radius:6px;font-size:12.5px;color:#1e293b;page-break-inside:avoid;break-inside:avoid;">' +
-      '<strong style="color:#334155;">' + escapeHTML(tafqeetPrefix) + '</strong> ' +
-      '<span style="font-weight:800;color:#0284c7;font-style:italic;font-size:13.5px;">' + escapeHTML(amountWords) + ' ' + escapeHTML(tafqeetSuffix) + '</span>' +
+    h += '<div style="margin-top:8px;padding:12px 16px;background:#f8fafc;border:1.5px solid #cbd5e1;border-left:5px solid #0284c7;border-radius:6px;font-size:14px;color:#1e293b;page-break-inside:avoid;break-inside:avoid;">' +
+      '<strong style="color:#334155;font-size:14px;">' + escapeHTML(tafqeetPrefix) + '</strong> ' +
+      '<span style="font-weight:800;color:#0284c7;font-style:italic;font-size:15px;">' + escapeHTML(amountWords) + ' ' + escapeHTML(tafqeetSuffix) + '</span>' +
     '</div>';
   }
 
   // Notes
   var notesText = String(doc.notes || '').trim();
   if(notesText){
-    h += '<div class="pied" style="margin-top:10px;border-top:1px solid #e2e8f0;padding-top:8px;font-size:12px;color:#334155;page-break-inside:avoid;break-inside:avoid;">';
-    h += '<div class="notes" style="background:#f8fafc;padding:8px 14px;border-radius:6px;border:1px dashed #cbd5e1;">';
-    h += '<p style="margin:2px 0;line-height:1.4;"><strong>' + escapeHTML(t.notes_label||tr('notes_label','Notes & conditions')) + ' :</strong></p>';
-    h += '<p style="margin:2px 0;line-height:1.4;">' + escapeHTML(notesText) + '</p>';
+    h += '<div class="pied" style="margin-top:10px;border-top:1px solid #e2e8f0;padding-top:8px;font-size:13px;color:#334155;page-break-inside:avoid;break-inside:avoid;">';
+    h += '<div class="notes" style="background:#f8fafc;padding:10px 14px;border-radius:6px;border:1px dashed #cbd5e1;">';
+    h += '<p style="margin:2px 0;line-height:1.45;"><strong>' + escapeHTML(t.notes_label||tr('notes_label','Notes & conditions')) + ' :</strong></p>';
+    h += '<p style="margin:2px 0;line-height:1.45;">' + escapeHTML(notesText) + '</p>';
     h += '</div>';
     h += '</div>';
   }
@@ -5563,7 +5563,7 @@ function printDocument(element, title) {
     '@page :left{margin:0mm !important;}' +
     '@page :right{margin:0mm !important;}' +
     '@media print{@page{size:A4 portrait;margin:0mm !important;}html,body{margin:0 !important;padding:0 !important;}}' +
-    'html, body{width:100% !important;margin:0 !important;padding:0 !important;background:#ffffff !important;color:#0f172a !important;font-family:"Segoe UI",Roboto,Tahoma,Arial,sans-serif !important;font-size:12pt;line-height:1.4;-webkit-print-color-adjust:exact;print-color-adjust:exact;}' +
+    'html, body{width:100% !important;margin:0 !important;padding:0 !important;background:#ffffff !important;color:#0f172a !important;font-family:"Segoe UI",Roboto,Tahoma,Arial,sans-serif !important;font-size:13.5pt;line-height:1.45;-webkit-print-color-adjust:exact;print-color-adjust:exact;}' +
     '.preview-zoom-viewport, .preview-scale-content{transform:none !important;width:100% !important;overflow:visible !important;padding:0 !important;margin:0 !important;}' +
     '.preview-zoom-toolbar, .zoom-mobile-hint, .no-print, button{display:none !important;}' +
     '.facture-container{overflow:visible !important;border-radius:0 !important;box-shadow:none !important;max-width:100% !important;width:100% !important;min-height:auto !important;box-sizing:border-box !important;page-break-inside:auto !important;break-inside:auto !important;padding:8mm 10mm 10mm 10mm !important;margin:0 auto !important;}' +

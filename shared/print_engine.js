@@ -45,7 +45,7 @@
       '@page :first{margin:0mm !important;}' +
       '@page :left{margin:0mm !important;}' +
       '@page :right{margin:0mm !important;}' +
-      'html,body{margin:0 !important;padding:0 !important;background:#fff !important;color:#0f172a;direction:' + dir + ';font-size:12pt;line-height:1.4;width:100% !important;min-height:100% !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}' +
+      'html,body{margin:0 !important;padding:0 !important;background:#fff !important;color:#0f172a;direction:' + dir + ';font-size:13pt;line-height:1.45;width:100% !important;min-height:100% !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}' +
       numCss +
       'button,.no-print,.modal-footer,.modal-actions,.btn,.preview-zoom-toolbar,.zoom-mobile-hint{display:none !important;}' +
       '.preview-scale-content,.preview-zoom-viewport{transform:none !important;transform-origin:top left !important;width:100% !important;max-width:100% !important;min-width:100% !important;overflow:visible !important;padding:0 !important;margin:0 !important;}' +
@@ -59,8 +59,8 @@
       '.preview-signatures{page-break-inside:avoid !important;break-inside:avoid !important;}' +
       '.preview-card,.preview-totals-card,.preview-notes{box-shadow:none !important;page-break-inside:avoid !important;break-inside:avoid !important;}' +
       '.preview-table-wrap{border-radius:0;border:1px solid #cbd5e1;page-break-inside:auto;}' +
-      '.preview-table{width:100% !important;border-collapse:collapse !important;font-size:10.5pt !important;page-break-inside:auto !important;break-inside:auto !important;}' +
-      '.preview-table th,.preview-table td{text-align:' + align + ';border-color:#cbd5e1;padding:8px 10px !important;font-size:11pt !important;}' +
+      '.preview-table{width:100% !important;border-collapse:collapse !important;font-size:11.5pt !important;page-break-inside:auto !important;break-inside:auto !important;}' +
+      '.preview-table th,.preview-table td{text-align:' + align + ';border-color:#cbd5e1;padding:9px 11px !important;font-size:12pt !important;}' +
       '.preview-hero{background:#1e293b !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}' +
       '.preview-table th,.preview-summary-item,.preview-notes,.preview-totals-card{-webkit-print-color-adjust:exact;print-color-adjust:exact;}' +
       '.facture-container{box-shadow:none !important;border:0 !important;max-width:100% !important;width:100% !important;min-height:auto !important;max-height:none !important;box-sizing:border-box !important;border-radius:0 !important;overflow:visible !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;padding:8mm 10mm 10mm 10mm !important;margin:0 auto !important;page-break-inside:auto !important;break-inside:auto !important;}' +
