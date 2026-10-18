@@ -4,27 +4,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>نقطة البيع والكاشير - Zeralda ERP POS</title>
+    <script>
+      // Auto-redirect to versioned URL to bust browser cache
+      (function () {
+        var REQUIRED_VERSION = '20261018g';
+        var url = new URL(window.location.href);
+        var currentVersion = url.searchParams.get('v');
+        if (currentVersion !== REQUIRED_VERSION) {
+          url.searchParams.set('v', REQUIRED_VERSION);
+          window.location.replace(url.toString());
+        }
+      })();
+    </script>
+    <script src="shared/theme_manager.js?v=20261018g"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles/design_tokens.css?v=20261018g">
+    <link rel="stylesheet" href="styles/dark_theme.css?v=20261018g">
     
     <script src="shared/zeralda_db.js?v=20261017_v10"></script>
-    <script src="shared/theme_manager.js"></script>
     <script src="shared/company_storage.js?v=20261017_v10"></script>
     <script src="shared/print_engine.js"></script>
     <script src="shared/qrcode.min.js"></script>
 
     <style>
         :root {
-            --pos-bg: #f1f5f9;
+            --pos-bg: #f8fafc;
             --pos-surface: #ffffff;
             --pos-border: #e2e8f0;
-            --pos-primary: #0f766e;
-            --pos-primary-hover: #0d9488;
+            --pos-primary: #2563eb;
+            --pos-primary-hover: #1d4ed8;
             --pos-accent: #d36b2e;
             --pos-accent-hover: #c05a1f;
-            --pos-text: #0f172a;
+            --pos-text: #1f2937;
             --pos-muted: #64748b;
             --pos-success: #10b981;
             --pos-danger: #ef4444;
@@ -33,14 +47,16 @@
             --pos-radius: 12px;
         }
 
-        [data-theme="dark"] {
-            --pos-bg: #090d16;
-            --pos-surface: #111827;
-            --pos-border: #1f2937;
+        [data-theme="dark"], .dark-theme, .dark-mode {
+            --pos-bg: #0f172a;
+            --pos-surface: #1e293b;
+            --pos-border: #334155;
             --pos-text: #f8fafc;
             --pos-muted: #94a3b8;
-            --pos-primary: #14b8a6;
-            --pos-primary-hover: #2dd4bf;
+            --pos-primary: #3b82f6;
+            --pos-primary-hover: #60a5fa;
+            --pos-accent: #f97316;
+            --pos-accent-hover: #ea580c;
             --pos-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
         }
 
@@ -67,10 +83,10 @@
             overflow: hidden;
         }
 
-        /* ── Top Bar ────────────────────────────────────────── */
+        /* ── Top Bar (Zeralda ERP Branded) ─────────────────── */
         .pos-header {
-            background: var(--pos-surface);
-            border-bottom: 1px solid var(--pos-border);
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #2563eb 100%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
             height: 64px;
             padding: 0 20px;
             display: flex;
@@ -78,7 +94,8 @@
             justify-content: space-between;
             flex-shrink: 0;
             z-index: 20;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            color: #ffffff;
         }
 
         .pos-brand {
@@ -88,28 +105,28 @@
         }
 
         .pos-logo-badge {
-            width: 38px;
-            height: 38px;
-            background: linear-gradient(135deg, #0f766e, #0d9488);
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
             border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: #fff;
-            font-size: 18px;
-            box-shadow: 0 4px 10px rgba(15,118,110,0.3);
+            font-size: 19px;
+            box-shadow: 0 4px 12px rgba(37,99,235,0.35);
         }
 
         .pos-title-wrap h1 {
             font-size: 17px;
             font-weight: 800;
             line-height: 1.2;
-            color: var(--pos-text);
+            color: #ffffff;
         }
 
         .pos-title-wrap small {
             font-size: 11px;
-            color: var(--pos-muted);
+            color: rgba(255, 255, 255, 0.8);
         }
 
         .pos-meta-wrap {
@@ -122,23 +139,24 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            padding: 6px 12px;
+            padding: 6px 14px;
             border-radius: 20px;
             font-size: 12px;
             font-weight: 700;
-            background: rgba(15,118,110,0.1);
-            color: var(--pos-primary);
+            background: rgba(255, 255, 255, 0.12);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.18);
         }
 
         .pos-time {
             font-family: 'Space Grotesk', monospace;
             font-size: 14px;
             font-weight: 700;
-            color: var(--pos-muted);
-            background: var(--pos-bg);
-            padding: 6px 12px;
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 6px 14px;
             border-radius: 8px;
-            border: 1px solid var(--pos-border);
+            border: 1px solid rgba(255, 255, 255, 0.15);
         }
 
         .pos-header-actions {
@@ -151,9 +169,9 @@
             width: 40px;
             height: 40px;
             border-radius: 10px;
-            border: 1px solid var(--pos-border);
-            background: var(--pos-surface);
-            color: var(--pos-text);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            background: rgba(255, 255, 255, 0.12);
+            color: #ffffff;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -163,20 +181,21 @@
         }
 
         .pos-icon-btn:hover {
-            background: var(--pos-bg);
-            border-color: var(--pos-primary);
-            color: var(--pos-primary);
+            background: rgba(255, 255, 255, 0.24);
+            border-color: rgba(255, 255, 255, 0.38);
+            color: #ffffff;
             transform: translateY(-1px);
         }
 
         .pos-btn-exit {
-            background: #fee2e2;
-            border-color: #fca5a5;
-            color: #b91c1c;
+            background: rgba(239, 68, 68, 0.25);
+            border-color: rgba(239, 68, 68, 0.45);
+            color: #fca5a5;
         }
         .pos-btn-exit:hover {
-            background: #fecaca;
-            color: #991b1b;
+            background: rgba(239, 68, 68, 0.4);
+            border-color: rgba(239, 68, 68, 0.65);
+            color: #ffffff;
         }
 
         /* ── Main Layout ────────────────────────────────────── */
@@ -623,7 +642,7 @@
             padding: 12px;
             border-radius: 10px;
             border: none;
-            background: linear-gradient(135deg, #0f766e, #0d9488);
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
             color: #fff;
             font-weight: 800;
             font-size: 16px;
@@ -632,13 +651,14 @@
             align-items: center;
             justify-content: center;
             gap: 10px;
-            box-shadow: 0 4px 12px rgba(15,118,110,0.3);
+            box-shadow: 0 4px 12px rgba(37,99,235,0.3);
             transition: all 0.2s;
         }
 
         .pos-btn-pay:hover {
+            background: linear-gradient(135deg, #1d4ed8, #1e40af);
             transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(15,118,110,0.4);
+            box-shadow: 0 6px 16px rgba(37,99,235,0.4);
         }
 
         .pos-btn-pay:active {
@@ -864,8 +884,8 @@
             <button class="pos-icon-btn" onclick="toggleFullscreen()" title="شاشة كاملة (F11)">
                 <i class="fas fa-expand"></i>
             </button>
-            <button class="pos-icon-btn" onclick="toggleTheme()" title="تغيير المظهر">
-                <i class="fas fa-moon"></i>
+            <button class="pos-icon-btn" id="posThemeToggleBtn" onclick="toggleTheme()" title="تبديل الوضع الداكن / الفاتح">
+                <i class="fas fa-moon" id="posThemeIcon"></i>
             </button>
             <button class="pos-icon-btn pos-btn-exit" onclick="exitToDashboard()" title="العودة للوحة التحكم">
                 <i class="fas fa-arrow-left"></i>
@@ -1510,11 +1530,15 @@
         }
 
         function toggleTheme() {
-            if (window.ThemeManager) {
-                ThemeManager.toggleTheme();
+            if (window.ZeraldaTheme && typeof window.ZeraldaTheme.toggle === 'function') {
+                window.ZeraldaTheme.toggle();
+            } else if (window.ThemeManager && typeof window.ThemeManager.toggleTheme === 'function') {
+                window.ThemeManager.toggleTheme();
             } else {
-                var cur = document.documentElement.getAttribute('data-theme');
-                document.documentElement.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+                var cur = document.documentElement.getAttribute('data-theme') || 'light';
+                var next = (cur === 'dark') ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', next);
+                if (document.body) document.body.classList.toggle('dark-theme', next === 'dark');
             }
         }
 

@@ -425,7 +425,290 @@
    17. CHART CONTAINERS — حاويات الرسوم البيانية
    ═══════════════════════════════════════════════════════════════ */
 [data-theme="dark"] .chart-container,
-[data-theme="dark"] .chart-wrapper {
+[data-theme="dark"] .chart-wrapper,
+.dark-theme .chart-container,
+.dark-theme .chart-wrapper {
     background: var(--dt-surface) !important;
     border-color: var(--dt-border) !important;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   18. DASHBOARD & STATS STRIP OVERRIDES — بطاقات الإحصائيات
+   ═══════════════════════════════════════════════════════════════ */
+[data-theme="dark"] body .main-content .stats-grid .stat-card,
+[data-theme="dark"] .stats-grid .stat-card,
+[data-theme="dark"] .stat-card,
+.dark-theme body .main-content .stats-grid .stat-card,
+.dark-theme .stats-grid .stat-card,
+.dark-theme .stat-card {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35) !important;
+}
+
+[data-theme="dark"] body .main-content .stats-grid .stat-card:hover,
+[data-theme="dark"] .stat-card:hover,
+.dark-theme body .main-content .stats-grid .stat-card:hover,
+.dark-theme .stat-card:hover {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45) !important;
+}
+
+[data-theme="dark"] .stat-details h3,
+.dark-theme .stat-details h3 {
+    color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .stat-details p,
+.dark-theme .stat-details p {
+    color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .quick-actions,
+.dark-theme .quick-actions {
+    background: var(--dt-surface) !important;
+    border: 1px solid var(--dt-border) !important;
+}
+
+[data-theme="dark"] .action-btn,
+.dark-theme .action-btn {
+    background: var(--dt-surface-2) !important;
+    border-color: var(--dt-border) !important;
+    color: var(--dt-text) !important;
+}
+
+[data-theme="dark"] .action-btn:hover,
+.dark-theme .action-btn:hover {
+    background: rgba(59, 130, 246, 0.25) !important;
+    border-color: #3b82f6 !important;
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .module-card,
+.dark-theme .module-card {
+    background: var(--dt-surface) !important;
+    color: var(--dt-text) !important;
+    border: 1px solid var(--dt-border) !important;
+    border-left: 5px solid transparent !important;
+}
+
+[data-theme="dark"] .module-card.blue, .dark-theme .module-card.blue { border-left-color: #3b82f6 !important; }
+[data-theme="dark"] .module-card.green, .dark-theme .module-card.green { border-left-color: #10b981 !important; }
+[data-theme="dark"] .module-card.orange, .dark-theme .module-card.orange { border-left-color: #f59e0b !important; }
+[data-theme="dark"] .module-card.red, .dark-theme .module-card.red { border-left-color: #ef4444 !important; }
+[data-theme="dark"] .module-card.purple, .dark-theme .module-card.purple { border-left-color: #8b5cf6 !important; }
+[data-theme="dark"] .module-card.cyan, .dark-theme .module-card.cyan { border-left-color: #06b6d4 !important; }
+[data-theme="dark"] .module-card.pink, .dark-theme .module-card.pink { border-left-color: #ec4899 !important; }
+[data-theme="dark"] .module-card.indigo, .dark-theme .module-card.indigo { border-left-color: #6366f1 !important; }
+
+[data-theme="dark"] .module-title,
+.dark-theme .module-title {
+    color: #f8fafc !important;
+}
+
+[data-theme="dark"] .module-description,
+[data-theme="dark"] .module-features li,
+.dark-theme .module-description,
+.dark-theme .module-features li {
+    color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .module-card:hover .module-features li,
+.dark-theme .module-card:hover .module-features li {
+    color: #cbd5e1 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   19. MODULE TABS & BARS — شريط الفلاتر والتبويبات
+   ═══════════════════════════════════════════════════════════════ */
+[data-theme="dark"] .tabs-container,
+[data-theme="dark"] .tab-content,
+.dark-theme .tabs-container,
+.dark-theme .tab-content {
+    background: var(--dt-surface) !important;
+    border-color: var(--dt-border) !important;
+}
+
+[data-theme="dark"] .tabs,
+.dark-theme .tabs {
+    border-bottom-color: var(--dt-border) !important;
+}
+
+[data-theme="dark"] .tab,
+.dark-theme .tab {
+    color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .tab:hover,
+.dark-theme .tab:hover {
+    background: var(--dt-surface-2) !important;
+    color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .tab.active,
+.dark-theme .tab.active {
+    color: #60a5fa !important;
+    border-bottom-color: #3b82f6 !important;
+    background: rgba(59, 130, 246, 0.15) !important;
+}
+
+[data-theme="dark"] .filter-bar,
+[data-theme="dark"] .summary-bar,
+[data-theme="dark"] .draft-bar,
+.dark-theme .filter-bar,
+.dark-theme .summary-bar,
+.dark-theme .draft-bar {
+    background: var(--dt-surface-2) !important;
+    border-color: var(--dt-border) !important;
+    color: var(--dt-text) !important;
+}
+
+[data-theme="dark"] .summary-item,
+[data-theme="dark"] .summary-item strong,
+.dark-theme .summary-item,
+.dark-theme .summary-item strong {
+    color: #f1f5f9 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   20. POS CAISSE DARK OVERRIDES — نقطة البيع والكاشير
+   ═══════════════════════════════════════════════════════════════ */
+[data-theme="dark"] .pos-header,
+.dark-theme .pos-header {
+    background: linear-gradient(135deg, #090d16 0%, #0f172a 60%, #1e293b 100%) !important;
+    border-bottom-color: #1f2937 !important;
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .pos-catalog-panel,
+[data-theme="dark"] .pos-cart-panel,
+.dark-theme .pos-catalog-panel,
+.dark-theme .pos-cart-panel {
+    background: var(--pos-bg, #090d16) !important;
+    border-color: var(--pos-border, #1f2937) !important;
+}
+
+[data-theme="dark"] .pos-search-bar,
+[data-theme="dark"] .pos-categories-nav,
+[data-theme="dark"] .pos-cart-header,
+[data-theme="dark"] .pos-cart-footer,
+.dark-theme .pos-search-bar,
+.dark-theme .pos-categories-nav,
+.dark-theme .pos-cart-header,
+.dark-theme .pos-cart-footer {
+    background: var(--pos-surface, #111827) !important;
+    border-color: var(--pos-border, #1f2937) !important;
+}
+
+[data-theme="dark"] .pos-product-card,
+.dark-theme .pos-product-card {
+    background: var(--pos-surface, #111827) !important;
+    border-color: var(--pos-border, #1f2937) !important;
+    color: #f8fafc !important;
+}
+
+[data-theme="dark"] .pos-product-card:hover,
+.dark-theme .pos-product-card:hover {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4) !important;
+}
+
+[data-theme="dark"] .pos-prod-thumb,
+.dark-theme .pos-prod-thumb {
+    background: #090d16 !important;
+}
+
+[data-theme="dark"] .pos-prod-title,
+.dark-theme .pos-prod-title {
+    color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .pos-cat-pill,
+.dark-theme .pos-cat-pill {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+    color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .pos-cat-pill:hover,
+[data-theme="dark"] .pos-cat-pill.active,
+.dark-theme .pos-cat-pill:hover,
+.dark-theme .pos-cat-pill.active {
+    background: #3b82f6 !important;
+    border-color: #3b82f6 !important;
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .pos-cart-row,
+.dark-theme .pos-cart-row {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+}
+
+[data-theme="dark"] .pos-row-info h4,
+.dark-theme .pos-row-info h4 {
+    color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .pos-qty-stepper,
+.dark-theme .pos-qty-stepper {
+    background: #0f172a !important;
+    border-color: #334155 !important;
+}
+
+[data-theme="dark"] .pos-step-btn,
+.dark-theme .pos-step-btn {
+    color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .pos-grand-total,
+.dark-theme .pos-grand-total {
+    background: rgba(59, 130, 246, 0.12) !important;
+    border-color: #3b82f6 !important;
+}
+
+[data-theme="dark"] .pos-grand-total-label,
+.dark-theme .pos-grand-total-label {
+    color: #f8fafc !important;
+}
+
+[data-theme="dark"] .pos-grand-total-val,
+.dark-theme .pos-grand-total-val {
+    color: #60a5fa !important;
+}
+
+[data-theme="dark"] .pos-due-box,
+.dark-theme .pos-due-box {
+    background: #0f172a !important;
+    border-color: #334155 !important;
+    color: #f8fafc !important;
+}
+
+[data-theme="dark"] .pos-pay-method-btn,
+.dark-theme .pos-pay-method-btn {
+    background: #0f172a !important;
+    border-color: #334155 !important;
+    color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .pos-pay-method-btn.active,
+.dark-theme .pos-pay-method-btn.active {
+    border-color: #3b82f6 !important;
+    background: rgba(59, 130, 246, 0.2) !important;
+    color: #60a5fa !important;
+}
+
+[data-theme="dark"] .pos-modal-card,
+[data-theme="dark"] .pos-cust-modal-content,
+.dark-theme .pos-modal-card,
+.dark-theme .pos-cust-modal-content {
+    background: #111827 !important;
+    border-color: #334155 !important;
+    color: #f8fafc !important;
+}
+
+[data-theme="dark"] .pos-modal-header,
+.dark-theme .pos-modal-header {
+    border-bottom-color: #1f2937 !important;
+}
+

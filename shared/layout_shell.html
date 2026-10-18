@@ -63,15 +63,15 @@
     </div>
     <div class="header-right">
       <div class="header-row row-1">
-        <button id="headerQuickSearchBtn" class="header-fullscreen-btn" type="button"
-                onclick="window.openCommandPalette && window.openCommandPalette()"
-                data-en-title="Quick Search & Spotlight (Ctrl + K)"
-                data-ar-title="البحث السريع والتنقل الذكي (Ctrl + K)"
-                data-fr-title="Recherche Rapide & Navigation (Ctrl + K)"
-                title="البحث السريع (Ctrl + K)"
-                aria-label="Quick Search"
-                style="color:#38bdf8;">
-          <i class="fas fa-search" aria-hidden="true"></i>
+        <button id="headerThemeToggleBtn" class="header-fullscreen-btn" type="button"
+                onclick="window.toggleZeraldaTheme && window.toggleZeraldaTheme()"
+                data-en-title="Toggle Dark / Light Mode"
+                data-ar-title="تبديل الوضع الداكن / الفاتح"
+                data-fr-title="Basculer Mode Sombre / Clair"
+                title="تبديل الوضع الداكن / الفاتح"
+                aria-label="Toggle Dark / Light Mode"
+                style="color:#fbbf24;">
+          <i class="fas fa-moon" id="headerThemeIcon" aria-hidden="true"></i>
         </button>
         <button id="headerUniversalScanBtn" class="header-fullscreen-btn" type="button"
                 onclick="window.openUniversalOcrModal && window.openUniversalOcrModal()"

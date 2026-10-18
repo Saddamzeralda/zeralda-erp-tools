@@ -656,7 +656,7 @@
   /* ── Load Shared Layout via fetch ────────────────────── */
   // Cache the layout HTML in ZS to avoid re-fetching on every page navigation.
   // ZS is synchronous (in-memory cache) and survives navigation within the same tab.
-  var _layoutCacheVersion = '20261018e';
+  var _layoutCacheVersion = '20261018g';
   var _cachedLayoutHTML = null;
   try {
     var cachedVersion = ZS.getItem('zeralda-layout-shell-version');
@@ -679,7 +679,7 @@
     // Use cached HTML if available (avoids fetch on every page navigation)
     var fetchPromise = _cachedLayoutHTML
       ? Promise.resolve(_cachedLayoutHTML)
-      : fetch('shared/layout_shell.html?v=20261018e')
+      : fetch('shared/layout_shell.html?v=20261018g')
           .then(function (res) {
             if (!res.ok) throw new Error('Failed to load layout_shell.html: ' + res.status);
             return res.text();
@@ -709,6 +709,9 @@
         initHeaderLanguageSelector();
         initHeaderZoomControls();
         initHeaderFullscreenButton();
+        if (window.ZeraldaTheme && typeof window.ZeraldaTheme.updateIcons === 'function') {
+          window.ZeraldaTheme.updateIcons();
+        }
         applyActiveMenu(activePage);
         applyLayoutLanguage();
         applySidebarState();

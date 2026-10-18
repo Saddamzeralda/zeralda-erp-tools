@@ -1,14 +1,13 @@
 /**
- * Zeralda ERP — Theme Manager
- * يحمّل الثيم المحفوظ من cookie ويطبّقه BEFORE paint (لا وميض FOUC).
- * يستخدم data-theme attribute على <html> لتفعيل تجاوزات CSS في dark_theme.css.
- *
- * ملاحظة: نستخدم cookie (وليس localStorage) لأنه متزامن ومتاح فوراً قبل أي JS.
+ * Zeralda ERP — Theme Manager (v20261018g)
+ * يحمّل الثيم المحفوظ من cookie / localStorage ويطبّقه BEFORE paint (لا وميض FOUC).
+ * يدعم data-theme attribute على <html> و class .dark-theme على <body> لتفعيل Dark Mode.
  *
  * الاستخدام:
- *   - يُحمّل هذا الملف في <head> قبل أي CSS لتفادي وميض الشاشة.
  *   - window.ZeraldaTheme.apply('dark' | 'light' | 'auto')
- *   - window.ZeraldaTheme.getSaved()  → 'dark' | 'light' | 'auto' | null
+ *   - window.ZeraldaTheme.toggle()  → تبديل فوري بين الداكن والفاتح
+ *   - window.ZeraldaTheme.getResolved()  → 'dark' | 'light'
+ *   - window.toggleZeraldaTheme()
  */
 (function () {
   'use strict';
@@ -32,6 +31,9 @@
       }
       document.cookie = name + '=' + encodeURIComponent(value) + expires + '; path=/; SameSite=Strict';
     } catch (_) {}
+    try {
+      localStorage.setItem(name, value);
+    } catch (_) {}
   }
 
   function _resolveAuto() {
@@ -44,16 +46,56 @@
   }
 
   function _readSaved() {
-    return _readCookie(THEME_COOKIE) || null;
+    var fromCookie = _readCookie(THEME_COOKIE);
+    if (fromCookie) return fromCookie;
+    try {
+      var fromLS = localStorage.getItem(THEME_COOKIE);
+      if (fromLS) return fromLS;
+    } catch (_) {}
+    return null;
+  }
+
+  function updateThemeIcons(resolved) {
+    try {
+      var theme = resolved || window.ZeraldaTheme.getResolved();
+      var isDark = (theme === 'dark');
+      var icons = document.querySelectorAll('#headerThemeIcon, #posThemeIcon, .theme-toggle-icon');
+      for (var i = 0; i < icons.length; i++) {
+        var ic = icons[i];
+        if (isDark) {
+          ic.className = 'fas fa-sun';
+          ic.style.color = '#fbbf24';
+        } else {
+          ic.className = 'fas fa-moon';
+          ic.style.color = '#fbbf24';
+        }
+      }
+      var btns = document.querySelectorAll('#headerThemeToggleBtn, #posThemeToggleBtn');
+      for (var b = 0; b < btns.length; b++) {
+        var btn = btns[b];
+        var titleText = isDark ? 'تبديل إلى الوضع الفاتح / Mode Clair' : 'تبديل إلى الوضع الداكن / Mode Sombre';
+        btn.setAttribute('title', titleText);
+        btn.setAttribute('aria-label', titleText);
+      }
+    } catch (_) {}
   }
 
   function _applyAttribute(resolved) {
     var root = document.documentElement;
     if (resolved === 'dark') {
       root.setAttribute('data-theme', 'dark');
+      if (document.body) {
+        document.body.classList.add('dark-theme');
+        document.body.classList.add('dark-mode');
+      }
     } else {
       root.setAttribute('data-theme', 'light');
+      if (document.body) {
+        document.body.classList.remove('dark-theme');
+        document.body.classList.remove('dark-mode');
+      }
     }
+    updateThemeIcons(resolved);
   }
 
   function apply(theme) {
@@ -62,8 +104,10 @@
       resolved = _resolveAuto();
     }
     _applyAttribute(resolved);
-    // Persist the user's *choice* (not the resolved value) in cookie
     _writeCookie(THEME_COOKIE, theme || 'auto', 365);
+    try {
+      window.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme: resolved, choice: theme } }));
+    } catch (_) {}
     return resolved;
   }
 
@@ -71,11 +115,48 @@
     return _readSaved();
   }
 
+  function getResolved() {
+    var s = getSaved();
+    if (s === 'auto' || !s) return _resolveAuto();
+    return s;
+  }
+
+  function toggle() {
+    var cur = getResolved();
+    var next = (cur === 'dark') ? 'light' : 'dark';
+    apply(next);
+    return next;
+  }
+
+  // ── Auto-inject dark_theme.css if missing ──
+  try {
+    if (!document.querySelector('link[href*="dark_theme.css"]')) {
+      var dtLink = document.createElement('link');
+      dtLink.rel = 'stylesheet';
+      var prefix = (window.location.pathname.indexOf('/modules/') !== -1) ? '../../' : '';
+      dtLink.href = prefix + 'styles/dark_theme.css?v=20261018g';
+      (document.head || document.documentElement).appendChild(dtLink);
+    }
+  } catch (_) {}
+
   // ── Apply ASAP (before CSS paints) ──
   var saved = _readSaved();
   var initialTheme = saved || 'light';
-  var resolved = (initialTheme === 'auto') ? _resolveAuto() : initialTheme;
-  _applyAttribute(resolved);
+  var initialResolved = (initialTheme === 'auto') ? _resolveAuto() : initialTheme;
+  _applyAttribute(initialResolved);
+
+  // Re-sync body class and icons once DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function () {
+      _applyAttribute(getResolved());
+    });
+  } else {
+    setTimeout(function () { _applyAttribute(getResolved()); }, 0);
+  }
+
+  document.addEventListener('sharedLayoutLoaded', function () {
+    updateThemeIcons(getResolved());
+  });
 
   // ── Listen for system theme changes when in 'auto' mode ──
   try {
@@ -97,10 +178,16 @@
   window.ZeraldaTheme = {
     apply: apply,
     getSaved: getSaved,
-    getResolved: function () {
-      var s = getSaved();
-      if (s === 'auto' || !s) return _resolveAuto();
-      return s;
-    }
+    getResolved: getResolved,
+    toggle: toggle,
+    updateIcons: updateThemeIcons
+  };
+
+  window.toggleZeraldaTheme = toggle;
+  window.ThemeManager = {
+    toggleTheme: toggle,
+    applyTheme: apply,
+    getTheme: getSaved,
+    getResolved: getResolved
   };
 })();
