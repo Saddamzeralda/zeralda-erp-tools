@@ -20,11 +20,11 @@
     }
     var hideStyle = document.createElement('style');
     hideStyle.id = 'zeralda-kill-sync-pill-style';
-    hideStyle.textContent = '#zeraldaSyncPill, #zeraldaSyncHubModal, #zeraldaAlertsHubWrapper, #zeraldaAlertsButton, #zeraldaAlertsDropdown, #zeraldaAlertsBadge, #zeraldaMobileNotifBanner, .zeralda-sync-pill, .alerts-hub-wrapper, .proactive-alerts-hub { display:none !important; visibility:hidden !important; pointer-events:none !important; opacity:0 !important; width:0 !important; height:0 !important; position:absolute !important; left:-99999px !important; top:-99999px !important; }';
+    hideStyle.textContent = '#zcpHeaderTriggerBtn, #headerQuickSearchBtn, #headerUniversalScanBtn, #zeraldaSyncPill, #zeraldaSyncHubModal, #zeraldaAlertsHubWrapper, #zeraldaAlertsButton, #zeraldaAlertsDropdown, #zeraldaAlertsBadge, #zeraldaMobileNotifBanner, .zeralda-sync-pill, .alerts-hub-wrapper, .proactive-alerts-hub { display:none !important; visibility:hidden !important; pointer-events:none !important; opacity:0 !important; width:0 !important; height:0 !important; position:absolute !important; left:-99999px !important; top:-99999px !important; }';
     (document.head || document.documentElement).appendChild(hideStyle);
 
     function __purgeFloatingWidgets() {
-      ['zeraldaSyncPill', 'zeraldaSyncHubModal', 'zeraldaAlertsHubWrapper', 'zeraldaAlertsButton', 'zeraldaAlertsDropdown', 'zeraldaAlertsBadge', 'zeraldaMobileNotifBanner'].forEach(function(id) {
+      ['zcpHeaderTriggerBtn', 'headerQuickSearchBtn', 'headerUniversalScanBtn', 'zeraldaSyncPill', 'zeraldaSyncHubModal', 'zeraldaAlertsHubWrapper', 'zeraldaAlertsButton', 'zeraldaAlertsDropdown', 'zeraldaAlertsBadge', 'zeraldaMobileNotifBanner'].forEach(function(id) {
         var el = document.getElementById(id);
         if (el && el.parentNode) el.parentNode.removeChild(el);
       });
@@ -656,7 +656,7 @@
   /* ── Load Shared Layout via fetch ────────────────────── */
   // Cache the layout HTML in ZS to avoid re-fetching on every page navigation.
   // ZS is synchronous (in-memory cache) and survives navigation within the same tab.
-  var _layoutCacheVersion = '20261018g';
+  var _layoutCacheVersion = '20261018h';
   var _cachedLayoutHTML = null;
   try {
     var cachedVersion = ZS.getItem('zeralda-layout-shell-version');
@@ -679,7 +679,7 @@
     // Use cached HTML if available (avoids fetch on every page navigation)
     var fetchPromise = _cachedLayoutHTML
       ? Promise.resolve(_cachedLayoutHTML)
-      : fetch('shared/layout_shell.html?v=20261018g')
+      : fetch('shared/layout_shell.html?v=20261018h')
           .then(function (res) {
             if (!res.ok) throw new Error('Failed to load layout_shell.html: ' + res.status);
             return res.text();

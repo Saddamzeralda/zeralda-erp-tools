@@ -298,34 +298,19 @@
     }
   });
 
-  // Inject Search Trigger Button into header if available
-  function injectHeaderSearchBtn() {
-    if (document.getElementById('zcpHeaderTriggerBtn')) return;
-    var header = document.querySelector('.header-left, .header-right, #sharedLayoutHeader, .top-header');
-    if (!header) return;
-
-    var btn = document.createElement('button');
-    btn.id = 'zcpHeaderTriggerBtn';
-    btn.type = 'button';
-    btn.title = 'البحث السريع (Ctrl + K)';
-    btn.style.cssText = 'display:inline-flex; align-items:center; gap:8px; padding:6px 14px; background:rgba(255,255,255,0.18); border:1px solid rgba(255,255,255,0.3); border-radius:20px; color:#ffffff; font-size:12.5px; font-weight:600; cursor:pointer; margin:0 8px; backdrop-filter:blur(4px); transition:all 0.15s;';
-    btn.innerHTML = '<i class="fas fa-search" style="font-size:13px;"></i> <span>بحث سريع</span> <kbd style="background:rgba(0,0,0,0.2); padding:1px 6px; border-radius:4px; font-size:10px; font-family:monospace;">Ctrl K</kbd>';
-    btn.onmouseover = function () { btn.style.background = 'rgba(255,255,255,0.3)'; };
-    btn.onmouseout = function () { btn.style.background = 'rgba(255,255,255,0.18)'; };
-    btn.onclick = openPalette;
-
-    var companySwitcher = document.querySelector('.company-switcher');
-    if (companySwitcher && companySwitcher.parentNode) {
-      companySwitcher.parentNode.insertBefore(btn, companySwitcher.nextSibling);
-    } else {
-      header.appendChild(btn);
-    }
+  // Ensure no search button is injected into header (purges any existing instances)
+  function purgeHeaderSearchBtn() {
+    ['zcpHeaderTriggerBtn', 'headerQuickSearchBtn'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el && el.parentNode) el.parentNode.removeChild(el);
+    });
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', injectHeaderSearchBtn);
+    document.addEventListener('DOMContentLoaded', purgeHeaderSearchBtn);
   } else {
-    injectHeaderSearchBtn();
+    purgeHeaderSearchBtn();
   }
-  document.addEventListener('sharedLayoutLoaded', injectHeaderSearchBtn);
+  document.addEventListener('sharedLayoutLoaded', purgeHeaderSearchBtn);
+  setInterval(purgeHeaderSearchBtn, 500);
 })();

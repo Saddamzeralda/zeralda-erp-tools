@@ -5,6 +5,18 @@ input[type="number"] { direction: ltr !important; text-align: left !important; u
 body, body.rtl { font-feature-settings: "lnum" 1; font-variant-numeric: lining-nums tabular-nums; }
 [lang="en"] { font-feature-settings: "lnum" 1; font-variant-numeric: lining-nums tabular-nums; }
 
+/* Explicitly purge header search and Copilote IA scan buttons */
+#zcpHeaderTriggerBtn, #headerQuickSearchBtn, #headerUniversalScanBtn {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    opacity: 0 !important;
+    width: 0 !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
 body > .header {
     position: fixed !important;
     top: 0 !important;
