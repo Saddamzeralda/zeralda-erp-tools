@@ -656,7 +656,7 @@
   /* ── Load Shared Layout via fetch ────────────────────── */
   // Cache the layout HTML in ZS to avoid re-fetching on every page navigation.
   // ZS is synchronous (in-memory cache) and survives navigation within the same tab.
-  var _layoutCacheVersion = '20261018j';
+  var _layoutCacheVersion = '20261018k';
   var _cachedLayoutHTML = null;
   try {
     var cachedVersion = ZS.getItem('zeralda-layout-shell-version');

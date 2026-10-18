@@ -10,7 +10,7 @@
     <script>
       // Auto-redirect to versioned URL to bust browser cache
       (function () {
-        var REQUIRED_VERSION = '20261018j';
+        var REQUIRED_VERSION = '20261018k';
         var url = new URL(window.location.href);
         var currentVersion = url.searchParams.get('v');
         if (currentVersion !== REQUIRED_VERSION) {
@@ -649,121 +649,6 @@
             </div>
             <div class="banner-icon">
                 <i class="fas fa-chart-line"></i>
-            </div>
-        </div>
-
-        <!-- Stats Cards -->
-        <div class="stats-grid">
-            <div class="stat-card" onclick="window.location.href='modules/sales/sales_management.html'">
-                <div class="stat-icon blue">
-                    <i class="fas fa-dollar-sign"></i>
-                </div>
-                <div class="stat-details">
-                    <h3><span class="currency-symbol">$</span><span class="currency-amount" data-amount="0">0</span></h3>
-                    <p data-en="Total Revenue" data-ar="إجمالي الإيرادات" data-fr="Revenu Total">Total Revenue</p>
-                    <div class="stat-change">
-                        <i class="fas fa-minus"></i>
-                        <span>-</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="stat-card" onclick="window.location.href='modules/sales/sales_management.html'">
-                <div class="stat-icon green">
-                    <i class="fas fa-shopping-cart"></i>
-                </div>
-                <div class="stat-details">
-                    <h3>0</h3>
-                    <p data-en="Total Orders" data-ar="إجمالي الطلبات" data-fr="Total Commandes">Total Orders</p>
-                    <div class="stat-change">
-                        <i class="fas fa-minus"></i>
-                        <span>-</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="stat-card" onclick="window.location.href='modules/crm/crm_management.html'">
-                <div class="stat-icon orange">
-                    <i class="fas fa-users"></i>
-                </div>
-                <div class="stat-details">
-                    <h3>0</h3>
-                    <p data-en="Total Customers" data-ar="إجمالي العملاء" data-fr="Total Clients">Total Customers</p>
-                    <div class="stat-change">
-                        <i class="fas fa-minus"></i>
-                        <span>-</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="stat-card" onclick="window.location.href='modules/inventory/inventory_management.html'">
-                <div class="stat-icon purple">
-                    <i class="fas fa-boxes"></i>
-                </div>
-                <div class="stat-details">
-                    <h3>0</h3>
-                    <p data-en="Products in Stock" data-ar="منتجات في المخزون" data-fr="Produits en Stock">Products in Stock</p>
-                    <div class="stat-change">
-                        <i class="fas fa-minus"></i>
-                        <span>-</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="stat-card" onclick="window.location.href='modules/hr/hr_management.html'">
-                <div class="stat-icon cyan">
-                    <i class="fas fa-user-tie"></i>
-                </div>
-                <div class="stat-details">
-                    <h3>0</h3>
-                    <p data-en="Total Employees" data-ar="إجمالي الموظفين" data-fr="Total Employés">Total Employees</p>
-                    <div class="stat-change">
-                        <i class="fas fa-minus"></i>
-                        <span>-</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="stat-card" onclick="window.location.href='modules/finance/finance_accounting.html'">
-                <div class="stat-icon red">
-                    <i class="fas fa-wallet"></i>
-                </div>
-                <div class="stat-details">
-                    <h3><span class="currency-symbol">$</span><span class="currency-amount" data-amount="0">0</span></h3>
-                    <p data-en="Bank Balance" data-ar="الرصيد البنكي" data-fr="Solde Bancaire">Bank Balance</p>
-                    <div class="stat-change">
-                        <i class="fas fa-minus"></i>
-                        <span>-</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="stat-card" onclick="window.location.href='modules/finance/finance_accounting.html'">
-                <div class="stat-icon pink">
-                    <i class="fas fa-chart-pie"></i>
-                </div>
-                <div class="stat-details">
-                    <h3><span class="currency-symbol">$</span><span class="currency-amount" data-amount="0">0</span></h3>
-                    <p data-en="Net Profit" data-ar="صافي الربح" data-fr="Bénéfice Net">Net Profit</p>
-                    <div class="stat-change">
-                        <i class="fas fa-minus"></i>
-                        <span>-</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="stat-card" onclick="window.location.href='modules/crm/crm_management.html'">
-                <div class="stat-icon indigo">
-                    <i class="fas fa-bullseye"></i>
-                </div>
-                <div class="stat-details">
-                    <h3>0</h3>
-                    <p data-en="Active Leads" data-ar="العملاء المحتملون" data-fr="Prospects Actifs">Active Leads</p>
-                    <div class="stat-change">
-                        <i class="fas fa-minus"></i>
-                        <span>-</span>
-                    </div>
-                </div>
             </div>
         </div>
 
