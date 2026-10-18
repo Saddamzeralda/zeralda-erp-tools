@@ -690,16 +690,22 @@ body.rtl .table-container::after {
 /* =============================================================================
    17.  PRINT — KEEP ONLY CONTENT
    ============================================================================= */
+@page {
+    size: A4 portrait;
+    margin: 0 !important;
+}
 @media print {
     @page {
         size: A4 portrait;
-        margin: 10mm 8mm 10mm 8mm !important;
+        margin: 0 !important;
     }
     html, body {
         background: #ffffff !important;
         color: #000000 !important;
         font-size: 11pt !important;
         line-height: 1.4 !important;
+        margin: 0 !important;
+        padding: 0 !important;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
     }

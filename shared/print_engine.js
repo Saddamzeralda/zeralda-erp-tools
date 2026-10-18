@@ -14,6 +14,13 @@
 
   function collectPageStyles() {
     var stylesheetLinks = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
+      .filter(function(link) {
+        var href = (link.href || '').toLowerCase();
+        // Skip responsive/layout stylesheets that might contain interfering print or @page rules
+        if (href.indexOf('responsive_global.css') !== -1) return false;
+        if (href.indexOf('common_header_layout.css') !== -1) return false;
+        return true;
+      })
       .map(function(link) {
         return '<link rel="stylesheet" href="' + escapeHtml(link.href) + '">';
       })
@@ -21,6 +28,10 @@
 
     var inlineStyles = Array.from(document.querySelectorAll('style'))
       .map(function(styleTag) { return styleTag.textContent || ''; })
+      .map(function(css) {
+        // Strip any @page rules from parent styles to avoid non-zero margin pollution
+        return css.replace(/@page\s*\{[^}]*\}/gi, '');
+      })
       .join('\n');
 
     return { links: stylesheetLinks, inlineStyles: inlineStyles };
@@ -30,7 +41,10 @@
     var align = dir === 'rtl' ? 'right' : 'left';
     var numCss = 'body{font-feature-settings:"lnum" 1;font-variant-numeric:lining-nums tabular-nums;}';
     return '' +
-      '@page{size:A4 portrait;margin:0 !important;}' +
+      '@page{size:A4 portrait;margin:0mm !important;}' +
+      '@page :first{margin:0mm !important;}' +
+      '@page :left{margin:0mm !important;}' +
+      '@page :right{margin:0mm !important;}' +
       'html,body{margin:0 !important;padding:0 !important;background:#fff !important;color:#0f172a;direction:' + dir + ';font-size:12pt;line-height:1.4;width:100% !important;min-height:100% !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}' +
       numCss +
       'button,.no-print,.modal-footer,.modal-actions,.btn,.preview-zoom-toolbar,.zoom-mobile-hint{display:none !important;}' +
@@ -59,7 +73,7 @@
       '.facture-container .coordonnees .fournisseur,.facture-container .coordonnees .client,.facture-container .notes,.facture-container .total-row{-webkit-print-color-adjust:exact;print-color-adjust:exact;}' +
       // When content is inside a wrapper (#doc-page or #pf-page), reset inner padding to avoid double padding
       '#doc-page .preview-paper,#doc-page .facture-container,#pf-page .preview-paper,#pf-page .facture-container{padding:0 !important;width:100% !important;}' +
-      '@media print{html,body{margin:0 !important;padding:0 !important;background:#fff !important;width:100% !important;} @page{size:A4 portrait;margin:0 !important;} tr, tbody tr { page-break-inside:avoid !important; break-inside:avoid !important; } table, tbody, .facture-container { page-break-inside:auto !important; break-inside:auto !important; } .preview-scale-content{transform:none !important;width:100% !important;} .facture-container{padding:8mm 10mm 10mm 10mm !important;width:100% !important;box-sizing:border-box !important;} .facture-footer-area{margin-top:12px !important;}}';
+      '@media print{html,body{margin:0 !important;padding:0 !important;background:#fff !important;width:100% !important;} @page{size:A4 portrait;margin:0mm !important;} @page :first{margin:0mm !important;} @page :left{margin:0mm !important;} @page :right{margin:0mm !important;} tr, tbody tr { page-break-inside:avoid !important; break-inside:avoid !important; } table, tbody, .facture-container { page-break-inside:auto !important; break-inside:auto !important; } .preview-scale-content{transform:none !important;width:100% !important;} .facture-container{padding:8mm 10mm 10mm 10mm !important;width:100% !important;box-sizing:border-box !important;} .facture-footer-area{margin-top:12px !important;}}';
   }
 
   function buildPrintHtml(content, title, options) {
@@ -99,36 +113,12 @@
       '<meta charset="UTF-8">' +
       '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">' +
       (baseUrl ? '<base href="' + escapeHtml(baseUrl) + '">' : '') +
-      '<title>' + escapeHtml(title || 'Print') + '</title>' +
+      '<title></title>' +
       styles.links +
       '<style>' + styles.inlineStyles + defaultPrintCss(dir) + extraCss + '</style>' +
+      '<style id="zeralda-strict-zero-margin">@page{size:A4 portrait;margin:0mm !important;}@page :first{margin:0mm !important;}@page :left{margin:0mm !important;}@page :right{margin:0mm !important;}@media print{@page{size:A4 portrait;margin:0mm !important;}html,body{margin:0 !important;padding:0 !important;width:100% !important;}}</style>' +
       '</head>' +
       '<body>' + processedContent +
-      '<script>' +
-      '(function() {' +
-      '  var printed = false;' +
-      '  function doPrint() {' +
-      '    if (printed) return;' +
-      '    printed = true;' +
-      '    try { window.focus(); } catch(e){}' +
-      '    setTimeout(function() {' +
-      '      try { window.print(); } catch(e){}' +
-      '    }, 250);' +
-      '  }' +
-      '  if (document.readyState === "complete" || document.readyState === "interactive") {' +
-      '    doPrint();' +
-      '  } else {' +
-      '    window.addEventListener("DOMContentLoaded", doPrint);' +
-      '    window.addEventListener("load", doPrint);' +
-      '    setTimeout(doPrint, 600);' +
-      '  }' +
-      '  window.addEventListener("afterprint", function() {' +
-      '    setTimeout(function() {' +
-      '      try { window.close(); } catch(e){}' +
-      '    }, 500);' +
-      '  });' +
-      '})();' +
-      '<\/script>' +
       '</body></html>';
   }
 

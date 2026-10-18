@@ -10,7 +10,7 @@
     <script>
       // Auto-redirect to versioned URL to bust browser cache
       (function () {
-        var REQUIRED_VERSION = '20261012e';
+        var REQUIRED_VERSION = '20261018b';
         var url = new URL(window.location.href);
         var currentVersion = url.searchParams.get('v');
         if (currentVersion !== REQUIRED_VERSION) {
@@ -26,10 +26,10 @@
     <link rel="stylesheet" href="styles/common_header_layout.css?v=20261012a">
     <link rel="stylesheet" href="styles/common_header_brand.css">
     <link rel="stylesheet" href="styles/design_tokens.css">
-    <link rel="stylesheet" href="styles/responsive_global.css">
+    <link rel="stylesheet" href="styles/responsive_global.css?v=20261018b">
     <link rel="stylesheet" href="styles/animated_icons.css">
     <link rel="stylesheet" href="styles/ocr_unified.css?v=20261012d">
-    <script src="shared/print_engine.js?v=20261017_v10" defer></script>
+    <script src="shared/print_engine.js?v=20261018b" defer></script>
     <script src="shared/preview_zoom.js?v=20261017_v10" defer></script>
     <script src="shared/professional_display_mode.js?v=20261017_v10" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
@@ -5559,7 +5559,11 @@ function printDocument(element, title) {
   contentHtml = contentHtml.replace(/style="([^"]*?)transform\s*:\s*scale\([^)]+\)[;]?([^"]*?)"/gi, 'style="$1$2"');
 
   const extraCss =
-    '@page{size:A4 portrait;margin:0 !important;}' +
+    '@page{size:A4 portrait;margin:0mm !important;}' +
+    '@page :first{margin:0mm !important;}' +
+    '@page :left{margin:0mm !important;}' +
+    '@page :right{margin:0mm !important;}' +
+    '@media print{@page{size:A4 portrait;margin:0mm !important;}html,body{margin:0 !important;padding:0 !important;}}' +
     'html, body{width:100% !important;margin:0 !important;padding:0 !important;background:#ffffff !important;color:#0f172a !important;font-family:"Segoe UI",Roboto,Tahoma,Arial,sans-serif !important;font-size:12pt;line-height:1.4;-webkit-print-color-adjust:exact;print-color-adjust:exact;}' +
     '.preview-zoom-viewport, .preview-scale-content{transform:none !important;width:100% !important;overflow:visible !important;padding:0 !important;margin:0 !important;}' +
     '.preview-zoom-toolbar, .zoom-mobile-hint, .no-print, button{display:none !important;}' +
@@ -7604,7 +7608,7 @@ function printDeliveryNote() {
   const sheet = document.getElementById('deliveryNotePrintSheet');
   if (!sheet) return;
   const title = 'Bon de Livraison';
-  const a4Css = '@page{size:A4 portrait;margin:8mm 10mm 10mm 10mm;}body{margin:0;padding:0;background:#fff;}#deliveryNotePrintSheet{min-height:270mm;display:flex;flex-direction:column;justify-content:space-between;box-sizing:border-box;border:none !important;}table{width:100%;border-collapse:collapse;}';
+  const a4Css = '@page{size:A4 portrait;margin:0mm !important;}@page :first{margin:0mm !important;}@media print{@page{size:A4 portrait;margin:0mm !important;}html,body{margin:0 !important;padding:0 !important;}}body{margin:0;padding:0;background:#fff;}#deliveryNotePrintSheet{box-sizing:border-box;padding:8mm 10mm 10mm 10mm !important;border:none !important;}table{width:100%;border-collapse:collapse;}';
   if (window.ZeraldaPrintEngine && typeof window.ZeraldaPrintEngine.printContent === 'function') {
     window.ZeraldaPrintEngine.printContent(sheet.outerHTML, title, { extraCss: a4Css, dir: 'rtl' });
     return;
@@ -7693,7 +7697,7 @@ function printCustomerStatement() {
   const sheet = document.getElementById('statementPrintSheet');
   if (!sheet) return;
   const title = 'Relevé de Compte Client';
-  const a4Css = '@page{size:A4 portrait;margin:8mm 10mm 10mm 10mm;}body{margin:0;padding:0;background:#fff;}#statementPrintSheet{box-sizing:border-box;border:none !important;}table{width:100%;border-collapse:collapse;}';
+  const a4Css = '@page{size:A4 portrait;margin:0mm !important;}@page :first{margin:0mm !important;}@media print{@page{size:A4 portrait;margin:0mm !important;}html,body{margin:0 !important;padding:0 !important;}}body{margin:0;padding:0;background:#fff;}#statementPrintSheet{box-sizing:border-box;padding:8mm 10mm 10mm 10mm !important;border:none !important;}table{width:100%;border-collapse:collapse;}';
   if (window.ZeraldaPrintEngine && typeof window.ZeraldaPrintEngine.printContent === 'function') {
     window.ZeraldaPrintEngine.printContent(sheet.outerHTML, title, { extraCss: a4Css, dir: 'rtl' });
     return;
