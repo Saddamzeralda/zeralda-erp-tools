@@ -651,6 +651,33 @@
           background: #16a34a;
           color: #ffffff;
         }
+        .product-picker-add-new {
+          padding: 10px 14px;
+          cursor: pointer;
+          font-size: 13.5px;
+          color: #15803d;
+          background: #f0fdf4;
+          font-weight: 700;
+          border-top: 1.5px solid #dcfce7;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          transition: all 0.2s ease;
+          user-select: none;
+        }
+        .product-picker-add-new:hover {
+          background: #dcfce7;
+          color: #166534;
+        }
+        [data-theme="dark"] .product-picker-add-new {
+          background: rgba(22, 163, 74, 0.15);
+          color: #4ade80;
+          border-top-color: rgba(34, 197, 94, 0.3);
+        }
+        [data-theme="dark"] .product-picker-add-new:hover {
+          background: rgba(22, 163, 74, 0.28);
+          color: #86efac;
+        }
         .total-section { background: var(--light-color); padding: 20px; border-radius: 10px; margin-top: 20px; }
         .total-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #d1d5db; }
         .total-row.grand-total { font-size: 20px; font-weight: 700; color: var(--primary-color); border-bottom: none; padding-top: 15px; }
@@ -970,6 +997,9 @@
                     <i class="fas fa-boxes-stacked"></i>
                     <h3 data-en="Invoice Items" data-ar="قائمة المنتجات المباعة" data-fr="Articles Facture">Articles Facture</h3>
                     <span class="items-count-badge" id="invoiceItemsCountBadge">0 articles</span>
+                    <button type="button" class="btn btn-sm" onclick="openQuickAddProductModal(null, 'invoice')" title="إضافة منتج جديد للكتالوج" style="margin-inline-start: 10px; display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 7px; font-weight: 600; font-size: 12px; border: 1.5px solid #10b981; color: #047857; background: #ecfdf5; cursor: pointer; transition: all 0.2s;">
+                      <i class="fas fa-plus"></i> <span data-en="+ New Product" data-ar="+ منتج جديد" data-fr="+ Nouveau Produit">+ Nouveau Produit</span>
+                    </button>
                   </div>
                   <div class="items-quick-stats">
                     <span id="invoiceItemsTotalPreview">Total HT: <strong>0.00 DA</strong></span>
@@ -995,7 +1025,8 @@
                 </div>
 
                 <div class="invoice-items-footer-actions">
-                  <button type="button" class="btn btn-primary-add" onclick="addInvoiceItem()"><i class="fas fa-plus-circle"></i><span data-en="Add Item" data-ar="إضافة عنصر" data-fr="Ajouter Article">Add Item</span></button>
+                  <button type="button" class="btn btn-primary-add" onclick="addInvoiceItem()"><i class="fas fa-plus-circle"></i><span data-en="Add Item" data-ar="إضافة عنصر / منتج" data-fr="Ajouter Article">Add Item</span></button>
+                  <button type="button" class="btn" onclick="openQuickAddProductModal(null, 'invoice')" title="Ajouter un nouveau produit au catalogue" style="display:inline-flex;align-items:center;gap:8px;padding:9px 18px;background:#f0fdf4;color:#16a34a;border:1.5px solid #bbf7d0;border-radius:9px;font-weight:600;font-size:13.5px;cursor:pointer;transition:all 0.2s;"><i class="fas fa-box-open"></i> <span data-en="New Product (Catalog)" data-ar="إضافة منتج جديد (الكتالوج)" data-fr="Nouveau Produit (Catalogue)">Nouveau Produit (Catalogue)</span></button>
                   <input id="invoiceOcrFile" type="file" accept="image/*,application/pdf,.xlsx,.xls,.csv,.doc,.docx,.txt,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain" style="display:none;">
                   <button type="button" class="btn btn-ai-scan" id="invoiceOcrBtn" onclick="triggerInvoiceOcrImport('invoice')" title="Scan & Extraction Copilote IA"><i class="fas fa-wand-magic-sparkles"></i> <span data-en="Copilot IA Scan" data-ar="مسح ذكي (Copilot IA)" data-fr="Scan Copilote IA">مسح ذكي (Copilot IA)</span></button>
                 </div>
@@ -1269,6 +1300,9 @@
                     <i class="fas fa-boxes-stacked"></i>
                     <h3 data-en="Proforma Items" data-ar="عناصر الفاتورة الشكلية" data-fr="Articles Proforma">Articles Proforma</h3>
                     <span class="items-count-badge" id="proformaItemsCountBadge">0 articles</span>
+                    <button type="button" class="btn btn-sm" onclick="openQuickAddProductModal(null, 'proforma')" title="إضافة منتج جديد للكتالوج" style="margin-inline-start: 10px; display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 7px; font-weight: 600; font-size: 12px; border: 1.5px solid #10b981; color: #047857; background: #ecfdf5; cursor: pointer; transition: all 0.2s;">
+                      <i class="fas fa-plus"></i> <span data-en="+ New Product" data-ar="+ منتج جديد" data-fr="+ Nouveau Produit">+ Nouveau Produit</span>
+                    </button>
                   </div>
                   <div class="items-quick-stats">
                     <span id="proformaItemsTotalPreview">Total HT: <strong>0.00 DA</strong></span>
@@ -1294,7 +1328,8 @@
                 </div>
 
                 <div class="invoice-items-footer-actions">
-                  <button type="button" class="btn btn-primary-add" onclick="addProformaItem()"><i class="fas fa-plus-circle"></i><span data-en="Add Item" data-ar="إضافة عنصر" data-fr="Ajouter Article">Add Item</span></button>
+                  <button type="button" class="btn btn-primary-add" onclick="addProformaItem()"><i class="fas fa-plus-circle"></i><span data-en="Add Item" data-ar="إضافة عنصر / منتج" data-fr="Ajouter Article">Add Item</span></button>
+                  <button type="button" class="btn" onclick="openQuickAddProductModal(null, 'proforma')" title="Ajouter un nouveau produit au catalogue" style="display:inline-flex;align-items:center;gap:8px;padding:9px 18px;background:#f0fdf4;color:#16a34a;border:1.5px solid #bbf7d0;border-radius:9px;font-weight:600;font-size:13.5px;cursor:pointer;transition:all 0.2s;"><i class="fas fa-box-open"></i> <span data-en="New Product (Catalog)" data-ar="إضافة منتج جديد (الكتالوج)" data-fr="Nouveau Produit (Catalogue)">Nouveau Produit (Catalogue)</span></button>
                   <input id="proformaOcrFile" type="file" accept="image/*,application/pdf,.xlsx,.xls,.csv,.doc,.docx,.txt,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain" style="display:none;">
                   <button type="button" class="btn btn-ai-scan" id="proformaOcrBtn" onclick="triggerInvoiceOcrImport('proforma')" title="Copilote IA Scan & Pricing"><i class="fas fa-wand-magic-sparkles"></i> <span data-en="Copilot IA Scan" data-ar="مسح ذكي (Copilot IA)" data-fr="Scan Copilote IA">مسح ذكي (Copilot IA)</span></button>
                 </div>
@@ -1907,6 +1942,9 @@ const translations = {
 // i18n augmentations (auto-added)
 (function(){
     var add = {
+        add_new_product:         { en: 'Add New Product', ar: 'إضافة منتج جديد', fr: 'Ajouter un nouveau produit' },
+        add_new_item_option:     { en: '➕ Add New Item', ar: '➕ إضافة منتج جديد', fr: '➕ Ajouter un nouveau produit' },
+        new_product_catalog:     { en: '+ New Product', ar: '+ منتج جديد', fr: '+ Nouveau Produit' },
         share_system_not_loaded: { en: 'Share system is not loaded yet.', ar: 'نظام المشاركة غير محمَّل بعد.', fr: "Le système de partage n'est pas encore chargé." },
         no_extracted_customer:   { en: 'No extracted customer data available. Run extraction first.', ar: 'لا توجد بيانات عميل مستخرجة. شغّل الاستخراج أولاً.', fr: "Aucune donnée client extraite. Veuillez d'abord exécuter l'extraction." },
         no_tender_data:          { en: 'No tender data available. Run extraction first.', ar: 'لا توجد بيانات مناقصة مستخرجة. شغّل الاستخراج أولاً.', fr: "Aucune donnée d'appel d'offres. Veuillez d'abord exécuter l'extraction." },
@@ -2517,14 +2555,40 @@ function saveQuickProductFromSales(){
   refreshProductSelects();
 
   if(pendingQuickProductTarget){
-    selectProduct(pendingQuickProductTarget.itemId, String(product.id), pendingQuickProductTarget.type);
-    // FIX: update the product picker UI to show the newly added product
-    const rowId = pendingQuickProductTarget.type === 'invoice'
-      ? ('item-' + pendingQuickProductTarget.itemId)
-      : ('pitem-' + pendingQuickProductTarget.itemId);
-    const row = document.getElementById(rowId);
-    const picker = row ? row.querySelector('.product-picker') : null;
-    if(picker && picker._setProduct) picker._setProduct(product.id, product.name);
+    const targetType = pendingQuickProductTarget.type || 'invoice';
+    if(pendingQuickProductTarget.itemId !== null && pendingQuickProductTarget.itemId !== undefined){
+      selectProduct(pendingQuickProductTarget.itemId, String(product.id), targetType);
+      const rowId = targetType === 'invoice'
+        ? ('item-' + pendingQuickProductTarget.itemId)
+        : ('pitem-' + pendingQuickProductTarget.itemId);
+      const row = document.getElementById(rowId);
+      const picker = row ? row.querySelector('.product-picker') : null;
+      if(picker && picker._setProduct) picker._setProduct(product.id, product.name);
+    } else {
+      // Triggered from header or footer "+ New Product" button
+      const arr = targetType === 'invoice' ? invoiceItemsArray : proformaItemsArray;
+      let targetItemId = null;
+      for(let idx = 0; idx < arr.length; idx++){
+        if(!arr[idx].productId || arr[idx].productId === 0){
+          targetItemId = arr[idx].id;
+          break;
+        }
+      }
+      if(targetItemId === null){
+        if(targetType === 'invoice'){
+          addInvoiceItem();
+          targetItemId = invoiceItemsArray[invoiceItemsArray.length - 1].id;
+        } else {
+          addProformaItem();
+          targetItemId = proformaItemsArray[proformaItemsArray.length - 1].id;
+        }
+      }
+      selectProduct(targetItemId, String(product.id), targetType);
+      const rowId = targetType === 'invoice' ? ('item-' + targetItemId) : ('pitem-' + targetItemId);
+      const row = document.getElementById(rowId);
+      const picker = row ? row.querySelector('.product-picker') : null;
+      if(picker && picker._setProduct) picker._setProduct(product.id, product.name);
+    }
   }
   pendingQuickProductTarget = null;
   closeModal('quickAddProductModal');
@@ -2688,6 +2752,10 @@ function refreshProductSelects(){
     const opt0 = document.createElement("option");
     opt0.value = "0"; opt0.textContent = tr('select_product','Select Product');
     sel.appendChild(opt0);
+    const optNew = document.createElement("option");
+    optNew.value = "__new__";
+    optNew.textContent = tr('add_new_item_option','➕ Add New Item');
+    sel.appendChild(optNew);
     productsData.forEach(p=>{
       const o = document.createElement("option");
       o.value = p.id;
@@ -3569,6 +3637,17 @@ function createProductPicker(itemId, type) {
 
   dropdown.appendChild(search);
   dropdown.appendChild(list);
+
+  const addNewBtn = document.createElement('div');
+  addNewBtn.className = 'product-picker-add-new';
+  addNewBtn.innerHTML = '<i class="fas fa-plus-circle"></i> <span>' + tr('add_new_item_option', '➕ Add New Item') + '</span>';
+  addNewBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    closeDropdown();
+    openQuickAddProductModal(itemId, type);
+  });
+  dropdown.appendChild(addNewBtn);
 
   fieldWrap.appendChild(input);
   fieldWrap.appendChild(dropdown);
