@@ -570,31 +570,43 @@
           .invoice-item .invoice-item-total { grid-area: total; }
         }
         /* ── Searchable Product Picker ── */
-        .product-picker { position: relative; width: 100%; }
-        .product-picker-input {
-          width: 100%; padding: 8px 10px; border: 1px solid var(--light-color);
-          border-radius: 8px; font-size: 14px; background: white; cursor: pointer;
-          box-sizing: border-box; text-align: left; direction: ltr;
+        .product-picker {
+          position: relative;
+          width: 100%;
+          display: flex;
+          align-items: center;
+          gap: 6px;
         }
-        .product-picker-input:focus { outline: none; border-color: var(--primary-color); }
+        .product-picker-field-wrap {
+          position: relative;
+          flex: 1;
+          min-width: 0;
+        }
+        .product-picker-input {
+          width: 100%; padding: 8px 10px; border: 1.5px solid #e2e8f0;
+          border-radius: 8px; font-size: 13.5px; background: white; cursor: pointer;
+          box-sizing: border-box; text-align: left; direction: ltr;
+          height: 38px; transition: all 0.2s ease;
+        }
+        .product-picker-input:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12); }
         .product-picker-input.placeholder { color: #9ca3af; }
         .product-picker-dropdown {
-          display: none; position: absolute; top: 100%; left: 0; right: 0;
-          z-index: 9999; background: white; border: 1px solid var(--light-color);
-          border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+          display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+          z-index: 9999; background: white; border: 1.5px solid #e2e8f0;
+          border-radius: 8px; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
           max-height: 280px; overflow: hidden; flex-direction: column;
         }
         .product-picker-dropdown.open { display: flex; }
         .product-picker-search {
           padding: 8px 10px; border-bottom: 1px solid var(--light-color);
-          font-size: 14px; width: 100%; box-sizing: border-box;
+          font-size: 13.5px; width: 100%; box-sizing: border-box;
           border: 1px solid #e5e7eb; border-radius: 6px; margin: 8px;
           width: calc(100% - 16px);
         }
         .product-picker-search:focus { outline: none; border-color: var(--primary-color); }
         .product-picker-list { overflow-y: auto; flex: 1; max-height: 220px; }
         .product-picker-option {
-          padding: 8px 12px; cursor: pointer; font-size: 14px;
+          padding: 8px 12px; cursor: pointer; font-size: 13.5px;
           display: flex; justify-content: space-between; align-items: center;
           border-bottom: 1px solid #f3f4f6; direction: ltr; text-align: left;
         }
@@ -603,11 +615,42 @@
         .product-picker-option.out-of-stock { color: #dc2626; }
         .product-picker-option .pp-price { color: #6b7280; font-size: 12px; white-space: nowrap; }
         .product-picker-option .pp-stock { font-size: 11px; color: #9ca3af; }
-        .product-picker-add-new {
-          padding: 8px 12px; cursor: pointer; font-size: 14px;
-          color: var(--primary-color); font-weight: 600; border-top: 2px solid var(--light-color);
+        .btn-quick-add-product {
+          width: 36px;
+          height: 38px;
+          min-width: 36px;
+          border-radius: 8px;
+          background: #f0fdf4;
+          color: #16a34a;
+          border: 1.5px solid #bbf7d0;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 14px;
+          cursor: pointer;
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+          flex-shrink: 0;
+          padding: 0;
         }
-        .product-picker-add-new:hover { background: #f0f7ff; }
+        .btn-quick-add-product:hover {
+          background: #16a34a;
+          color: #ffffff;
+          border-color: #16a34a;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 10px rgba(22, 163, 74, 0.25);
+        }
+        .btn-quick-add-product:active {
+          transform: translateY(0);
+        }
+        [data-theme="dark"] .btn-quick-add-product {
+          background: rgba(22, 163, 74, 0.15);
+          color: #4ade80;
+          border-color: rgba(34, 197, 94, 0.3);
+        }
+        [data-theme="dark"] .btn-quick-add-product:hover {
+          background: #16a34a;
+          color: #ffffff;
+        }
         .total-section { background: var(--light-color); padding: 20px; border-radius: 10px; margin-top: 20px; }
         .total-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #d1d5db; }
         .total-row.grand-total { font-size: 20px; font-weight: 700; color: var(--primary-color); border-bottom: none; padding-top: 15px; }
@@ -2476,10 +2519,6 @@ function refreshProductSelects(){
     const opt0 = document.createElement("option");
     opt0.value = "0"; opt0.textContent = tr('select_product','Select Product');
     sel.appendChild(opt0);
-    const optNew = document.createElement("option");
-    optNew.value = "__new__";
-    optNew.textContent = tr('add_new_item_option','➕ Add New Item');
-    sel.appendChild(optNew);
     productsData.forEach(p=>{
       const o = document.createElement("option");
       o.value = p.id;
@@ -3336,6 +3375,9 @@ function createProductPicker(itemId, type) {
   const wrapper = document.createElement('div');
   wrapper.className = 'product-picker';
 
+  const fieldWrap = document.createElement('div');
+  fieldWrap.className = 'product-picker-field-wrap';
+
   const input = document.createElement('input');
   input.type = 'text';
   input.className = 'product-picker-input placeholder';
@@ -3355,16 +3397,28 @@ function createProductPicker(itemId, type) {
   const list = document.createElement('div');
   list.className = 'product-picker-list';
 
-  const addNewBtn = document.createElement('div');
-  addNewBtn.className = 'product-picker-add-new';
-  addNewBtn.textContent = tr('add_new_item_option', '➕ Add New Item');
-
   dropdown.appendChild(search);
   dropdown.appendChild(list);
-  dropdown.appendChild(addNewBtn);
 
-  wrapper.appendChild(input);
-  wrapper.appendChild(dropdown);
+  fieldWrap.appendChild(input);
+  fieldWrap.appendChild(dropdown);
+
+  // Standalone side "+" button to add a new product
+  const quickAddBtn = document.createElement('button');
+  quickAddBtn.type = 'button';
+  quickAddBtn.className = 'btn-quick-add-product';
+  quickAddBtn.title = tr('add_new_product', 'إضافة منتج جديد');
+  quickAddBtn.setAttribute('aria-label', tr('add_new_product', 'إضافة منتج جديد'));
+  quickAddBtn.innerHTML = '<i class="fas fa-plus"></i>';
+  quickAddBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    closeDropdown();
+    openQuickAddProductModal(itemId, type);
+  });
+
+  wrapper.appendChild(fieldWrap);
+  wrapper.appendChild(quickAddBtn);
 
   // State
   let selectedProductId = 0;
@@ -3462,15 +3516,6 @@ function createProductPicker(itemId, type) {
 
   search.addEventListener('input', function() {
     renderList(search.value);
-  });
-
-  addNewBtn.addEventListener('click', function() {
-    closeDropdown();
-    if (type === 'invoice') {
-      selectProduct(itemId, '__new__', 'invoice');
-    } else {
-      selectProduct(itemId, '__new__', 'proforma');
-    }
   });
 
   // Close dropdown when clicking outside
