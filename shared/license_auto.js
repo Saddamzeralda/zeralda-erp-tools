@@ -121,11 +121,16 @@
     if (!window.LicenseManager || typeof window.LicenseManager.verifyIntegrity !== 'function') {
       return;
     }
+    try {
+      if (sessionStorage.getItem('zeralda_license_integrity_ok') === '1') {
+        return;
+      }
+    } catch (_) {}
     for (var i = 0; i < CRITICAL_SCRIPTS.length; i++) {
       var scriptName = CRITICAL_SCRIPTS[i];
       try {
         var resp = await fetch(scriptName + '?v=' + SCRIPT_VERSION, {
-          cache: 'no-store',
+          cache: 'default',
           signal: AbortSignal.timeout(3000),
         });
         if (!resp.ok) continue;
@@ -140,6 +145,7 @@
         // Network error — skip this check
       }
     }
+    try { sessionStorage.setItem('zeralda_license_integrity_ok', '1'); } catch (_) {}
   }
 
   function _reportTampering(scriptName) {

@@ -42,7 +42,7 @@
     window.addEventListener('load', __purgeFloatingWidgets);
 
     if (window.MutationObserver) {
-      new MutationObserver(function(muts) {
+      var _purgeObserver = new MutationObserver(function(muts) {
         for (var i = 0; i < muts.length; i++) {
           var nodes = muts[i].addedNodes;
           for (var j = 0; j < nodes.length; j++) {
@@ -54,7 +54,13 @@
             }
           }
         }
-      }).observe(document.documentElement, { childList: true, subtree: true });
+      });
+      _purgeObserver.observe(document.documentElement, { childList: true, subtree: true });
+      window.addEventListener('load', function() {
+        setTimeout(function() {
+          try { _purgeObserver.disconnect(); } catch (_) {}
+        }, 2000);
+      });
     }
   } catch (_) {}
 
@@ -743,9 +749,30 @@
         // Force-disable export features on all loaded pages.
         installExportDisableGuards();
 
-        // When user clicks on menu links, set fullscreen intent before navigation
-        var menuItems = document.querySelectorAll('.sidebar .menu-item');
-        menuItems.forEach(function(link) {
+        // ── Fast Navigation Prefetching (Instant Page Transitions) ──
+        var _prefetchedUrls = {};
+        function prefetchLink(href) {
+          if (!href || href === '#' || href.indexOf('javascript:') === 0 || _prefetchedUrls[href]) return;
+          _prefetchedUrls[href] = true;
+          try {
+            var pl = document.createElement('link');
+            pl.rel = 'prefetch';
+            pl.href = href;
+            pl.as = 'document';
+            document.head.appendChild(pl);
+          } catch (_) {
+            try { fetch(href, { priority: 'low', credentials: 'include' }).catch(function () {}); } catch (_) {}
+          }
+        }
+
+        // When user hovers or touches menu links, prefetch target page ahead of click
+        var navLinks = document.querySelectorAll('.sidebar .menu-item, a[href$=".html"]');
+        navLinks.forEach(function(link) {
+          var targetHref = link.getAttribute('href');
+          if (targetHref && targetHref !== '#' && targetHref.indexOf('javascript:') !== 0) {
+            link.addEventListener('pointerenter', function() { prefetchLink(link.getAttribute('href')); }, { passive: true });
+            link.addEventListener('touchstart', function() { prefetchLink(link.getAttribute('href')); }, { passive: true });
+          }
           link.addEventListener('click', function() {
             if (isFullscreenActive()) {
               setFullscreenIntent(true);

@@ -138,21 +138,29 @@ def create_app() -> FastAPI:
                 "object-src 'none'"
             )
             response.headers["Content-Security-Policy"] = csp
-        # Smart caching: Never cache JS, CSS, or HTML in production to guarantee immediate UI updates
+        # High-performance caching strategy:
         if path.startswith("/api/"):
+            # Dynamic APIs: never cache
             response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
             response.headers["Pragma"] = "no-cache"
             response.headers["Expires"] = "0"
         elif path.endswith((".js", ".css")):
-            response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"
-            response.headers["Pragma"] = "no-cache"
-            response.headers["Expires"] = "0"
+            # Scripts & Styles: if versioned with ?v=, cache aggressively for 7 days
+            if request.query_params.get("v"):
+                response.headers["Cache-Control"] = "public, max-age=604800, immutable"
+            else:
+                response.headers["Cache-Control"] = "public, max-age=600, stale-while-revalidate=3600"
+            response.headers.pop("Pragma", None)
+            response.headers.pop("Expires", None)
         elif path.endswith((".png", ".jpg", ".jpeg", ".ico", ".svg", ".woff", ".woff2", ".ttf")):
-            response.headers["Cache-Control"] = "public, max-age=86400"
+            response.headers["Cache-Control"] = "public, max-age=604800, stale-while-revalidate=86400"
+            response.headers.pop("Pragma", None)
+            response.headers.pop("Expires", None)
         elif path.endswith(".html") or path == "/":
-            response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"
-            response.headers["Pragma"] = "no-cache"
-            response.headers["Expires"] = "0"
+            # HTML pages: no-cache allows fast ETag validation (304) and enables browser bfcache
+            response.headers["Cache-Control"] = "no-cache"
+            response.headers.pop("Pragma", None)
+            response.headers.pop("Expires", None)
         return response
 
     # ── CSRF protection middleware ──────────────────────────────────────

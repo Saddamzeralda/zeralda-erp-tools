@@ -26,8 +26,12 @@
   /* 1. Activity Detection - تكتشف آخر نشاط للمستخدم */
   /* ══════════════════════════════════════════════════════════ */
   
+  let _lastActivityThrottle = 0;
   function recordActivity() {
-    lastActivityTime = Date.now();
+    const now = Date.now();
+    if (now - _lastActivityThrottle < 5000) return; // Throttle to at most once per 5 seconds
+    _lastActivityThrottle = now;
+    lastActivityTime = now;
     warningShown = false; // Reset warning if user is still active
     resetSessionTimer();
   }
