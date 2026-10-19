@@ -1606,30 +1606,10 @@
     }
 
     function initGoogleOneTap() {
-      if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) return;
-      try {
-        google.accounts.id.initialize({
-          client_id: GOOGLE_CLIENT_ID,
-          callback: function (resp) {
-            if (resp && resp.credential) {
-              setGoogleLoading(true);
-              sendGoogleTokenToServer(resp.credential);
-            }
-          },
-          auto_select: false,
-          cancel_on_tap_outside: true,
-          use_fedcm_for_prompt: true
-        });
-        google.accounts.id.prompt(function (notification) {
-          // Handled gracefully: if FedCM / OneTap prompt is suppressed by browser privacy settings,
-          // user continues with regular login or clicks the 'Sign in with Google' button.
-          if (notification && typeof notification.isNotDisplayed === 'function' && notification.isNotDisplayed()) {
-            return;
-          }
-        });
-      } catch (e) {
-        // Non-critical Google One-Tap warning
-      }
+      // Auto-prompt disabled: FedCM is restricted by modern browser site settings on third-party origins,
+      // which causes noisy AbortError and COOP warnings in the console when unprompted.
+      // Sign-in with Google is initiated cleanly on-demand when the user clicks the Google button (doGoogleSignIn).
+      return;
     }
 
     window.initGoogleTokenClient = initGoogleTokenClient;
@@ -2141,10 +2121,9 @@
         });
       }
 
-      // Eagerly pre-load Google Token Client and Google One-Tap for instant 1-click login
+      // Pre-load Google Token Client for instant 1-click login on button click
       setTimeout(function () {
         if (typeof window.initGoogleTokenClient === 'function') window.initGoogleTokenClient();
-        if (typeof window.initGoogleOneTap === 'function') window.initGoogleOneTap();
       }, 300);
     });
   </script>
