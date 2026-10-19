@@ -53,6 +53,8 @@ def create_app() -> FastAPI:
         r"172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}",
         r"([a-zA-Z0-9-]+\.)*zeralda-erp\.dz",
         r"([a-zA-Z0-9-]+\.)*zeralda\.local",
+        r"([a-zA-Z0-9-]+\.)*railway\.app",
+        r"([a-zA-Z0-9-]+\.)*up\.railway\.app",
         r"zeralda-erp-employees-main-production\.up\.railway\.app",
     ]
 
@@ -77,9 +79,8 @@ def create_app() -> FastAPI:
         CORSMiddleware,
         allow_origin_regex=SAFE_CORS_REGEX,
         allow_credentials=True,
-        allow_methods=["GET", "POST", "DELETE", "PATCH", "OPTIONS"],
-        allow_headers=["Content-Type", "Authorization", "X-Session-Token", "X-Requested-With",
-                       "X-Client-Session"],
+        allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+        allow_headers=["*"],
     )
 
     # ── GZip Compression Middleware (High performance on mobile/LAN) ────
@@ -90,11 +91,8 @@ def create_app() -> FastAPI:
     async def security_headers(request: Request, call_next):
         response = await call_next(request)
         path = request.url.path.lower()
-        # X-Frame-Options
-        if path.endswith("/settings.html"):
-            response.headers["X-Frame-Options"] = "SAMEORIGIN"
-        else:
-            response.headers["X-Frame-Options"] = "DENY"
+        # X-Frame-Options: SAMEORIGIN allows same-origin iframes (AI settings modal, previews)
+        response.headers["X-Frame-Options"] = "SAMEORIGIN"
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
@@ -128,12 +126,12 @@ def create_app() -> FastAPI:
                 "style-src-elem 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com https://accounts.google.com; "
                 "font-src 'self' data: https: https://fonts.gstatic.com https://cdnjs.cloudflare.com "
                 "https://at.alicdn.com http://at.alicdn.com; "
-                "img-src 'self' data: https: blob: https://lh3.googleusercontent.com; "
-                "connect-src 'self' http://127.0.0.1:8080 https://www.googleapis.com https://oauth2.googleapis.com "
-                "https://people.googleapis.com https://gmail.googleapis.com https://accounts.google.com "
-                "https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
+                "img-src 'self' data: https: blob: https://lh3.googleusercontent.com https://*.railway.app; "
+                "connect-src 'self' http://127.0.0.1:8080 http://localhost:8080 https://*.railway.app wss://*.railway.app wss: ws: "
+                "https://www.googleapis.com https://oauth2.googleapis.com https://people.googleapis.com "
+                "https://gmail.googleapis.com https://accounts.google.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
                 "worker-src 'self' blob: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
-                "frame-src 'self' https://accounts.google.com; "
+                "frame-src 'self' https://accounts.google.com blob:; "
                 "frame-ancestors 'self'; "
                 "object-src 'none'"
             )
@@ -393,6 +391,9 @@ def create_app() -> FastAPI:
             "services_management.html": "modules/services/services_management.html",
             "consulting_tenders_management.html": "modules/consulting/consulting_tenders_management.html",
         }
+        if clean_fn in ("dashboard", "dashboard.html", "zeralda_dashboard.html"):
+            from fastapi.responses import RedirectResponse
+            return RedirectResponse(url="/zeralda_erp_dashboard.html", status_code=302)
         if clean_fn in MODULE_SHORTCUTS:
             from fastapi.responses import RedirectResponse
             return RedirectResponse(url=f"/{MODULE_SHORTCUTS[clean_fn]}", status_code=302)

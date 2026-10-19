@@ -166,13 +166,18 @@ TRUSTED_PROXY_COUNT = int(os.getenv("TRUSTED_PROXY_COUNT", "0"))
 
 
 def get_client_ip(request: Request) -> str:
-    """Resolve the real client IP. Trusts X-Forwarded-For only when configured."""
-    if TRUSTED_PROXY_COUNT > 0:
+    """Resolve the real client IP. Trusts X-Forwarded-For when configured or running behind Railway proxy."""
+    hops_to_trust = TRUSTED_PROXY_COUNT
+    if hops_to_trust <= 0:
+        is_railway = bool(os.getenv("RAILWAY_ENVIRONMENT") or os.getenv("RAILWAY_PROJECT_ID") or request.headers.get("x-railway-request-id"))
+        if is_railway:
+            hops_to_trust = 1
+    if hops_to_trust > 0:
         xff = request.headers.get("X-Forwarded-For", "")
         if xff:
             hops = [h.strip() for h in xff.split(",") if h.strip()]
             if hops:
-                idx = max(0, len(hops) - TRUSTED_PROXY_COUNT)
+                idx = max(0, len(hops) - hops_to_trust)
                 return hops[idx]
     if request.client:
         return request.client.host

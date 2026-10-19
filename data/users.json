@@ -49,7 +49,7 @@
     "active": true,
     "failed_attempts": 0,
     "locked_until": null,
-    "must_change_password": true,
+    "must_change_password": false,
     "password_changed_at": "2026-10-16T12:53:18.543092"
   }
 }

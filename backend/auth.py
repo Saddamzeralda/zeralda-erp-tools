@@ -676,9 +676,11 @@ def authenticate(identifier: str, password: str, ip_address: str = '', user_agen
     except Exception:
         pass
 
-    # Enforce mandatory password change if user has must_change_password or is using default admin password
+    # Enforce mandatory password change only if user explicitly has must_change_password or ENFORCE_PASSWORD_CHANGE is enabled
     default_pwd = os.getenv('DEFAULT_ADMIN_PASSWORD', 'Admin@2026!').strip()
+    enforce_pwd_change = os.getenv('ENFORCE_PASSWORD_CHANGE', 'false').lower() == 'true'
     is_using_default = (
+        enforce_pwd_change and
         user.get('role') == 'admin' and (
             user.get('must_change_password') is True or
             verify_password(default_pwd, user['password'], user['salt'])

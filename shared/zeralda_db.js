@@ -1080,7 +1080,10 @@
     }
 
     function _serverApi() {
-        return (window.location && window.location.origin ? window.location.origin : 'http://127.0.0.1:8080') + '/api/store';
+        var origin = (typeof window !== 'undefined' && window.location && window.location.origin && window.location.origin !== 'null' && !window.location.origin.startsWith('file:'))
+            ? window.location.origin.replace(/\/+$/, '')
+            : 'http://127.0.0.1:8080';
+        return origin + '/api/store';
     }
 
     function _isLocalOnly(key) {
