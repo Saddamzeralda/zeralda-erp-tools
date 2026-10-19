@@ -24,9 +24,13 @@ SESSIONS_FILE = os.path.join(DATA_DIR, 'sessions.json')
 LOGIN_ATTEMPTS_FILE = os.path.join(DATA_DIR, 'login_attempts.json')
 
 os.makedirs(DATA_DIR, exist_ok=True)
-if os.path.abspath(DATA_DIR) != os.path.abspath(_BASE_DATA_DIR):
+_SEED_AUTH_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data_defaults')
+if not os.path.exists(_SEED_AUTH_DIR):
+    _SEED_AUTH_DIR = _BASE_DATA_DIR
+
+if os.path.abspath(DATA_DIR) != os.path.abspath(_SEED_AUTH_DIR):
     for f in ['users.json', '.secret_key']:
-        src = os.path.join(_BASE_DATA_DIR, f)
+        src = os.path.join(_SEED_AUTH_DIR, f)
         dst = os.path.join(DATA_DIR, f)
         if os.path.exists(src) and not os.path.exists(dst):
             try:

@@ -86,19 +86,21 @@ BACKUP_DIR = DATA_DIR / "backups"
 
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-# If using external persistent volume, seed defaults if target files are missing
-if _ENV_DATA_DIR:
+# If using external persistent volume or clean mount, seed defaults if target files are missing
+_SEED_DIR = _BASE_DIR / "data_defaults"
+if not _SEED_DIR.exists():
     _SEED_DIR = _BASE_DIR / "data"
-    if _SEED_DIR.exists() and _SEED_DIR.resolve() != DATA_DIR:
-        for _seed in _SEED_DIR.iterdir():
-            if _seed.is_file():
-                _dst = DATA_DIR / _seed.name
-                if not _dst.exists():
-                    try:
-                        import shutil
-                        shutil.copy2(_seed, _dst)
-                    except Exception:
-                        pass
+
+if _SEED_DIR.exists() and _SEED_DIR.resolve() != DATA_DIR.resolve():
+    for _seed in _SEED_DIR.iterdir():
+        if _seed.is_file():
+            _dst = DATA_DIR / _seed.name
+            if not _dst.exists():
+                try:
+                    import shutil
+                    shutil.copy2(_seed, _dst)
+                except Exception:
+                    pass
 
 
 def _atomic_write_encrypted_json(target_path: Path, data: Any) -> None:

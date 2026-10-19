@@ -411,6 +411,13 @@ def create_app() -> FastAPI:
         except Exception as e:
             log_structured("WARN", "Default users init failed", error=str(e))
 
+        try:
+            from app.services import storage
+            storage.init_db_schema()
+            storage.migrate_unified_settings()
+        except Exception as e:
+            log_structured("WARN", "Database schema / settings init failed", error=str(e))
+
     @app.on_event("shutdown")
     async def _shutdown():
         try:
