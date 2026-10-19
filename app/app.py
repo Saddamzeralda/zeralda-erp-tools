@@ -150,17 +150,17 @@ def create_app() -> FastAPI:
                 response.headers["Cache-Control"] = "public, max-age=604800, immutable"
             else:
                 response.headers["Cache-Control"] = "public, max-age=600, stale-while-revalidate=3600"
-            response.headers.pop("Pragma", None)
-            response.headers.pop("Expires", None)
+            if "pragma" in response.headers: del response.headers["pragma"]
+            if "expires" in response.headers: del response.headers["expires"]
         elif path.endswith((".png", ".jpg", ".jpeg", ".ico", ".svg", ".woff", ".woff2", ".ttf")):
             response.headers["Cache-Control"] = "public, max-age=604800, stale-while-revalidate=86400"
-            response.headers.pop("Pragma", None)
-            response.headers.pop("Expires", None)
+            if "pragma" in response.headers: del response.headers["pragma"]
+            if "expires" in response.headers: del response.headers["expires"]
         elif path.endswith(".html") or path == "/":
             # HTML pages: no-cache allows fast ETag validation (304) and enables browser bfcache
             response.headers["Cache-Control"] = "no-cache"
-            response.headers.pop("Pragma", None)
-            response.headers.pop("Expires", None)
+            if "pragma" in response.headers: del response.headers["pragma"]
+            if "expires" in response.headers: del response.headers["expires"]
         return response
 
     # ── CSRF protection middleware ──────────────────────────────────────
