@@ -7,7 +7,8 @@ import datetime
 from pathlib import Path
 
 # Path to keys database
-DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data')
+_BASE_DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data')
+DATA_DIR = os.getenv("DATA_DIR", _BASE_DATA_DIR)
 KEYS_FILE = os.path.join(DATA_DIR, 'keys.json')
 
 # External/installed data directories to keep synchronized
@@ -18,6 +19,15 @@ _ALT_DATA_DIRS = [
 
 # Ensure data directory exists
 os.makedirs(DATA_DIR, exist_ok=True)
+if os.path.abspath(DATA_DIR) != os.path.abspath(_BASE_DATA_DIR):
+    src = os.path.join(_BASE_DATA_DIR, 'keys.json')
+    dst = os.path.join(DATA_DIR, 'keys.json')
+    if os.path.exists(src) and not os.path.exists(dst):
+        try:
+            import shutil
+            shutil.copy2(src, dst)
+        except Exception:
+            pass
 
 
 def _get_sync_keys_files():

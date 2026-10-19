@@ -77,13 +77,28 @@ except Exception as e:  # noqa: BLE001
 
 # ── Paths ───────────────────────────────────────────────────────────────────
 _BASE_DIR = Path(__file__).resolve().parent.parent.parent
-DATA_DIR = _BASE_DIR / "data"
+_ENV_DATA_DIR = os.getenv("DATA_DIR")
+DATA_DIR = Path(_ENV_DATA_DIR).resolve() if _ENV_DATA_DIR else (_BASE_DIR / "data")
 DATA_FILE = DATA_DIR / "shared_store.json"
 HISTORY_FILE = DATA_DIR / "shared_history.json"
 UNDO_STACK_FILE = DATA_DIR / "undo_stack.json"
 BACKUP_DIR = DATA_DIR / "backups"
 
 DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+# If using external persistent volume, seed defaults if target files are missing
+if _ENV_DATA_DIR:
+    _SEED_DIR = _BASE_DIR / "data"
+    if _SEED_DIR.exists() and _SEED_DIR.resolve() != DATA_DIR:
+        for _seed in _SEED_DIR.iterdir():
+            if _seed.is_file():
+                _dst = DATA_DIR / _seed.name
+                if not _dst.exists():
+                    try:
+                        import shutil
+                        shutil.copy2(_seed, _dst)
+                    except Exception:
+                        pass
 
 
 def _atomic_write_encrypted_json(target_path: Path, data: Any) -> None:

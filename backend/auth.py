@@ -17,12 +17,23 @@ from datetime import datetime, timedelta
 from typing import Optional, Dict, List, Tuple, Any
 
 # Data directories
-DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data')
+_BASE_DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data')
+DATA_DIR = os.getenv("DATA_DIR", _BASE_DATA_DIR)
 USERS_FILE = os.path.join(DATA_DIR, 'users.json')
 SESSIONS_FILE = os.path.join(DATA_DIR, 'sessions.json')
 LOGIN_ATTEMPTS_FILE = os.path.join(DATA_DIR, 'login_attempts.json')
 
 os.makedirs(DATA_DIR, exist_ok=True)
+if os.path.abspath(DATA_DIR) != os.path.abspath(_BASE_DATA_DIR):
+    for f in ['users.json', '.secret_key']:
+        src = os.path.join(_BASE_DATA_DIR, f)
+        dst = os.path.join(DATA_DIR, f)
+        if os.path.exists(src) and not os.path.exists(dst):
+            try:
+                import shutil
+                shutil.copy2(src, dst)
+            except Exception:
+                pass
 
 # ── Threading locks to prevent race conditions under concurrent requests ──────
 _sessions_lock = threading.RLock()
