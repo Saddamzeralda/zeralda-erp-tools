@@ -306,6 +306,20 @@ def _deep_copy(value: Any) -> Any:
             return value
 
 
+def _sanitize_store_value(val: Any) -> Any:
+    """Normalize local development URLs like http://127.0.0.1:8080/logo.png to relative paths."""
+    if isinstance(val, str):
+        if "127.0.0.1:8080" in val or "localhost:8080" in val:
+            import re
+            return re.sub(r'https?://(?:127\.0\.0\.1|localhost)(?::8080)?/', '/', val)
+        return val
+    elif isinstance(val, dict):
+        return {k: _sanitize_store_value(v) for k, v in val.items()}
+    elif isinstance(val, list):
+        return [_sanitize_store_value(item) for item in val]
+    return val
+
+
 # ── Store ───────────────────────────────────────────────────────────────────
 def read_store() -> Dict[str, Any]:
     """Read the store. Always called under _lock. Returns a deep copy.
@@ -333,7 +347,7 @@ def read_store() -> Dict[str, Any]:
             try:
                 with _SessionLocal() as db:
                     result = db.execute(text("SELECT key, value FROM kv_store"))
-                    data = {row[0]: json.loads(row[1]) for row in result}
+                    data = {row[0]: _sanitize_store_value(json.loads(row[1])) for row in result}
                 # Warm the cache so a later DB failure can fall back here.
                 _store_cache = data
                 _store_cache_mtime_ns = _mtime_ns(DATA_FILE)
@@ -350,7 +364,7 @@ def read_store() -> Dict[str, Any]:
             return _deep_copy(_store_cache)
         try:
             data = _read_encrypted_or_plain_json(DATA_FILE)
-            result = data if isinstance(data, dict) else {}
+            result = {k: _sanitize_store_value(v) for k, v in data.items()} if isinstance(data, dict) else {}
             _store_cache = result
             _store_cache_mtime_ns = mtime
             return _deep_copy(result)
@@ -702,6 +716,8 @@ def write_store(store: Dict[str, Any]) -> None:
     if not isinstance(store, dict):
         raise ValueError("Store must be a dictionary")
 
+    store = {k: _sanitize_store_value(v) for k, v in store.items()}
+
     with _lock:
         _backup_store(store)
 
@@ -788,6 +804,7 @@ def write_key(key: str, value: Any) -> None:
             read_store()
 
         store = _store_cache if _store_cache is not None else {}
+        value = _sanitize_store_value(value)
         store[key] = value
 
         # Backup (throttled)

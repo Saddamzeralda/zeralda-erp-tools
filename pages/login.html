@@ -1617,15 +1617,18 @@
             }
           },
           auto_select: false,
-          cancel_on_tap_outside: true
+          cancel_on_tap_outside: true,
+          use_fedcm_for_prompt: true
         });
         google.accounts.id.prompt(function (notification) {
-          if (notification && (notification.isNotDisplayed() || notification.isSkippedMoment())) {
-            // FedCM/One-tap suppressed by user preference or site settings; user clicks 'Sign in with Google' button directly
+          // Handled gracefully: if FedCM / OneTap prompt is suppressed by browser privacy settings,
+          // user continues with regular login or clicks the 'Sign in with Google' button.
+          if (notification && typeof notification.isNotDisplayed === 'function' && notification.isNotDisplayed()) {
+            return;
           }
         });
       } catch (e) {
-        console.warn('[Google One-Tap] Initialization error:', e);
+        // Non-critical Google One-Tap warning
       }
     }
 

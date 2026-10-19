@@ -2959,9 +2959,10 @@ function buildCompanyInfoHTML(){
   const bankName = c && c.bankName ? c.bankName : "";
   const bankAccount = c && c.bankAccount ? c.bankAccount : "";
   const rib = c && c.rib ? c.rib : "";
-  const capital = c && c.capital ? c.capital : "";
-  const logo = c && (c.logoDataUrl || c.logo) ? (c.logoDataUrl || c.logo) : "logo.png";
-  let lines = "";
+  let logo = c && (c.logoDataUrl || c.logo) ? (c.logoDataUrl || c.logo) : "logo.png";
+  if (typeof logo === 'string') {
+    logo = logo.replace(/^https?:\/\/(?:127\.0\.0\.1|localhost)(?::\d+)?\//i, '/');
+  }
   if(address) lines += '<div style="font-size:12px;color:#1f2937;">' + escapeHTML(address) + "</div>";
   if(phone) lines += '<div style="font-size:12px;color:#1f2937;">' + escapeHTML(tr('tel_label','Tel')) + ': ' + escapeHTML(phone) + "</div>";
   if(email) lines += '<div style="font-size:12px;color:#1f2937;">' + escapeHTML(tr('email','Email')) + ': ' + escapeHTML(email) + "</div>";
@@ -5344,7 +5345,10 @@ function buildFactureHTML(opts){
 
   // Fix relative logo path from modules/sales/
   var compLogo = company.logoDataUrl || company.logo || '../../logo.png';
-  if (compLogo === 'logo.png') compLogo = '../../logo.png';
+  if (typeof compLogo === 'string') {
+    compLogo = compLogo.replace(/^https?:\/\/(?:127\.0\.0\.1|localhost)(?::\d+)?\//i, '../../');
+    if (compLogo === 'logo.png') compLogo = '../../logo.png';
+  }
 
   var _previewProducts = productsData;
   if(!_previewProducts || _previewProducts.length === 0){

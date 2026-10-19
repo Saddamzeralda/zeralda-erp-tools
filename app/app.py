@@ -110,10 +110,8 @@ def create_app() -> FastAPI:
             is_https or host_hdr in ("localhost", "127.0.0.1", "::1") or host_hdr.endswith((".railway.app", ".trycloudflare.com"))
         )
         if is_trustworthy_context:
-            if path.endswith("login.html") or path == "/" or "login" in path:
-                response.headers["Cross-Origin-Opener-Policy"] = "unsafe-none"
-            else:
-                response.headers["Cross-Origin-Opener-Policy"] = "same-origin-allow-popups"
+            # 'unsafe-none' allows Google Identity Services (GSI) and OAuth popups to check window.closed without COOP errors
+            response.headers["Cross-Origin-Opener-Policy"] = "unsafe-none"
         if is_https:
             response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         # CSP for HTML pages
@@ -126,7 +124,7 @@ def create_app() -> FastAPI:
                 "style-src-elem 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com https://accounts.google.com; "
                 "font-src 'self' data: https: https://fonts.gstatic.com https://cdnjs.cloudflare.com "
                 "https://at.alicdn.com http://at.alicdn.com; "
-                "img-src 'self' data: https: blob: https://lh3.googleusercontent.com https://*.railway.app; "
+                "img-src 'self' data: https: blob: http: https://lh3.googleusercontent.com https://*.railway.app http://127.0.0.1:8080 http://localhost:8080; "
                 "connect-src 'self' http://127.0.0.1:8080 http://localhost:8080 https://*.railway.app wss://*.railway.app wss: ws: "
                 "https://www.googleapis.com https://oauth2.googleapis.com https://people.googleapis.com "
                 "https://gmail.googleapis.com https://accounts.google.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
