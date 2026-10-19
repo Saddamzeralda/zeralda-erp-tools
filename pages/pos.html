@@ -814,6 +814,152 @@
             gap: 12px;
         }
 
+        /* ── Language Switcher Dropdown ───────────────────── */
+        .pos-lang-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .pos-lang-btn {
+            width: auto !important;
+            padding: 0 12px;
+            gap: 7px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .pos-lang-current {
+            font-size: 12px;
+            font-weight: 800;
+            font-family: 'Space Grotesk', sans-serif;
+            letter-spacing: 0.5px;
+        }
+
+        .pos-lang-menu {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            background: var(--pos-surface);
+            border: 1px solid var(--pos-border);
+            border-radius: 12px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.22);
+            padding: 6px;
+            min-width: 145px;
+            display: none;
+            z-index: 1000;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .pos-lang-menu.show {
+            display: flex;
+        }
+
+        .pos-lang-item {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: var(--pos-text);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            text-align: start;
+            transition: all 0.15s;
+        }
+
+        .pos-lang-item:hover {
+            background: rgba(37,99,235,0.12);
+            color: var(--pos-primary);
+        }
+
+        .pos-lang-item.active {
+            background: var(--pos-primary);
+            color: #ffffff;
+        }
+
+        .pos-lang-flag {
+            font-size: 15px;
+            line-height: 1;
+        }
+
+        .pos-lang-check {
+            margin-inline-start: auto;
+            font-size: 11px;
+            display: none;
+        }
+
+        .pos-lang-item.active .pos-lang-check {
+            display: inline-block;
+        }
+
+        /* ── Directional LTR Overrides (Français / English) ── */
+        html[dir="ltr"] .pos-catalog-panel {
+            border-left: none;
+            border-right: 1px solid var(--pos-border);
+        }
+
+        html[dir="ltr"] .pos-barcode-box i {
+            right: auto;
+            left: 14px;
+        }
+
+        html[dir="ltr"] .pos-barcode-input {
+            padding: 11px 14px 11px 42px;
+        }
+
+        html[dir="ltr"] .pos-name-search i {
+            right: auto;
+            left: 12px;
+        }
+
+        html[dir="ltr"] .pos-name-input {
+            padding: 11px 12px 11px 36px;
+        }
+
+        html[dir="ltr"] .pos-cart-customer-select {
+            margin-left: 0;
+            margin-right: 0;
+            margin-inline-start: 12px;
+        }
+
+        html[dir="ltr"] .pos-row-total {
+            text-align: right;
+        }
+
+        html[dir="ltr"] .pos-lang-menu {
+            right: auto;
+            left: 0;
+        }
+
+        html[dir="ltr"] #thermalReceiptContainer {
+            direction: ltr !important;
+        }
+
+        html[dir="ltr"] #thermalReceiptContainer th:first-child,
+        html[dir="ltr"] #thermalReceiptContainer td:first-child {
+            text-align: left !important;
+        }
+
+        html[dir="ltr"] #thermalReceiptContainer th:last-child,
+        html[dir="ltr"] #thermalReceiptContainer td:last-child {
+            text-align: right !important;
+        }
+
+        html[dir="rtl"] #thermalReceiptContainer th:first-child,
+        html[dir="rtl"] #thermalReceiptContainer td:first-child {
+            text-align: right !important;
+        }
+
+        html[dir="rtl"] #thermalReceiptContainer th:last-child,
+        html[dir="rtl"] #thermalReceiptContainer td:last-child {
+            text-align: left !important;
+        }
+
         /* ── Thermal Receipt Printable Template ────────────── */
         #thermalReceiptContainer {
             display: none;
@@ -825,9 +971,9 @@
             }
             #thermalReceiptContainer, #thermalReceiptContainer * {
                 visibility: visible !important;
-                display: block !important;
             }
             #thermalReceiptContainer {
+                display: block !important;
                 position: absolute;
                 left: 0;
                 top: 0;
@@ -837,7 +983,21 @@
                 font-family: monospace, 'Courier New', Courier;
                 font-size: 11px;
                 color: #000;
-                direction: rtl;
+            }
+            #thermalReceiptContainer table {
+                display: table !important;
+            }
+            #thermalReceiptContainer thead {
+                display: table-header-group !important;
+            }
+            #thermalReceiptContainer tbody {
+                display: table-row-group !important;
+            }
+            #thermalReceiptContainer tr {
+                display: table-row !important;
+            }
+            #thermalReceiptContainer th, #thermalReceiptContainer td {
+                display: table-cell !important;
             }
             @page {
                 size: 80mm auto;
@@ -869,13 +1029,38 @@
         </div>
 
         <div class="pos-header-actions">
-            <button class="pos-icon-btn" onclick="toggleFullscreen()" title="شاشة كاملة (F11)">
+            <!-- Language Switcher Dropdown -->
+            <div class="pos-lang-dropdown">
+                <button type="button" class="pos-icon-btn pos-lang-btn" id="posLangBtn" onclick="toggleLangDropdown(event)" title="تغيير اللغة / Change Language / Changer de langue">
+                    <i class="fas fa-globe"></i>
+                    <span class="pos-lang-current" id="posLangCurrentCode">AR</span>
+                </button>
+                <div class="pos-lang-menu" id="posLangMenu">
+                    <button type="button" class="pos-lang-item active" data-lang="ar" onclick="changeLanguage('ar')">
+                        <span class="pos-lang-flag">🇩🇿</span>
+                        <span>العربية</span>
+                        <i class="fas fa-check pos-lang-check"></i>
+                    </button>
+                    <button type="button" class="pos-lang-item" data-lang="fr" onclick="changeLanguage('fr')">
+                        <span class="pos-lang-flag">🇫🇷</span>
+                        <span>Français</span>
+                        <i class="fas fa-check pos-lang-check"></i>
+                    </button>
+                    <button type="button" class="pos-lang-item" data-lang="en" onclick="changeLanguage('en')">
+                        <span class="pos-lang-flag">🇬🇧</span>
+                        <span>English</span>
+                        <i class="fas fa-check pos-lang-check"></i>
+                    </button>
+                </div>
+            </div>
+
+            <button class="pos-icon-btn" onclick="toggleFullscreen()" data-i18n-title="fullscreenTitle" title="شاشة كاملة (F11)">
                 <i class="fas fa-expand"></i>
             </button>
-            <button class="pos-icon-btn" id="posThemeToggleBtn" onclick="toggleTheme()" title="تبديل الوضع الداكن / الفاتح">
+            <button class="pos-icon-btn" id="posThemeToggleBtn" onclick="toggleTheme()" data-i18n-title="themeTitle" title="تبديل الوضع الداكن / الفاتح">
                 <i class="fas fa-moon" id="posThemeIcon"></i>
             </button>
-            <button class="pos-icon-btn pos-btn-exit" onclick="exitToDashboard()" title="العودة للوحة التحكم">
+            <button class="pos-icon-btn pos-btn-exit" onclick="exitToDashboard()" data-i18n-title="exitTitle" title="العودة للوحة التحكم">
                 <i class="fas fa-arrow-left"></i>
             </button>
         </div>
@@ -889,22 +1074,22 @@
             <div class="pos-search-bar">
                 <div class="pos-barcode-box">
                     <i class="fas fa-barcode"></i>
-                    <input type="text" id="barcodeInput" class="pos-barcode-input" placeholder="امسح الباركود أو أدخل كود الصنف ثم اضغط Enter..." autofocus />
+                    <input type="text" id="barcodeInput" class="pos-barcode-input" data-i18n-placeholder="barcodePlaceholder" placeholder="امسح الباركود أو أدخل كود الصنف ثم اضغط Enter..." autofocus />
                 </div>
                 <div class="pos-name-search">
                     <i class="fas fa-search"></i>
-                    <input type="text" id="nameFilterInput" class="pos-name-input" placeholder="بحث بالاسم..." oninput="filterCatalog()" />
+                    <input type="text" id="nameFilterInput" class="pos-name-input" data-i18n-placeholder="searchPlaceholder" placeholder="بحث بالاسم..." oninput="filterCatalog()" />
                 </div>
             </div>
 
             <div class="pos-categories-nav" id="catNavContainer">
                 <button class="pos-cat-pill active" onclick="selectCategory('all', this)">
-                    <i class="fas fa-th-large"></i> الكل
+                    <i class="fas fa-th-large"></i> <span data-i18n="catAll">الكل</span>
                 </button>
-                <button class="pos-cat-pill" onclick="selectCategory('إلكترونيات', this)">إلكترونيات</button>
-                <button class="pos-cat-pill" onclick="selectCategory('أغذية', this)">أغذية ومشروبات</button>
-                <button class="pos-cat-pill" onclick="selectCategory('مستلزمات', this)">مستلزمات مكتبية</button>
-                <button class="pos-cat-pill" onclick="selectCategory('خدمات', this)">خدمات</button>
+                <button class="pos-cat-pill" onclick="selectCategory('electronics', this)" data-i18n="catElectronics">إلكترونيات</button>
+                <button class="pos-cat-pill" onclick="selectCategory('food', this)" data-i18n="catFood">أغذية ومشروبات</button>
+                <button class="pos-cat-pill" onclick="selectCategory('supplies', this)" data-i18n="catSupplies">مستلزمات مكتبية</button>
+                <button class="pos-cat-pill" onclick="selectCategory('services', this)" data-i18n="catServices">خدمات</button>
             </div>
 
             <div class="pos-grid-container" id="productsGridContainer">
@@ -917,48 +1102,48 @@
             <div class="pos-cart-header">
                 <div style="font-size:14px; font-weight:800; display:flex; align-items:center; gap:6px;">
                     <i class="fas fa-shopping-basket text-primary"></i>
-                    <span>سلة الطلب</span>
+                    <span data-i18n="cartTitle">سلة الطلب</span>
                     <span id="cartCountBadge" style="background:var(--pos-primary); color:#fff; font-size:11px; padding:2px 8px; border-radius:12px;">0</span>
                 </div>
                 <select id="customerSelect" class="pos-cart-customer-select">
-                    <option value="walk_in">زبون عابر (Comptant)</option>
+                    <option value="walk_in" data-i18n="customerWalkIn">زبون عابر (Comptant)</option>
                 </select>
             </div>
 
             <div class="pos-cart-items-wrap" id="cartItemsContainer">
                 <div class="pos-cart-empty">
                     <i class="fas fa-shopping-cart"></i>
-                    <strong>السلة فارغة</strong>
-                    <small>امسح باركود المنتج أو اضغط على صنف من القائمة لإضافته للطلب</small>
+                    <strong data-i18n="cartEmptyTitle">السلة فارغة</strong>
+                    <small data-i18n="cartEmptySub">امسح باركود المنتج أو اضغط على صنف من القائمة لإضافته للطلب</small>
                 </div>
             </div>
 
             <div class="pos-cart-footer">
                 <div class="pos-summary-line">
-                    <span>المجموع الفرعي (HT):</span>
+                    <span data-i18n="subtotal">المجموع الفرعي (HT):</span>
                     <strong id="cartSubtotal">0.00 د.ج</strong>
                 </div>
                 <div class="pos-summary-line">
-                    <span>الضريبة (TVA 19%):</span>
+                    <span data-i18n="tax">الضريبة (TVA 19%):</span>
                     <strong id="cartTax">0.00 د.ج</strong>
                 </div>
                 <div class="pos-summary-line">
-                    <span>الخصم (Remise):</span>
+                    <span data-i18n="discount">الخصم (Remise):</span>
                     <strong id="cartDiscount" style="color:#ef4444;">0.00 د.ج</strong>
                 </div>
 
                 <div class="pos-grand-total">
-                    <span class="pos-grand-total-label">الإجمالي النهائي:</span>
+                    <span class="pos-grand-total-label" data-i18n="grandTotal">الإجمالي النهائي:</span>
                     <span class="pos-grand-total-val" id="cartGrandTotal">0.00 د.ج</span>
                 </div>
 
                 <div class="pos-checkout-actions">
                     <button type="button" class="pos-btn-clear" onclick="clearCart()">
-                        <i class="fas fa-trash-alt"></i> إفراغ
+                        <i class="fas fa-trash-alt"></i> <span data-i18n="clearBtn">إفراغ</span>
                     </button>
                     <button type="button" class="pos-btn-pay" onclick="openCheckoutModal()">
                         <i class="fas fa-check-circle"></i>
-                        <span>دفع (F9)</span>
+                        <span data-i18n="payBtn">دفع (F9)</span>
                     </button>
                 </div>
             </div>
@@ -970,55 +1155,55 @@
     <div class="pos-modal-backdrop" id="checkoutModal">
         <div class="pos-modal-card">
             <div class="pos-modal-header">
-                <h3><i class="fas fa-cash-register text-primary"></i> إتمام عملية الدفع</h3>
+                <h3><i class="fas fa-cash-register text-primary"></i> <span data-i18n="checkoutTitle">إتمام عملية الدفع</span></h3>
                 <button type="button" onclick="closeCheckoutModal()" style="background:none; border:none; font-size:20px; color:var(--pos-muted); cursor:pointer;">&times;</button>
             </div>
 
             <div class="pos-pay-methods-grid">
                 <div class="pos-pay-method-btn active" onclick="selectPayMethod('cash', this)">
                     <i class="fas fa-money-bill-wave"></i>
-                    <span>نقداً</span>
+                    <span data-i18n="payCash">نقداً</span>
                 </div>
                 <div class="pos-pay-method-btn" onclick="selectPayMethod('card', this)">
                     <i class="fas fa-credit-card"></i>
-                    <span>بطاقة CIB</span>
+                    <span data-i18n="payCard">بطاقة CIB</span>
                 </div>
                 <div class="pos-pay-method-btn" onclick="selectPayMethod('check', this)">
                     <i class="fas fa-money-check"></i>
-                    <span>شيك</span>
+                    <span data-i18n="payCheck">شيك</span>
                 </div>
                 <div class="pos-pay-method-btn" onclick="selectPayMethod('credit', this)">
                     <i class="fas fa-hand-holding-dollar"></i>
-                    <span>على الحساب</span>
+                    <span data-i18n="payCredit">على الحساب</span>
                 </div>
             </div>
 
             <div class="pos-due-box">
-                <span style="font-size:14px; font-weight:700; color:#475569;">المبلغ المطلوب دفعه:</span>
+                <span style="font-size:14px; font-weight:700; color:#475569;" data-i18n="dueAmountLabel">المبلغ المطلوب دفعه:</span>
                 <span class="pos-due-val" id="modalDueAmount">0.00 د.ج</span>
             </div>
 
             <div class="pos-tender-input-wrap">
-                <label style="display:block; font-size:12px; font-weight:700; color:var(--pos-muted); margin-bottom:6px;">المبلغ المستلم من الزبون (Reçu):</label>
+                <label style="display:block; font-size:12px; font-weight:700; color:var(--pos-muted); margin-bottom:6px;" data-i18n="tenderedLabel">المبلغ المستلم من الزبون (Reçu):</label>
                 <input type="number" id="tenderedInput" class="pos-tender-input" placeholder="0" oninput="calculateChange()" />
             </div>
 
             <div class="pos-fast-money-grid">
-                <button type="button" class="pos-money-btn" onclick="setExactTender()">المبلغ تماماً</button>
+                <button type="button" class="pos-money-btn" onclick="setExactTender()" data-i18n="exactAmountBtn">المبلغ تماماً</button>
                 <button type="button" class="pos-money-btn" onclick="addTender(500)">+500</button>
                 <button type="button" class="pos-money-btn" onclick="addTender(1000)">+1000</button>
                 <button type="button" class="pos-money-btn" onclick="addTender(2000)">+2000</button>
             </div>
 
             <div class="pos-change-box">
-                <span style="font-size:15px; font-weight:800; color:#065f46;">المبلغ المتبقي للزبون (الباقي):</span>
+                <span style="font-size:15px; font-weight:800; color:#065f46;" data-i18n="changeLabel">المبلغ المتبقي للزبون (الباقي):</span>
                 <span class="pos-change-val" id="modalChangeAmount">0.00 د.ج</span>
             </div>
 
             <div class="pos-modal-footer">
-                <button type="button" class="pos-btn-clear" onclick="closeCheckoutModal()" style="flex:1;">إلغاء</button>
+                <button type="button" class="pos-btn-clear" onclick="closeCheckoutModal()" style="flex:1;" data-i18n="cancelBtn">إلغاء</button>
                 <button type="button" class="pos-btn-pay" onclick="finalizeTransaction()" style="flex:2;">
-                    <i class="fas fa-print"></i> تأكيد وطباعة التذكرة
+                    <i class="fas fa-print"></i> <span data-i18n="confirmPrintBtn">تأكيد وطباعة التذكرة</span>
                 </button>
             </div>
         </div>
@@ -1044,10 +1229,10 @@
 
         <table style="width:100%; font-size:11px; border-collapse:collapse; margin-bottom:6px;">
             <thead>
-                <tr style="border-bottom:1px solid #000; text-align:right;">
-                    <th>الصنف</th>
-                    <th style="text-align:center;">الكمية</th>
-                    <th style="text-align:left;">المجموع</th>
+                <tr style="border-bottom:1px solid #000;">
+                    <th id="rcptColItem">الصنف</th>
+                    <th id="rcptColQty" style="text-align:center;">الكمية</th>
+                    <th id="rcptColTotal">المجموع</th>
                 </tr>
             </thead>
             <tbody id="rcptItemsBody">
@@ -1059,63 +1244,411 @@
 
         <div style="font-size:11px;">
             <div style="display:flex; justify-content:space-between;">
-                <span>المجموع الفرعي:</span>
+                <span id="rcptLblSubtotal">المجموع الفرعي:</span>
                 <span id="rcptSubtotal">0.00</span>
             </div>
             <div style="display:flex; justify-content:space-between;">
-                <span>الضريبة:</span>
+                <span id="rcptLblTax">الضريبة:</span>
                 <span id="rcptTax">0.00</span>
             </div>
             <div style="display:flex; justify-content:space-between; font-size:14px; font-weight:bold; margin-top:4px;">
-                <span>المجموع الكلي:</span>
+                <span id="rcptLblGrandTotal">المجموع الكلي:</span>
                 <span id="rcptTotal">0.00 د.ج</span>
             </div>
             <div style="display:flex; justify-content:space-between; margin-top:2px;">
-                <span>المدفوع:</span>
+                <span id="rcptLblPaid">المدفوع:</span>
                 <span id="rcptPaid">0.00</span>
             </div>
             <div style="display:flex; justify-content:space-between; font-weight:bold;">
-                <span>الباقي للزبون:</span>
+                <span id="rcptLblChange">الباقي للزبون:</span>
                 <span id="rcptChange">0.00 د.ج</span>
             </div>
         </div>
 
         <div style="border-top:1px dashed #000; margin:8px 0; text-align:center;">
-            <p style="margin:4px 0; font-size:11px; font-weight:bold;">شكراً لزيارتكم - مرحباً بكم دائماً</p>
+            <p id="rcptThanks" style="margin:4px 0; font-size:11px; font-weight:bold;">شكراً لزيارتكم - مرحباً بكم دائماً</p>
             <p style="margin:0; font-size:9px; color:#555;">Zeralda ERP POS Engine v3.0</p>
         </div>
     </div>
 
     <!-- ── POS Controller Logic ──────────────────────────── -->
     <script>
-        // Default product inventory catalog
-        var _catalog = [
-            { id: 'PRD-01', name: 'لابتوب ديل XPS 13 Core i7', category: 'إلكترونيات', price: 145000, stock: 12, barcode: '613000000001', icon: 'fa-laptop' },
-            { id: 'PRD-02', name: 'طابعة فواتير حرارية 80 مم USB/LAN', category: 'إلكترونيات', price: 18500, stock: 35, barcode: '613000000002', icon: 'fa-print' },
-            { id: 'PRD-03', name: 'قارئ باركود ليزري أوتوماتيكي', category: 'إلكترونيات', price: 7200, stock: 24, barcode: '613000000003', icon: 'fa-barcode' },
-            { id: 'PRD-04', name: 'شاشة سامسونج منحنية 27 بوصة', category: 'إلكترونيات', price: 42000, stock: 10, barcode: '613000000004', icon: 'fa-tv' },
-            { id: 'PRD-05', name: 'لوحة مفاتيح وماوس لاسلكي لوجيتيك', category: 'إلكترونيات', price: 6500, stock: 40, barcode: '613000000005', icon: 'fa-keyboard' },
-            { id: 'PRD-06', name: 'قهوة اسبريسو فاخرة 1 كغ', category: 'أغذية', price: 2400, stock: 50, barcode: '613000000006', icon: 'fa-mug-hot' },
-            { id: 'PRD-07', name: 'مياه معدنية طبيعية 1.5 لتر (حزمة)', category: 'أغذية', price: 380, stock: 120, barcode: '613000000007', icon: 'fa-bottle-water' },
-            { id: 'PRD-08', name: 'ورق طباعة A4 80g حزمة 500 ورقة', category: 'مستلزمات', price: 850, stock: 80, barcode: '613000000008', icon: 'fa-copy' },
-            { id: 'PRD-09', name: 'حبر طابعة ليزر أسود HP 85A', category: 'مستلزمات', price: 3200, stock: 18, barcode: '613000000009', icon: 'fa-fill-drip' },
-            { id: 'PRD-10', name: 'خدمة صيانة وبرمجة برمجيات', category: 'خدمات', price: 5000, stock: 999, barcode: '613000000010', icon: 'fa-tools' },
-            { id: 'PRD-11', name: 'قرص تخزين SSD NVMe 1TB كينغستون', category: 'إلكترونيات', price: 11500, stock: 15, barcode: '613000000011', icon: 'fa-hdd' },
-            { id: 'PRD-12', name: 'راوتر واي فاي Wi-Fi 6 TP-Link', category: 'إلكترونيات', price: 9800, stock: 22, barcode: '613000000012', icon: 'fa-wifi' }
+        // ── Multilingual Dictionary (ar, fr, en) ───────────
+        var posTranslations = {
+            ar: {
+                pageTitle: "نقطة البيع والكاشير - Zeralda ERP POS",
+                posTitle: "Zeralda ERP — كاشير المبيعات",
+                cashierShift: "الكاشير: {cashier} | الوردية: مفتوحة",
+                defaultCashier: "المدير العام",
+                synced: "متصل ومتزامن",
+                fullscreenTitle: "شاشة كاملة (F11)",
+                themeTitle: "تبديل الوضع الداكن / الفاتح",
+                exitTitle: "العودة للوحة التحكم",
+                barcodePlaceholder: "امسح الباركود أو أدخل كود الصنف ثم اضغط Enter...",
+                searchPlaceholder: "بحث بالاسم...",
+                catAll: "الكل",
+                catElectronics: "إلكترونيات",
+                catFood: "أغذية ومشروبات",
+                catSupplies: "مستلزمات مكتبية",
+                catServices: "خدمات",
+                catGeneral: "عام",
+                cartTitle: "سلة الطلب",
+                customerWalkIn: "زبون عابر (Comptant)",
+                cartEmptyTitle: "السلة فارغة",
+                cartEmptySub: "امسح باركود المنتج أو اضغط على صنف من القائمة لإضافته للطلب",
+                subtotal: "المجموع الفرعي (HT):",
+                tax: "الضريبة (TVA 19%):",
+                discount: "الخصم (Remise):",
+                grandTotal: "الإجمالي النهائي:",
+                clearBtn: "إفراغ",
+                payBtn: "دفع (F9)",
+                deleteItem: "حذف",
+                checkoutTitle: "إتمام عملية الدفع",
+                payCash: "نقداً",
+                payCard: "بطاقة CIB",
+                payCheck: "شيك",
+                payCredit: "على الحساب",
+                dueAmountLabel: "المبلغ المطلوب دفعه:",
+                tenderedLabel: "المبلغ المستلم من الزبون (Reçu):",
+                exactAmountBtn: "المبلغ تماماً",
+                changeLabel: "المبلغ المتبقي للزبون (الباقي):",
+                cancelBtn: "إلغاء",
+                confirmPrintBtn: "تأكيد وطباعة التذكرة",
+                inStock: "متوفر",
+                noProductsFound: "لا توجد منتجات مطابقة للبحث",
+                barcodeNotFound: "لم يتم العثور على منتج يحمل الباركود: ",
+                confirmClearCart: "هل أنت متأكد من تفريغ سلة الطلب الحالية؟",
+                cartEmptyAlert: "السلة فارغة!",
+                underpaidConfirm: "المبلغ المستلم أقل من الإجمالي! هل تريد المتابعة كعملية على الحساب (آجل)؟",
+                currency: "د.ج",
+                rcptAddress: "الجزائر العاصمة، الجزائر",
+                rcptPhone: "هاتف: 023-00-00-00",
+                rcptTicket: "تذكرة: #",
+                rcptCashier: "الكاشير: ",
+                rcptCustomer: "الزبون: عابر",
+                rcptItemCol: "الصنف",
+                rcptQtyCol: "الكمية",
+                rcptTotalCol: "المجموع",
+                rcptSubtotal: "المجموع الفرعي:",
+                rcptTax: "الضريبة:",
+                rcptGrandTotal: "المجموع الكلي:",
+                rcptPaid: "المدفوع:",
+                rcptChange: "الباقي للزبون:",
+                rcptThanks: "شكراً لزيارتكم - مرحباً بكم دائماً"
+            },
+            fr: {
+                pageTitle: "Point de Vente (POS) - Zeralda ERP",
+                posTitle: "Zeralda ERP — Caisse POS",
+                cashierShift: "Caissier: {cashier} | Session: Ouverte",
+                defaultCashier: "Administrateur",
+                synced: "En ligne & Synchronisé",
+                fullscreenTitle: "Plein écran (F11)",
+                themeTitle: "Basculer Mode Sombre / Clair",
+                exitTitle: "Retour au tableau de bord",
+                barcodePlaceholder: "Scannez le code-barres ou tapez la référence...",
+                searchPlaceholder: "Rechercher par nom...",
+                catAll: "Tous",
+                catElectronics: "Électronique",
+                catFood: "Alimentation",
+                catSupplies: "Bureautique",
+                catServices: "Services",
+                catGeneral: "Général",
+                cartTitle: "Panier de Vente",
+                customerWalkIn: "Client de passage (Comptant)",
+                cartEmptyTitle: "Le panier est vide",
+                cartEmptySub: "Scannez un code-barres ou cliquez sur un article pour l'ajouter",
+                subtotal: "Sous-total (HT):",
+                tax: "TVA (19%):",
+                discount: "Remise:",
+                grandTotal: "Total à payer (TTC):",
+                clearBtn: "Vider",
+                payBtn: "Payer (F9)",
+                deleteItem: "Supprimer",
+                checkoutTitle: "Finaliser le Paiement",
+                payCash: "Espèces",
+                payCard: "Carte CIB",
+                payCheck: "Chèque",
+                payCredit: "À terme",
+                dueAmountLabel: "Montant dû à payer :",
+                tenderedLabel: "Montant reçu du client (Reçu) :",
+                exactAmountBtn: "Montant exact",
+                changeLabel: "Monnaie à rendre (Rendu) :",
+                cancelBtn: "Annuler",
+                confirmPrintBtn: "Confirmer & Imprimer le ticket",
+                inStock: "en stock",
+                noProductsFound: "Aucun produit correspondant trouvé",
+                barcodeNotFound: "Aucun produit trouvé avec le code-barres : ",
+                confirmClearCart: "Êtes-vous sûr de vouloir vider le panier actuel ?",
+                cartEmptyAlert: "Le panier est vide !",
+                underpaidConfirm: "Le montant reçu est inférieur au total ! Voulez-vous continuer à terme / crédit ?",
+                currency: "DA",
+                rcptAddress: "Alger, Algérie",
+                rcptPhone: "Tél: 023-00-00-00",
+                rcptTicket: "Ticket: #",
+                rcptCashier: "Caissier: ",
+                rcptCustomer: "Client: Comptant",
+                rcptItemCol: "Article",
+                rcptQtyCol: "Qté",
+                rcptTotalCol: "Total",
+                rcptSubtotal: "Sous-total (HT):",
+                rcptTax: "TVA (19%):",
+                rcptGrandTotal: "TOTAL TTC:",
+                rcptPaid: "Reçu:",
+                rcptChange: "Monnaie rendue:",
+                rcptThanks: "Merci de votre visite - À bientôt !"
+            },
+            en: {
+                pageTitle: "Point of Sale (POS) - Zeralda ERP",
+                posTitle: "Zeralda ERP — Point of Sale",
+                cashierShift: "Cashier: {cashier} | Shift: Open",
+                defaultCashier: "Administrator",
+                synced: "Online & Synced",
+                fullscreenTitle: "Fullscreen (F11)",
+                themeTitle: "Toggle Dark / Light Mode",
+                exitTitle: "Back to Dashboard",
+                barcodePlaceholder: "Scan barcode or enter SKU then press Enter...",
+                searchPlaceholder: "Search by name...",
+                catAll: "All",
+                catElectronics: "Electronics",
+                catFood: "Food & Beverage",
+                catSupplies: "Office Supplies",
+                catServices: "Services",
+                catGeneral: "General",
+                cartTitle: "Order Cart",
+                customerWalkIn: "Walk-in Customer (Cash)",
+                cartEmptyTitle: "Cart is empty",
+                cartEmptySub: "Scan an item barcode or click a product from catalog to add",
+                subtotal: "Subtotal (Excl. Tax):",
+                tax: "Tax (VAT 19%):",
+                discount: "Discount:",
+                grandTotal: "Grand Total (Incl. Tax):",
+                clearBtn: "Clear",
+                payBtn: "Pay (F9)",
+                deleteItem: "Delete",
+                checkoutTitle: "Complete Payment",
+                payCash: "Cash",
+                payCard: "Bank Card",
+                payCheck: "Check",
+                payCredit: "On Account",
+                dueAmountLabel: "Total Amount Due:",
+                tenderedLabel: "Amount Received (Tendered):",
+                exactAmountBtn: "Exact Amount",
+                changeLabel: "Change to Return:",
+                cancelBtn: "Cancel",
+                confirmPrintBtn: "Confirm & Print Receipt",
+                inStock: "in stock",
+                noProductsFound: "No matching products found",
+                barcodeNotFound: "No product found with barcode: ",
+                confirmClearCart: "Are you sure you want to clear current cart?",
+                cartEmptyAlert: "The cart is empty!",
+                underpaidConfirm: "Received amount is less than total! Proceed on credit / account?",
+                currency: "DA",
+                rcptAddress: "Algiers, Algeria",
+                rcptPhone: "Tel: 023-00-00-00",
+                rcptTicket: "Receipt: #",
+                rcptCashier: "Cashier: ",
+                rcptCustomer: "Customer: Walk-in",
+                rcptItemCol: "Item",
+                rcptQtyCol: "Qty",
+                rcptTotalCol: "Total",
+                rcptSubtotal: "Subtotal:",
+                rcptTax: "Tax (19%):",
+                rcptGrandTotal: "GRAND TOTAL:",
+                rcptPaid: "Paid:",
+                rcptChange: "Change:",
+                rcptThanks: "Thank you for your visit - Welcome back!"
+            }
+        };
+
+        // Category definitions
+        var _categoryDefs = [
+            { id: 'all', key: 'catAll', icon: 'fa-th-large' },
+            { id: 'electronics', key: 'catElectronics' },
+            { id: 'food', key: 'catFood' },
+            { id: 'supplies', key: 'catSupplies' },
+            { id: 'services', key: 'catServices' }
         ];
 
+        // Default product inventory catalog with multi-language titles
+        var _defaultCatalog = [
+            { id: 'PRD-01', name_ar: 'لابتوب ديل XPS 13 Core i7', name_fr: 'PC Portable Dell XPS 13 Core i7', name_en: 'Dell XPS 13 Core i7 Laptop', cat_key: 'electronics', price: 145000, stock: 12, barcode: '613000000001', icon: 'fa-laptop' },
+            { id: 'PRD-02', name_ar: 'طابعة فواتير حرارية 80 مم USB/LAN', name_fr: 'Imprimante Thermique Ticket 80mm USB/LAN', name_en: 'Thermal Receipt Printer 80mm USB/LAN', cat_key: 'electronics', price: 18500, stock: 35, barcode: '613000000002', icon: 'fa-print' },
+            { id: 'PRD-03', name_ar: 'قارئ باركود ليزري أوتوماتيكي', name_fr: 'Lecteur Code-barres Laser Automatique', name_en: 'Automatic Laser Barcode Scanner', cat_key: 'electronics', price: 7200, stock: 24, barcode: '613000000003', icon: 'fa-barcode' },
+            { id: 'PRD-04', name_ar: 'شاشة سامسونج منحنية 27 بوصة', name_fr: 'Écran Incurvé Samsung 27"', name_en: 'Samsung Curved Monitor 27"', cat_key: 'electronics', price: 42000, stock: 10, barcode: '613000000004', icon: 'fa-tv' },
+            { id: 'PRD-05', name_ar: 'لوحة مفاتيح وماوس لاسلكي لوجيتيك', name_fr: 'Pack Clavier + Souris Sans Fil Logitech', name_en: 'Logitech Wireless Keyboard & Mouse', cat_key: 'electronics', price: 6500, stock: 40, barcode: '613000000005', icon: 'fa-keyboard' },
+            { id: 'PRD-06', name_ar: 'قهوة اسبريسو فاخرة 1 كغ', name_fr: 'Café Espresso Premium en Grains 1kg', name_en: 'Premium Espresso Coffee Beans 1kg', cat_key: 'food', price: 2400, stock: 50, barcode: '613000000006', icon: 'fa-mug-hot' },
+            { id: 'PRD-07', name_ar: 'مياه معدنية طبيعية 1.5 لتر (حزمة)', name_fr: 'Pack Eau Minérale Naturelle 1.5L', name_en: 'Natural Mineral Water 1.5L Pack', cat_key: 'food', price: 380, stock: 120, barcode: '613000000007', icon: 'fa-bottle-water' },
+            { id: 'PRD-08', name_ar: 'ورق طباعة A4 80g حزمة 500 ورقة', name_fr: 'Rame Papier A4 80g (500 feuilles)', name_en: 'A4 Printing Paper 80g (500 sheets)', cat_key: 'supplies', price: 850, stock: 80, barcode: '613000000008', icon: 'fa-copy' },
+            { id: 'PRD-09', name_ar: 'حبر طابعة ليزر أسود HP 85A', name_fr: 'Toner Laser Noir HP 85A Original', name_en: 'HP 85A Black Laser Toner', cat_key: 'supplies', price: 3200, stock: 18, barcode: '613000000009', icon: 'fa-fill-drip' },
+            { id: 'PRD-10', name_ar: 'خدمة صيانة وبرمجة برمجيات', name_fr: 'Service Maintenance & Dév Logiciel', name_en: 'Software Maintenance & Dev Service', cat_key: 'services', price: 5000, stock: 999, barcode: '613000000010', icon: 'fa-tools' },
+            { id: 'PRD-11', name_ar: 'قرص تخزين SSD NVMe 1TB كينغستون', name_fr: 'Disque SSD Kingston NVMe 1TB', name_en: 'Kingston 1TB NVMe SSD', cat_key: 'electronics', price: 11500, stock: 15, barcode: '613000000011', icon: 'fa-hdd' },
+            { id: 'PRD-12', name_ar: 'راوتر واي فاي Wi-Fi 6 TP-Link', name_fr: 'Routeur Wi-Fi 6 TP-Link Gigabit', name_en: 'TP-Link Wi-Fi 6 Gigabit Router', cat_key: 'electronics', price: 9800, stock: 22, barcode: '613000000012', icon: 'fa-wifi' }
+        ];
+
+        var _catalog = _defaultCatalog.slice();
         var _cart = [];
         var _activeCategory = 'all';
+        var _currentLang = 'ar';
         var _currency = 'د.ج';
         var _selectedPayMethod = 'cash';
+
+        // ── Translation Helper ─────────────────────────────
+        function t(key) {
+            if (posTranslations[_currentLang] && posTranslations[_currentLang][key]) {
+                return posTranslations[_currentLang][key];
+            }
+            if (posTranslations['ar'] && posTranslations['ar'][key]) {
+                return posTranslations['ar'][key];
+            }
+            return key;
+        }
+
+        function getProdName(prod, lang) {
+            if (!prod) return '';
+            if (lang === 'fr' && prod.name_fr) return prod.name_fr;
+            if (lang === 'en' && prod.name_en) return prod.name_en;
+            if (lang === 'ar' && prod.name_ar) return prod.name_ar;
+            return prod.name || prod.title || prod.name_ar || 'Article';
+        }
+
+        function getProdCategoryName(prod, lang) {
+            if (!prod) return t('catGeneral');
+            if (prod.cat_key && _categoryDefs.some(function(c) { return c.id === prod.cat_key; })) {
+                var def = _categoryDefs.find(function(c) { return c.id === prod.cat_key; });
+                if (def && posTranslations[lang][def.key]) return posTranslations[lang][def.key];
+            }
+            return prod.category || t('catGeneral');
+        }
+
+        // ── Language Management ────────────────────────────
+        function setLanguage(lang, persist) {
+            if (persist === undefined) persist = true;
+            if (!posTranslations[lang]) lang = 'ar';
+            _currentLang = lang;
+            _currency = posTranslations[lang].currency;
+
+            if (persist) {
+                try { localStorage.setItem('preferred-language', lang); } catch(e) {}
+                if (typeof ZS !== 'undefined' && ZS.setItem) {
+                    try { ZS.setItem('preferred-language', lang); } catch(e) {}
+                }
+            }
+
+            var isRtl = (lang === 'ar');
+            document.documentElement.setAttribute('lang', lang);
+            document.documentElement.setAttribute('dir', isRtl ? 'rtl' : 'ltr');
+
+            // Update current language code pill in header
+            var currentBadge = document.getElementById('posLangCurrentCode');
+            if (currentBadge) currentBadge.textContent = lang.toUpperCase();
+
+            // Highlight active language in menu
+            document.querySelectorAll('.pos-lang-item').forEach(function(item) {
+                if (item.getAttribute('data-lang') === lang) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+
+            // Update Page Title
+            document.title = t('pageTitle');
+
+            // Update elements with data-i18n
+            document.querySelectorAll('[data-i18n]').forEach(function(el) {
+                var key = el.getAttribute('data-i18n');
+                if (posTranslations[lang][key]) {
+                    el.textContent = posTranslations[lang][key];
+                }
+            });
+
+            // Update placeholder attributes
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(function(el) {
+                var key = el.getAttribute('data-i18n-placeholder');
+                if (posTranslations[lang][key]) {
+                    el.placeholder = posTranslations[lang][key];
+                }
+            });
+
+            // Update title attributes
+            document.querySelectorAll('[data-i18n-title]').forEach(function(el) {
+                var key = el.getAttribute('data-i18n-title');
+                if (posTranslations[lang][key]) {
+                    el.title = posTranslations[lang][key];
+                }
+            });
+
+            // Update customer dropdown option
+            var custOption = document.querySelector('#customerSelect option[value="walk_in"]');
+            if (custOption) custOption.textContent = t('customerWalkIn');
+
+            // Update existing cart item titles
+            _cart.forEach(function(item) {
+                if (item.prodRef) {
+                    item.name = getProdName(item.prodRef, _currentLang);
+                }
+            });
+
+            // Update company & cashier header
+            loadSettings();
+
+            // Refresh categories navigation pills
+            renderCategoriesNav();
+
+            // Re-render catalog and cart UI
+            renderCatalog();
+            updateCartUI();
+
+            // Update thermal receipt static labels
+            updateReceiptStaticLabels();
+        }
+
+        function toggleLangDropdown(e) {
+            if (e) e.stopPropagation();
+            var menu = document.getElementById('posLangMenu');
+            if (menu) menu.classList.toggle('show');
+        }
+
+        function changeLanguage(lang) {
+            setLanguage(lang, true);
+            var menu = document.getElementById('posLangMenu');
+            if (menu) menu.classList.remove('show');
+        }
+
+        // Close dropdown on outside click
+        document.addEventListener('click', function(e) {
+            var menu = document.getElementById('posLangMenu');
+            var btn = document.getElementById('posLangBtn');
+            if (menu && menu.classList.contains('show')) {
+                if (!menu.contains(e.target) && !btn.contains(e.target)) {
+                    menu.classList.remove('show');
+                }
+            }
+        });
 
         // ── Initialization ─────────────────────────────────
         document.addEventListener('DOMContentLoaded', function() {
             startClock();
+
+            // Load saved language preference (localStorage / ZS)
+            var savedLang = 'ar';
+            try {
+                savedLang = (typeof ZS !== 'undefined' && ZS.getItem ? ZS.getItem('preferred-language') : '') || localStorage.getItem('preferred-language') || 'ar';
+            } catch(e) {
+                savedLang = 'ar';
+            }
+            if (['ar', 'fr', 'en'].indexOf(savedLang) === -1) savedLang = 'ar';
+
             loadSettings();
             loadInventoryFromStore();
-            renderCatalog();
-            updateCartUI();
+            setLanguage(savedLang, false);
+
+            // Listen for cross-tab or settings language changes
+            window.addEventListener('storage', function(e) {
+                if (e.key === 'preferred-language' && e.newValue && e.newValue !== _currentLang) {
+                    setLanguage(e.newValue, false);
+                }
+            });
 
             // Setup barcode scanner listener
             var barcodeInp = document.getElementById('barcodeInput');
@@ -1158,19 +1691,38 @@
 
         function loadSettings() {
             try {
+                var compName = 'Zeralda ERP';
                 if (window.CompanyStorage) {
                     var comp = CompanyStorage.getActiveCompany();
                     if (comp && comp.name) {
-                        document.getElementById('posCompanyTitle').textContent = comp.name + ' — كاشير المبيعات';
-                        document.getElementById('rcptCompany').textContent = comp.name.toUpperCase();
+                        compName = comp.name;
                     }
                 }
+                var compTitleEl = document.getElementById('posCompanyTitle');
+                if (compTitleEl) {
+                    var suffix = (_currentLang === 'ar') ? 'كاشير المبيعات' : ((_currentLang === 'fr') ? 'Caisse POS' : 'Point of Sale');
+                    compTitleEl.textContent = compName + ' — ' + suffix;
+                }
+                var rcptCompEl = document.getElementById('rcptCompany');
+                if (rcptCompEl) {
+                    rcptCompEl.textContent = compName.toUpperCase() + ' STORE';
+                }
+
+                var cashierName = t('defaultCashier');
                 var userJson = localStorage.getItem('zeralda-current-user');
                 if (userJson) {
                     var u = JSON.parse(userJson);
-                    var name = u.fullName || u.username || u.email || 'الكاشير';
-                    document.getElementById('posCashierName').textContent = 'الكاشير: ' + name + ' | الوردية: مفتوحة';
-                    document.getElementById('rcptCashier').textContent = 'الكاشير: ' + name;
+                    cashierName = u.fullName || u.username || u.email || cashierName;
+                }
+
+                var cashierEl = document.getElementById('posCashierName');
+                if (cashierEl) {
+                    cashierEl.textContent = t('cashierShift').replace('{cashier}', cashierName);
+                }
+
+                var rcptCashierEl = document.getElementById('rcptCashier');
+                if (rcptCashierEl) {
+                    rcptCashierEl.textContent = t('rcptCashier') + cashierName;
                 }
             } catch(e) {}
         }
@@ -1184,8 +1736,12 @@
                         _catalog = parsed.map(function(item, idx) {
                             return {
                                 id: item.id || ('PRD-' + (idx + 1)),
-                                name: item.name || item.title || 'منتج غير مسمى',
+                                name_ar: item.name_ar || item.name || item.title || 'منتج غير مسمى',
+                                name_fr: item.name_fr || item.name || item.title || 'Article sans nom',
+                                name_en: item.name_en || item.name || item.title || 'Unnamed Product',
+                                name: item.name || item.title || 'Article',
                                 category: item.category || 'عام',
+                                cat_key: (item.category ? item.category.toLowerCase() : 'general'),
                                 price: parseFloat(item.price || item.unit_price || item.sellingPrice || 0),
                                 stock: parseInt(item.stock || item.quantity || 10, 10),
                                 barcode: item.barcode || item.sku || ('61300000' + (idx + 100)),
@@ -1197,44 +1753,24 @@
             } catch(e) {}
         }
 
-        // ── Catalog Rendering ──────────────────────────────
-        function renderCatalog() {
-            var container = document.getElementById('productsGridContainer');
+        // ── Categories Navigation ──────────────────────────
+        function renderCategoriesNav() {
+            var container = document.getElementById('catNavContainer');
             if (!container) return;
             container.innerHTML = '';
 
-            var filterTxt = (document.getElementById('nameFilterInput') ? document.getElementById('nameFilterInput').value : '').toLowerCase().trim();
-
-            var filtered = _catalog.filter(function(prod) {
-                var matchCat = (_activeCategory === 'all') || (prod.category && prod.category.indexOf(_activeCategory) !== -1);
-                var matchTxt = !filterTxt || prod.name.toLowerCase().indexOf(filterTxt) !== -1 || prod.barcode.indexOf(filterTxt) !== -1;
-                return matchCat && matchTxt;
-            });
-
-            if (filtered.length === 0) {
-                container.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--pos-muted);"><i class="fas fa-search fa-2x" style="opacity:0.3; margin-bottom:8px; display:block;"></i>لا توجد منتجات مطابقة للبحث</div>';
-                return;
-            }
-
-            filtered.forEach(function(prod) {
-                var card = document.createElement('div');
-                card.className = 'pos-product-card';
-                card.onclick = function() { addToCart(prod); };
-
-                var stockClass = prod.stock <= 5 ? 'pos-stock-badge pos-stock-low' : 'pos-stock-badge';
-
-                card.innerHTML = 
-                    '<div class="pos-prod-thumb"><i class="fas ' + (prod.icon || 'fa-box') + '"></i></div>' +
-                    '<div>' +
-                        '<div class="pos-prod-cat">' + escapeHtml(prod.category || 'عام') + '</div>' +
-                        '<div class="pos-prod-title" title="' + escapeHtml(prod.name) + '">' + escapeHtml(prod.name) + '</div>' +
-                    '</div>' +
-                    '<div class="pos-prod-footer">' +
-                        '<div class="pos-prod-price">' + formatMoney(prod.price) + '</div>' +
-                        '<span class="' + stockClass + '">' + prod.stock + ' متوفر</span>' +
-                    '</div>';
-
-                container.appendChild(card);
+            _categoryDefs.forEach(function(c) {
+                var btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'pos-cat-pill' + (_activeCategory === c.id ? ' active' : '');
+                var label = posTranslations[_currentLang][c.key] || c.id;
+                if (c.icon) {
+                    btn.innerHTML = '<i class="fas ' + c.icon + '"></i> <span>' + escapeHtml(label) + '</span>';
+                } else {
+                    btn.textContent = label;
+                }
+                btn.onclick = function() { selectCategory(c.id, this); };
+                container.appendChild(btn);
             });
         }
 
@@ -1251,6 +1787,53 @@
             renderCatalog();
         }
 
+        // ── Catalog Rendering ──────────────────────────────
+        function renderCatalog() {
+            var container = document.getElementById('productsGridContainer');
+            if (!container) return;
+            container.innerHTML = '';
+
+            var filterTxt = (document.getElementById('nameFilterInput') ? document.getElementById('nameFilterInput').value : '').toLowerCase().trim();
+
+            var filtered = _catalog.filter(function(prod) {
+                var prodCatKey = prod.cat_key || '';
+                var prodCat = (prod.category || '').toLowerCase();
+                var matchCat = (_activeCategory === 'all') || (prodCatKey === _activeCategory) || (prodCat.indexOf(_activeCategory) !== -1);
+
+                var pName = getProdName(prod, _currentLang).toLowerCase();
+                var matchTxt = !filterTxt || pName.indexOf(filterTxt) !== -1 || (prod.barcode && prod.barcode.indexOf(filterTxt) !== -1);
+                return matchCat && matchTxt;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--pos-muted);"><i class="fas fa-search fa-2x" style="opacity:0.3; margin-bottom:8px; display:block;"></i>' + escapeHtml(t('noProductsFound')) + '</div>';
+                return;
+            }
+
+            filtered.forEach(function(prod) {
+                var card = document.createElement('div');
+                card.className = 'pos-product-card';
+                card.onclick = function() { addToCart(prod); };
+
+                var stockClass = prod.stock <= 5 ? 'pos-stock-badge pos-stock-low' : 'pos-stock-badge';
+                var pTitle = getProdName(prod, _currentLang);
+                var pCat = getProdCategoryName(prod, _currentLang);
+
+                card.innerHTML = 
+                    '<div class="pos-prod-thumb"><i class="fas ' + (prod.icon || 'fa-box') + '"></i></div>' +
+                    '<div>' +
+                        '<div class="pos-prod-cat">' + escapeHtml(pCat) + '</div>' +
+                        '<div class="pos-prod-title" title="' + escapeHtml(pTitle) + '">' + escapeHtml(pTitle) + '</div>' +
+                    '</div>' +
+                    '<div class="pos-prod-footer">' +
+                        '<div class="pos-prod-price">' + formatMoney(prod.price) + '</div>' +
+                        '<span class="' + stockClass + '">' + prod.stock + ' ' + escapeHtml(t('inStock')) + '</span>' +
+                    '</div>';
+
+                container.appendChild(card);
+            });
+        }
+
         // ── Barcode Scanner Logic ──────────────────────────
         function handleBarcodeScan(code) {
             var found = _catalog.find(function(p) {
@@ -1261,7 +1844,7 @@
                 addToCart(found);
                 playBeepSound();
             } else {
-                alert('لم يتم العثور على منتج يحمل الباركود: ' + code);
+                alert(t('barcodeNotFound') + code);
             }
         }
 
@@ -1290,7 +1873,8 @@
             } else {
                 _cart.push({
                     id: prod.id,
-                    name: prod.name,
+                    prodRef: prod,
+                    name: getProdName(prod, _currentLang),
                     price: prod.price,
                     qty: 1,
                     barcode: prod.barcode
@@ -1316,7 +1900,7 @@
 
         function clearCart() {
             if (_cart.length === 0) return;
-            if (confirm('هل أنت متأكد من تفريغ سلة الطلب الحالية؟')) {
+            if (confirm(t('confirmClearCart'))) {
                 _cart = [];
                 updateCartUI();
             }
@@ -1333,8 +1917,8 @@
                 container.innerHTML = 
                     '<div class="pos-cart-empty">' +
                         '<i class="fas fa-shopping-cart"></i>' +
-                        '<strong>السلة فارغة</strong>' +
-                        '<small>امسح باركود المنتج أو اضغط على صنف من القائمة لإضافته للطلب</small>' +
+                        '<strong>' + escapeHtml(t('cartEmptyTitle')) + '</strong>' +
+                        '<small>' + escapeHtml(t('cartEmptySub')) + '</small>' +
                     '</div>';
                 document.getElementById('cartSubtotal').textContent = formatMoney(0);
                 document.getElementById('cartTax').textContent = formatMoney(0);
@@ -1363,7 +1947,7 @@
                     '</div>' +
                     '<div class="pos-row-total">' +
                         '<span class="pos-row-price">' + formatMoney(lineTotal) + '</span>' +
-                        '<button type="button" class="pos-row-del" onclick="removeCartItem(' + idx + ')" title="حذف"><i class="fas fa-trash"></i> حذف</button>' +
+                        '<button type="button" class="pos-row-del" onclick="removeCartItem(' + idx + ')" title="' + escapeHtml(t('deleteItem')) + '"><i class="fas fa-trash"></i> ' + escapeHtml(t('deleteItem')) + '</button>' +
                     '</div>';
                 container.appendChild(row);
             });
@@ -1379,7 +1963,7 @@
         // ── Checkout & Change Calculator ───────────────────
         function openCheckoutModal() {
             if (_cart.length === 0) {
-                alert('السلة فارغة!');
+                alert(t('cartEmptyAlert'));
                 return;
             }
             var subtotal = _cart.reduce(function(sum, i) { return sum + (i.price * i.qty); }, 0);
@@ -1431,22 +2015,52 @@
         }
 
         // ── Finalize Sale & Thermal Printing ───────────────
+        function updateReceiptStaticLabels() {
+            var l = posTranslations[_currentLang];
+            var rcptAddress = document.getElementById('rcptAddress');
+            if (rcptAddress) rcptAddress.textContent = l.rcptAddress;
+            var rcptPhone = document.getElementById('rcptPhone');
+            if (rcptPhone) rcptPhone.textContent = l.rcptPhone;
+            var rcptColItem = document.getElementById('rcptColItem');
+            if (rcptColItem) rcptColItem.textContent = l.rcptItemCol;
+            var rcptColQty = document.getElementById('rcptColQty');
+            if (rcptColQty) rcptColQty.textContent = l.rcptQtyCol;
+            var rcptColTotal = document.getElementById('rcptColTotal');
+            if (rcptColTotal) rcptColTotal.textContent = l.rcptTotalCol;
+            var lblSubtotal = document.getElementById('rcptLblSubtotal');
+            if (lblSubtotal) lblSubtotal.textContent = l.rcptSubtotal;
+            var lblTax = document.getElementById('rcptLblTax');
+            if (lblTax) lblTax.textContent = l.rcptTax;
+            var lblGrandTotal = document.getElementById('rcptLblGrandTotal');
+            if (lblGrandTotal) lblGrandTotal.textContent = l.rcptGrandTotal;
+            var lblPaid = document.getElementById('rcptLblPaid');
+            if (lblPaid) lblPaid.textContent = l.rcptPaid;
+            var lblChange = document.getElementById('rcptLblChange');
+            if (lblChange) lblChange.textContent = l.rcptChange;
+            var rcptThanks = document.getElementById('rcptThanks');
+            if (rcptThanks) rcptThanks.textContent = l.rcptThanks;
+            var rcptClient = document.getElementById('rcptClient');
+            if (rcptClient) rcptClient.textContent = l.rcptCustomer;
+        }
+
         function finalizeTransaction() {
             var subtotal = _cart.reduce(function(sum, i) { return sum + (i.price * i.qty); }, 0);
             var grandTotal = subtotal * 1.19;
             var tendered = parseFloat(document.getElementById('tenderedInput').value) || 0;
 
             if (_selectedPayMethod === 'cash' && tendered < grandTotal) {
-                if (!confirm('المبلغ المستلم أقل من الإجمالي! هل تريد المتابعة كعملية على الحساب (آجل)؟')) {
+                if (!confirm(t('underpaidConfirm'))) {
                     return;
                 }
             }
 
             var invoiceNum = 'POS-' + Date.now().toString().slice(-6);
-            var dateStr = new Date().toLocaleString('ar-DZ');
+            var dateLocale = (_currentLang === 'ar') ? 'ar-DZ' : ((_currentLang === 'fr') ? 'fr-FR' : 'en-US');
+            var dateStr = new Date().toLocaleString(dateLocale);
 
-            // Populate thermal receipt
-            document.getElementById('rcptInvoiceNo').textContent = 'تذكرة: #' + invoiceNum;
+            // Populate thermal receipt with current language
+            updateReceiptStaticLabels();
+            document.getElementById('rcptInvoiceNo').textContent = t('rcptTicket') + invoiceNum;
             document.getElementById('rcptDate').textContent = dateStr;
             document.getElementById('rcptSubtotal').textContent = formatMoney(subtotal);
             document.getElementById('rcptTax').textContent = formatMoney(subtotal * 0.19);
@@ -1454,14 +2068,15 @@
             document.getElementById('rcptPaid').textContent = formatMoney(tendered);
             document.getElementById('rcptChange').textContent = formatMoney(Math.max(0, tendered - grandTotal));
 
+            var isLtr = (_currentLang !== 'ar');
             var tbody = document.getElementById('rcptItemsBody');
             tbody.innerHTML = '';
             _cart.forEach(function(item) {
                 var tr = document.createElement('tr');
                 tr.innerHTML = 
-                    '<td>' + escapeHtml(item.name) + '</td>' +
+                    '<td style="text-align:' + (isLtr ? 'left' : 'right') + ';">' + escapeHtml(item.name) + '</td>' +
                     '<td style="text-align:center;">' + item.qty + '</td>' +
-                    '<td style="text-align:left;">' + formatMoney(item.price * item.qty) + '</td>';
+                    '<td style="text-align:' + (isLtr ? 'right' : 'left') + ';">' + formatMoney(item.price * item.qty) + '</td>';
                 tbody.appendChild(tr);
             });
 
