@@ -1013,7 +1013,33 @@
 
     <div class="modal" id="quickAddProductModal">
       <div class="modal-content">
-        <div class="modal-header"><h2 id="quickProductModalTitle" data-en="Add Product" data-ar="إضافة منتج" data-fr="Ajouter un produit">Add Product</h2><span class="close-modal" onclick="closeModal('quickAddProductModal')">&times;</span></div>
+        <div class="modal-header" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+            <h2 id="quickProductModalTitle" data-en="Add Product" data-ar="إضافة منتج" data-fr="Ajouter un produit" style="margin:0;">Add Product</h2>
+            <button type="button" class="btn btn-ai-scan btn-sm" id="btnQuickProductAiScanHeader" onclick="triggerQuickProductOcr()" title="Scan & Extraction Copilote IA" style="background:linear-gradient(135deg,#7c3aed,#2563eb);color:#fff;border:none;border-radius:8px;padding:6px 14px;font-weight:700;font-size:12.5px;display:inline-flex;align-items:center;gap:6px;cursor:pointer;box-shadow:0 3px 10px rgba(124,58,237,0.3);transition:all 0.2s;">
+              <i class="fas fa-wand-magic-sparkles"></i>
+              <span data-en="Copilot IA Scan" data-ar="مسح ذكي (Copilot IA)" data-fr="Scan Copilote IA">Scan Copilote IA</span>
+            </button>
+          </div>
+          <span class="close-modal" onclick="closeModal('quickAddProductModal')">&times;</span>
+        </div>
+
+        <div class="quick-product-ai-card" style="background:linear-gradient(135deg, rgba(124,58,237,0.07), rgba(37,99,235,0.07));border:1.5px dashed rgba(124,58,237,0.45);border-radius:12px;padding:12px 16px;margin:12px 0 16px 0;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#7c3aed,#2563eb);color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 3px 8px rgba(124,58,237,0.3);">
+              <i class="fas fa-camera"></i>
+            </div>
+            <div>
+              <div style="font-weight:700;font-size:13.5px;color:#0f172a;" data-en="Scan Product with Copilot IA" data-ar="مسح واستخراج بيانات المنتج عبر المساعد الذكي" data-fr="Scanner le produit avec Copilote IA">Scanner le produit avec Copilote IA</div>
+              <div style="font-size:11.5px;color:#64748b;" data-en="Capture package, barcode, or invoice to autofill product details" data-ar="التقط صورة للعلبة أو الباركود أو الفاتورة لتعبئة الحقول تلقائياً" data-fr="Photographiez l'emballage, le code-barres ou la fiche pour remplir les champs">Photographiez l'emballage, le code-barres ou la fiche pour remplir les champs</div>
+            </div>
+          </div>
+          <button type="button" class="btn btn-ai-scan" onclick="triggerQuickProductOcr()" style="background:linear-gradient(135deg,#7c3aed,#2563eb);color:#fff;border:none;border-radius:9px;padding:9px 18px;font-weight:700;font-size:13px;display:inline-flex;align-items:center;gap:8px;cursor:pointer;box-shadow:0 4px 12px rgba(124,58,237,0.25);">
+            <i class="fas fa-wand-magic-sparkles"></i>
+            <span data-en="Copilot IA Scan" data-ar="مسح ذكي (Copilot IA)" data-fr="Scan Copilote IA">Scan Copilote IA</span>
+          </button>
+        </div>
+
         <div class="form-row">
           <div class="form-group"><label class="form-label" data-en="Product Code" data-ar="رمز المنتج" data-fr="Code produit">Product Code</label><input id="quickProductCode" class="form-input" type="text" placeholder="PRD-001" data-en-placeholder="PRD-001" data-ar-placeholder="PRD-001" data-fr-placeholder="PRD-001"></div>
           <div class="form-group"><label class="form-label" data-en="Product Name" data-ar="اسم المنتج" data-fr="Nom du produit">Product Name</label><input id="quickProductName" class="form-input" type="text" placeholder="Product name" data-en-placeholder="Product name" data-ar-placeholder="اسم المنتج" data-fr-placeholder="Nom du produit"></div>
@@ -1039,9 +1065,15 @@
           <div class="form-group"><label class="form-label" data-en="Barcode" data-ar="الباركود" data-fr="Code-barres">Barcode</label><input id="quickProductBarcode" class="form-input" type="text" placeholder="Barcode" data-en-placeholder="Barcode" data-ar-placeholder="الباركود" data-fr-placeholder="Code-barres"></div>
         </div>
         <div class="form-group"><label class="form-label" data-en="Description" data-ar="الوصف" data-fr="Description">Description</label><textarea id="quickProductDescription" class="form-textarea" rows="3" placeholder="Description" data-en-placeholder="Description" data-ar-placeholder="الوصف" data-fr-placeholder="Description"></textarea></div>
-        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
-          <button class="btn btn-secondary" type="button" onclick="closeModal('quickAddProductModal')"><i class="fas fa-times"></i> <span data-en="Cancel" data-ar="إلغاء" data-fr="Annuler">Cancel</span></button>
-          <button class="btn btn-primary" type="button" onclick="saveQuickProductFromSales()"><i class="fas fa-save"></i> <span data-en="Save Product" data-ar="حفظ المنتج" data-fr="Enregistrer le produit">Save Product</span></button>
+        <div style="display:flex;gap:10px;justify-content:space-between;align-items:center;margin-top:18px;flex-wrap:wrap;">
+          <button type="button" class="btn btn-ai-scan" onclick="triggerQuickProductOcr()" style="background:linear-gradient(135deg,#7c3aed,#2563eb);color:#fff;border:none;border-radius:9px;padding:9px 16px;font-weight:700;font-size:13px;display:inline-flex;align-items:center;gap:7px;cursor:pointer;box-shadow:0 4px 12px rgba(124,58,237,0.25);">
+            <i class="fas fa-wand-magic-sparkles"></i>
+            <span data-en="Copilot IA Scan" data-ar="مسح ذكي (Copilot IA)" data-fr="Scan Copilote IA">Scan Copilote IA</span>
+          </button>
+          <div style="display:flex;gap:10px;">
+            <button class="btn btn-secondary" type="button" onclick="closeModal('quickAddProductModal')"><i class="fas fa-times"></i> <span data-en="Cancel" data-ar="إلغاء" data-fr="Annuler">Cancel</span></button>
+            <button class="btn btn-primary" type="button" onclick="saveQuickProductFromSales()"><i class="fas fa-save"></i> <span data-en="Save Product" data-ar="حفظ المنتج" data-fr="Enregistrer le produit">Save Product</span></button>
+          </div>
         </div>
       </div>
     </div>
@@ -2496,6 +2528,143 @@ function saveQuickProductFromSales(){
   }
   pendingQuickProductTarget = null;
   closeModal('quickAddProductModal');
+}
+
+function triggerQuickProductOcr(){
+  var ocr = window.ZeraldaOCR || window.ZeraldaOCRUnified;
+  var openMethod = null;
+  if(ocr && typeof ocr.openModal === 'function'){
+    openMethod = function(opts){ return ocr.openModal(opts); };
+  } else if(ocr && typeof ocr.open === 'function'){
+    openMethod = function(opts){ return ocr.open(opts); };
+  } else if(typeof window.openOcrModal === 'function'){
+    openMethod = function(opts){ return window.openOcrModal(opts); };
+  }
+
+  if(openMethod){
+    try {
+      openMethod({
+        mode: 'product',
+        title: (window.currentLanguage === 'fr' ? 'Copilote IA : Scan & Extraction Produit' : (window.currentLanguage === 'en' ? 'Copilot IA: Product Scan & Recognition' : 'المساعد الذكي (Copilot IA) : مسح واستخراج بيانات المنتج')),
+        subtitle: (window.currentLanguage === 'fr' ? 'Prenez en photo l\'emballage, code-barres ou fiche technique' : (window.currentLanguage === 'en' ? 'Photograph packaging, barcode label, or spec sheet' : 'قم بتصوير علبة المنتج، الباركود، الفاتورة أو بطاقة المواصفات')),
+        icon: 'fas fa-barcode',
+        onApply: function(data){
+          applyOcrToQuickProduct(data);
+        }
+      });
+      return;
+    } catch(err){
+      console.error('[QuickProduct OCR] Error opening unified OCR modal:', err);
+    }
+  }
+
+  alert(window.currentLanguage === 'fr' ? 'Copilote IA en cours de chargement... Veuillez réessayer.' : 'Copilot IA is loading, please try again.');
+}
+
+function applyOcrToQuickProduct(data){
+  if(!data) return;
+  var payload = data.payload || {};
+  var fields = (payload.analysis && payload.analysis.fields) || {};
+  var raw = data.rawText || '';
+
+  // 1. Product Name
+  var pName = data.productName || fields.product_name || fields.name || '';
+  if(!pName && Array.isArray(data.items) && data.items.length){
+    pName = data.items[0].description || '';
+  }
+  if(!pName && raw){
+    var nm = raw.match(/(?:d[eé]signation|produit|article|nom|libell[eé]|المنتج|السلعة)\s*[:\-]?\s*([^\n\r]{2,80})/i);
+    if(nm) pName = nm[1].trim();
+  }
+  var nameEl = document.getElementById('quickProductName');
+  if(nameEl && pName) nameEl.value = pName;
+
+  // 2. Barcode
+  var barcode = data.barcode || fields.barcode || payload.barcode || '';
+  if(!barcode && raw){
+    var bcM = raw.match(/\b([0-9]{8,14})\b/);
+    if(bcM) barcode = bcM[1];
+  }
+  var barcodeEl = document.getElementById('quickProductBarcode');
+  if(barcodeEl && barcode) barcodeEl.value = barcode;
+
+  // 3. Product Code (if detected from OCR, else keep existing generated code)
+  var pCode = fields.product_code || fields.code || payload.code || '';
+  if(!pCode && raw){
+    var cdM = raw.match(/(?:ref|r[eé]f(?:\.|erence)?|code(?:\s*produit)?|رمز(?:\s*المنتج)?)\s*[:\-]?\s*([A-Za-z0-9\/\-_]{3,25})/i);
+    if(cdM) pCode = cdM[1].trim();
+  }
+  var codeEl = document.getElementById('quickProductCode');
+  if(codeEl && pCode) codeEl.value = pCode;
+
+  // 4. Purchase Price
+  var pPrice = data.purchasePrice || fields.purchase_price || fields.cost_price || 0;
+  if(!pPrice && Array.isArray(data.items) && data.items.length){
+    pPrice = data.items[0].unitPrice || data.items[0].unit_price || 0;
+  }
+  var purchaseEl = document.getElementById('quickProductPurchasePrice');
+  if(purchaseEl && pPrice > 0) purchaseEl.value = Number(pPrice).toFixed(2);
+
+  // 5. Selling Price
+  var sPrice = data.sellingPrice || fields.selling_price || fields.price || 0;
+  if(!sPrice && pPrice > 0){
+    sPrice = Number(pPrice) * 1.25;
+  }
+  var sellingEl = document.getElementById('quickProductSellingPrice');
+  if(sellingEl && sPrice > 0) sellingEl.value = Number(sPrice).toFixed(2);
+
+  // 6. Quantity
+  var qty = data.quantity || fields.quantity || 0;
+  if(!qty && Array.isArray(data.items) && data.items.length && data.items[0].quantity > 0){
+    qty = data.items[0].quantity;
+  }
+  var qtyEl = document.getElementById('quickProductQuantity');
+  if(qtyEl && qty > 0) qtyEl.value = String(qty);
+
+  // 7. Category
+  var cat = data.category || fields.category || '';
+  var catEl = document.getElementById('quickProductCategory');
+  if(catEl && cat && cat.toLowerCase() !== 'general') catEl.value = cat;
+
+  // 8. Brand
+  var brand = fields.brand || payload.brand || '';
+  if(!brand && raw){
+    var brm = raw.match(/(?:marque|brand|fabricant|الماركة|العلامة التجارية)\s*[:\-]?\s*([^\n\r]{2,50})/i);
+    if(brm) brand = brm[1].trim();
+  }
+  var brandEl = document.getElementById('quickProductBrand');
+  if(brandEl && brand) brandEl.value = brand;
+
+  // 9. Tax Rate
+  var tax = fields.tax_rate || fields.tva || payload.taxRate || 0;
+  var taxEl = document.getElementById('quickProductTaxRate');
+  if(taxEl && tax > 0) taxEl.value = String(tax);
+
+  // 10. Unit
+  var unit = fields.unit || payload.unit || '';
+  var unitEl = document.getElementById('quickProductUnit');
+  if(unitEl && unit){
+    for(var i = 0; i < unitEl.options.length; i++){
+      if(unitEl.options[i].value.toLowerCase() === unit.toLowerCase() || unitEl.options[i].text.toLowerCase().includes(unit.toLowerCase())){
+        unitEl.selectedIndex = i;
+        break;
+      }
+    }
+  }
+
+  // 11. Description
+  var desc = fields.description || payload.description || '';
+  var descEl = document.getElementById('quickProductDescription');
+  if(descEl && desc) descEl.value = desc;
+
+  if(typeof window.showNotification === 'function'){
+    window.showNotification(
+      window.currentLanguage === 'fr' ? '✓ Données du produit extraites via Copilote IA !' :
+      window.currentLanguage === 'en' ? '✓ Product details extracted via Copilot IA!' :
+      '✓ تم استخراج وتعبئة بيانات المنتج عبر المساعد الذكي (Copilote IA)!',
+      'success', 4000
+    );
+  }
 }
 
 function refreshProductSelects(){

@@ -1422,8 +1422,14 @@
     <!-- Add Product Modal -->
     <div id="addProduct" class="modal">
         <div class="modal-content">
-            <div class="modal-header">
-                <h2 data-en="Add New Product" data-ar="إضافة منتج جديد" data-fr="Ajouter Nouveau Produit">Add New Product</h2>
+            <div class="modal-header" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+                <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                    <h2 data-en="Add New Product" data-ar="إضافة منتج جديد" data-fr="Ajouter Nouveau Produit" style="margin:0;">Add New Product</h2>
+                    <button type="button" class="btn btn-ai-scan btn-sm" onclick="openInventoryOcrModal()" title="Scan & Extraction Copilote IA" style="background:linear-gradient(135deg,#7c3aed,#2563eb);color:#fff;border:none;border-radius:8px;padding:6px 14px;font-weight:700;font-size:12.5px;display:inline-flex;align-items:center;gap:6px;cursor:pointer;box-shadow:0 3px 10px rgba(124,58,237,0.3);transition:all 0.2s;">
+                        <i class="fas fa-wand-magic-sparkles"></i>
+                        <span data-en="Copilot IA Scan" data-ar="مسح ذكي (Copilot IA)" data-fr="Scan Copilote IA">Scan Copilote IA</span>
+                    </button>
+                </div>
                 <div class="close-modal" onclick="closeModal('addProduct')">
                     <i class="fas fa-times"></i>
                 </div>
@@ -1523,9 +1529,9 @@
                         <p style="font-size:12px;color:#64748b;margin-bottom:10px;" data-en="Scan product label, barcode, or purchase invoice using camera or file" data-ar="امسح ملصق المنتج أو الباركود أو فاتورة الشراء بالكاميرا أو الملف" data-fr="Scannez l'étiquette, le code-barres ou la facture avec caméra ou fichier">
                             امسح ملصق المنتج أو الباركود أو فاتورة الشراء مباشرة بالكاميرا أو الملف
                         </p>
-                        <button type="button" class="btn btn-info" onclick="openInventoryOcrModal()" style="display:inline-flex;align-items:center;gap:8px;">
-                            <i class="fas fa-camera"></i>
-                            <span data-en="Launch Unified Scanner" data-ar="فتح المسح الضوئي الذكي" data-fr="Ouvrir le scanner IA">فتح المسح الضوئي الذكي</span>
+                        <button type="button" class="btn btn-ai-scan" onclick="openInventoryOcrModal()" style="background:linear-gradient(135deg,#7c3aed,#2563eb);color:#fff;border:none;border-radius:9px;padding:9px 18px;font-weight:700;font-size:13px;display:inline-flex;align-items:center;gap:8px;cursor:pointer;box-shadow:0 4px 12px rgba(124,58,237,0.25);">
+                            <i class="fas fa-wand-magic-sparkles"></i>
+                            <span data-en="Copilot IA Scan" data-ar="مسح ذكي (Copilot IA)" data-fr="Scan Copilote IA">Scan Copilote IA</span>
                         </button>
                     </div>
                 </form>
