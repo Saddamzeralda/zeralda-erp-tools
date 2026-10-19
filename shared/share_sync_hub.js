@@ -185,16 +185,136 @@
     // Disabled: Do not intercept clicks on export/download buttons
   }
 
-  function triggerDailySyncNow() {
-    if (!window.UnifiedStorage || typeof window.UnifiedStorage.runDailyFullSync !== 'function') {
-      return Promise.resolve(false);
+  function cleanPhoneNumber(phone) {
+    if (!phone) return '';
+    var clean = String(phone).replace(/[^0-9+]/g, '');
+    if (clean.indexOf('+') === 0) clean = clean.slice(1);
+    if (clean.indexOf('00') === 0) clean = clean.slice(2);
+    // Algerian number formatting
+    if (clean.length === 9 && clean.indexOf('0') !== 0) clean = '213' + clean;
+    if (clean.indexOf('0') === 0) clean = '213' + clean.slice(1);
+    return clean;
+  }
+
+  function shareViaWhatsApp(phone, text) {
+    var cleanPhone = cleanPhoneNumber(phone);
+    var waUrl = cleanPhone
+      ? 'https://wa.me/' + cleanPhone + '?text=' + encodeURIComponent(text || '')
+      : 'https://wa.me/?text=' + encodeURIComponent(text || '');
+    window.open(waUrl, '_blank');
+    return true;
+  }
+
+  async function shareDocument(options) {
+    var opts = options || {};
+    var title = safeString(opts.title || 'Zeralda ERP Document');
+    var text = safeString(opts.text || '');
+    var phone = opts.phone || '';
+    var blob = opts.blob || null;
+    var filename = safeString(opts.filename || 'document.pdf');
+    var file = opts.file || null;
+
+    if (!file && blob) {
+      try {
+        file = new File([blob], filename, { type: blob.type || 'application/pdf' });
+      } catch (_) {
+        file = null;
+      }
     }
-    return window.UnifiedStorage.runDailyFullSync();
+
+    // 1) Mobile / Native Web Share API (Level 2 with files support)
+    if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({
+          files: [file],
+          title: title,
+          text: text
+        });
+        return { ok: true, method: 'web_share' };
+      } catch (err) {
+        if (err && err.name === 'AbortError') {
+          return { ok: false, aborted: true };
+        }
+        console.warn('[ZeraldaShareHub] Web Share failed, falling back to desktop flow:', err);
+      }
+    }
+
+    // 2) Desktop Flow: Download document & open WhatsApp
+    if (blob || file) {
+      var dlBlob = blob || file;
+      var url = URL.createObjectURL(dlBlob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 3000);
+
+      var lang = getLang();
+      var notice = lang === 'ar'
+        ? 'تم تحميل الملف بنجاح (' + filename + '). يرجى إرفاقه في نافذة الواتساب المفتوحة.'
+        : lang === 'fr'
+        ? 'Le fichier (' + filename + ') a été téléchargé. Veuillez le joindre dans WhatsApp.'
+        : 'File (' + filename + ') downloaded. Please attach it in WhatsApp.';
+
+      var waText = text + '\n\n(' + notice + ')';
+      shareViaWhatsApp(phone, waText);
+
+      if (typeof window.showNotification === 'function') {
+        window.showNotification(notice, 'info', 7000);
+      } else {
+        setTimeout(function () { alert(notice); }, 400);
+      }
+
+      return { ok: true, method: 'download_whatsapp' };
+    }
+
+    // 3) Text-only fallback
+    if (phone) {
+      shareViaWhatsApp(phone, text);
+      return { ok: true, method: 'whatsapp_text' };
+    }
+
+    return { ok: false, error: 'No shareable content' };
+  }
+
+  async function uploadFile(fileOrBlob, filename) {
+    if (!fileOrBlob) throw new Error('No file provided');
+    var formData = new FormData();
+    var fname = filename || fileOrBlob.name || 'upload.bin';
+    formData.append('file', fileOrBlob, fname);
+
+    var headers = {
+      'X-Requested-With': 'XMLHttpRequest'
+    };
+    var token = (window.ZS && typeof window.ZS.getItem === 'function' ? window.ZS.getItem('zeralda-auth-token') : null) ||
+                localStorage.getItem('zeralda-auth-token') || '';
+    if (token) {
+      headers['X-Session-Token'] = token;
+      headers['Authorization'] = 'Bearer ' + token;
+    }
+
+    var res = await fetch('/api/files/upload', {
+      method: 'POST',
+      headers: headers,
+      body: formData
+    });
+
+    var data = await res.json().catch(function () { return {}; });
+    if (!res.ok || !data.ok) {
+      throw new Error(data.error || ('HTTP ' + res.status));
+    }
+    return data;
   }
 
   window.ZeraldaShareHub = {
     chooseChannel: chooseChannel,
     openEmail: openEmail,
+    cleanPhoneNumber: cleanPhoneNumber,
+    shareViaWhatsApp: shareViaWhatsApp,
+    shareDocument: shareDocument,
+    uploadFile: uploadFile,
     sharePayload: sharePayload,
     shareTableData: shareTableData,
     triggerDailySyncNow: triggerDailySyncNow,

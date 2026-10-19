@@ -308,7 +308,7 @@ def create_app() -> FastAPI:
         )
 
     # ── Routers ──────────────────────────────────────────────────────────
-    from app.handlers import auth, store, ai, backup, ocr, misc, license as license_handler, notifications as notifications_handler
+    from app.handlers import auth, store, ai, backup, ocr, misc, files, license as license_handler, notifications as notifications_handler
 
     app.include_router(auth.router)
     app.include_router(auth.keys_router)
@@ -317,6 +317,7 @@ def create_app() -> FastAPI:
     app.include_router(ai.router)
     app.include_router(backup.router)
     app.include_router(ocr.router)
+    app.include_router(files.router)
     app.include_router(misc.router)
     app.include_router(license_handler.router)
     app.include_router(notifications_handler.router)

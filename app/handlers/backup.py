@@ -343,6 +343,16 @@ async def folder_run(request: Request):
             except Exception:
                 pass
 
+    # Export uploaded attachments to backup directory
+    uploads_src = os.path.join(storage.DATA_DIR, "uploads")
+    if os.path.isdir(uploads_src):
+        attach_dst = os.path.join(backup_subdir, "_attachments")
+        try:
+            import shutil
+            shutil.copytree(uploads_src, attach_dst, dirs_exist_ok=True)
+        except Exception as e:
+            log_structured("WARN", "Failed copying attachments in folder backup", error=str(e))
+
     exported_pdfs = 0
     pdf_errors = 0
     exported_modules = 0

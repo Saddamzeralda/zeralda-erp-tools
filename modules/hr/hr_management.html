@@ -2385,6 +2385,10 @@
                     <i class="fas fa-times"></i>
                     <span data-en="Close" data-ar="إغلاق" data-fr="Fermer">Close</span>
                 </button>
+                <button class="btn btn-success" onclick="sharePayslipViaWhatsApp()" style="background:#16a34a; color:#fff;" title="مشاركة قسيمة الراتب عبر واتساب">
+                    <i class="fab fa-whatsapp"></i>
+                    <span data-en="Share WhatsApp" data-ar="مشاركة واتساب" data-fr="Partager WhatsApp">مشاركة واتساب</span>
+                </button>
                 <button class="btn btn-info" onclick="comptabiliserCurrentPayslipToFinance()" style="background:#0891b2; color:#fff;" title="ترحيل قيد هذا الراتب الفردي إلى اليومية المحاسبية SCF">
                     <i class="fas fa-book"></i>
                     <span data-en="Post to Finance" data-ar="ترحيل لليومية المحاسبية" data-fr="Comptabiliser">ترحيل لليومية المحاسبية</span>
@@ -2801,20 +2805,57 @@
         function handleDocInput(event, type) {
             var file = event.target.files && event.target.files[0];
             if (!file) return;
-            var maxSize = 2 * 1024 * 1024;
+            var maxSize = 10 * 1024 * 1024; // 10MB
             if (file.size > maxSize) {
                 var lang = ZS.getItem('preferred-language') || 'en';
-                var msg = lang === 'ar' ? 'الملف كبير جداً. الحد الأقصى 2 ميغابايت.' : lang === 'fr' ? 'Fichier trop grand. Taille max : 2 Mo.' : 'File too large. Maximum size is 2 MB.';
+                var msg = lang === 'ar' ? 'الملف كبير جداً. الحد الأقصى 10 ميغابايت.' : lang === 'fr' ? 'Fichier trop grand. Taille max : 10 Mo.' : 'File too large. Maximum size is 10 MB.';
                 alert(msg);
                 event.target.value = '';
                 return;
             }
-            var reader = new FileReader();
-            reader.onload = function(e) {
-                employeeDocumentsTemp[type] = { name: file.name, type: file.type, data: e.target.result, uploadDate: new Date().toISOString().split('T')[0] };
-                renderDocPreview(type);
-            };
-            reader.readAsDataURL(file);
+
+            var previewEl = document.getElementById('docPreview_' + type);
+            if (previewEl) {
+                previewEl.innerHTML = '<i class="fas fa-spinner fa-spin" style="font-size:28px;color:var(--primary-color);"></i><span>جاري الرفع...</span>';
+            }
+
+            function fallbackBase64() {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    employeeDocumentsTemp[type] = {
+                        name: file.name,
+                        type: file.type,
+                        size: file.size,
+                        data: e.target.result,
+                        uploadDate: new Date().toISOString().split('T')[0]
+                    };
+                    renderDocPreview(type);
+                };
+                reader.readAsDataURL(file);
+            }
+
+            if (window.ZeraldaShareHub && typeof window.ZeraldaShareHub.uploadFile === 'function') {
+                window.ZeraldaShareHub.uploadFile(file).then(function(res) {
+                    if (res && res.ok && res.file) {
+                        employeeDocumentsTemp[type] = {
+                            name: file.name,
+                            type: file.type,
+                            size: file.size,
+                            url: res.file.url,
+                            fileId: res.file.id,
+                            uploadDate: new Date().toISOString().split('T')[0]
+                        };
+                        renderDocPreview(type);
+                        return;
+                    }
+                    fallbackBase64();
+                }).catch(function(err) {
+                    console.warn('[HR] File upload API failed, falling back to local base64:', err);
+                    fallbackBase64();
+                });
+            } else {
+                fallbackBase64();
+            }
         }
 
         function removeDoc(type) {
@@ -2837,19 +2878,23 @@
             if (!doc) {
                 previewEl.innerHTML = '<i class="fas ' + icon + '"></i><span>' + uploadText + '</span>';
                 if (zoneEl) zoneEl.classList.remove('has-file');
-                if (nameEl) nameEl.textContent = '';
+                if (nameEl) nameEl.innerHTML = '';
                 if (removeBtn) removeBtn.style.display = 'none';
                 return;
             }
+
+            var fileSource = doc.url || doc.data || '#';
             if (doc.type && doc.type.startsWith('image/')) {
-                previewEl.innerHTML = '<img src="' + doc.data + '" alt="' + escapeHtml(doc.name) + '" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">';
+                previewEl.innerHTML = '<img src="' + fileSource + '" alt="' + escapeHtml(doc.name) + '" style="width:100%;height:100%;object-fit:cover;border-radius:10px;">';
             } else {
                 var ext = (doc.name.split('.').pop() || 'FILE').toUpperCase();
                 var fileIcon = ext === 'PDF' ? 'fa-file-pdf' : ext === 'DOC' || ext === 'DOCX' ? 'fa-file-word' : 'fa-file-alt';
                 previewEl.innerHTML = '<i class="fas ' + fileIcon + '" style="font-size:34px;color:var(--primary-color);"></i><span style="font-weight:600;">' + ext + '</span>';
             }
             if (zoneEl) zoneEl.classList.add('has-file');
-            if (nameEl) nameEl.textContent = doc.name;
+            if (nameEl) {
+                nameEl.innerHTML = '<a href="' + fileSource + '" target="_blank" style="color:var(--primary-color);text-decoration:none;font-size:12px;display:inline-flex;align-items:center;gap:4px;" title="عرض الملف">' + escapeHtml(doc.name) + ' <i class="fas fa-external-link-alt" style="font-size:10px;"></i></a>';
+            }
             if (removeBtn) removeBtn.style.display = 'inline';
         }
 
@@ -4215,7 +4260,32 @@
                 + '</tr></tfoot></table>'
                 + '<div class="payslip-footer">' + L.date + ': ' + escapeHtml(record.processedDate || '') + '</div>'
                 + '</div>';
+            currentViewingPayslipRecord = record;
             openModal('viewPayslipModal');
+        }
+
+        var currentViewingPayslipRecord = null;
+
+        function sharePayslipViaWhatsApp() {
+            if (!currentViewingPayslipRecord) return;
+            var rec = currentViewingPayslipRecord;
+            var emp = (employeesState || []).find(function(e) {
+                return (e && (e.id === rec.employeeId || e.employeeId === rec.employeeId || e.name === rec.fullName));
+            }) || {};
+            var phone = emp.phone || '';
+            var text = '📄 كشف الراتب - Zeralda ERP\n' +
+                       'الموظف: ' + (rec.fullName || '') + ' (' + (rec.employeeId || '') + ')\n' +
+                       'الشهر: ' + (rec.month || currentPayrollMonth || '') + '\n' +
+                       'الراتب الأساسي: ' + _fmtMoney(rec.baseSalary) + '\n' +
+                       'الخصومات: ' + _fmtMoney(rec.deductions) + '\n' +
+                       '✅ الراتب الصافي: ' + _fmtMoney(rec.net);
+
+            if (window.ZeraldaShareHub && typeof window.ZeraldaShareHub.shareViaWhatsApp === 'function') {
+                window.ZeraldaShareHub.shareViaWhatsApp(phone, text);
+            } else {
+                var clean = (phone || '').replace(/[^0-9]/g, '');
+                window.open('https://wa.me/' + clean + '?text=' + encodeURIComponent(text), '_blank');
+            }
         }
 
         function editPayroll(recordId) {

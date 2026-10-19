@@ -325,6 +325,18 @@ async function shareInvoiceViaWhatsApp(invoiceId) {
 
     if (blob) {
       const fileName = String(invoiceNumber || 'invoice').replace(/[^a-zA-Z0-9_-]+/g, '_') + '.pdf';
+      if (window.ZeraldaShareHub && typeof window.ZeraldaShareHub.shareDocument === 'function') {
+        await window.ZeraldaShareHub.shareDocument({
+          title: 'Facture ' + invoiceNumber,
+          text: shortText,
+          phone: cleanPhone || phone,
+          blob: blob,
+          filename: fileName
+        });
+        logShareEvent(invoiceId, 'whatsapp', phone || 'no-number');
+        return;
+      }
+
       const file = new File([blob], fileName, { type: 'application/pdf' });
 
       // Check if Web Share API supports file sharing (mobile devices)
@@ -419,6 +431,18 @@ async function shareProformaViaWhatsApp(proformaId) {
 
     if (blob) {
       const fileName = String(proformaNumber || 'proforma').replace(/[^a-zA-Z0-9_-]+/g, '_') + '.pdf';
+      if (window.ZeraldaShareHub && typeof window.ZeraldaShareHub.shareDocument === 'function') {
+        await window.ZeraldaShareHub.shareDocument({
+          title: 'Proforma ' + proformaNumber,
+          text: shortText,
+          phone: cleanPhone || phone,
+          blob: blob,
+          filename: fileName
+        });
+        logShareEvent(proformaId, 'whatsapp', phone || 'no-number');
+        return;
+      }
+
       const file = new File([blob], fileName, { type: 'application/pdf' });
 
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
