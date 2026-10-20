@@ -39,20 +39,7 @@
     return base + "." + ext;
   }
 
-  function toBase64Utf8(text) {
-    var str = String(text == null ? "" : text);
-    if (typeof TextEncoder !== "undefined") {
-      var bytes = new TextEncoder().encode(str);
-      var chunkSize = 0x8000;
-      var binary = "";
-      for (var i = 0; i < bytes.length; i += chunkSize) {
-        var chunk = bytes.subarray(i, i + chunkSize);
-        binary += String.fromCharCode.apply(null, chunk);
-      }
-      return btoa(binary);
-    }
-    return btoa(unescape(encodeURIComponent(str)));
-  }
+  
 
   function getSessionToken() {
     if (window.ZeraldaAuth) return window.ZeraldaAuth.getSessionToken();

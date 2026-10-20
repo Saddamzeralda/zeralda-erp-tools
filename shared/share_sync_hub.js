@@ -169,17 +169,9 @@
     // Disabled: Do not override native export/download buttons across ERP modules
   }
 
-  function isLegacyExportAction(actionText) {
-    return false;
-  }
+  
 
-  function extractButtonLabel(el) {
-    if (!el) return 'ERP Data Share';
-    var span = el.querySelector('span');
-    if (span && safeString(span.textContent).trim()) return safeString(span.textContent).trim();
-    var text = safeString(el.textContent).replace(/\s+/g, ' ').trim();
-    return text || 'ERP Data Share';
-  }
+  
 
   function installLegacyActionInterceptor() {
     // Disabled: Do not intercept clicks on export/download buttons

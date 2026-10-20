@@ -1538,16 +1538,16 @@
     </div>
 
     <script src="shared/zeralda_db.js?v=20261017_v10"></script>
-    <script src="shared/layout_shell.js?v=20261020_hotfix3" defer></script>
+    <script src="shared/layout_shell.js?v=20261020_hotfix4" defer></script>
     <script src="shared/storage_adapter.js?v=20261017_v10" defer></script>
     <script src="shared/ai_chat_widget.js?v=20261017_v10" defer></script>
     <script src="shared/session_timeout.js" defer></script>
     <script src="shared/company_storage.js?v=20261017_v10"></script>
-    <script src="shared/unified_i18n.js?v=20261020_hotfix3" defer></script>
+    <script src="shared/unified_i18n.js?v=20261020_hotfix4" defer></script>
     <script src="shared/app_sync.js?v=20261017_v10" defer></script>
     <script src="shared/role_access_control.js" defer></script>
     <script src="shared/header_company_switcher.js?v=20261017_v10" defer></script>
-    <script src="shared/header_language_switcher.js?v=20261020_hotfix3" defer></script>
+    <script src="shared/header_language_switcher.js?v=20261020_hotfix4" defer></script>
     <script src="shared/runtime_i18n.js"></script>
     <script src="shared/ocr.js?v=20261017_v10" defer></script>
     <script>
@@ -2671,11 +2671,7 @@
             window.ZeraldaPrintEngine.printContent(content, title, options || {});
         }
 
-        function nextRef(prefix, list) {
-            const year = new Date().getFullYear();
-            const next = (Array.isArray(list) ? list.length : 0) + 1;
-            return prefix + '-' + year + '-' + String(next).padStart(3, '0');
-        }
+        
 
         const purchasingState = {
             orders: [],
@@ -2797,16 +2793,7 @@
             }
         }
 
-        function resolveAutoOcrLang() {
-            const settings = getSystemSettingsSnapshot();
-            const preferred = String(
-                settings.preferredLanguage || settings.language || ZS.getItem('preferred-language') || 'en'
-            ).toLowerCase();
-
-            // Multilingual pack improves extraction for mixed invoices.
-            if (preferred === 'ar' || preferred === 'fr') return 'eng+ara+fra';
-            return 'eng+fra+ara';
-        }
+        
 
         function optimizeImageFileToDataUrl(file, maxSide) {
             return window.UnifiedOCR.optimizeImage(file, maxSide);

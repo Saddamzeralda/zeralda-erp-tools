@@ -1328,18 +1328,7 @@
     }
 
     // إرسال غير متزامن (fallback)
-    function _pushToServerAsync(key, value) {
-        try {
-            fetch(_serverApi(), {
-                method: 'POST',
-                cache: 'no-store',
-                headers: _buildHeaders({ 'Content-Type': 'application/json' }),
-                body: JSON.stringify({ key: key, value: value })
-            }).catch(function(err) {
-                console.warn('[ZS] Async write retry failed for', key, err.message);
-            });
-        } catch(e) {}
-    }
+    
 
     // حذف متزامن من الخادم
     function _deleteFromServer(key) {

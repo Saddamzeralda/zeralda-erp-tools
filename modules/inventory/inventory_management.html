@@ -1927,16 +1927,16 @@
     </div>
 
     <script src="shared/zeralda_db.js?v=20261017_v10"></script>
-    <script src="shared/layout_shell.js?v=20261020_hotfix3" defer></script>
+    <script src="shared/layout_shell.js?v=20261020_hotfix4" defer></script>
     <script src="shared/ai_chat_widget.js?v=20261017_v10" defer></script>
     <script src="shared/storage_adapter.js?v=20261017_v10" defer></script>
     <script src="shared/session_timeout.js" defer></script>
     <script src="shared/company_storage.js?v=20261017_v10"></script>
-    <script src="shared/unified_i18n.js?v=20261020_hotfix3" defer></script>
+    <script src="shared/unified_i18n.js?v=20261020_hotfix4" defer></script>
     <script src="shared/app_sync.js?v=20261017_v10" defer></script>
     <script src="shared/role_access_control.js" defer></script>
     <script src="shared/header_company_switcher.js?v=20261017_v10" defer></script>
-    <script src="shared/header_language_switcher.js?v=20261020_hotfix3" defer></script>
+    <script src="shared/header_language_switcher.js?v=20261020_hotfix4" defer></script>
     <script src="shared/runtime_i18n.js"></script>
     <script src="shared/ocr.js?v=20261017_v10" defer></script>
     <script src="modules/inventory/inventory_intelligence.js"></script>
@@ -2445,43 +2445,7 @@
             }
         }
 
-        function restoreBackup(timestamp) {
-            if (!confirm(tRuntime('confirm_restore_backup'))) {
-                return false;
-            }
-
-            try {
-                const backups = getBackups();
-                const backup = backups.find(b => b.timestamp === timestamp);
-
-                if (!backup) {
-                    alert(tRuntime('backup_not_found'));
-                    return false;
-                }
-
-                inventoryProducts = JSON.parse(JSON.stringify(backup.products));
-                inventoryMovements = JSON.parse(JSON.stringify(backup.movements));
-
-                saveInventoryProducts();
-                saveStockMovements();
-
-                logAudit('BACKUP_RESTORED', `Backup restored from ${backup.date}`, getActiveUserName());
-                alert(tRuntime('backup_restored'));
-                // Wait for ZDB to flush before reloading (inventory data was
-                // written via ZS → async IndexedDB write).
-                function doReload() { location.reload(); }
-                if (window.ZDB && typeof window.ZDB.flush === 'function') {
-                  window.ZDB.flush().then(doReload).catch(function () { setTimeout(doReload, 150); });
-                } else {
-                  setTimeout(doReload, 0);
-                }
-                return true;
-            } catch (err) {
-                console.error('Backup restore failed:', err);
-                alert(tRuntime('backup_restore_failed'));
-                return false;
-            }
-        }
+        
 
         // ===== AUDIT LOG SYSTEM =====
         function logAudit(action, details, user) {
@@ -2624,9 +2588,7 @@
             return currentUserRole === USER_ROLES.ADMIN;
         }
 
-        function canManageBackups() {
-            return currentUserRole === USER_ROLES.ADMIN;
-        }
+        
 
         function enforcePermission(permission, actionName) {
             if (!permission) {
@@ -2656,14 +2618,7 @@
 
         // ===== GOOGLE SYNC SYSTEM =====
 
-        function loadSyncHistory() {
-            try {
-                const raw = ZS.getItem(SYNC_HISTORY_KEY);
-                syncHistory = raw ? JSON.parse(raw) : [];
-            } catch (err) {
-                syncHistory = [];
-            }
-        }
+        
 
         function getCompanyId() {
             try {
@@ -2765,52 +2720,11 @@
             }, 60000); // 1 minute interval
         }
 
-        function performAutoSync() {
-            try {
+        
 
-                recordSyncAction('AUTO_SYNC', 'success', 'Automatic daily sync completed');
-                logAudit('AUTO_SYNC_COMPLETED', 'Automatic sync executed', 'SYSTEM');
+        
 
-                return true;
-            } catch (err) {
-                console.error('Auto sync failed:', err);
-                recordSyncAction('AUTO_SYNC', 'failed', err.message);
-                return false;
-            }
-        }
-
-        function showSyncStatus() {
-            const config = (typeof googleSyncConfig === 'object' && googleSyncConfig) ? googleSyncConfig : {
-                enabled: false,
-                email: '-',
-                syncSchedule: 'manual',
-                syncTime: '--:--'
-            };
-            const history = getSyncHistory(getCompanyId(), 10);
-
-            let status = `📱 GOOGLE SYNC STATUS\n`;
-            status += `${'='.repeat(50)}\n\n`;
-            status += `Status: ${config.enabled ? '✅ ENABLED' : '❌ DISABLED'}\n`;
-            status += `Email: ${config.email}\n`;
-            status += `Schedule: ${config.syncSchedule} @ ${config.syncTime}\n`;
-            status += `Last Sync: ${lastSyncTime ? new Date(lastSyncTime).toLocaleString() : 'Never'}\n\n`;
-
-            status += `RECENT SYNC HISTORY:\n`;
-            history.forEach((entry, idx) => {
-                const date = new Date(entry.timestamp).toLocaleString();
-                status += `${idx + 1}. ${date} - ${entry.action} (${entry.status})\n`;
-            });
-
-            alert(status);
-        }
-
-        function manualSync() {
-
-            if (confirm(tRuntime('manual_sync_confirm'))) {
-                exportToGoogleSheets();
-                alert('✅ Manual sync completed!');
-            }
-        }
+        
 
         function normalizeProduct(raw, fallbackId) {
             const id = Number(raw.id || fallbackId || 0);
@@ -4696,18 +4610,7 @@
             closeModal('removeStock');
         }
 
-        function downloadTemplate() {
-            const header = 'Code,Name,Category,Quantity,Purchase Price,Selling Price,Min Stock';
-            const sample = 'PRD-001,Laptop HP ProBook 450,Electronics,10,600,850,5';
-            if (window.ZeraldaShareHub && typeof window.ZeraldaShareHub.sharePayload === 'function') {
-                window.ZeraldaShareHub.sharePayload({
-                    title: 'Inventory Template',
-                    payload: { header: header, sample: sample }
-                });
-            } else {
-                alert(tRuntime('share_system_not_loaded'));
-            }
-        }
+        
 
         function normalizeHeaderText(text) {
             return String(text || '').toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -4737,35 +4640,9 @@
             return result;
         }
 
-        function mapRowsFromCsv(text) {
-            const lines = String(text || '').split(/\r?\n/).filter((l) => l.trim());
-            if (!lines.length) return [];
-            const headers = splitCsvLine(lines[0]);
-            const rows = [];
-            for (let i = 1; i < lines.length; i += 1) {
-                const values = splitCsvLine(lines[i]);
-                const row = {};
-                headers.forEach((h, idx) => {
-                    row[h] = values[idx] || '';
-                });
-                rows.push(row);
-            }
-            return mapRowsWithLookup(headers, rows);
-        }
+        
 
-        function mapRowsFromArray(data) {
-            if (!Array.isArray(data) || data.length === 0) return [];
-            const headers = (data[0] || []).map((h) => String(h || '').trim());
-            const rows = [];
-            for (let i = 1; i < data.length; i += 1) {
-                const row = {};
-                headers.forEach((h, idx) => {
-                    row[h] = data[i] ? data[i][idx] : '';
-                });
-                rows.push(row);
-            }
-            return mapRowsWithLookup(headers, rows);
-        }
+        
 
         function mapRowsWithLookup(headers, rows) {
             const lookup = {};
@@ -4775,15 +4652,7 @@
             return rows.map((row) => ({ row, lookup }));
         }
 
-        function getRowValue(row, lookup, keys) {
-            for (let i = 0; i < keys.length; i += 1) {
-                const header = lookup[keys[i]];
-                if (header && row[header] !== undefined && row[header] !== null) {
-                    return row[header];
-                }
-            }
-            return '';
-        }
+        
 
         // Barcode Functions
         function generateBarcode(code, name) {
@@ -4873,25 +4742,7 @@
             }
         }
 
-        function exportInventoryReport() {
-            const report = generateInventoryReport();
-            if (!report) {
-                alert(tRuntime('report_generation_failed'));
-                return;
-            }
-
-            if (window.ZeraldaShareHub && typeof window.ZeraldaShareHub.sharePayload === 'function') {
-                window.ZeraldaShareHub.sharePayload({
-                    title: 'Inventory Report',
-                    payload: report
-                });
-            } else {
-                alert(tRuntime('share_system_not_loaded'));
-                return;
-            }
-
-            logAudit('REPORT_EXPORTED', 'Inventory report exported', getActiveUserName());
-        }
+        
 
         function exportStockMovements() {
             const filteredMovements = getFilteredMovements(document.getElementById('movementSearchInput')?.value || '');
@@ -4980,168 +4831,24 @@
             return alerts;
         }
 
-        function getProductTrendAnalysis(productId, days = 30) {
-            const cutoffTime = Date.now() - (days * 24 * 60 * 60 * 1000);
-            const movements = inventoryMovements.filter(m =>
-                m.productId === productId && m.timestamp > cutoffTime
-            ).sort((a, b) => a.timestamp - b.timestamp);
-
-            let inTotal = 0, outTotal = 0;
-            const dailyData = {};
-
-            movements.forEach(m => {
-                const date = new Date(m.timestamp).toISOString().split('T')[0];
-                if (!dailyData[date]) {
-                    dailyData[date] = { in: 0, out: 0 };
-                }
-                if (m.type === 'IN') {
-                    inTotal += m.quantity;
-                    dailyData[date].in += m.quantity;
-                } else if (m.type === 'OUT') {
-                    outTotal += m.quantity;
-                    dailyData[date].out += m.quantity;
-                }
-            });
-
-            return {
-                productId: productId,
-                period: days,
-                totalIn: inTotal,
-                totalOut: outTotal,
-                netChange: inTotal - outTotal,
-                movements: movements.length,
-                dailyData: dailyData,
-                trend: inTotal > outTotal ? 'INCREASING' : outTotal > inTotal ? 'DECREASING' : 'STABLE'
-            };
-        }
+        
 
         function printBarcode() {
             window.print();
         }
 
         // ===== COMPREHENSIVE BACKUP & RESTORE UI =====
-        function showBackupManager() {
-            const backups = getBackups();
-            if (backups.length === 0) {
-                alert(tRuntime('no_backups_available'));
-                return;
-            }
+        
 
-            let list = 'Available Backups:\n\n';
-            backups.slice(-10).reverse().forEach((backup, idx) => {
-                const date = new Date(backup.timestamp).toLocaleString();
-                const sizeKB = (backup.size / 1024).toFixed(2);
-                list += `${idx + 1}. ${date} (${sizeKB} KB)\n`;
-            });
-
-            list += '\nNote: Showing last 10 backups';
-            alert(list);
-        }
-
-        function downloadAllBackups() {
-            const backups = getBackups();
-            if (backups.length === 0) {
-                alert(tRuntime('no_backups_to_download'));
-                return;
-            }
-
-            const data = {
-                exportedAt: new Date().toISOString(),
-                exportedBy: getActiveUserName(),
-                totalBackups: backups.length,
-                backups: backups
-            };
-
-            if (window.ZeraldaShareHub && typeof window.ZeraldaShareHub.sharePayload === 'function') {
-                window.ZeraldaShareHub.sharePayload({
-                    title: 'Inventory Backups',
-                    payload: data
-                });
-            } else {
-                alert(tRuntime('share_system_not_loaded'));
-                return;
-            }
-
-            logAudit('BACKUPS_DOWNLOADED', `Downloaded ${backups.length} backups`, getActiveUserName());
-        }
+        
 
         // ===== AUDIT LOG VIEWER =====
-        function showAuditLog(limit = 50) {
-            if (!canViewAudit()) {
-                alert(tRuntime('no_permission_view_audit'));
-                return;
-            }
+        
 
-            const logs = getAuditLog(null, null, 7).slice(0, limit);
-            if (logs.length === 0) {
-                alert(tRuntime('no_audit_logs_available'));
-                return;
-            }
-
-            let report = 'Audit Log (Last 7 days)\n' + '='.repeat(60) + '\n\n';
-            logs.forEach(log => {
-                const date = new Date(log.timestamp).toLocaleString();
-                report += `[${date}] ${log.action}\n`;
-                report += `  User: ${log.user} (${log.userRole})\n`;
-                report += `  Details: ${log.details}\n\n`;
-            });
-
-            alert(`Audit logs: ${logs.length} entries (See console for full list)`);
-        }
-
-        function exportAuditLog() {
-            if (!canViewAudit()) {
-                alert(tRuntime('no_permission_export_audit'));
-                return;
-            }
-
-            const logs = getAuditLog(null, null, 30);
-            const data = {
-                exportedAt: new Date().toISOString(),
-                exportedBy: getActiveUserName(),
-                period: '30 days',
-                totalEntries: logs.length,
-                logs: logs
-            };
-
-            if (window.ZeraldaShareHub && typeof window.ZeraldaShareHub.sharePayload === 'function') {
-                window.ZeraldaShareHub.sharePayload({
-                    title: 'Audit Log',
-                    payload: data
-                });
-            } else {
-                alert(tRuntime('share_system_not_loaded'));
-                return;
-            }
-
-            logAudit('AUDIT_LOG_EXPORTED', `Exported ${logs.length} audit entries`, getActiveUserName());
-        }
+        
 
         // ===== SYSTEM DASHBOARD =====
-        function showSystemDashboard() {
-            const alerts = getStockAlerts();
-            const backups = getBackups();
-            const recentAudit = getAuditLog(null, null, 1).slice(0, 5);
-
-            let dashboard = 'INVENTORY SYSTEM DASHBOARD\n' + '='.repeat(60) + '\n\n';
-
-            dashboard += 'ALERTS:\n';
-            dashboard += `  🔴 Critical: ${alerts.critical.length}\n`;
-            dashboard += `  🟠 Warning: ${alerts.warning.length}\n`;
-            dashboard += `  🔵 Info: ${alerts.info.length}\n\n`;
-
-            dashboard += 'BACKUPS:\n';
-            dashboard += `  Total: ${backups.length}\n`;
-            dashboard += `  Last: ${backups.length > 0 ? new Date(backups[backups.length - 1].timestamp).toLocaleString() : 'None'}\n\n`;
-
-            dashboard += 'RECENT ACTIVITY:\n';
-            recentAudit.forEach(entry => {
-                const date = new Date(entry.timestamp).toLocaleString();
-                dashboard += `  ${date} - ${entry.action} by ${entry.user}\n`;
-            });
-
-            alert(tRuntime('dashboard_generated_console'));
-        }
+        
 
         // Image Preview
         function previewImage(event) {
