@@ -28,6 +28,7 @@ def print_menu():
     print("  [5] أدوات الحماية والتراخيص     (Protection Toolkit & Keygen)")
     print("  [6] النشر المباشر على السحابة   (Deploy to Railway Cloud)")
     print("  [7] ربط الأجهزة عبر الشبكة     (Network Connection Hub)")
+    print("  [8] تجهيز نسخة البيع للزبائن   (Build Client Setup Installer)")
     print("  [0] خروج                       (Exit)")
     print("=" * 68)
 
@@ -115,6 +116,46 @@ def action_connect():
     print("\n[*] فتح واجهة الربط الشبكي...")
     webbrowser.open("http://127.0.0.1:8080/pages/connect.html")
 
+def action_installer():
+    print("\n[*] جاري فحص بيئة تجميع وتجهيز حزمة البيع (Inno Setup)...")
+    iss_file = os.path.join(BASE_DIR, "installer", "Zeralda_ERP_Setup.iss")
+    if not os.path.exists(iss_file):
+        print(f"[ERROR] ملف الإعداد غير موجود: {iss_file}")
+        return
+
+    iscc_candidates = [
+        "iscc",
+        r"C:\Program Files (x86)\Inno Setup 6\ISCC.exe",
+        r"C:\Program Files\Inno Setup 6\ISCC.exe",
+    ]
+    iscc_exe = None
+    for cand in iscc_candidates:
+        if shutil.which(cand) or (os.path.isabs(cand) and os.path.exists(cand)):
+            iscc_exe = cand
+            break
+
+    if not iscc_exe:
+        print("[!] لم يتم العثور على مترجم Inno Setup 6 (ISCC.exe) في المسار الافتراضي.")
+        print("[*] لتوليد ملف التثبيت Setup.exe للبيع، اتبع الآتي:")
+        print("    1. قم بتحميل Inno Setup 6 مجاناً من: https://jrsoftware.org/isdl.php")
+        print("    2. بعد التثبيت، أعد تشغيل هذا الخيار أو شغّل: iscc installer\\Zeralda_ERP_Setup.iss")
+        print("    3. سيتم إنشاء ملف التثبيت الجاهز للزبائن مباشرة داخل مجلد: installer\\dist\\")
+        return
+
+    print(f"[*] تم العثور على Inno Setup: {iscc_exe}")
+    print("[*] جاري بناء وتجميع حزمة التثبيت الرسمية للعملاء...")
+    try:
+        res = subprocess.run([iscc_exe, iss_file])
+        if res.returncode == 0:
+            print("\n[OK] تم بناء ملف التثبيت بنجاح داخل مجلد installer/dist/")
+            dist_dir = os.path.join(BASE_DIR, "installer", "dist")
+            if os.path.exists(dist_dir):
+                os.startfile(dist_dir)
+        else:
+            print(f"\n[ERROR] حدث خطأ أثناء التجميع (كود: {res.returncode})")
+    except Exception as e:
+        print(f"[ERROR] فشل تشغيل Inno Setup: {e}")
+
 def main():
     if len(sys.argv) > 1:
         cmd = sys.argv[1].lower()
@@ -134,16 +175,18 @@ def main():
             action_deploy()
         elif cmd == "connect":
             action_connect()
+        elif cmd in ("installer", "build-installer", "package"):
+            action_installer()
         else:
             print(f"[ERROR] أمر غير معروف: {cmd}")
-            print("الأوامر المتاحة: run, stop, tunnel, diag, toolkit, keygen, deploy, connect")
+            print("الأوامر المتاحة: run, stop, tunnel, diag, toolkit, keygen, deploy, connect, installer")
             sys.exit(1)
         return
 
     while True:
         print_menu()
         try:
-            choice = input("يرجى اختيار رقم العملية [0-7]: ").strip()
+            choice = input("يرجى اختيار رقم العملية [0-8]: ").strip()
         except (KeyboardInterrupt, EOFError):
             print("\nوداعاً!")
             break
@@ -162,6 +205,8 @@ def main():
             action_deploy()
         elif choice == "7":
             action_connect()
+        elif choice == "8":
+            action_installer()
         elif choice == "0":
             print("\nتم الخروج بنجاح.")
             break
