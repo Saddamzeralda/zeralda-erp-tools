@@ -42,7 +42,7 @@ BACKUP_DIR = os.path.join(BASE_DIR, "tools", "_py_originals")
 TARGET_FILES = [
     "app/services/license_service.py",
     "app/handlers/license.py",
-    "backend/keygen_service.py",
+    "app/services/keygen_service.py",
 ]
 
 

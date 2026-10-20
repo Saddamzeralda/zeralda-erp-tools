@@ -124,7 +124,7 @@ def mod_generate_key():
     except ValueError:
         expires = 0
 
-    from backend import keygen_service
+    from app.services import keygen_service
     result = keygen_service.generate_key(phone, user_email=email,
                                           license_expires_days=expires, force_new=True)
     if result.get("ok"):
@@ -144,7 +144,7 @@ def mod_generate_key():
 def mod_list_unified():
     """عرض موحد للمفاتيح + التراخيص"""
     _header("العرض الموحد: المفاتيح + التراخيص")
-    from backend import keygen_service
+    from app.services import keygen_service
     result = keygen_service.list_unified()
     if result["count"] == 0:
         _info("لا توجد مفاتيح"); _pause(); return
@@ -169,7 +169,7 @@ def mod_show_license():
     key = input("  أدخل المفتاح (KEY-XXXX-XXXX-XXXX): ").strip().upper()
     if not key:
         _err("المفتاح مطلوب"); return
-    from backend import keygen_service
+    from app.services import keygen_service
     result = keygen_service.get_license_for_key(key)
     if result.get("ok"):
         p = result["payload"]
@@ -203,7 +203,7 @@ def mod_revoke_key():
     confirm = input(f"  {C.RED}تأكيد إلغاء {key}؟ (yes/no): {C.R}").strip().lower()
     if confirm != "yes":
         _info("تم الإلغاء"); _pause(); return
-    from backend import keygen_service
+    from app.services import keygen_service
     result = keygen_service.revoke_key(key)
     if result.get("ok"):
         _ok(result["message"])
@@ -222,7 +222,7 @@ def mod_test_login():
         hw_fp = hashlib.sha256(os.urandom(32)).hexdigest()[:32]
     hw_id = input("  معرف الجهاز (أو اترك فارغ): ").strip() or f"HW-{hw_fp[:4].upper()}-{hw_fp[4:8].upper()}-{hw_fp[8:12].upper()}-{hw_fp[12:16].upper()}"
 
-    from backend import keygen_service
+    from app.services import keygen_service
     from app.services import license_service
 
     # Authenticate
@@ -533,7 +533,7 @@ def mod_integrity_reset():
 def mod_full_test():
     """اختبار شامل لكل النظام"""
     _header("اختبار شامل للنظام الموحد")
-    from backend import keygen_service
+    from app.services import keygen_service
     from app.services import license_service
 
     TEST_PHONE = "+213661234567"
@@ -704,7 +704,7 @@ def mod_server_status():
 
     # Keys DB info
     try:
-        from backend import keygen_service
+        from app.services import keygen_service
         keys = keygen_service._load_keys()
         k_total = len(keys)
         k_active = sum(1 for v in keys.values() if v.get("active", True))
@@ -855,11 +855,11 @@ def _handle_api(path, method, handler):
     try:
         # ── Keys ──
         if path == "/api/toolkit/keys/list" and method == "GET":
-            from backend import keygen_service
+            from app.services import keygen_service
             return _json_response(keygen_service.list_unified())
 
         if path == "/api/toolkit/keys/generate" and method == "POST":
-            from backend import keygen_service
+            from app.services import keygen_service
             data = _read_body(handler)
             result = keygen_service.generate_key(
                 data.get("phone", ""),
@@ -870,25 +870,25 @@ def _handle_api(path, method, handler):
             return _json_response(result, 200 if result.get("ok") else 400)
 
         if path == "/api/toolkit/keys/revoke" and method == "POST":
-            from backend import keygen_service
+            from app.services import keygen_service
             data = _read_body(handler)
             result = keygen_service.revoke_key(data.get("key", ""))
             return _json_response(result, 200 if result.get("ok") else 400)
 
         if path == "/api/toolkit/keys/delete" and method == "POST":
-            from backend import keygen_service
+            from app.services import keygen_service
             data = _read_body(handler)
             result = keygen_service.delete_key(data.get("key", ""))
             return _json_response(result, 200 if result.get("ok") else 400)
 
         if path == "/api/toolkit/keys/verify" and method == "POST":
-            from backend import keygen_service
+            from app.services import keygen_service
             data = _read_body(handler)
             result = keygen_service.verify_key(data.get("key", ""), data.get("phone", ""))
             return _json_response(result, 200)
 
         if path.startswith("/api/toolkit/keys/license/") and method == "GET":
-            from backend import keygen_service
+            from app.services import keygen_service
             key = path.split("/")[-1]
             result = keygen_service.get_license_for_key(key)
             return _json_response(result, 200 if result.get("ok") else 404)
@@ -979,7 +979,7 @@ def _handle_api(path, method, handler):
                 pass
             # Keys DB
             try:
-                from backend import keygen_service
+                from app.services import keygen_service
                 keys = keygen_service._load_keys()
                 status["keysTotal"] = len(keys)
                 status["keysActive"] = sum(1 for v in keys.values() if v.get("active", True))
@@ -1008,7 +1008,7 @@ def _handle_api(path, method, handler):
 
 def _run_full_test_silent():
     """Run full test suite and return structured results"""
-    from backend import keygen_service
+    from app.services import keygen_service
     from app.services import license_service
 
     TEST_PHONE = "+213661234567"

@@ -86,7 +86,7 @@ def prune_client_presence(now_ts: float = None) -> int:
 async def ping():
     uptime_s = int(time.time() - _SERVER_START_TIME)
     try:
-        from backend import auth as _auth
+        from app.services import auth as _auth
         auth_enabled = True
     except ImportError:
         auth_enabled = False
@@ -106,12 +106,12 @@ async def ping():
 @router.get("/config/keygen-status")
 async def keygen_status():
     try:
-        from backend import keygen_service  # noqa: F401
+        from app.services import keygen_service  # noqa: F401
         keygen_enabled = True
     except ImportError:
         keygen_enabled = False
     try:
-        from backend import auth  # noqa: F401
+        from app.services import auth  # noqa: F401
         auth_enabled = True
     except ImportError:
         auth_enabled = False
@@ -190,7 +190,7 @@ async def server_shutdown(request: Request):
         except Exception:
             pass
         try:
-            from backend import auth
+            from app.services import auth
             auth.flush_sessions()
         except Exception:
             pass

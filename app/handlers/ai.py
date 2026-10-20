@@ -27,7 +27,7 @@ from app.services.security import (
 )
 
 # Security helpers shared with legacy server.py (parity with user-applied fixes)
-from backend.ai_routes import (
+from app.services.ai_routes import (
     MODULE_MAP,
     ai_chat as _ai_chat,
     normalize_line_items as _normalize_line_items,
@@ -162,7 +162,7 @@ def _inject_into_prompt(base: str, insertion: str, marker: str = "## YOUR ACTION
 @router.get("/status")
 async def status():
     try:
-        from backend.cloud_ai_service import get_cloud_status
+        from app.services.cloud_ai_service import get_cloud_status
         s = get_cloud_status()
         return {"ok": s.get("configured", False), "provider": s.get("provider", "unknown"),
                 "model": s.get("model", "unknown"), "configured": s.get("configured", False),
@@ -174,7 +174,7 @@ async def status():
 # ── Settings ───────────────────────────────────────────────────────────────
 @router.get("/settings")
 async def get_settings(request: Request):
-    from backend.cloud_ai_service import PROVIDER_CONFIGS, _read_ai_settings
+    from app.services.cloud_ai_service import PROVIDER_CONFIGS, _read_ai_settings
     import os
     # Parity fix: require an authenticated session — settings contain provider/model info
     # and API keys (DPAPI-encrypted on disk, but we mask them for non-admins below).
@@ -204,7 +204,7 @@ async def get_settings(request: Request):
             defaults[pcfg["api_key_field"]] = ai_cfg.get(pcfg["api_key_field"], "")
         if pcfg.get("model_field"):
             defaults[pcfg["model_field"]] = ai_cfg.get(pcfg["model_field"], pcfg["default_model"])
-    from backend.auth import AI_PERMISSIONS
+    from app.services.auth import AI_PERMISSIONS
     defaults["role_permissions"] = {r: dict(p) for r, p in AI_PERMISSIONS.items()}
     defaults.update(ai_cfg)
     # Security: mask API keys for non-admin viewers so the GET endpoint never
@@ -220,7 +220,7 @@ async def get_settings(request: Request):
 
 @router.post("/settings")
 async def save_settings(request: Request):
-    from backend.cloud_ai_service import PROVIDER_CONFIGS, _encrypt_api_key, _DPAPI_PREFIX
+    from app.services.cloud_ai_service import PROVIDER_CONFIGS, _encrypt_api_key, _DPAPI_PREFIX
     import os
     user = require_auth(request, required_role="admin")
     data = await read_json_body(request)
@@ -254,7 +254,7 @@ async def save_settings(request: Request):
     # FIX AI-P1-005: invalidate the permissions cache so the new overrides
     # take effect immediately.
     try:
-        from backend.auth import invalidate_ai_permissions_cache
+        from app.services.auth import invalidate_ai_permissions_cache
         invalidate_ai_permissions_cache()
     except Exception:
         pass
@@ -265,7 +265,7 @@ async def save_settings(request: Request):
 
 @router.get("/my-permissions")
 async def my_permissions(request: Request):
-    from backend.auth import get_ai_permissions
+    from app.services.auth import get_ai_permissions
     user = require_auth(request)
     perms = get_ai_permissions(user.get("role", "viewer"))
     return {"ok": True, "role": user.get("role"), "permissions": perms}
@@ -324,10 +324,10 @@ def _normalize_chat_messages(
 # ── Chat ───────────────────────────────────────────────────────────────────
 @router.post("/chat")
 async def chat(request: Request):
-    from backend.auth import get_ai_permissions
-    from backend.ai_chat_service import chat_with_assistant_ai
+    from app.services.auth import get_ai_permissions
+    from app.services.ai_chat_service import chat_with_assistant_ai
     try:
-        from backend.groq_service import search_web
+        from app.services.groq_service import search_web
     except ImportError:
         def search_web(q, max_results=5):
             return []
@@ -454,10 +454,10 @@ async def chat(request: Request):
 @router.post("/chat/stream")
 async def chat_stream(request: Request):
     from fastapi.responses import StreamingResponse
-    from backend.auth import get_ai_permissions
-    from backend.cloud_ai_service import chat_with_assistant_ai_stream
+    from app.services.auth import get_ai_permissions
+    from app.services.cloud_ai_service import chat_with_assistant_ai_stream
     try:
-        from backend.groq_service import search_web
+        from app.services.groq_service import search_web
     except ImportError:
         def search_web(q, max_results=5):
             return []
@@ -594,8 +594,8 @@ _DESTRUCTIVE_ACTIONS = {"user_delete", "store_delete_record", "store_write",
 
 @router.post("/action")
 async def action(request: Request):
-    from backend.auth import get_ai_permissions
-    from backend.ai_routes import MODULE_MAP
+    from app.services.auth import get_ai_permissions
+    from app.services.ai_routes import MODULE_MAP
     import time
     import datetime
 
@@ -644,7 +644,7 @@ async def action(request: Request):
         if req.action == "user_list":
             if not (ai_perms.get("manage_users") or ai_perms.get("read_all")):
                 raise HTTPException(403, detail={"ok": False, "error": "Permission denied: manage_users required"})
-            from backend.auth import list_users
+            from app.services.auth import list_users
             users = list_users() or []
             safe = [{"email": u.get("email"), "name": u.get("name"), "role": u.get("role"),
                      "active": u.get("active", True)} for u in users]
@@ -654,7 +654,7 @@ async def action(request: Request):
         elif req.action == "user_create":
             if not ai_perms.get("manage_users"):
                 raise HTTPException(403, detail={"ok": False, "error": "Permission denied: manage_users required"})
-            from backend.auth import create_user
+            from app.services.auth import create_user
             email = str(args.get("email") or "").strip().lower()
             name = str(args.get("name") or email.split("@")[0] if email else "").strip()
             role = str(args.get("role") or "user").strip()
@@ -673,7 +673,7 @@ async def action(request: Request):
         elif req.action == "user_update":
             if not ai_perms.get("manage_users"):
                 raise HTTPException(403, detail={"ok": False, "error": "Permission denied: manage_users required"})
-            from backend.auth import update_user
+            from app.services.auth import update_user
             email = str(args.get("email") or "").strip().lower()
             if not email:
                 raise HTTPException(400, detail={"ok": False, "error": "email is required"})
@@ -689,7 +689,7 @@ async def action(request: Request):
                 raise HTTPException(403, detail={"ok": False, "error": "Permission denied: manage_users required"})
             if user.get("role") != "admin":
                 raise HTTPException(403, detail={"ok": False, "error": "Only admins can delete users"})
-            from backend.auth import delete_user
+            from app.services.auth import delete_user
             email = str(args.get("email") or "").strip().lower()
             if not email:
                 raise HTTPException(400, detail={"ok": False, "error": "email is required"})
@@ -746,7 +746,7 @@ async def action(request: Request):
                     json.dump(existing, f, ensure_ascii=False, indent=2)
                 os.replace(tmp_ai, ai_sf)
                 try:
-                    from backend.auth import invalidate_ai_permissions_cache
+                    from app.services.auth import invalidate_ai_permissions_cache
                     invalidate_ai_permissions_cache()
                 except Exception:
                     pass
@@ -1354,8 +1354,8 @@ async def action(request: Request):
 # ── Company search (FIX #28: now requires auth) ───────────────────────────
 @router.post("/company-search")
 async def company_search(request: Request):
-    from backend.ai_routes import ai_chat as _ai_chat
-    from backend.auth import get_ai_permissions
+    from app.services.ai_routes import ai_chat as _ai_chat
+    from app.services.auth import get_ai_permissions
     user = require_auth(request)  # FIX #28
     data = await read_json_body(request)
     query = str(data.get("query") or "").strip()[:2000]
@@ -1496,7 +1496,7 @@ async def company_search(request: Request):
 @router.post("/bill-review")
 async def bill_review(request: Request):
     user = require_auth(request)
-    from backend.ai_routes import ai_chat as _ai_chat
+    from app.services.ai_routes import ai_chat as _ai_chat
     data = await read_json_body(request)
     # FIX AI-P2-009: sanitize the bill text before injecting it into the
     # prompt — a malicious or adversarial invoice could otherwise embed

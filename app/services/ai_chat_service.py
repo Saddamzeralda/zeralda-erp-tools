@@ -4,7 +4,7 @@ Routes to cloud provider depending on settings.
 """
 
 from typing import Any, Dict, List, Optional
-from backend.cloud_ai_service import chat_with_assistant_ai as _cloud_chat
+from app.services.cloud_ai_service import chat_with_assistant_ai as _cloud_chat
 
 
 def chat_with_assistant_ai(messages: List[Dict], system_prompt: Optional[str] = None, provider_override: Optional[str] = None, max_tokens: Optional[int] = None, temperature: Optional[float] = None) -> Dict[str, Any]:

@@ -97,7 +97,7 @@ def _safe_users(users: Dict[str, Any]) -> Dict[str, Any]:
 # ── Auth endpoints ─────────────────────────────────────────────────────────
 @router.post("/login")
 async def login(request: Request):
-    from backend import auth
+    from app.services import auth
 
     client_ip = get_client_ip(request)
     if auth_rate_limited(client_ip):
@@ -125,7 +125,7 @@ async def login(request: Request):
 
 @router.post("/google-login")
 async def google_login(request: Request):
-    from backend import auth
+    from app.services import auth
 
     client_ip = get_client_ip(request)
     if auth_rate_limited(client_ip):
@@ -236,7 +236,7 @@ async def google_login(request: Request):
 
 @router.post("/logout")
 async def logout(request: Request):
-    from backend import auth
+    from app.services import auth
     token = get_session_token(request)
     if token:
         auth.destroy_session(token)
@@ -254,7 +254,7 @@ async def validate(request: Request):
 # ── Two-Factor Authentication (2FA / TOTP) ─────────────────────────────────
 @router.post("/2fa/verify")
 async def verify_2fa(request: Request):
-    from backend import auth
+    from app.services import auth
 
     client_ip = get_client_ip(request)
     if auth_rate_limited(client_ip):
@@ -278,7 +278,7 @@ async def verify_2fa(request: Request):
 @router.get("/2fa/status")
 async def get_2fa_status(request: Request):
     user = require_auth(request)
-    from backend import auth
+    from app.services import auth
 
     users = auth.load_users()
     u = users.get(user.get("email", "").lower(), {})
@@ -292,7 +292,7 @@ async def get_2fa_status(request: Request):
 @router.get("/2fa/setup")
 async def setup_2fa(request: Request):
     user = require_auth(request)
-    from backend import auth
+    from app.services import auth
 
     res = auth.setup_user_2fa(user.get("email", ""))
     return JSONResponse(status_code=200 if res.get("ok") else 400, content=res)
@@ -301,7 +301,7 @@ async def setup_2fa(request: Request):
 @router.post("/2fa/enable")
 async def enable_2fa(request: Request):
     user = require_auth(request)
-    from backend import auth
+    from app.services import auth
 
     data = await read_json_body(request, max_bytes=MAX_AUTH_BODY_BYTES)
     secret = str(data.get("secret") or "").strip()
@@ -316,7 +316,7 @@ async def enable_2fa(request: Request):
 @router.post("/2fa/disable")
 async def disable_2fa(request: Request):
     user = require_auth(request)
-    from backend import auth
+    from app.services import auth
 
     res = auth.disable_user_2fa(user.get("email", ""))
     return JSONResponse(status_code=200 if res.get("ok") else 400, content=res)
@@ -324,7 +324,7 @@ async def disable_2fa(request: Request):
 
 @router.post("/register")
 async def register(request: Request):
-    from backend import auth
+    from app.services import auth
     user = require_auth(request, required_role="admin")
     data = await read_json_body(request)
     try:
@@ -345,7 +345,7 @@ async def register(request: Request):
 
 @router.get("/users")
 async def list_users(request: Request):
-    from backend import auth
+    from app.services import auth
     require_auth(request, required_role="admin")
     users = auth.load_users()
     return {"ok": True, "users": _safe_users(users)}
@@ -359,7 +359,7 @@ async def me(request: Request):
 
 @router.post("/change-password")
 async def change_password(request: Request):
-    from backend import auth
+    from app.services import auth
     user = require_auth(request)
     data = await read_json_body(request)
     try:
@@ -377,7 +377,7 @@ async def change_password(request: Request):
 
 @router.patch("/users/{email}")
 async def update_user_endpoint(request: Request, email: str):
-    from backend import auth
+    from app.services import auth
     import urllib.parse
     requester = require_auth(request)
     target_email = urllib.parse.unquote(email).strip().lower()
@@ -411,7 +411,7 @@ async def update_user_endpoint(request: Request, email: str):
 
 @router.delete("/users/{email}")
 async def delete_user_endpoint(request: Request, email: str):
-    from backend import auth
+    from app.services import auth
     import urllib.parse
     requester = require_auth(request, required_role="admin")
     target_email = urllib.parse.unquote(email).strip().lower()
@@ -427,14 +427,14 @@ async def delete_user_endpoint(request: Request, email: str):
 
 @router.get("/sessions")
 async def list_sessions(request: Request):
-    from backend import auth
+    from app.services import auth
     require_auth(request, required_role="admin")
     return auth.get_sessions_info()
 
 
 @router.post("/sessions/cleanup")
 async def cleanup_sessions(request: Request):
-    from backend import auth
+    from app.services import auth
     require_auth(request, required_role="admin")
     auth.cleanup_expired_sessions()
     return {"ok": True, "message": "Expired sessions cleaned up"}
@@ -442,7 +442,7 @@ async def cleanup_sessions(request: Request):
 
 @router.get("/preferences")
 async def get_preferences(request: Request):
-    from backend import auth
+    from app.services import auth
     user = require_auth(request)
     users = auth.load_users()
     prefs = users.get(user.get("email", ""), {}).get("preferences", {})
@@ -451,7 +451,7 @@ async def get_preferences(request: Request):
 
 @router.post("/preferences")
 async def save_preferences(request: Request):
-    from backend import auth
+    from app.services import auth
     user = require_auth(request)
     body = await read_json_body(request)
     prefs = body.get("preferences", {})
@@ -468,8 +468,8 @@ async def save_preferences(request: Request):
 # ── Key login (separate route, not under /api/auth prefix) ─────────────────
 @router.post("/login-with-key")
 async def login_with_key(request: Request):
-    from backend import auth
-    from backend import keygen_service
+    from app.services import auth
+    from app.services import keygen_service
 
     client_ip = get_client_ip(request)
     if auth_rate_limited(client_ip):
@@ -568,7 +568,7 @@ async def login_with_key(request: Request):
 # ── KEYGEN endpoints ───────────────────────────────────────────────────────
 @keys_router.post("/generate")
 async def generate_key(request: Request):
-    from backend import keygen_service
+    from app.services import keygen_service
     user = require_auth(request, required_role="admin")
     data = await read_json_body(request)
     try:
@@ -585,7 +585,7 @@ async def generate_key(request: Request):
 
 @keys_router.post("/verify")
 async def verify_key(request: Request):
-    from backend import keygen_service
+    from app.services import keygen_service
     client_ip = get_client_ip(request)
     if auth_rate_limited(client_ip):
         log_structured("WARNING", "Key verification rate limited", action="keygen_rate_limited",
@@ -602,7 +602,7 @@ async def verify_key(request: Request):
 
 @keys_router.get("/list")
 async def list_keys(request: Request, phone: Optional[str] = None, active_only: bool = False):
-    from backend import keygen_service
+    from app.services import keygen_service
     require_auth(request, required_role="admin")
     return keygen_service.list_keys(phone_number=phone, active_only=active_only)
 
@@ -610,7 +610,7 @@ async def list_keys(request: Request, phone: Optional[str] = None, active_only: 
 @keys_router.get("/list-unified")
 async def list_keys_unified(request: Request, phone: Optional[str] = None, active_only: bool = False):
     """List all keygen keys WITH their linked license info (unified view)."""
-    from backend import keygen_service
+    from app.services import keygen_service
     require_auth(request, required_role="admin")
     return keygen_service.list_unified(phone_number=phone, active_only=active_only)
 
@@ -618,14 +618,14 @@ async def list_keys_unified(request: Request, phone: Optional[str] = None, activ
 @keys_router.get("/license/{key}")
 async def get_license_for_key(request: Request, key: str):
     """Get the linked RSA license info for a keygen key."""
-    from backend import keygen_service
+    from app.services import keygen_service
     require_auth(request, required_role="admin")
     return keygen_service.get_license_for_key(key)
 
 
 @keys_router.post("/revoke")
 async def revoke_key(request: Request):
-    from backend import keygen_service
+    from app.services import keygen_service
     user = require_auth(request, required_role="admin")
     data = await read_json_body(request)
     try:
@@ -641,7 +641,7 @@ async def revoke_key(request: Request):
 @keys_router.post("/delete")
 async def delete_key(request: Request):
     """Permanently delete a key (admin only)."""
-    from backend import keygen_service
+    from app.services import keygen_service
     user = require_auth(request, required_role="admin")
     data = await read_json_body(request)
     try:
@@ -678,7 +678,7 @@ async def verify_2fa_endpoint(request: Request):
         raise HTTPException(400, detail={"ok": False, "error": f"Invalid request: {e}"})
 
     ua = request.headers.get("User-Agent", "")
-    from backend import auth
+    from app.services import auth
     result = auth.verify_2fa_login(req.temp_token, req.code, ip_address=client_ip, user_agent=ua)
     return JSONResponse(status_code=200 if result.get("ok") else 401, content=result)
 
@@ -687,7 +687,7 @@ async def verify_2fa_endpoint(request: Request):
 async def setup_2fa_endpoint(request: Request):
     """Generate a new TOTP secret and provisioning URI for the authenticated user."""
     user = require_auth(request)
-    from backend import auth
+    from app.services import auth
     result = auth.setup_user_2fa(user.get("email", ""))
     return JSONResponse(status_code=200 if result.get("ok") else 400, content=result)
 
@@ -702,7 +702,7 @@ async def enable_2fa_endpoint(request: Request):
     except Exception as e:
         raise HTTPException(400, detail={"ok": False, "error": f"Invalid request: {e}"})
 
-    from backend import auth
+    from app.services import auth
     result = auth.enable_user_2fa(user.get("email", ""), req.secret, req.code)
     return JSONResponse(status_code=200 if result.get("ok") else 400, content=result)
 
@@ -711,7 +711,7 @@ async def enable_2fa_endpoint(request: Request):
 async def disable_2fa_endpoint(request: Request):
     """Disable 2FA for the authenticated user."""
     user = require_auth(request)
-    from backend import auth
+    from app.services import auth
     result = auth.disable_user_2fa(user.get("email", ""))
     return JSONResponse(status_code=200 if result.get("ok") else 400, content=result)
 
@@ -727,7 +727,7 @@ async def revoke_sessions_endpoint(request: Request):
     if target_email != str(current_user.get("email", "")).lower() and current_user.get("role") != "admin":
         raise HTTPException(403, detail={"ok": False, "error": "Only admins can revoke other users sessions"})
 
-    from backend import auth
+    from app.services import auth
     count = auth.revoke_all_sessions(target_email)
     try:
         from app.services.audit import record_audit_event

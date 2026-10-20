@@ -193,7 +193,7 @@ def _sanitize_nested_dict(obj):
 
 def ai_chat(messages, system_prompt=None, max_tokens=None, temperature=None):
     """Thin wrapper around the AI chat service."""
-    from backend.ai_chat_service import chat_with_assistant_ai
+    from app.services.ai_chat_service import chat_with_assistant_ai
     return chat_with_assistant_ai(messages, system_prompt=system_prompt, max_tokens=max_tokens, temperature=temperature)
 
 

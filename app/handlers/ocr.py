@@ -55,7 +55,7 @@ class OcrExtractRequest(BaseModel):
 async def ocr_status(request: Request):
     _require_ai_user(request)
     try:
-        from backend.ocr_service import get_ocr_status
+        from app.services.ocr_service import get_ocr_status
         status = get_ocr_status()
     except Exception as exc:
         status = {"ok": False, "tesseract_ready": False, "details": str(exc)}
@@ -79,7 +79,7 @@ async def ocr_languages(request: Request):
     error = None
     try:
         import pytesseract as _tess
-        from backend.ocr_service import _configure_tesseract_cmd
+        from app.services.ocr_service import _configure_tesseract_cmd
         _configure_tesseract_cmd()
         langs = _tess.get_languages()
     except Exception as exc:
@@ -99,7 +99,7 @@ async def ocr_extract(request: Request):
         raise HTTPException(400, detail={"ok": False, "error": "fileBase64 is required"})
     try:
         import asyncio
-        from backend.ocr_service import extract_text_from_payload
+        from app.services.ocr_service import extract_text_from_payload
         # Run CPU-bound OCR in a thread pool to avoid blocking the event loop
         loop = asyncio.get_event_loop()
         result = await loop.run_in_executor(
@@ -108,7 +108,7 @@ async def ocr_extract(request: Request):
             )
         )
         if (req.useAI or req.aiPrompt) and result.get("ok"):
-            from backend.ai_routes import ai_chat as _ai_chat
+            from app.services.ai_routes import ai_chat as _ai_chat
             text_for_ai = str(result.get("text") or "").strip()
             if text_for_ai:
                 default_prompt = ("Analyze the following OCR text and return a concise structured JSON "
@@ -206,7 +206,7 @@ async def invoice_extract(request: Request):
 
     if file_b64:
         try:
-            from backend import ai_file_processor
+            from app.services import ai_file_processor
             import os
             import asyncio
             from app.services import storage as _storage
@@ -244,7 +244,7 @@ async def invoice_extract(request: Request):
                 else:
                     # Automatic fallback to Tesseract if Copilot returned no text/failed
                     try:
-                        from backend.ocr_service import extract_text_from_payload
+                        from app.services.ocr_service import extract_text_from_payload
                         tess_res = await loop.run_in_executor(
                             None, lambda: extract_text_from_payload(
                                 file_b64, mime_type, "ara+fra+eng", file_name=file_name
@@ -255,7 +255,7 @@ async def invoice_extract(request: Request):
                             proc_result["text"] = source_text
                             proc_result["ocr_engine_used"] = "tesseract-fallback"
                             proc_result["ok"] = True
-                            from backend.ai_file_processor import _regex_invoice_extract
+                            from app.services.ai_file_processor import _regex_invoice_extract
                             reg_data = _regex_invoice_extract(source_text)
                             if reg_data:
                                 analysis = reg_data
@@ -272,8 +272,8 @@ async def invoice_extract(request: Request):
             fields = analysis.get("fields") or {}
             line_items = analysis.get("line_items") or []
 
-            from backend.ai_routes import normalize_line_items as _normalize_line_items
-            from backend.ai_routes import ai_chat as _ai_chat
+            from app.services.ai_routes import normalize_line_items as _normalize_line_items
+            from app.services.ai_routes import ai_chat as _ai_chat
 
             # Fallback AI extraction if no line items
             if not line_items and source_text:
@@ -302,7 +302,7 @@ async def invoice_extract(request: Request):
             _need_regex = (not line_items) or (not fields.get('supplier_name') and not fields.get('supplier'))
             if _need_regex and source_text:
                 try:
-                    from backend.ai_file_processor import _regex_invoice_extract
+                    from app.services.ai_file_processor import _regex_invoice_extract
                     regex_result = _regex_invoice_extract(source_text)
                     if regex_result:
                         regex_fields = regex_result.get('fields') or {}
@@ -380,14 +380,14 @@ async def invoice_extract(request: Request):
     if not source_text:
         return JSONResponse(status_code=400, content={"ok": False, "error": "No text or file provided"})
     try:
-        from backend.ai_routes import ai_chat as _ai_chat
-        from backend.ai_routes import normalize_line_items as _normalize_line_items
+        from app.services.ai_routes import ai_chat as _ai_chat
+        from app.services.ai_routes import normalize_line_items as _normalize_line_items
 
         # FIX: Run regex extraction first (works without AI API key)
         _regex_fields = {}
         _regex_items = []
         try:
-            from backend.ai_file_processor import _regex_invoice_extract
+            from app.services.ai_file_processor import _regex_invoice_extract
             _regex_result = _regex_invoice_extract(source_text)
             if _regex_result:
                 _regex_fields = _regex_result.get('fields') or {}
@@ -453,7 +453,7 @@ async def invoice_extract(request: Request):
 async def analyze_file(request: Request):
     _require_ai_user(request)
     try:
-        from backend import ai_file_processor
+        from app.services import ai_file_processor
         import asyncio
         import os
         from app.services import storage
@@ -489,7 +489,7 @@ async def analyze_file(request: Request):
 async def compare_files(request: Request):
     _require_ai_user(request)
     try:
-        from backend import ai_file_processor
+        from app.services import ai_file_processor
         import asyncio
         data = await read_json_body(request)
         files = data.get("files", [])
@@ -509,7 +509,7 @@ async def compare_files(request: Request):
 async def extract_table(request: Request):
     _require_ai_user(request)
     try:
-        from backend import ai_file_processor
+        from app.services import ai_file_processor
         import asyncio
         data = await read_json_body(request)
         if not data.get("fileBase64"):
@@ -530,7 +530,7 @@ async def extract_table(request: Request):
 async def classify(request: Request):
     _require_ai_user(request)
     try:
-        from backend import ai_file_processor
+        from app.services import ai_file_processor
         import asyncio
         data = await read_json_body(request)
         if not data.get("fileBase64"):

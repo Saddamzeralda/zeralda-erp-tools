@@ -12,9 +12,9 @@ import re
 import sys
 import time
 from typing import Any, Dict, List, Optional
-from backend import ocr_service
-from backend.ai_chat_service import chat_with_assistant_ai
-from backend.cloud_ai_service import chat_with_vision
+from app.services import ocr_service
+from app.services.ai_chat_service import chat_with_assistant_ai
+from app.services.cloud_ai_service import chat_with_vision
 
 # ── Windows UTF-8 fix: reconfigure stdout/stderr to UTF-8 so print() with
 #    flush=True doesn't fail with [Errno 22] Invalid argument when the output
@@ -195,7 +195,7 @@ _VISION_FALLBACK_ORDER = ['gemini', 'groq']
 
 def _try_fallback_vision(file_base64: str, mime_type: str, prompt: str, system_prompt: str = '', json_mode: bool = False, exclude_provider: str = '') -> Optional[Dict[str, Any]]:
     """Try fallback vision providers when the primary provider fails with quota/error."""
-    from backend.cloud_ai_service import _read_ai_settings, chat_with_vision, VISION_MODELS, PROVIDER_CONFIGS
+    from app.services.cloud_ai_service import _read_ai_settings, chat_with_vision, VISION_MODELS, PROVIDER_CONFIGS
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     ai_cfg = _read_ai_settings(project_root)
     for fb_provider in _VISION_FALLBACK_ORDER:
@@ -251,7 +251,7 @@ def _provider_supports_vision() -> tuple:
     """Check if the current AI provider supports vision. Returns (supports, provider_name, reason)."""
     try:
         project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        from backend.cloud_ai_service import _read_ai_settings, _resolve_provider, VISION_MODELS, PROVIDER_CONFIGS
+        from app.services.cloud_ai_service import _read_ai_settings, _resolve_provider, VISION_MODELS, PROVIDER_CONFIGS
         _ai_cfg = _read_ai_settings(project_root)
         _provider = _resolve_provider(_ai_cfg)
         _vision_model = VISION_MODELS.get(_provider, '')
@@ -683,7 +683,7 @@ def _analyze_with_ai(
         print(f'[AI ANALYSIS] vision check: ok={_vision_ok}, provider={_vision_provider}, reason={_vision_reason[:100]}')
         if _vision_ok:
             try:
-                from backend.cloud_ai_service import chat_with_vision
+                from app.services.cloud_ai_service import chat_with_vision
                 import fitz as _fitz_v
                 normalized_mime = mime_type.lower().split(';')[0].strip()
                 is_pdf_v = (normalized_mime == 'application/pdf')
@@ -979,7 +979,7 @@ def _analyze_with_ai(
         # For file analysis, prefer Gemini (fast, excellent for structured extraction from text)
         # Gemini Flash is ~5x faster than OpenRouter free models for text analysis
         try:
-            from backend.cloud_ai_service import _openai_compatible_chat, _read_ai_settings
+            from app.services.cloud_ai_service import _openai_compatible_chat, _read_ai_settings
             project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
             _ai_cfg = _read_ai_settings(project_root)
             _gemini_api_key = _ai_cfg.get('gemini_api_key') or os.getenv('GEMINI_API_KEY', '')
@@ -1005,7 +1005,7 @@ def _analyze_with_ai(
             err = str(response.get('error', '')).lower()
             _safe_print(f'[AI ANALYSIS] Gemini failed ({err[:100]}), trying DeepSeek')
             try:
-                from backend.cloud_ai_service import _openai_compatible_chat, _read_ai_settings
+                from app.services.cloud_ai_service import _openai_compatible_chat, _read_ai_settings
                 _ai_cfg = _read_ai_settings(project_root)
                 _ds_api_key = _ai_cfg.get('deepseek_api_key') or os.getenv('DEEPSEEK_API_KEY', '')
                 if _ds_api_key:
@@ -1023,7 +1023,7 @@ def _analyze_with_ai(
             err = str(response.get('error', '')).lower()
             _safe_print(f'[AI ANALYSIS] DeepSeek failed ({err[:100]}), trying Groq')
             try:
-                from backend.cloud_ai_service import _openai_compatible_chat, _read_ai_settings
+                from app.services.cloud_ai_service import _openai_compatible_chat, _read_ai_settings
                 _ai_cfg = _read_ai_settings(project_root)
                 _groq_api_key = _ai_cfg.get('groq_api_key') or os.getenv('GROQ_API_KEY', '')
                 _groq_model = _ai_cfg.get('groq_model') or 'llama-3.3-70b-versatile'
@@ -1042,7 +1042,7 @@ def _analyze_with_ai(
             err = str(response.get('error', '')).lower()
             _safe_print(f'[AI ANALYSIS] Groq failed ({err[:100]}), trying OpenAI')
             try:
-                from backend.cloud_ai_service import _openai_compatible_chat, _read_ai_settings
+                from app.services.cloud_ai_service import _openai_compatible_chat, _read_ai_settings
                 _ai_cfg = _read_ai_settings(project_root)
                 _oai_api_key = _ai_cfg.get('openai_api_key') or os.getenv('OPENAI_API_KEY', '')
                 _oai_model = _ai_cfg.get('openai_model') or 'gpt-4o-mini'
@@ -1061,7 +1061,7 @@ def _analyze_with_ai(
             err = str(response.get('error', '')).lower()
             _safe_print(f'[AI ANALYSIS] OpenAI failed ({err[:100]}), trying OpenRouter text models')
             try:
-                from backend.cloud_ai_service import _openai_compatible_chat, _read_ai_settings
+                from app.services.cloud_ai_service import _openai_compatible_chat, _read_ai_settings
                 _ai_cfg = _read_ai_settings(project_root)
                 _or_api_key = _ai_cfg.get('openrouter_api_key') or os.getenv('OPENROUTER_API_KEY', '')
                 # Use fast text models (NOT vision models which are 100x slower)
@@ -2158,7 +2158,7 @@ def _chat_with_fallback(messages: List[Dict], system_prompt: str, json_mode: boo
     """
     # 1) DeepSeek (fast, good for structured extraction)
     try:
-        from backend.cloud_ai_service import _openai_compatible_chat, _read_ai_settings
+        from app.services.cloud_ai_service import _openai_compatible_chat, _read_ai_settings
         project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         _ai_cfg = _read_ai_settings(project_root)
         _ds_api_key = _ai_cfg.get('deepseek_api_key') or os.getenv('DEEPSEEK_API_KEY', '')

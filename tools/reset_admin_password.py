@@ -7,7 +7,7 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from backend import auth
+from app.services import auth
 
 USERS_FILE = ROOT / 'data' / 'users.json'
 NEW_PASSWORD = os.getenv('ZERALDA_ADMIN_RESET_PASSWORD', 'Admin@2026!')

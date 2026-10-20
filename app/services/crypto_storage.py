@@ -22,9 +22,16 @@ import secrets
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-from cryptography.hazmat.primitives.kdf.hkdf import HKDF
+try:
+    from cryptography.hazmat.primitives import hashes
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+    from cryptography.hazmat.primitives.kdf.hkdf import HKDF
+    HAS_CRYPTOGRAPHY = True
+except ImportError:
+    HAS_CRYPTOGRAPHY = False
+    hashes = None
+    AESGCM = None
+    HKDF = None
 
 logger = logging.getLogger("zeralda.crypto_storage")
 
@@ -41,8 +48,11 @@ _KEY_FILE = _BASE_DIR / "data" / ".storage_key"
 _cached_aes_key: Optional[bytes] = None
 
 
-def get_encryption_key() -> bytes:
+def get_encryption_key() -> Optional[bytes]:
     """Retrieve or derive the persistent 256-bit AES-GCM key."""
+    if not HAS_CRYPTOGRAPHY or not HKDF:
+        return None
+
     global _cached_aes_key
     if _cached_aes_key is not None:
         return _cached_aes_key
@@ -101,7 +111,11 @@ def encrypt_bytes(plaintext: bytes) -> bytes:
     """Encrypt raw bytes using AES-256-GCM.
     Format: MAGIC_HEADER (15 bytes) + NONCE (12 bytes) + CIPHERTEXT_WITH_TAG
     """
+    if not HAS_CRYPTOGRAPHY or not AESGCM:
+        return plaintext
     key = get_encryption_key()
+    if not key:
+        return plaintext
     aesgcm = AESGCM(key)
     nonce = secrets.token_bytes(NONCE_LEN)
     ciphertext = aesgcm.encrypt(nonce, plaintext, None)
@@ -114,11 +128,16 @@ def decrypt_bytes(raw_data: bytes) -> bytes:
         # Plaintext backward compatibility
         return raw_data
 
+    if not HAS_CRYPTOGRAPHY or not AESGCM:
+        return raw_data
+
     header_offset = MAGIC_LEN
     nonce = raw_data[header_offset:header_offset + NONCE_LEN]
     ciphertext = raw_data[header_offset + NONCE_LEN:]
 
     key = get_encryption_key()
+    if not key:
+        return raw_data
     aesgcm = AESGCM(key)
     try:
         return aesgcm.decrypt(nonce, ciphertext, None)

@@ -15,7 +15,7 @@ Benefits:
 Target Modules:
 - app/services/license_service.py
 - app/handlers/license.py
-- backend/keygen_service.py
+- app/services/keygen_service.py
 - app/services/crypto_storage.py
 
 Usage:
@@ -42,7 +42,7 @@ BACKUP_DIR = BASE_DIR / "tools" / "_cython_originals"
 TARGET_MODULES = [
     "app/services/license_service.py",
     "app/handlers/license.py",
-    "backend/keygen_service.py",
+    "app/services/keygen_service.py",
     "app/services/crypto_storage.py",
 ]
 

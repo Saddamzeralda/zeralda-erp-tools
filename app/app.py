@@ -6,8 +6,13 @@ Run via: python -m app.main  (or)  uvicorn app.app:app --host 127.0.0.1 --port 8
 from __future__ import annotations
 
 import os
+import sys
 from pathlib import Path
 from typing import Optional
+
+# Backward compatibility alias: ensures any legacy `import backend` seamlessly maps to `app.services`
+from app import services as _services
+sys.modules['backend'] = _services
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -301,12 +306,13 @@ def create_app() -> FastAPI:
         )
 
     # ── Routers ──────────────────────────────────────────────────────────
-    from app.handlers import auth, store, ai, backup, ocr, misc, files, license as license_handler, notifications as notifications_handler
+    from app.handlers import auth, store, ai, backup, ocr, misc, files, sync, license as license_handler, notifications as notifications_handler
 
     app.include_router(auth.router)
     app.include_router(auth.keys_router)
     app.include_router(auth.audit_router)
     app.include_router(store.router)
+    app.include_router(sync.router)
     app.include_router(ai.router)
     app.include_router(backup.router)
     app.include_router(ocr.router)
@@ -401,7 +407,7 @@ def create_app() -> FastAPI:
         log_structured("INFO", "Zeralda ERP starting", action="server_start",
                        environment=ENVIRONMENT, auth_required=True)
         try:
-            from backend import auth
+            from app.services import auth
             auth.initialize_default_users()
         except Exception as e:
             log_structured("WARN", "Default users init failed", error=str(e))
@@ -421,7 +427,7 @@ def create_app() -> FastAPI:
         except Exception as e:
             log_structured("WARN", "History flush failed on shutdown", error=str(e))
         try:
-            from backend import auth
+            from app.services import auth
             auth.flush_sessions()
         except Exception:
             pass

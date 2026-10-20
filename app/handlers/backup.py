@@ -153,7 +153,7 @@ async def backup_restore(request: Request):
     # FIX #33: encrypt AI settings via DPAPI before writing
     if req.ai_settings and isinstance(req.ai_settings, dict):
         try:
-            from backend.cloud_ai_service import PROVIDER_CONFIGS, _encrypt_api_key, _DPAPI_PREFIX
+            from app.services.cloud_ai_service import PROVIDER_CONFIGS, _encrypt_api_key, _DPAPI_PREFIX
             existing = _read_ai_settings()
             existing.update(req.ai_settings)
             for pcfg in PROVIDER_CONFIGS.values():

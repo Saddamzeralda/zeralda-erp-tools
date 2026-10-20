@@ -24,10 +24,17 @@ try:
 except Exception:
     pass
 
-# Ensure project root is on sys.path so `backend` and `app` resolve
+# Ensure project root is on sys.path
 _BASE = Path(__file__).resolve().parent.parent
 if str(_BASE) not in sys.path:
     sys.path.insert(0, str(_BASE))
+
+# Register backward compatibility alias for backend
+try:
+    from app import services as _services
+    sys.modules['backend'] = _services
+except Exception:
+    pass
 
 # Load .env file — required for DEFAULT_ADMIN_*, API keys, SECRET_KEY, etc.
 # server.py has its own _load_dotenv(); app/main.py must do the same.
@@ -195,7 +202,7 @@ def _start_launcher_watchdog() -> None:
                 except Exception:
                     pass
                 try:
-                    from backend import auth
+                    from app.services import auth
                     auth.flush_sessions()
                 except Exception:
                     pass
@@ -434,7 +441,7 @@ def main() -> None:
 
     # Initialize default admin if auth is enabled
     try:
-        from backend import auth
+        from app.services import auth
         auth.initialize_default_users()
         auth.cleanup_expired_sessions()
     except Exception as e:

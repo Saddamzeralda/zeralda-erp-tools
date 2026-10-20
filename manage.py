@@ -29,6 +29,7 @@ def print_menu():
     print("  [6] النشر المباشر على السحابة   (Deploy to Railway Cloud)")
     print("  [7] ربط الأجهزة عبر الشبكة     (Network Connection Hub)")
     print("  [8] تجهيز نسخة البيع للزبائن   (Build Client Setup Installer)")
+    print("  [9] فحص واختبار النظام آلياً   (Run Core Automated Tests)")
     print("  [0] خروج                       (Exit)")
     print("=" * 68)
 
@@ -99,7 +100,9 @@ def action_toolkit():
 
 def action_keygen():
     print("\n[*] تشغيل مولد التراخيص Keygen...")
-    keygen_py = os.path.join(BASE_DIR, "backend", "KEYGEN.py")
+    keygen_py = os.path.join(BASE_DIR, "tools", "keygen_tool.py")
+    if not os.path.exists(keygen_py):
+        keygen_py = os.path.join(BASE_DIR, "tools", "keygen_cli.py")
     subprocess.run([sys.executable, keygen_py])
 
 def action_deploy():
@@ -156,6 +159,13 @@ def action_installer():
     except Exception as e:
         print(f"[ERROR] فشل تشغيل Inno Setup: {e}")
 
+def action_test():
+    print("\n" + "=" * 68)
+    print("           تشغيل حزمة الاختبارات الآلية لنظام Zeralda ERP")
+    print("=" * 68)
+    test_file = os.path.join(BASE_DIR, "tests", "test_api_core.py")
+    subprocess.run([sys.executable, test_file])
+
 def main():
     if len(sys.argv) > 1:
         cmd = sys.argv[1].lower()
@@ -177,16 +187,18 @@ def main():
             action_connect()
         elif cmd in ("installer", "build-installer", "package"):
             action_installer()
+        elif cmd in ("test", "tests"):
+            action_test()
         else:
             print(f"[ERROR] أمر غير معروف: {cmd}")
-            print("الأوامر المتاحة: run, stop, tunnel, diag, toolkit, keygen, deploy, connect, installer")
+            print("الأوامر المتاحة: run, stop, tunnel, diag, toolkit, keygen, deploy, connect, installer, test")
             sys.exit(1)
         return
 
     while True:
         print_menu()
         try:
-            choice = input("يرجى اختيار رقم العملية [0-8]: ").strip()
+            choice = input("يرجى اختيار رقم العملية [0-9]: ").strip()
         except (KeyboardInterrupt, EOFError):
             print("\nوداعاً!")
             break
@@ -207,6 +219,8 @@ def main():
             action_connect()
         elif choice == "8":
             action_installer()
+        elif choice == "9":
+            action_test()
         elif choice == "0":
             print("\nتم الخروج بنجاح.")
             break

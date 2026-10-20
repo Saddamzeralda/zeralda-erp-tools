@@ -750,7 +750,7 @@ async def store_events(request: Request):
         # get_session_token inside validate_session can find it.
         if token and not get_session_token(request):
             try:
-                from backend import auth as _auth
+                from app.services import auth as _auth
                 ip = request.client.host if request.client else ""
                 ua = request.headers.get("User-Agent", "")
                 user = _auth.validate_session(token, ip, ua)
