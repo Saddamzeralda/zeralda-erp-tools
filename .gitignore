@@ -14,6 +14,9 @@ __pycache__/
 *.pyo
 *.pyd
 .venv/
+legacy/
+tools/_js_originals/
+tools/_py_originals/
 venv/
 
 # بيانات وقت التشغيل
