@@ -288,7 +288,7 @@ class EcommerceService:
         new_order = {
             'id': self._generate_id(),
             'orderNumber': order_num,
-            ...order_data,
+            **order_data,
             'status': 'pending',
             'paymentStatus': 'pending',
             'createdAt': datetime.utcnow().isoformat(),
@@ -374,7 +374,7 @@ class EcommerceService:
         
         new_customer = {
             'id': self._generate_id(),
-            ...customer_data,
+            **customer_data,
             'totalOrders': 0,
             'totalSpent': 0,
             'createdAt': datetime.utcnow().isoformat(),
@@ -394,7 +394,7 @@ class EcommerceService:
             if customer.get('id') == customer_id:
                 customers[i] = {
                     **customer,
-                    ...updates,
+                    **updates,
                     'updatedAt': datetime.utcnow().isoformat()
                 }
                 self._set_data(self.STORAGE_KEYS['CUSTOMERS'], customers)
@@ -434,7 +434,7 @@ class EcommerceService:
         
         new_payment = {
             'id': self._generate_id(),
-            ...payment_data,
+            **payment_data,
             'createdAt': datetime.utcnow().isoformat()
         }
         
