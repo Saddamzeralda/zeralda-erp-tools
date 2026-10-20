@@ -5,6 +5,18 @@
 (function () {
   'use strict';
 
+  if (typeof window !== 'undefined' && !window.safeJSONParse) {
+    window.safeJSONParse = function (str, fallback) {
+      if (str === null || str === undefined || str === '') return fallback !== undefined ? fallback : null;
+      if (typeof str !== 'string') return str;
+      try {
+        return JSON.parse(str);
+      } catch (e) {
+        return fallback !== undefined ? fallback : null;
+      }
+    };
+  }
+
   // Immediately kill any floating sync indicator, alerts hub, or modal
   try {
     if (typeof window !== 'undefined' && 'caches' in window && !sessionStorage.getItem('zeralda_bust_20261017')) {

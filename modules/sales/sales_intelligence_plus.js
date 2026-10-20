@@ -19,7 +19,7 @@
     // 1. Subscription & Recurring Revenue Logic
     // تحويل الفواتير العادية إلى اشتراكات دورية (شهرية/سنوية)
     window.toggleSubscriptionMode = function(invoiceId) {
-        const invoices = JSON.parse(ZS.getItem('invoices-data') || '[]');
+        const invoices = safeJSONParse(ZS.getItem('invoices-data'), [] === '{}' ? {} : []);
         const idx = invoices.findIndex(inv => inv.id == invoiceId);
         if (idx === -1) return;
 
@@ -44,7 +44,7 @@
     // 2. Customer Loyalty Points System
     // نظام مكافآت: كل 100 دينار/دولار مبيعات = 1 نقطة ولاء
     window.calculateLoyaltyPoints = function(customerId) {
-        const invoices = JSON.parse(ZS.getItem('invoices-data') || '[]');
+        const invoices = safeJSONParse(ZS.getItem('invoices-data'), [] === '{}' ? {} : []);
         const customerInvoices = invoices.filter(inv => inv.customerId == customerId);
         const totalSpent = customerInvoices.reduce((sum, inv) => sum + Number(inv.total || 0), 0);
         return Math.floor(totalSpent / 100);
@@ -53,7 +53,7 @@
     // 3. Smart Sales Forecasting (Simulated AI)
     // التنبؤ بمبيعات الشهر القادم بناءً على اتجاه الـ 3 أشهر الماضية
     window.getSalesForecast = function() {
-        const invoices = JSON.parse(ZS.getItem('invoices-data') || '[]');
+        const invoices = safeJSONParse(ZS.getItem('invoices-data'), [] === '{}' ? {} : []);
         const now = new Date();
         const last3Months = invoices.filter(inv => {
             const d = new Date(inv.date);

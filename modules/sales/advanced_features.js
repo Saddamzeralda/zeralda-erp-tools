@@ -569,7 +569,7 @@ function generateInvoiceQRCode(invoiceId) {
  * Format: {base_url}?shareId={UUID}
  */
 function generateShareableLink(invoiceId, type = 'invoice') {
-  const shares = JSON.parse(ZS.getItem('invoice-shares') || '{}');
+  const shares = safeJSONParse(ZS.getItem('invoice-shares'), {} === '{}' ? {} : []);
 
   if (!shares[invoiceId]) {
     shares[invoiceId] = {
@@ -597,7 +597,7 @@ function generateUUID() {
 }
 
 function logShareEvent(invoiceId, method, recipient) {
-  const log = JSON.parse(ZS.getItem('share-log') || '[]');
+  const log = safeJSONParse(ZS.getItem('share-log'), [] === '{}' ? {} : []);
   log.push({
     invoiceId: invoiceId,
     method: method,
@@ -721,7 +721,7 @@ function confirmScheduleSend(invoiceId) {
   };
 
   // Save schedule
-  const schedules = JSON.parse(ZS.getItem('invoice-schedules') || '[]');
+  const schedules = safeJSONParse(ZS.getItem('invoice-schedules'), [] === '{}' ? {} : []);
   schedules.push(schedule);
   ZS.setItem('invoice-schedules', JSON.stringify(schedules));
 
@@ -736,7 +736,7 @@ function confirmScheduleSend(invoiceId) {
  * Check and send scheduled invoices (run periodically)
  */
 function checkScheduledInvoices() {
-  const schedules = JSON.parse(ZS.getItem('invoice-schedules') || '[]');
+  const schedules = safeJSONParse(ZS.getItem('invoice-schedules'), [] === '{}' ? {} : []);
   const now = new Date();
 
   schedules.forEach(schedule => {

@@ -57,7 +57,7 @@
 
     window.refreshAIMasterStats = function() {
         const stats = {
-            tenders: JSON.parse(localStorage.getItem('zeralda-tenders-benchmarking') || '[]').length,
+            tenders: safeJSONParse(localStorage.getItem('zeralda-tenders-benchmarking'), [] === '{}' ? {} : []).length,
             salesForecast: localStorage.getItem('zeralda-sales-forecast') || '$0',
             hrAlerts: 0,
             stockRisks: 0,
@@ -65,7 +65,7 @@
         };
 
         // جمع تنبيهات الموارد البشرية
-        const employees = JSON.parse(localStorage.getItem('employees-data') || '[]');
+        const employees = safeJSONParse(localStorage.getItem('employees-data'), [] === '{}' ? {} : []);
         const now = new Date();
         employees.forEach(emp => {
             if (emp.contractEndDate) {
@@ -75,7 +75,7 @@
         });
 
         // جمع مخاطر المخزون
-        const inventory = JSON.parse(localStorage.getItem('inventory-products') || '[]');
+        const inventory = safeJSONParse(localStorage.getItem('inventory-products'), [] === '{}' ? {} : []);
         inventory.forEach(p => {
             if (p.stock <= p.reorderLevel) stats.stockRisks++;
         });

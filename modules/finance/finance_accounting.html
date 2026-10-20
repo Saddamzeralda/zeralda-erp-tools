@@ -2866,16 +2866,16 @@
     </div>
 
     <script src="shared/zeralda_db.js?v=20261017_v10"></script>
-    <script src="shared/layout_shell.js?v=20261020_hotfix2" defer></script>
+    <script src="shared/layout_shell.js?v=20261020_hotfix3" defer></script>
     <script src="shared/ai_chat_widget.js?v=20261017_v10" defer></script>
     <script src="shared/storage_adapter.js?v=20261017_v10" defer></script>
     <script src="shared/session_timeout.js" defer></script>
     <script src="shared/company_storage.js?v=20261017_v10"></script>
-    <script src="shared/unified_i18n.js?v=20261020_hotfix2" defer></script>
+    <script src="shared/unified_i18n.js?v=20261020_hotfix3" defer></script>
     <script src="shared/app_sync.js?v=20261017_v10" defer></script>
     <script src="shared/role_access_control.js" defer></script>
     <script src="shared/header_company_switcher.js?v=20261017_v10" defer></script>
-    <script src="shared/header_language_switcher.js?v=20261020_hotfix2" defer></script>
+    <script src="shared/header_language_switcher.js?v=20261020_hotfix3" defer></script>
     <script src="shared/runtime_i18n.js"></script>
     <script>
         // FIX: Guard against zeralda_db.js failing to load
@@ -3862,6 +3862,46 @@
                     + '</tr>';
             }).join('');
         }
+
+        async function deleteJournalEntry(id) {
+            if (!id) return;
+            if (!confirm('هل أنت متأكد من حذف هذا القيد المحاسبي؟')) return;
+            var idx = _journalEntries.findIndex(function(e) { return e.id === id; });
+            if (idx !== -1) {
+                _journalEntries.splice(idx, 1);
+                if (typeof _financeStoreSet === 'function') {
+                    await _financeStoreSet(window.financeAPI ? window.financeAPI.JOURNAL_ENTRIES_KEY : 'finance_journal_entries', _journalEntries);
+                }
+                renderJournalEntries();
+                if (typeof updateDashboardKPIs === 'function') updateDashboardKPIs();
+                if (typeof showNotification === 'function') {
+                    showNotification('تم حذف القيد المحاسبي بنجاح', 'success');
+                } else {
+                    alert('تم حذف القيد المحاسبي بنجاح');
+                }
+            }
+        }
+        window.deleteJournalEntry = deleteJournalEntry;
+
+        async function deleteJournalEntry(id) {
+            if (!id) return;
+            if (!confirm('هل أنت متأكد من حذف هذا القيد المحاسبي؟')) return;
+            var idx = _journalEntries.findIndex(function(e) { return e.id === id; });
+            if (idx !== -1) {
+                _journalEntries.splice(idx, 1);
+                if (typeof _financeStoreSet === 'function') {
+                    await _financeStoreSet(window.financeAPI ? window.financeAPI.JOURNAL_ENTRIES_KEY : 'finance_journal_entries', _journalEntries);
+                }
+                renderJournalEntries();
+                if (typeof updateDashboardKPIs === 'function') updateDashboardKPIs();
+                if (typeof showNotification === 'function') {
+                    showNotification('تم حذف القيد المحاسبي بنجاح', 'success');
+                } else {
+                    alert('تم حذف القيد المحاسبي بنجاح');
+                }
+            }
+        }
+        window.deleteJournalEntry = deleteJournalEntry;
 
         function viewJournalEntry(id) {
             const entry = _journalEntries.find(function(j) { return j.id === id; });

@@ -1927,16 +1927,16 @@
     </div>
 
     <script src="shared/zeralda_db.js?v=20261017_v10"></script>
-    <script src="shared/layout_shell.js?v=20261020_hotfix2" defer></script>
+    <script src="shared/layout_shell.js?v=20261020_hotfix3" defer></script>
     <script src="shared/ai_chat_widget.js?v=20261017_v10" defer></script>
     <script src="shared/storage_adapter.js?v=20261017_v10" defer></script>
     <script src="shared/session_timeout.js" defer></script>
     <script src="shared/company_storage.js?v=20261017_v10"></script>
-    <script src="shared/unified_i18n.js?v=20261020_hotfix2" defer></script>
+    <script src="shared/unified_i18n.js?v=20261020_hotfix3" defer></script>
     <script src="shared/app_sync.js?v=20261017_v10" defer></script>
     <script src="shared/role_access_control.js" defer></script>
     <script src="shared/header_company_switcher.js?v=20261017_v10" defer></script>
-    <script src="shared/header_language_switcher.js?v=20261020_hotfix2" defer></script>
+    <script src="shared/header_language_switcher.js?v=20261020_hotfix3" defer></script>
     <script src="shared/runtime_i18n.js"></script>
     <script src="shared/ocr.js?v=20261017_v10" defer></script>
     <script src="modules/inventory/inventory_intelligence.js"></script>
@@ -5270,6 +5270,208 @@
             }
         }
         startInventoryInit();
+
+        // ── Inventory Extended Actions: Fiche de Stock, Bon de Mouvement, Physical Audit ──
+        var _currentFicheProduct = null;
+        function openFicheDeStock(productId) {
+            var product = products.find(function(p) { return p.id === productId; });
+            if (!product) return;
+            _currentFicheProduct = product;
+
+            var movs = movements.filter(function(m) { return m.productId === productId; });
+            var html = '<div id="fichePrintArea" style="font-family:Segoe UI,Tahoma,sans-serif; color:#1e293b;">'
+                + '<div style="display:flex; justify-content:space-between; border-bottom:2px solid #2563eb; padding-bottom:12px; margin-bottom:14px;">'
+                + '  <div><h2 style="margin:0; color:#0f172a;">بطاقة متابعة المخزون الفردية (Fiche de Stock)</h2><h4 style="margin:4px 0; color:#2563eb;">' + escapeHtml(product.name) + ' (' + escapeHtml(product.sku) + ')</h4></div>'
+                + '  <div style="text-align:left; font-size:13px; color:#64748b;">تاريخ التقرير: ' + new Date().toLocaleDateString('ar-DZ') + '</div>'
+                + '</div>'
+                + '<div style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:14px; background:#f8fafc; padding:12px; border-radius:8px; border:1px solid #e2e8f0;">'
+                + '  <div><small style="color:#64748b;">المخزون الحالي:</small><div style="font-size:16px; font-weight:700; color:#2563eb;">' + product.stock + ' ' + (product.unit || 'وحدة') + '</div></div>'
+                + '  <div><small style="color:#64748b;">سعر الشراء:</small><div style="font-size:15px; font-weight:700;">' + fmt(product.costPrice) + '</div></div>'
+                + '  <div><small style="color:#64748b;">سعر البيع:</small><div style="font-size:15px; font-weight:700;">' + fmt(product.price) + '</div></div>'
+                + '  <div><small style="color:#64748b;">القيمة الإجمالية:</small><div style="font-size:15px; font-weight:700; color:#16a34a;">' + fmt(product.stock * (product.costPrice || product.price)) + '</div></div>'
+                + '</div>'
+                + '<table style="width:100%; border-collapse:collapse; font-size:13px;">'
+                + '  <thead><tr style="background:#f1f5f9;"><th style="border:1px solid #cbd5e1; padding:8px;">التاريخ</th><th style="border:1px solid #cbd5e1; padding:8px;">نوع الحركة</th><th style="border:1px solid #cbd5e1; padding:8px;">المرجع</th><th style="border:1px solid #cbd5e1; padding:8px; text-align:center;">الوارد (Entrée)</th><th style="border:1px solid #cbd5e1; padding:8px; text-align:center;">المنصرف (Sortie)</th><th style="border:1px solid #cbd5e1; padding:8px; text-align:center;">الرصيد التراكمي</th></tr></thead>'
+                + '  <tbody>';
+
+            var runningStock = 0;
+            if (movs.length) {
+                movs.forEach(function(m) {
+                    var isIn = m.type === 'in' || m.type === 'adjustment_in';
+                    var qtyIn = isIn ? m.quantity : 0;
+                    var qtyOut = !isIn ? m.quantity : 0;
+                    runningStock += (qtyIn - qtyOut);
+                    html += '<tr><td style="border:1px solid #cbd5e1; padding:8px;">' + (m.date || '') + '</td>'
+                        + '<td style="border:1px solid #cbd5e1; padding:8px;">' + (isIn ? '<span style="color:#16a34a; font-weight:600;">دخول (Entrée)</span>' : '<span style="color:#dc2626; font-weight:600;">خروج (Sortie)</span>') + '</td>'
+                        + '<td style="border:1px solid #cbd5e1; padding:8px;">' + escapeHtml(m.reference || m.reason || '') + '</td>'
+                        + '<td style="border:1px solid #cbd5e1; padding:8px; text-align:center; color:#16a34a; font-weight:700;">' + (qtyIn || '-') + '</td>'
+                        + '<td style="border:1px solid #cbd5e1; padding:8px; text-align:center; color:#dc2626; font-weight:700;">' + (qtyOut || '-') + '</td>'
+                        + '<td style="border:1px solid #cbd5e1; padding:8px; text-align:center; font-weight:700;">' + runningStock + '</td></tr>';
+                });
+            } else {
+                html += '<tr><td colspan="6" style="text-align:center; padding:16px; color:#64748b;">لا توجد حركات سابقة مسجلة لهذا المنتج</td></tr>';
+            }
+
+            html += '</tbody></table></div>';
+            var cont = document.getElementById('ficheDeStockContent');
+            if (cont) cont.innerHTML = html;
+            openModal('ficheDeStockModal');
+        }
+        window.openFicheDeStock = openFicheDeStock;
+
+        function printFicheDeStock() {
+            var el = document.getElementById('fichePrintArea');
+            if (!el) return;
+            var w = window.open('', '_blank', 'width=900,height=700');
+            w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>بطاقة المخزون</title><style>body{font-family:Segoe UI,sans-serif;padding:24px;color:#0f172a}table{width:100%;border-collapse:collapse}th,td{border:1px solid #cbd5e1;padding:8px}</style></head><body>' + el.innerHTML + '</body></html>');
+            w.document.close();
+            w.focus();
+            setTimeout(function(){ w.print(); }, 150);
+        }
+        window.printFicheDeStock = printFicheDeStock;
+
+        function printMovementVoucher(movementId) {
+            var mov = movements.find(function(m) { return Number(m.id) === Number(movementId); });
+            if (!mov) return;
+            var prod = products.find(function(p) { return p.id === mov.productId; }) || { name: mov.productName || 'منتج', sku: '' };
+            var isIn = mov.type === 'in' || mov.type === 'adjustment_in';
+            var title = isIn ? "سند استلام ودخول مخزني (Bon d'Entrée)" : "سند تسليم وصرف مخزني (Bon de Sortie)";
+
+            var html = '<div id="voucherPrintArea" style="font-family:Segoe UI,Tahoma,sans-serif; color:#1e293b; padding:16px;">'
+                + '<div style="display:flex; justify-content:space-between; border-bottom:2px solid #f59e0b; padding-bottom:12px; margin-bottom:16px;">'
+                + '  <div><h2 style="margin:0; color:#0f172a;">' + title + '</h2><h4 style="margin:4px 0; color:#f59e0b;">رقم السند: BM-' + mov.id + '</h4></div>'
+                + '  <div style="text-align:left; font-size:13px; color:#64748b;">التاريخ: ' + (mov.date || new Date().toISOString().slice(0, 10)) + '</div>'
+                + '</div>'
+                + '<div style="background:#f8fafc; border:1px solid #e2e8f0; padding:12px; border-radius:8px; margin-bottom:16px; line-height:1.8;">'
+                + '  <div><strong>المرجع / السبب:</strong> ' + escapeHtml(mov.reference || mov.reason || 'حركة اعتيادية') + '</div>'
+                + '  <div><strong>النوع:</strong> ' + (isIn ? 'وارد إلى المستودع' : 'صادر من المستودع') + '</div>'
+                + '</div>'
+                + '<table style="width:100%; border-collapse:collapse; font-size:13px;">'
+                + '  <thead><tr style="background:#f1f5f9;"><th style="border:1px solid #cbd5e1; padding:8px;">رمز المنتج</th><th style="border:1px solid #cbd5e1; padding:8px;">اسم المنتج</th><th style="border:1px solid #cbd5e1; padding:8px; text-align:center;">الكمية</th></tr></thead>'
+                + '  <tbody><tr><td style="border:1px solid #cbd5e1; padding:8px;">' + escapeHtml(prod.sku || '') + '</td><td style="border:1px solid #cbd5e1; padding:8px;">' + escapeHtml(prod.name || '') + '</td><td style="border:1px solid #cbd5e1; padding:8px; text-align:center; font-weight:700; font-size:15px; color:' + (isIn ? '#16a34a' : '#dc2626') + ';">' + mov.quantity + '</td></tr></tbody>'
+                + '</table>'
+                + '<div style="margin-top:40px; display:flex; justify-content:space-between; text-align:center;">'
+                + '  <div style="width:200px;"><strong>توقيع المستلم / المسلّم</strong></div>'
+                + '  <div style="width:200px;"><strong>ختم وتوقيع أمين المستودع</strong></div>'
+                + '</div></div>';
+
+            var cont = document.getElementById('movementVoucherContent');
+            if (cont) cont.innerHTML = html;
+            openModal('movementVoucherModal');
+        }
+        window.printMovementVoucher = printMovementVoucher;
+
+        function executePrintMovementVoucher() {
+            var el = document.getElementById('voucherPrintArea');
+            if (!el) return;
+            var w = window.open('', '_blank', 'width=850,height=650');
+            w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>سند حركة مخزنية</title><style>body{font-family:Segoe UI,sans-serif;padding:24px;color:#0f172a}table{width:100%;border-collapse:collapse}th,td{border:1px solid #cbd5e1;padding:8px}</style></head><body>' + el.innerHTML + '</body></html>');
+            w.document.close();
+            w.focus();
+            setTimeout(function(){ w.print(); }, 150);
+        }
+        window.executePrintMovementVoucher = executePrintMovementVoucher;
+
+        function openPhysicalInventoryAuditModal() {
+            var tbody = document.getElementById('physicalInventoryTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            products.forEach(function(p, idx) {
+                var row = document.createElement('tr');
+                row.id = 'audit-row-' + p.id;
+                row.innerHTML = '<td style="padding:8px; border:1px solid #cbd5e1;"><strong>' + escapeHtml(p.sku) + '</strong></td>'
+                    + '<td style="padding:8px; border:1px solid #cbd5e1;">' + escapeHtml(p.name) + '</td>'
+                    + '<td style="padding:8px; border:1px solid #cbd5e1; text-align:center; font-weight:700;" id="audit-theor-' + p.id + '">' + p.stock + '</td>'
+                    + '<td style="padding:6px; border:1px solid #cbd5e1; text-align:center;"><input type="number" id="audit-count-' + p.id + '" value="' + p.stock + '" min="0" step="1" style="width:90px; padding:4px 8px; border:1.5px solid #cbd5e1; border-radius:4px; text-align:center; font-weight:700;" oninput="updateAuditRowDiff(' + p.id + ')"></td>'
+                    + '<td style="padding:8px; border:1px solid #cbd5e1; text-align:center; font-weight:700;" id="audit-diff-' + p.id + '">0</td>'
+                    + '<td style="padding:8px; border:1px solid #cbd5e1; text-align:right; font-weight:700;" id="audit-val-' + p.id + '">0.00 د.ج</td>';
+                tbody.appendChild(row);
+            });
+
+            var sumEl = document.getElementById('auditSummaryText');
+            if (sumEl) sumEl.textContent = 'إجمالي المنتجات الخاضعة للجرد: ' + products.length;
+            openModal('physicalInventoryModal');
+        }
+        window.openPhysicalInventoryAuditModal = openPhysicalInventoryAuditModal;
+
+        function updateAuditRowDiff(productId) {
+            var p = products.find(function(item) { return item.id === productId; });
+            if (!p) return;
+            var input = document.getElementById('audit-count-' + productId);
+            var counted = parseFloat(input ? input.value : 0) || 0;
+            var diff = counted - p.stock;
+            var cost = p.costPrice || p.price || 0;
+            var diffVal = diff * cost;
+
+            var diffEl = document.getElementById('audit-diff-' + productId);
+            var valEl = document.getElementById('audit-val-' + productId);
+
+            if (diffEl) {
+                diffEl.textContent = (diff > 0 ? '+' : '') + diff;
+                diffEl.style.color = diff === 0 ? '#64748b' : (diff > 0 ? '#16a34a' : '#dc2626');
+            }
+            if (valEl) {
+                valEl.textContent = fmt(diffVal);
+                valEl.style.color = diff === 0 ? '#64748b' : (diff > 0 ? '#16a34a' : '#dc2626');
+            }
+        }
+        window.updateAuditRowDiff = updateAuditRowDiff;
+
+        function printPhysicalInventoryReport() {
+            var wrap = document.getElementById('physicalInventoryTableWrap');
+            if (!wrap) return;
+            var w = window.open('', '_blank', 'width=950,height=750');
+            w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>محضر الجرد الفعلي للمخزون</title><style>body{font-family:Segoe UI,sans-serif;padding:24px;color:#0f172a}table{width:100%;border-collapse:collapse}th,td{border:1px solid #cbd5e1;padding:8px}</style></head><body>'
+                + '<h2>محضر الجرد الفعلي الدوري وتسوية الفوارق</h2><p>تاريخ الجرد: ' + new Date().toLocaleDateString('ar-DZ') + '</p>'
+                + wrap.innerHTML + '<br><br><div style="display:flex;justify-content:space-between;"><div><strong>توقيع لجنة الجرد</strong></div><div><strong>ختم إدارة المستودعات</strong></div></div></body></html>');
+            w.document.close();
+            w.focus();
+            setTimeout(function(){ w.print(); }, 150);
+        }
+        window.printPhysicalInventoryReport = printPhysicalInventoryReport;
+
+        function applyPhysicalInventoryAdjustments() {
+            if (!confirm('هل أنت متأكد من اعتماد نتائج الجرد وتسوية فوارق المخزون آلياً؟')) return;
+            var adjustmentsMade = 0;
+            var nowStr = new Date().toISOString().slice(0, 10);
+
+            products.forEach(function(p) {
+                var input = document.getElementById('audit-count-' + p.id);
+                if (input) {
+                    var counted = parseFloat(input.value);
+                    if (!isNaN(counted) && counted !== p.stock) {
+                        var diff = counted - p.stock;
+                        var isAdd = diff > 0;
+                        var absDiff = Math.abs(diff);
+
+                        p.stock = counted;
+                        movements.unshift({
+                            id: Date.now() + Math.floor(Math.random() * 1000),
+                            productId: p.id,
+                            productName: p.name,
+                            type: isAdd ? 'adjustment_in' : 'adjustment_out',
+                            quantity: absDiff,
+                            reason: 'تسوية جرد فعلي (Audit)',
+                            reference: 'AUDIT-' + nowStr,
+                            date: nowStr,
+                            companyId: currentCompanyScope
+                        });
+                        adjustmentsMade++;
+                    }
+                }
+            });
+
+            saveData();
+            renderProducts();
+            renderMovements();
+            renderAlerts();
+            renderValuation();
+            updateStats();
+            closeModal('physicalInventoryModal');
+            alert('تم اعتماد الجرد بنجاح وتسوية فوارق ' + adjustmentsMade + ' منتج في المخزون.');
+        }
+        window.applyPhysicalInventoryAdjustments = applyPhysicalInventoryAdjustments;
     </script>
     <script src="shared/demo_seed_data.js?v=20261017_v10" defer></script>
     <script src="shared/erp_export_utils.js?v=20261017_v10" defer></script>

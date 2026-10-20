@@ -1202,12 +1202,11 @@
             <div class="supplier-preview-shell">
                 <div id="supplierPreviewContent"></div>
                 <div class="modal-footer" style="padding: 18px 0 0; border-top: none; justify-content: flex-start; gap: 10px;">
-                    <button class="btn btn-secondary" onclick="closeModal('viewSupplierModal')">
                     <button class="btn btn-warning" onclick="openSupplierStatementFromCurrentPreview()" style="background:#f59e0b; color:#fff;" title="عرض وطباعة كشف حساب المورد الدوري">
                         <i class="fas fa-file-invoice-dollar" aria-hidden="true"></i>
                         <span data-en="Account Statement" data-ar="كشف حساب المورد" data-fr="Relevé de Compte">كشف حساب المورد</span>
                     </button>
-                    
+                    <button class="btn btn-secondary" onclick="closeModal('viewSupplierModal')">
                         <i class="fas fa-times" aria-hidden="true"></i>
                         <span data-en="Close" data-ar="إغلاق" data-fr="Fermer">Close</span>
                     </button>
@@ -1539,16 +1538,16 @@
     </div>
 
     <script src="shared/zeralda_db.js?v=20261017_v10"></script>
-    <script src="shared/layout_shell.js?v=20261020_hotfix2" defer></script>
+    <script src="shared/layout_shell.js?v=20261020_hotfix3" defer></script>
     <script src="shared/storage_adapter.js?v=20261017_v10" defer></script>
     <script src="shared/ai_chat_widget.js?v=20261017_v10" defer></script>
     <script src="shared/session_timeout.js" defer></script>
     <script src="shared/company_storage.js?v=20261017_v10"></script>
-    <script src="shared/unified_i18n.js?v=20261020_hotfix2" defer></script>
+    <script src="shared/unified_i18n.js?v=20261020_hotfix3" defer></script>
     <script src="shared/app_sync.js?v=20261017_v10" defer></script>
     <script src="shared/role_access_control.js" defer></script>
     <script src="shared/header_company_switcher.js?v=20261017_v10" defer></script>
-    <script src="shared/header_language_switcher.js?v=20261020_hotfix2" defer></script>
+    <script src="shared/header_language_switcher.js?v=20261020_hotfix3" defer></script>
     <script src="shared/runtime_i18n.js"></script>
     <script src="shared/ocr.js?v=20261017_v10" defer></script>
     <script>
@@ -6339,6 +6338,178 @@
         window.addEventListener('load', function() {
             startCompanyScopeWatcher();
         });
+
+        // ── Purchasing Extended Actions: BR, Statement, SCF ──
+        function openSupplierStatementFromCurrentPreview() {
+            var supName = currentSupplier ? (currentSupplier.company || currentSupplier.name) : '';
+            if (!supName) {
+                alert('يرجى تحديد المورد أولاً.');
+                return;
+            }
+            openSupplierStatement(supName);
+        }
+        window.openSupplierStatementFromCurrentPreview = openSupplierStatementFromCurrentPreview;
+
+        function openSupplierStatement(supplierName) {
+            var orders = (typeof purchaseOrdersState !== 'undefined' ? purchaseOrdersState : []).filter(function(po) {
+                return po.supplier && po.supplier.toLowerCase() === supplierName.toLowerCase();
+            });
+            var bills = (typeof billsState !== 'undefined' ? billsState : []).filter(function(b) {
+                return (b.vendor || b.supplier || '').toLowerCase() === supplierName.toLowerCase();
+            });
+
+            var totalPurchases = orders.reduce(function(sum, o) { return sum + (parseFloat(o.total) || 0); }, 0);
+            var totalBilled = bills.reduce(function(sum, b) { return sum + (parseFloat(b.total) || 0); }, 0);
+            var totalPaid = bills.filter(function(b) { return b.status === 'paid'; }).reduce(function(sum, b) { return sum + (parseFloat(b.total) || 0); }, 0);
+            var balanceDue = totalBilled - totalPaid;
+
+            var html = '<div id="statementPrintArea" style="font-family:Segoe UI,Tahoma,sans-serif; padding:16px; color:#1e293b;">'
+                + '<div style="display:flex; justify-content:space-between; border-bottom:2px solid #0284c7; padding-bottom:12px; margin-bottom:16px;">'
+                + '  <div><h2 style="margin:0; color:#0f172a;">كشف حساب المورد الدوري (Relevé de Compte)</h2><h4 style="margin:4px 0; color:#0284c7;">' + escHtml(supplierName) + '</h4></div>'
+                + '  <div style="text-align:left; font-size:13px; color:#64748b;">تاريخ الاستخراج: ' + new Date().toLocaleDateString('ar-DZ') + '</div>'
+                + '</div>'
+                + '<div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:18px;">'
+                + '  <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:12px; border-radius:8px; text-align:center;"><div style="font-size:12px; color:#64748b;">إجمالي الفواتير</div><div style="font-size:16px; font-weight:700; color:#0284c7;">' + fmtMoney(totalBilled) + '</div></div>'
+                + '  <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:12px; border-radius:8px; text-align:center;"><div style="font-size:12px; color:#64748b;">إجمالي المدفوع</div><div style="font-size:16px; font-weight:700; color:#16a34a;">' + fmtMoney(totalPaid) + '</div></div>'
+                + '  <div style="background:#fef2f2; border:1px solid #fecaca; padding:12px; border-radius:8px; text-align:center;"><div style="font-size:12px; color:#dc2626;">الرصيد المستحق (Solde)</div><div style="font-size:16px; font-weight:700; color:#dc2626;">' + fmtMoney(balanceDue) + '</div></div>'
+                + '</div>'
+                + '<h4 style="margin-bottom:8px;">سجل الفواتير والمعاملات:</h4>'
+                + '<table style="width:100%; border-collapse:collapse; font-size:13px;">'
+                + '  <thead><tr style="background:#f1f5f9;"><th style="border:1px solid #cbd5e1; padding:8px;">رقم الفاتورة</th><th style="border:1px solid #cbd5e1; padding:8px;">التاريخ</th><th style="border:1px solid #cbd5e1; padding:8px; text-align:right;">المبلغ TTC</th><th style="border:1px solid #cbd5e1; padding:8px; text-align:center;">الحالة</th></tr></thead>'
+                + '  <tbody>';
+
+            if (bills.length) {
+                bills.forEach(function(b) {
+                    html += '<tr><td style="border:1px solid #cbd5e1; padding:8px;">' + escHtml(b.id || b.billNumber || '') + '</td>'
+                        + '<td style="border:1px solid #cbd5e1; padding:8px;">' + escHtml(b.date || '') + '</td>'
+                        + '<td style="border:1px solid #cbd5e1; padding:8px; text-align:right; font-weight:700;">' + fmtMoney(b.total) + '</td>'
+                        + '<td style="border:1px solid #cbd5e1; padding:8px; text-align:center;">' + escHtml(b.status || '') + '</td></tr>';
+                });
+            } else {
+                html += '<tr><td colspan="4" style="text-align:center; padding:16px; color:#64748b;">لا توجد فواتير مسجلة لهذا المورد</td></tr>';
+            }
+            html += '</tbody></table></div>';
+
+            var cont = document.getElementById('supplierStatementContent');
+            if (cont) cont.innerHTML = html;
+            openModal('supplierStatementModal');
+        }
+        window.openSupplierStatement = openSupplierStatement;
+
+        function printSupplierStatement() {
+            var el = document.getElementById('statementPrintArea');
+            if (!el) return;
+            var w = window.open('', '_blank', 'width=900,height=700');
+            w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>كشف حساب مورد</title><style>body{font-family:Segoe UI,sans-serif;padding:24px;color:#0f172a}table{width:100%;border-collapse:collapse}th,td{border:1px solid #cbd5e1;padding:8px}</style></head><body>' + el.innerHTML + '</body></html>');
+            w.document.close();
+            w.focus();
+            setTimeout(function(){ w.print(); }, 150);
+        }
+        window.printSupplierStatement = printSupplierStatement;
+
+        function generateBonReceptionFromCurrentPO() {
+            if (!currentPO) {
+                alert('يرجى تحديد طلب الشراء (PO) أولاً.');
+                return;
+            }
+            var po = currentPO;
+            var html = '<div id="goodsReceiptPrintArea" style="font-family:Segoe UI,Tahoma,sans-serif; padding:16px; color:#1e293b;">'
+                + '<div style="display:flex; justify-content:space-between; border-bottom:2px solid #f59e0b; padding-bottom:12px; margin-bottom:16px;">'
+                + '  <div><h2 style="margin:0; color:#0f172a;">سند استلام البضائع ومحضر المطابقة (Bon de Réception)</h2><h4 style="margin:4px 0; color:#f59e0b;">المرجع: BR-' + escHtml(po.id || '') + ' (طلب الشراء: ' + escHtml(po.id || '') + ')</h4></div>'
+                + '  <div style="text-align:left; font-size:13px; color:#64748b;">التاريخ: ' + new Date().toLocaleDateString('ar-DZ') + '</div>'
+                + '</div>'
+                + '<div style="background:#f8fafc; border:1px solid #e2e8f0; padding:12px; border-radius:8px; margin-bottom:16px; line-height:1.8;">'
+                + '  <div><strong>المورد:</strong> ' + escHtml(po.supplier || '') + '</div>'
+                + '  <div><strong>تاريخ الطلب:</strong> ' + escHtml(po.date || '') + '</div>'
+                + '  <div><strong>موقع الاستلام:</strong> المستودع المركزي - Zeralda ERP</div>'
+                + '</div>'
+                + '<table style="width:100%; border-collapse:collapse; font-size:13px;">'
+                + '  <thead><tr style="background:#f1f5f9;"><th style="border:1px solid #cbd5e1; padding:8px;">البند / المنتج</th><th style="border:1px solid #cbd5e1; padding:8px; text-align:center;">الكمية المطلوبة</th><th style="border:1px solid #cbd5e1; padding:8px; text-align:center;">الكمية المستلمة</th><th style="border:1px solid #cbd5e1; padding:8px; text-align:center;">المطابقة الفنية</th></tr></thead>'
+                + '  <tbody>';
+
+            var items = po.items || [];
+            items.forEach(function(item) {
+                html += '<tr><td style="border:1px solid #cbd5e1; padding:8px;">' + escHtml(item.name || item.product || '') + '</td>'
+                    + '<td style="border:1px solid #cbd5e1; padding:8px; text-align:center;">' + (item.quantity || 1) + '</td>'
+                    + '<td style="border:1px solid #cbd5e1; padding:8px; text-align:center; font-weight:700; color:#16a34a;">' + (item.quantity || 1) + '</td>'
+                    + '<td style="border:1px solid #cbd5e1; padding:8px; text-align:center; color:#16a34a;"><i class="fas fa-check-circle"></i> مطابق للمواصفات</td></tr>';
+            });
+
+            html += '</tbody></table>'
+                + '<div style="margin-top:40px; display:flex; justify-content:space-between; text-align:center;">'
+                + '  <div style="width:200px;"><strong>توقيع أمين المخزن المستلم</strong></div>'
+                + '  <div style="width:200px;"><strong>ختم ومصادقة مراقب الجودة</strong></div>'
+                + '</div></div>';
+
+            var area = document.getElementById('goodsReceiptPreviewArea');
+            if (area) area.innerHTML = html;
+            openModal('goodsReceiptModal');
+        }
+        window.generateBonReceptionFromCurrentPO = generateBonReceptionFromCurrentPO;
+
+        function printGoodsReceipt() {
+            var el = document.getElementById('goodsReceiptPrintArea');
+            if (!el) return;
+            var w = window.open('', '_blank', 'width=900,height=700');
+            w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>سند استلام بضائع</title><style>body{font-family:Segoe UI,sans-serif;padding:24px;color:#0f172a}table{width:100%;border-collapse:collapse}th,td{border:1px solid #cbd5e1;padding:8px}</style></head><body>' + el.innerHTML + '</body></html>');
+            w.document.close();
+            w.focus();
+            setTimeout(function(){ w.print(); }, 150);
+        }
+        window.printGoodsReceipt = printGoodsReceipt;
+
+        async function comptabiliserCurrentBillToFinance() {
+            if (!currentBill) {
+                alert('يرجى تحديد فاتورة الشراء أولاً.');
+                return;
+            }
+            var b = currentBill;
+            var ref = b.billNumber || b.id || ('BILL-' + (b.date || ''));
+
+            var journalEntries = [];
+            try {
+                var raw = ZS.getItem('finance_journal_entries');
+                if (raw) journalEntries = JSON.parse(raw);
+            } catch(e) {}
+
+            var exists = journalEntries.some(function(e) { return e.reference === ref; });
+            if (exists) {
+                alert('هذه الفاتورة مرحلة مسبقاً إلى اليومية المحاسبية (المرجع: ' + ref + ').');
+                return;
+            }
+
+            var totalTTC = parseFloat(b.total || b.amount || 0);
+            var totalHT = parseFloat(b.subtotal || 0) || (totalTTC / 1.19);
+            var tvaAmt = totalTTC - totalHT;
+
+            if (totalTTC <= 0) {
+                alert('لا يمكن ترحيل فاتورة شراء بمبلغ صفر.');
+                return;
+            }
+
+            var year = b.date ? new Date(b.date).getFullYear() : new Date().getFullYear();
+            var eId = 'ECR-' + year + '-' + (journalEntries.length + 1).toString().padStart(4, '0');
+
+            var newEntry = {
+                id: eId,
+                date: b.date || new Date().toISOString().slice(0, 10),
+                reference: ref,
+                description: 'فاتورة شراء رقم ' + ref + ' - المورد: ' + (b.vendor || b.supplier || 'مورد'),
+                sourceType: 'bills',
+                status: 'posted',
+                createdAt: new Date().toISOString(),
+                lines: [
+                    { accountCode: '380000', accountName: 'مشتريات بضائع ومواد مخزنة (Achats de marchandises)', description: 'مشتريات HT', debit: totalHT, credit: 0 },
+                    { accountCode: '445600', accountName: 'الدولة - TVA قابلة للاسترجاع (TVA déductible)', description: 'رسم القيمة المضافة للشراء', debit: tvaAmt, credit: 0 },
+                    { accountCode: '401000', accountName: 'الموردون والحسابات الملحقة (Fournisseurs)', description: 'استحقاق المورد TTC', debit: 0, credit: totalTTC }
+                ]
+            };
+
+            journalEntries.unshift(newEntry);
+            ZS.setItem('finance_journal_entries', JSON.stringify(journalEntries));
+            alert('تم ترحيل فاتورة الشراء بنجاح إلى اليومية المحاسبية SCF!\nرقم القيد: ' + eId + '\nالمدين مشتريات (380): ' + fmtMoney(totalHT) + '\nالمدين TVA (4456): ' + fmtMoney(tvaAmt) + '\nالدائن مورد (401): ' + fmtMoney(totalTTC));
+        }
+        window.comptabiliserCurrentBillToFinance = comptabiliserCurrentBillToFinance;
     </script>
     <script src="shared/demo_seed_data.js?v=20261017_v10" defer></script>
     <script src="shared/erp_export_utils.js?v=20261017_v10" defer></script>

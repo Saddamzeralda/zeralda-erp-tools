@@ -223,7 +223,13 @@ def remove_subscription(endpoint: str) -> bool:
     with _notif_lock:
         subs = _load_subscriptions()
         initial_len = len(subs)
-        subs = [s for s in subs if s.get("endpoint") != endpoint]
+        clean = endpoint.rstrip(".")
+        subs = [
+            s for s in subs 
+            if s.get("id") != endpoint 
+            and s.get("endpoint") != endpoint 
+            and not (s.get("endpoint", "").startswith(clean) and len(clean) >= 20)
+        ]
         if len(subs) != initial_len:
             _save_subscriptions(subs)
             return True

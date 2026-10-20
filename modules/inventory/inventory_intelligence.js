@@ -22,8 +22,8 @@
     // 1. Stock Depletion Predictor (AI Logic)
     // التنبؤ بموعد نفاد المخزون بناءً على معدل المبيعات
     window.predictStockDepletion = function(productId) {
-        const products = JSON.parse(ZS.getItem('inventory-products') || '[]');
-        const sales = JSON.parse(ZS.getItem('sales-history') || '[]');
+        const products = safeJSONParse(ZS.getItem('inventory-products'), [] === '{}' ? {} : []);
+        const sales = safeJSONParse(ZS.getItem('sales-history'), [] === '{}' ? {} : []);
 
         const product = products.find(p => p.id == productId);
         if (!product) return null;
@@ -46,11 +46,11 @@
     window.triggerAutoReorder = function(productId) {
         const prediction = window.predictStockDepletion(productId);
         if (prediction && (prediction.status === t('critical') || prediction.status === t('warning'))) {
-            const products = JSON.parse(ZS.getItem('inventory-products') || '[]');
+            const products = safeJSONParse(ZS.getItem('inventory-products'), [] === '{}' ? {} : []);
             const p = products.find(prod => prod.id == productId);
 
             // إضافة الطلب إلى قائمة "المشتريات المقترحة"
-            const suggestions = JSON.parse(ZS.getItem('purchasing-suggestions') || '[]');
+            const suggestions = safeJSONParse(ZS.getItem('purchasing-suggestions'), [] === '{}' ? {} : []);
             if (!suggestions.find(s => s.productId == productId)) {
                 suggestions.push({
                     productId: productId,

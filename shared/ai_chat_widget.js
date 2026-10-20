@@ -29,7 +29,7 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
             if (window.CompanyStorage && window.CompanyStorage.getActiveCompanyId) {
                 cid = window.CompanyStorage.getActiveCompanyId() || 'default-company';
             } else {
-                cid = JSON.parse(ZS.getItem('zeralda-settings') || '{}').activeCompanyId || 'default-company';
+                cid = safeJSONParse(ZS.getItem('zeralda-settings'), {} === '{}' ? {} : []).activeCompanyId || 'default-company';
             }
         } catch (e) {}
         return 'zeralda-ai-chat-' + suffix + '::' + cid;
@@ -239,7 +239,7 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
         try {
             var companyId = '';
             try {
-                companyId = JSON.parse(ZS.getItem('zeralda-active-company') || '{}').id || '';
+                companyId = safeJSONParse(ZS.getItem('zeralda-active-company'), {} === '{}' ? {} : []).id || '';
             } catch (e2) {}
             var purchKey = companyId ? 'zeralda-purchasing-data-' + companyId : 'zeralda-purchasing-data';
             var raw2 = ZS.getItem(purchKey);
@@ -816,7 +816,7 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
             }
         } catch (e) {}
         try {
-            var company = JSON.parse(ZS.getItem('zeralda-active-company') || '{}');
+            var company = safeJSONParse(ZS.getItem('zeralda-active-company'), {} === '{}' ? {} : []);
             return String(company.name || company.label || '').trim();
         } catch (e2) {}
         return '-';
@@ -2033,7 +2033,7 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
 
     function _getCompanyId() {
         try {
-            var s = JSON.parse(ZS.getItem('zeralda-settings') || '{}');
+            var s = safeJSONParse(ZS.getItem('zeralda-settings'), {} === '{}' ? {} : []);
             return String(s.activeCompanyId || 'default-company');
         } catch (e) { return 'default-company'; }
     }
@@ -2418,7 +2418,7 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
         // Include companyId so server can scope storage keys
         if (!args.companyId) {
             try {
-                var s = JSON.parse(ZS.getItem('zeralda-settings') || '{}');
+                var s = safeJSONParse(ZS.getItem('zeralda-settings'), {} === '{}' ? {} : []);
                 args.companyId = String(s.activeCompanyId || 'default-company');
             } catch (e) { args.companyId = 'default-company'; }
         }
@@ -2576,7 +2576,7 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
 
     function _getSyncCompanyId() {
         try {
-            var s = JSON.parse(ZS.getItem('zeralda-settings') || '{}');
+            var s = safeJSONParse(ZS.getItem('zeralda-settings'), {} === '{}' ? {} : []);
             return String(s.activeCompanyId || 'default-company');
         } catch (e) { return 'default-company'; }
     }
@@ -2602,7 +2602,7 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
         if (nested) {
             var parentKey = nested.parent();
             try {
-                var parentData = JSON.parse(ZS.getItem(parentKey) || 'null');
+                var parentData = safeJSONParse(ZS.getItem(parentKey), null === '{}' ? {} : []);
                 if (parentData && typeof parentData === 'object') {
                     existing = Array.isArray(parentData[nested.field]) ? parentData[nested.field] : [];
                 }
@@ -2641,7 +2641,7 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
         if (nested) {
             var parentKey = nested.parent();
             var parentData = null;
-            try { parentData = JSON.parse(ZS.getItem(parentKey) || 'null'); } catch(e) {}
+            try { parentData = safeJSONParse(ZS.getItem(parentKey), null === '{}' ? {} : []); } catch(e) {}
             if (!parentData || typeof parentData !== 'object') {
                 parentData = { orders: [], suppliers: [], bills: [], payments: [] };
             }
@@ -2678,7 +2678,7 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
         if (nested) {
             var parentKey = nested.parent();
             var parentData = null;
-            try { parentData = JSON.parse(ZS.getItem(parentKey) || 'null'); } catch(e) {}
+            try { parentData = safeJSONParse(ZS.getItem(parentKey), null === '{}' ? {} : []); } catch(e) {}
             if (!parentData || typeof parentData !== 'object') return;
             var arr = parentData[nested.field] || [];
             for (var i = 0; i < arr.length; i++) {
@@ -2710,7 +2710,7 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
         if (nested) {
             var parentKey = nested.parent();
             var parentData = null;
-            try { parentData = JSON.parse(ZS.getItem(parentKey) || 'null'); } catch(e) {}
+            try { parentData = safeJSONParse(ZS.getItem(parentKey), null === '{}' ? {} : []); } catch(e) {}
             if (!parentData || typeof parentData !== 'object') return;
             var arr = parentData[nested.field] || [];
             parentData[nested.field] = arr.filter(function(r) { return String(r.id || '') !== recordId && String(r.code || '') !== recordId && String(r.sku || '') !== recordId && String(r.reference || '') !== recordId && String(r._id || '') !== recordId; });
@@ -2761,7 +2761,7 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
             if (storageKey === 'invoices-data' && typeof window.loadInvoicesTable === 'function') {
                 setTimeout(function() {
                     try {
-                        var stored = JSON.parse(ZS.getItem('invoices-data') || '[]');
+                        var stored = safeJSONParse(ZS.getItem('invoices-data'), [] === '{}' ? {} : []);
                         if (Array.isArray(stored)) {
                             window.invoicesData = stored;
                             window.loadInvoicesTable();
@@ -2774,7 +2774,7 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
             if (storageKey === 'products-data') {
                 setTimeout(function() {
                     try {
-                        var stored = JSON.parse(ZS.getItem('products-data') || '[]');
+                        var stored = safeJSONParse(ZS.getItem('products-data'), [] === '{}' ? {} : []);
                         if (Array.isArray(stored)) {
                             window.productsData = stored;
                             if (typeof window.loadProductsFromStorage === 'function') window.loadProductsFromStorage();
@@ -2789,7 +2789,7 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
             if (storageKey === 'customers-data' && typeof window.loadCustomersTable === 'function') {
                 setTimeout(function() {
                     try {
-                        var stored = JSON.parse(ZS.getItem('customers-data') || '[]');
+                        var stored = safeJSONParse(ZS.getItem('customers-data'), [] === '{}' ? {} : []);
                         if (Array.isArray(stored)) {
                             window.customersData = stored;
                             window.loadCustomersTable();
@@ -2802,7 +2802,7 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
             if (storageKey === 'suppliers-data') {
                 setTimeout(function() {
                     try {
-                        var stored = JSON.parse(ZS.getItem('suppliers-data') || '[]');
+                        var stored = safeJSONParse(ZS.getItem('suppliers-data'), [] === '{}' ? {} : []);
                         if (Array.isArray(stored)) {
                             window.suppliersData = stored;
                             if (typeof window.renderSuppliers === 'function') window.renderSuppliers();
@@ -2868,7 +2868,7 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
                 var nameLower = String(newCompany.name || '').toLowerCase();
 
                 // Primary: update zeralda-settings.companies (canonical source)
-                var s = JSON.parse(ZS.getItem('zeralda-settings') || '{}');
+                var s = safeJSONParse(ZS.getItem('zeralda-settings'), {} === '{}' ? {} : []);
                 if (!Array.isArray(s.companies)) s.companies = [];
                 var existsInSettings = s.companies.some(function(c) {
                     return String(c.name || '').toLowerCase() === nameLower;

@@ -1448,7 +1448,19 @@
         _memReadyPromise = Promise.resolve(_memKeys.length);
     }
 
+    if (typeof window !== 'undefined' && !window.safeJSONParse) {
+        window.safeJSONParse = function (str, fallback) {
+            if (str === null || str === undefined || str === '') return fallback !== undefined ? fallback : null;
+            if (typeof str !== 'string') return str;
+            try { return JSON.parse(str); } catch (e) { return fallback !== undefined ? fallback : null; }
+        };
+    }
+
     window.ZS = {
+        getJSON: function (key, fallback) {
+            var val = this.getItem(key);
+            return window.safeJSONParse(val, fallback);
+        },
         getItem: function (key) {
             var sk = _scopeKey(key);
             // الـ token: اقرأ من cookie أولاً

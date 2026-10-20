@@ -13,7 +13,7 @@
         // ════════════════════════════════════════════════════════════════════
 
         savePersonalSettings: function() {
-            const currentUser = JSON.parse(ZS.getItem('zeralda-current-user') || '{}');
+            const currentUser = safeJSONParse(ZS.getItem('zeralda-current-user'), {} === '{}' ? {} : []);
             const userId = currentUser.id || 'default';
 
             // Helper: safely read a form element's value (returns null if missing)
@@ -78,7 +78,7 @@
 
             var currentSettings = {};
             try {
-                currentSettings = JSON.parse(ZS.getItem('zeralda-system-settings') || '{}');
+                currentSettings = safeJSONParse(ZS.getItem('zeralda-system-settings'), {} === '{}' ? {} : []);
             } catch (_) {}
 
             const settings = {
@@ -101,7 +101,7 @@
 
             // Sync with canonical zeralda-settings
             try {
-                var canonical = JSON.parse(ZS.getItem('zeralda-settings') || '{}');
+                var canonical = safeJSONParse(ZS.getItem('zeralda-settings'), {} === '{}' ? {} : []);
                 canonical.system = Object.assign({}, canonical.system || {}, settings);
                 if (settings.systemName) canonical.systemName = settings.systemName;
                 ZS.setItem('zeralda-settings', JSON.stringify(canonical));
@@ -121,7 +121,7 @@
         loadSystemSettings: function() {
             var settings = {};
             try {
-                settings = JSON.parse(ZS.getItem('zeralda-system-settings') || '{}');
+                settings = safeJSONParse(ZS.getItem('zeralda-system-settings'), {} === '{}' ? {} : []);
             } catch (_) {}
 
             function setVal(id, val) {
@@ -160,7 +160,7 @@
          * تحميل إعدادات الوحدات
          */
         loadModuleSettings: function() {
-            const moduleSettings = JSON.parse(ZS.getItem('zeralda-module-settings') || '{}');
+            const moduleSettings = safeJSONParse(ZS.getItem('zeralda-module-settings'), {} === '{}' ? {} : []);
 
             const modules = [
                 { id: 'crm', name: 'CRM' },
@@ -204,7 +204,7 @@
          * تفعيل/تعطيل الوحدة
          */
         toggleModuleEnabled: function(moduleId, enabled) {
-            const moduleSettings = JSON.parse(ZS.getItem('zeralda-module-settings') || '{}');
+            const moduleSettings = safeJSONParse(ZS.getItem('zeralda-module-settings'), {} === '{}' ? {} : []);
             moduleSettings[moduleId] = enabled;
             ZS.setItem('zeralda-module-settings', JSON.stringify(moduleSettings));
             this.showSuccessMessage(`Module "${moduleId}" ${enabled ? 'enabled' : 'disabled'}`);
@@ -215,7 +215,7 @@
          * فتح إعدادات الوحدة
          */
         openModuleSettings: function(moduleId) {
-            const moduleConfig = JSON.parse(ZS.getItem(`zeralda-module-config-${moduleId}`) || '{}');
+            const moduleConfig = safeJSONParse(ZS.getItem(`zeralda-module-config-${moduleId}`), {} === '{}' ? {} : []);
             console.log(`Opening settings for module: ${moduleId}`, moduleConfig);
             this.showInfoMessage(`Configure settings for ${moduleId} module.`);
         },
@@ -307,7 +307,7 @@
          * Add Backup to History
          */
         addBackupToHistory: function(entry) {
-            const history = JSON.parse(ZS.getItem('zeralda-backup-history') || '[]');
+            const history = safeJSONParse(ZS.getItem('zeralda-backup-history'), [] === '{}' ? {} : []);
             history.push({
                 timestamp: entry.timestamp,
                 size:      entry.size  || 0,
@@ -390,10 +390,10 @@
          */
         loadPersonalSettings: function() {
             var currentUser = {};
-            try { currentUser = JSON.parse(ZS.getItem('zeralda-current-user') || '{}'); } catch (_) {}
+            try { currentUser = safeJSONParse(ZS.getItem('zeralda-current-user'), {} === '{}' ? {} : []); } catch (_) {}
             var userId = currentUser.id || 'default';
             var settings = {};
-            try { settings = JSON.parse(ZS.getItem('zeralda-personal-settings-' + userId) || '{}'); } catch (_) {}
+            try { settings = safeJSONParse(ZS.getItem('zeralda-personal-settings-' + userId), {} === '{}' ? {} : []); } catch (_) {}
 
             // Populate theme dropdown
             var themeEl = document.getElementById('themePreference');

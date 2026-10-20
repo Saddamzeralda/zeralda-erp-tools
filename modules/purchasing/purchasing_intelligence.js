@@ -27,7 +27,7 @@
     // حساب الكميات المطلوب شراؤها بناءً على توقعات المبيعات وسجل الشراء
     window.suggestReplenishment = function() {
         const forecast = typeof window.getSalesForecast === 'function' ? Number(window.getSalesForecast()) : 0;
-        const inventory = JSON.parse(ZS.getItem('inventory-data') || '[]');
+        const inventory = safeJSONParse(ZS.getItem('inventory-data'), [] === '{}' ? {} : []);
 
         const suggestions = inventory.map(item => {
             const currentStock = Number(item.quantity || 0);
@@ -53,7 +53,7 @@
 
     // 2. Automating RFQ (Request for Quotation)
     window.generateAutoPO = function(suggestion) {
-        const purchases = JSON.parse(ZS.getItem('purchases-data') || '[]');
+        const purchases = safeJSONParse(ZS.getItem('purchases-data'), [] === '{}' ? {} : []);
         const newPO = {
             id: Date.now(),
             reference: `AUTO-REPLENISH-${Date.now().toString().slice(-4)}`,

@@ -26,7 +26,7 @@
 
     function getActiveCompanyId() {
         try {
-            const settings = JSON.parse(ZS.getItem(SETTINGS_KEY) || '{}');
+            const settings = safeJSONParse(ZS.getItem(SETTINGS_KEY), {} === '{}' ? {} : []);
             return String((settings && settings.activeCompanyId) || 'default-company');
         } catch (_) {
             return 'default-company';
@@ -36,7 +36,7 @@
     function getServicesData() {
         const scopedKey = SERVICES_KEY + '::' + getActiveCompanyId();
         try {
-            const raw = JSON.parse(ZS.getItem(scopedKey) || '{}');
+            const raw = safeJSONParse(ZS.getItem(scopedKey), {} === '{}' ? {} : []);
             return {
                 rentals: Array.isArray(raw.rentals) ? raw.rentals : [],
                 sealLoans: Array.isArray(raw.sealLoans) ? raw.sealLoans : []
@@ -79,8 +79,8 @@
     // 1. Smart Resource Allocator (AI)
     // العثور على أفضل موظف متاح للمهمة بناءً على المهارات والحمل الحالي
     window.suggestBestEmployee = function(serviceType) {
-        const employees = JSON.parse(ZS.getItem('employees-data') || '[]');
-        const activeTasks = JSON.parse(ZS.getItem('services-tasks') || '[]');
+        const employees = safeJSONParse(ZS.getItem('employees-data'), [] === '{}' ? {} : []);
+        const activeTasks = safeJSONParse(ZS.getItem('services-tasks'), [] === '{}' ? {} : []);
 
         // فلترة الموظفين حسب القسم (مثال: 'Consulting', 'Technical', 'Sales')
         const eligible = employees.filter(emp => {

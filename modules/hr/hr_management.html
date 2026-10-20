@@ -1243,16 +1243,16 @@
 
     </style>
     <script src="shared/zeralda_db.js?v=20261017_v10"></script>
-    <script src="shared/layout_shell.js?v=20261020_hotfix2" defer></script>
+    <script src="shared/layout_shell.js?v=20261020_hotfix3" defer></script>
     <script src="shared/ai_chat_widget.js?v=20261017_v10" defer></script>
     <script src="shared/storage_adapter.js?v=20261017_v10" defer></script>
     <script src="shared/session_timeout.js" defer></script>
     <script src="shared/company_storage.js?v=20261017_v10"></script>
-    <script src="shared/unified_i18n.js?v=20261020_hotfix2" defer></script>
+    <script src="shared/unified_i18n.js?v=20261020_hotfix3" defer></script>
     <script src="shared/app_sync.js?v=20261017_v10" defer></script>
     <script src="shared/role_access_control.js" defer></script>
     <script src="shared/header_company_switcher.js?v=20261017_v10" defer></script>
-    <script src="shared/header_language_switcher.js?v=20261020_hotfix2" defer></script>
+    <script src="shared/header_language_switcher.js?v=20261020_hotfix3" defer></script>
     <script src="shared/runtime_i18n.js"></script>
     <script src="shared/ocr.js?v=20261017_v10" defer></script>
     <script src="modules/hr/hr_intelligence.js"></script>
@@ -4265,6 +4265,308 @@
         }
 
         var currentViewingPayslipRecord = null;
+
+        async function comptabiliserCurrentPayslipToFinance() {
+            if (!currentViewingPayslipRecord) {
+                alert('لا توجد قسيمة راتب محددة حالياً.');
+                return;
+            }
+            var rec = currentViewingPayslipRecord;
+            var ref = 'PAY-' + (rec.month || currentPayrollMonth || new Date().toISOString().slice(0, 7)) + '-' + (rec.employeeId || rec.id || 'EMP');
+            
+            var journalEntries = [];
+            try {
+                var raw = ZS.getItem('finance_journal_entries');
+                if (raw) journalEntries = JSON.parse(raw);
+            } catch(e) {}
+            
+            var exists = journalEntries.some(function(e) { return e.reference === ref; });
+            if (exists) {
+                alert('هذا الراتب مرحل بالفعل إلى دفتر اليومية المحاسبي (المرجع: ' + ref + ').');
+                return;
+            }
+
+            var gross = parseFloat(rec.gross != null ? rec.gross : (parseFloat(rec.baseSalary || 0) + parseFloat(rec.allowances || 0) + parseFloat(rec.bonuses || 0))) || 0;
+            var net = parseFloat(rec.net || 0);
+            var cnas = parseFloat(rec.cnas || 0);
+            var irg = parseFloat(rec.irg || 0);
+
+            if (gross <= 0 && net <= 0) {
+                alert('لا يمكن ترحيل قسيمة راتب بدون مبالغ مالية.');
+                return;
+            }
+
+            var year = new Date().getFullYear();
+            var eId = 'ECR-' + year + '-' + (journalEntries.length + 1).toString().padStart(4, '0');
+
+            var newEntry = {
+                id: eId,
+                date: rec.processedDate || new Date().toISOString().slice(0, 10),
+                reference: ref,
+                description: 'أجور شهر ' + (rec.month || currentPayrollMonth || '') + ' - الموظف: ' + (rec.fullName || rec.employeeId),
+                sourceType: 'payroll',
+                status: 'posted',
+                createdAt: new Date().toISOString(),
+                lines: [
+                    { accountCode: '631000', accountName: 'أجور ورواتب المستخدمين (Rémunérations)', description: 'الراتب الإجمالي', debit: gross, credit: 0 },
+                    { accountCode: '421000', accountName: 'المستخدمون - الأجور المستحقة (Personnel)', description: 'الصافي للدفع', debit: 0, credit: net },
+                    { accountCode: '431000', accountName: 'الضمان الاجتماعي (Sécurité Sociale - CNAS)', description: 'اشتراكات الضمان الاجتماعي', debit: 0, credit: cnas },
+                    { accountCode: '442000', accountName: 'الدولة - ضرائب مقتطعة IRG (Impôts retenus)', description: 'اقتطاع الضريبة على الدخل', debit: 0, credit: irg }
+                ]
+            };
+
+            journalEntries.unshift(newEntry);
+            ZS.setItem('finance_journal_entries', JSON.stringify(journalEntries));
+            alert('تم ترحيل قسيمة الراتب بنجاح إلى اليومية المحاسبية SCF!\nرقم القيد: ' + eId + '\nإجمالي الأعباء (631): ' + _fmtMoney(gross) + '\nالصافي المستحق (421): ' + _fmtMoney(net));
+        }
+        window.comptabiliserCurrentPayslipToFinance = comptabiliserCurrentPayslipToFinance;
+
+        async function comptabiliserMonthlyPayrollToFinance() {
+            var monthKey = currentPayrollMonth || (document.getElementById('payrollMonthSelect') ? document.getElementById('payrollMonthSelect').value : '');
+            var records = (payrollData[monthKey] || []).map(ensurePayrollFields);
+            if (!records.length) {
+                alert('لا توجد سجلات رواتب للشهر المحدد (' + (monthKey || 'الحالي') + ') لترحيلها.');
+                return;
+            }
+
+            var ref = 'PAYROLL-TOTAL-' + monthKey;
+            var journalEntries = [];
+            try {
+                var raw = ZS.getItem('finance_journal_entries');
+                if (raw) journalEntries = JSON.parse(raw);
+            } catch(e) {}
+
+            var exists = journalEntries.some(function(e) { return e.reference === ref; });
+            if (exists) {
+                alert('رواتب هذا الشهر مٌرحلة مسبقاً إلى اليومية المحاسبية (المرجع: ' + ref + ').');
+                return;
+            }
+
+            var totalGross = 0, totalNet = 0, totalCnas = 0, totalIrg = 0;
+            records.forEach(function(r) {
+                totalGross += parseFloat(r.gross != null ? r.gross : (parseFloat(r.baseSalary || 0) + parseFloat(r.allowances || 0) + parseFloat(r.bonuses || 0))) || 0;
+                totalNet += parseFloat(r.net || 0);
+                totalCnas += parseFloat(r.cnas || 0);
+                totalIrg += parseFloat(r.irg || 0);
+            });
+
+            var year = new Date().getFullYear();
+            var eId = 'ECR-' + year + '-' + (journalEntries.length + 1).toString().padStart(4, '0');
+
+            var newEntry = {
+                id: eId,
+                date: new Date().toISOString().slice(0, 10),
+                reference: ref,
+                description: 'كشف رواتب وأجور الشهر الإجمالي: ' + monthKey + ' (' + records.length + ' موظف)',
+                sourceType: 'payroll',
+                status: 'posted',
+                createdAt: new Date().toISOString(),
+                lines: [
+                    { accountCode: '631000', accountName: 'أجور ورواتب المستخدمين (Rémunérations)', description: 'إجمالي الأجور الخام', debit: totalGross, credit: 0 },
+                    { accountCode: '421000', accountName: 'المستخدمون - رواتب مستحقة (Personnel)', description: 'إجمالي الصافي للدفع', debit: 0, credit: totalNet },
+                    { accountCode: '431000', accountName: 'الضمان الاجتماعي (Sécurité Sociale - CNAS)', description: 'مجموع اقتطاعات CNAS', debit: 0, credit: totalCnas },
+                    { accountCode: '442000', accountName: 'الدولة - ضرائب مقتطعة IRG (Impôts retenus)', description: 'مجموع اقتطاعات ضريبة IRG', debit: 0, credit: totalIrg }
+                ]
+            };
+
+            journalEntries.unshift(newEntry);
+            ZS.setItem('finance_journal_entries', JSON.stringify(journalEntries));
+            alert('تم ترحيل إجمالي رواتب شهر (' + monthKey + ') بنجاح إلى اليومية المحاسبية SCF!\nرقم القيد: ' + eId + '\nإجمالي الأجور الخام (631): ' + _fmtMoney(totalGross) + '\nإجمالي الصافي للموظفين (421): ' + _fmtMoney(totalNet));
+        }
+        window.comptabiliserMonthlyPayrollToFinance = comptabiliserMonthlyPayrollToFinance;
+
+        function generateLeaveVoucherFromCurrentPayslip() {
+            if (!currentViewingPayslipRecord) {
+                alert('يرجى تحديد قسيمة الراتب أولاً.');
+                return;
+            }
+            var rec = currentViewingPayslipRecord;
+            var emp = (employeesState || []).find(function(e) {
+                return (e && (e.id === rec.employeeId || e.employeeId === rec.employeeId || e.name === rec.fullName));
+            }) || { fullName: rec.fullName, employeeId: rec.employeeId, position: rec.department };
+
+            var docTitle = 'سند رخصة العطلة السنوية (Titre de Congé)';
+            var html = '<div class="hr-doc-container" style="font-family:Segoe UI,Tahoma,sans-serif; padding:20px; color:#1e293b;">'
+                + '<div style="text-align:center; border-bottom:2px solid #0284c7; padding-bottom:12px; margin-bottom:18px;">'
+                + '  <h2 style="margin:0; color:#0f172a; font-size:22px;">الجمهورية الجزائرية الديمقراطية الشعبية</h2>'
+                + '  <h3 style="margin:6px 0 0; color:#0284c7; font-size:18px;">سند رخصة العطلة السنوية (Titre de Congé Annuel)</h3>'
+                + '</div>'
+                + '<div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:16px; margin-bottom:16px; line-height:1.8;">'
+                + '  <p><strong>المؤسسة المشغلة:</strong> Zeralda ERP</p>'
+                + '  <p><strong>اسم ولقب الموظف:</strong> ' + escapeHtml(emp.fullName || rec.fullName || '') + '</p>'
+                + '  <p><strong>الرقم التعريفي / Matricule:</strong> ' + escapeHtml(emp.employeeId || rec.employeeId || '') + '</p>'
+                + '  <p><strong>الوظيفة / القسم:</strong> ' + escapeHtml(emp.position || rec.department || '') + '</p>'
+                + '  <p><strong>الفترة المرجعية للراتب:</strong> شهر ' + escapeHtml(rec.month || currentPayrollMonth || '') + '</p>'
+                + '  <p><strong>الرصيد المتاح للعطلة:</strong> 30 يوماً قانونياً سنوياً (2.5 يوم / شهر عمل فعلي وفق القانون 90-11)</p>'
+                + '</div>'
+                + '<table style="width:100%; border-collapse:collapse; margin-top:14px;">'
+                + '  <thead><tr style="background:#f1f5f9;"><th style="border:1px solid #cbd5e1; padding:8px;">طبيعة العطلة</th><th style="border:1px solid #cbd5e1; padding:8px; text-align:center;">عدد الأيام</th><th style="border:1px solid #cbd5e1; padding:8px; text-align:center;">تاريخ الانطلاق</th><th style="border:1px solid #cbd5e1; padding:8px; text-align:center;">تاريخ الاستئناف</th></tr></thead>'
+                + '  <tbody><tr><td style="border:1px solid #cbd5e1; padding:8px;">عطلة سنوية مدفوعة الأجر (Congé Payé)</td><td style="border:1px solid #cbd5e1; padding:8px; text-align:center; font-weight:700;">30 يوماً</td><td style="border:1px solid #cbd5e1; padding:8px; text-align:center;">' + new Date().toISOString().slice(0, 10) + '</td><td style="border:1px solid #cbd5e1; padding:8px; text-align:center;">وفق المخطط السنوي</td></tr></tbody>'
+                + '</table>'
+                + '<div style="margin-top:40px; display:flex; justify-content:space-between; text-align:center;">'
+                + '  <div style="width:200px;"><strong>توقيع المعني بالأمر</strong></div>'
+                + '  <div style="width:200px;"><strong>ختم وتوقيع المدير العام</strong></div>'
+                + '</div>'
+                + '</div>';
+
+            showHrDocument(docTitle, html, {
+                title: docTitle,
+                fileName: 'titre_de_conge_' + (rec.employeeId || 'emp'),
+                rows: []
+            });
+        }
+        window.generateLeaveVoucherFromCurrentPayslip = generateLeaveVoucherFromCurrentPayslip;
+
+        async function comptabiliserCurrentPayslipToFinance() {
+            if (!currentViewingPayslipRecord) {
+                alert('لا توجد قسيمة راتب محددة حالياً.');
+                return;
+            }
+            var rec = currentViewingPayslipRecord;
+            var ref = 'PAY-' + (rec.month || currentPayrollMonth || new Date().toISOString().slice(0, 7)) + '-' + (rec.employeeId || rec.id || 'EMP');
+            
+            var journalEntries = [];
+            try {
+                var raw = ZS.getItem('finance_journal_entries');
+                if (raw) journalEntries = JSON.parse(raw);
+            } catch(e) {}
+            
+            var exists = journalEntries.some(function(e) { return e.reference === ref; });
+            if (exists) {
+                alert('هذا الراتب مرحل بالفعل إلى دفتر اليومية المحاسبي (المرجع: ' + ref + ').');
+                return;
+            }
+
+            var gross = parseFloat(rec.gross != null ? rec.gross : (parseFloat(rec.baseSalary || 0) + parseFloat(rec.allowances || 0) + parseFloat(rec.bonuses || 0))) || 0;
+            var net = parseFloat(rec.net || 0);
+            var cnas = parseFloat(rec.cnas || 0);
+            var irg = parseFloat(rec.irg || 0);
+
+            if (gross <= 0 && net <= 0) {
+                alert('لا يمكن ترحيل قسيمة راتب بدون مبالغ مالية.');
+                return;
+            }
+
+            var year = new Date().getFullYear();
+            var eId = 'ECR-' + year + '-' + (journalEntries.length + 1).toString().padStart(4, '0');
+
+            var newEntry = {
+                id: eId,
+                date: rec.processedDate || new Date().toISOString().slice(0, 10),
+                reference: ref,
+                description: 'أجور شهر ' + (rec.month || currentPayrollMonth || '') + ' - الموظف: ' + (rec.fullName || rec.employeeId),
+                sourceType: 'payroll',
+                status: 'posted',
+                createdAt: new Date().toISOString(),
+                lines: [
+                    { accountCode: '631000', accountName: 'أجور ورواتب المستخدمين (Rémunérations)', description: 'الراتب الإجمالي', debit: gross, credit: 0 },
+                    { accountCode: '421000', accountName: 'المستخدمون - الأجور المستحقة (Personnel)', description: 'الصافي للدفع', debit: 0, credit: net },
+                    { accountCode: '431000', accountName: 'الضمان الاجتماعي (Sécurité Sociale - CNAS)', description: 'اشتراكات الضمان الاجتماعي', debit: 0, credit: cnas },
+                    { accountCode: '442000', accountName: 'الدولة - ضرائب مقتطعة IRG (Impôts retenus)', description: 'اقتطاع الضريبة على الدخل', debit: 0, credit: irg }
+                ]
+            };
+
+            journalEntries.unshift(newEntry);
+            ZS.setItem('finance_journal_entries', JSON.stringify(journalEntries));
+            alert('تم ترحيل قسيمة الراتب بنجاح إلى اليومية المحاسبية SCF!\nرقم القيد: ' + eId + '\nإجمالي الأعباء (631): ' + _fmtMoney(gross) + '\nالصافي المستحق (421): ' + _fmtMoney(net));
+        }
+        window.comptabiliserCurrentPayslipToFinance = comptabiliserCurrentPayslipToFinance;
+
+        async function comptabiliserMonthlyPayrollToFinance() {
+            var monthKey = currentPayrollMonth || (document.getElementById('payrollMonthSelect') ? document.getElementById('payrollMonthSelect').value : '');
+            var records = (payrollData[monthKey] || []).map(ensurePayrollFields);
+            if (!records.length) {
+                alert('لا توجد سجلات رواتب للشهر المحدد (' + (monthKey || 'الحالي') + ') لترحيلها.');
+                return;
+            }
+
+            var ref = 'PAYROLL-TOTAL-' + monthKey;
+            var journalEntries = [];
+            try {
+                var raw = ZS.getItem('finance_journal_entries');
+                if (raw) journalEntries = JSON.parse(raw);
+            } catch(e) {}
+
+            var exists = journalEntries.some(function(e) { return e.reference === ref; });
+            if (exists) {
+                alert('رواتب هذا الشهر مٌرحلة مسبقاً إلى اليومية المحاسبية (المرجع: ' + ref + ').');
+                return;
+            }
+
+            var totalGross = 0, totalNet = 0, totalCnas = 0, totalIrg = 0;
+            records.forEach(function(r) {
+                totalGross += parseFloat(r.gross != null ? r.gross : (parseFloat(r.baseSalary || 0) + parseFloat(r.allowances || 0) + parseFloat(r.bonuses || 0))) || 0;
+                totalNet += parseFloat(r.net || 0);
+                totalCnas += parseFloat(r.cnas || 0);
+                totalIrg += parseFloat(r.irg || 0);
+            });
+
+            var year = new Date().getFullYear();
+            var eId = 'ECR-' + year + '-' + (journalEntries.length + 1).toString().padStart(4, '0');
+
+            var newEntry = {
+                id: eId,
+                date: new Date().toISOString().slice(0, 10),
+                reference: ref,
+                description: 'كشف رواتب وأجور الشهر الإجمالي: ' + monthKey + ' (' + records.length + ' موظف)',
+                sourceType: 'payroll',
+                status: 'posted',
+                createdAt: new Date().toISOString(),
+                lines: [
+                    { accountCode: '631000', accountName: 'أجور ورواتب المستخدمين (Rémunérations)', description: 'إجمالي الأجور الخام', debit: totalGross, credit: 0 },
+                    { accountCode: '421000', accountName: 'المستخدمون - رواتب مستحقة (Personnel)', description: 'إجمالي الصافي للدفع', debit: 0, credit: totalNet },
+                    { accountCode: '431000', accountName: 'الضمان الاجتماعي (Sécurité Sociale - CNAS)', description: 'مجموع اقتطاعات CNAS', debit: 0, credit: totalCnas },
+                    { accountCode: '442000', accountName: 'الدولة - ضرائب مقتطعة IRG (Impôts retenus)', description: 'مجموع اقتطاعات ضريبة IRG', debit: 0, credit: totalIrg }
+                ]
+            };
+
+            journalEntries.unshift(newEntry);
+            ZS.setItem('finance_journal_entries', JSON.stringify(journalEntries));
+            alert('تم ترحيل إجمالي رواتب شهر (' + monthKey + ') بنجاح إلى اليومية المحاسبية SCF!\nرقم القيد: ' + eId + '\nإجمالي الأجور الخام (631): ' + _fmtMoney(totalGross) + '\nإجمالي الصافي للموظفين (421): ' + _fmtMoney(totalNet));
+        }
+        window.comptabiliserMonthlyPayrollToFinance = comptabiliserMonthlyPayrollToFinance;
+
+        function generateLeaveVoucherFromCurrentPayslip() {
+            if (!currentViewingPayslipRecord) {
+                alert('يرجى تحديد قسيمة الراتب أولاً.');
+                return;
+            }
+            var rec = currentViewingPayslipRecord;
+            var emp = (employeesState || []).find(function(e) {
+                return (e && (e.id === rec.employeeId || e.employeeId === rec.employeeId || e.name === rec.fullName));
+            }) || { fullName: rec.fullName, employeeId: rec.employeeId, position: rec.department };
+
+            var docTitle = 'سند رخصة العطلة السنوية (Titre de Congé)';
+            var html = '<div class="hr-doc-container" style="font-family:Segoe UI,Tahoma,sans-serif; padding:20px; color:#1e293b;">'
+                + '<div style="text-align:center; border-bottom:2px solid #0284c7; padding-bottom:12px; margin-bottom:18px;">'
+                + '  <h2 style="margin:0; color:#0f172a; font-size:22px;">الجمهورية الجزائرية الديمقراطية الشعبية</h2>'
+                + '  <h3 style="margin:6px 0 0; color:#0284c7; font-size:18px;">سند رخصة العطلة السنوية (Titre de Congé Annuel)</h3>'
+                + '</div>'
+                + '<div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:16px; margin-bottom:16px; line-height:1.8;">'
+                + '  <p><strong>المؤسسة المشغلة:</strong> Zeralda ERP</p>'
+                + '  <p><strong>اسم ولقب الموظف:</strong> ' + escapeHtml(emp.fullName || rec.fullName || '') + '</p>'
+                + '  <p><strong>الرقم التعريفي / Matricule:</strong> ' + escapeHtml(emp.employeeId || rec.employeeId || '') + '</p>'
+                + '  <p><strong>الوظيفة / القسم:</strong> ' + escapeHtml(emp.position || rec.department || '') + '</p>'
+                + '  <p><strong>الفترة المرجعية للراتب:</strong> شهر ' + escapeHtml(rec.month || currentPayrollMonth || '') + '</p>'
+                + '  <p><strong>الرصيد المتاح للعطلة:</strong> 30 يوماً قانونياً سنوياً (2.5 يوم / شهر عمل فعلي وفق القانون 90-11)</p>'
+                + '</div>'
+                + '<table style="width:100%; border-collapse:collapse; margin-top:14px;">'
+                + '  <thead><tr style="background:#f1f5f9;"><th style="border:1px solid #cbd5e1; padding:8px;">طبيعة العطلة</th><th style="border:1px solid #cbd5e1; padding:8px; text-align:center;">عدد الأيام</th><th style="border:1px solid #cbd5e1; padding:8px; text-align:center;">تاريخ الانطلاق</th><th style="border:1px solid #cbd5e1; padding:8px; text-align:center;">تاريخ الاستئناف</th></tr></thead>'
+                + '  <tbody><tr><td style="border:1px solid #cbd5e1; padding:8px;">عطلة سنوية مدفوعة الأجر (Congé Payé)</td><td style="border:1px solid #cbd5e1; padding:8px; text-align:center; font-weight:700;">30 يوماً</td><td style="border:1px solid #cbd5e1; padding:8px; text-align:center;">' + new Date().toISOString().slice(0, 10) + '</td><td style="border:1px solid #cbd5e1; padding:8px; text-align:center;">وفق المخطط السنوي</td></tr></tbody>'
+                + '</table>'
+                + '<div style="margin-top:40px; display:flex; justify-content:space-between; text-align:center;">'
+                + '  <div style="width:200px;"><strong>توقيع المعني بالأمر</strong></div>'
+                + '  <div style="width:200px;"><strong>ختم وتوقيع المدير العام</strong></div>'
+                + '</div>'
+                + '</div>';
+
+            showHrDocument(docTitle, html, {
+                title: docTitle,
+                fileName: 'titre_de_conge_' + (rec.employeeId || 'emp'),
+                rows: []
+            });
+        }
+        window.generateLeaveVoucherFromCurrentPayslip = generateLeaveVoucherFromCurrentPayslip;
 
         function sharePayslipViaWhatsApp() {
             if (!currentViewingPayslipRecord) return;

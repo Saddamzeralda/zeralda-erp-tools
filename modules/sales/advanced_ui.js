@@ -238,7 +238,7 @@ function confirmBatchScheduleSend() {
   }
 
   let scheduledCount = 0;
-  const schedules = JSON.parse(ZS.getItem('invoice-schedules') || '[]');
+  const schedules = safeJSONParse(ZS.getItem('invoice-schedules'), [] === '{}' ? {} : []);
 
   selectedInvoiceIds.forEach((id, index) => {
     const sendDateTime = new Date(`${date}T${time}`);
@@ -295,7 +295,7 @@ function initializePerformanceMonitoring() {
 
   // Store metrics periodically
   setInterval(() => {
-    const log = JSON.parse(ZS.getItem('performance-log') || '[]');
+    const log = safeJSONParse(ZS.getItem('performance-log'), [] === '{}' ? {} : []);
     log.push({
       timestamp: new Date().toISOString(),
       metrics: { ...metrics }

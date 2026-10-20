@@ -804,6 +804,65 @@
     }
 
     // Make functions globally accessible
+    function openOrderModal() {
+        const customerName = prompt('Enter Customer Name:');
+        if (!customerName) return;
+        const total = parseFloat(prompt('Enter Order Total Amount (DZD):', '1000')) || 0;
+        const newOrder = {
+            id: 'ord_' + Date.now(),
+            orderNumber: 'ORD-' + Math.floor(1000 + Math.random() * 9000),
+            customerName: customerName,
+            total: total,
+            status: 'pending',
+            paymentStatus: 'unpaid',
+            createdAt: new Date().toISOString(),
+            items: []
+        };
+        storage.addOrder(newOrder);
+        loadOrders();
+        showToast('Order created successfully', 'success');
+    }
+
+    function openCustomerModal() {
+        const name = prompt('Enter Customer Full Name:');
+        if (!name) return;
+        const email = prompt('Enter Customer Email:', 'customer@example.com') || '';
+        const phone = prompt('Enter Customer Phone:', '0550000000') || '';
+        const newCust = {
+            id: 'cust_' + Date.now(),
+            name: name,
+            email: email,
+            phone: phone,
+            totalOrders: 0,
+            totalSpent: 0
+        };
+        storage.addCustomer(newCust);
+        loadCustomers();
+        showToast('Customer added successfully', 'success');
+    }
+
+    function openPaymentModal() {
+        const orderId = prompt('Enter Order ID or Number:');
+        if (!orderId) return;
+        const amount = parseFloat(prompt('Enter Payment Amount (DZD):', '1000')) || 0;
+        const method = prompt('Payment Method (cash, card, transfer):', 'cash') || 'cash';
+        const newPay = {
+            id: 'pay_' + Date.now(),
+            orderId: orderId,
+            amount: amount,
+            method: method,
+            status: 'completed',
+            createdAt: new Date().toISOString()
+        };
+        storage.addPayment(newPay);
+        loadPayments();
+        showToast('Payment recorded successfully', 'success');
+    }
+
+    window.openOrderModal = openOrderModal;
+    window.openCustomerModal = openCustomerModal;
+    window.openPaymentModal = openPaymentModal;
+
     window.openProductModal = openProductModal;
     window.closeProductModal = closeProductModal;
     window.editProduct = editProduct;

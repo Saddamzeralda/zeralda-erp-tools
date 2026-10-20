@@ -30,7 +30,7 @@
     // 0. Smart Biometric Simulation
     // محاكاة نظام البصمة الذكي لتسجيل الحضور والغياب
     window.simulateBiometricCheckIn = function(employeeId) {
-        const attendance = JSON.parse(ZS.getItem(ATTENDANCE_KEY) || '{}');
+        const attendance = safeJSONParse(ZS.getItem(ATTENDANCE_KEY), {} === '{}' ? {} : []);
         const today = new Date().toISOString().split('T')[0];
         const logTime = new Date().toLocaleTimeString();
 
@@ -51,8 +51,8 @@
     // 1. Smart Payroll Hub
     // حساب الرواتب ديناميكياً بناءً على الحضور، الغياب، والعمل الإضافي
     window.calculateSmartPayroll = function(employeeId) {
-        const employees = JSON.parse(ZS.getItem('employees-data') || '[]');
-        const attendanceLog = JSON.parse(ZS.getItem(ATTENDANCE_KEY) || '{}');
+        const employees = safeJSONParse(ZS.getItem('employees-data'), [] === '{}' ? {} : []);
+        const attendanceLog = safeJSONParse(ZS.getItem(ATTENDANCE_KEY), {} === '{}' ? {} : []);
         const emp = employees.find(e => e.id == employeeId);
         if (!emp) return { base:0, final:0, deductions:0, bonus:0 };
 
@@ -88,7 +88,7 @@
     // 2. AI Contract Expiry Predictor
     // التنبؤ بانتهاء العقود وتنبيه الإدارة قبل 30 يوم عمل
     window.checkContractExpiries = function() {
-        const employees = JSON.parse(ZS.getItem('employees-data') || '[]');
+        const employees = safeJSONParse(ZS.getItem('employees-data'), [] === '{}' ? {} : []);
         const now = new Date();
         const alerts = [];
 
@@ -160,7 +160,7 @@
         const container = document.getElementById('payrollTableBody');
         if (!container) return;
 
-        const employees = JSON.parse(ZS.getItem('employees-data') || '[]');
+        const employees = safeJSONParse(ZS.getItem('employees-data'), [] === '{}' ? {} : []);
         container.innerHTML = '';
 
         employees.forEach(emp => {
