@@ -701,6 +701,7 @@
     },
 
     ensureStyles: function() {
+      if (document.querySelector('link[href*="zeralda_core.bundle.css"]')) return;
       if (!document.getElementById('zeralda-ocr-unified-css')) {
         var link = document.createElement('link');
         link.id = 'zeralda-ocr-unified-css';

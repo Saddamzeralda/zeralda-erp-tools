@@ -434,6 +434,7 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
             }
             return '';
         })();
+        if (document.querySelector('link[href*="zeralda_core.bundle.css"]')) return;
         var cssHref = (scriptPath ? scriptPath + '/../styles/ai_chat_widget.css' : 'styles/ai_chat_widget.css') + '?v=20260805a';
         var existing = document.getElementById('ai-chat-widget-styles');
         if (existing) {
