@@ -141,11 +141,8 @@ def create_app() -> FastAPI:
             response.headers["Pragma"] = "no-cache"
             response.headers["Expires"] = "0"
         elif path.endswith((".js", ".css")):
-            # Scripts & Styles: if versioned with ?v=, cache aggressively for 7 days
-            if request.query_params.get("v"):
-                response.headers["Cache-Control"] = "public, max-age=604800, immutable"
-            else:
-                response.headers["Cache-Control"] = "public, max-age=600, stale-while-revalidate=3600"
+            # Scripts & Styles: no-cache enables instant live updates with 304 ETag revalidation
+            response.headers["Cache-Control"] = "no-cache, must-revalidate"
             if "pragma" in response.headers: del response.headers["pragma"]
             if "expires" in response.headers: del response.headers["expires"]
         elif path.endswith((".png", ".jpg", ".jpeg", ".ico", ".svg", ".woff", ".woff2", ".ttf")):
