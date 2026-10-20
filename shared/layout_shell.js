@@ -1002,7 +1002,7 @@
       window.ZeraldaOCR.open(opts || { mode: 'universal' });
       return;
     }
-    if (!document.querySelector('link[href*="ocr_unified.css"]')) {
+    if (!document.querySelector('link[href*="ocr_unified.css"]') && !document.querySelector('link[href*="zeralda_core.bundle.css"]')) {
       var link = document.createElement('link');
       link.rel = 'stylesheet';
       link.href = 'styles/ocr_unified.css?v=20261012d';
@@ -1031,3 +1031,445 @@
     startInit();
   }
 })();
+
+
+/* === EMBEDDED HEADER SWITCHERS (Company & Language) === */
+(function () {
+  function getSettings() {
+    try {
+      var raw = (window.ZS && typeof window.ZS.getItem === 'function') ? window.ZS.getItem('zeralda-settings') : null;
+      if (!raw) {
+        try { raw = localStorage.getItem('zeralda-settings'); } catch (_) {}
+      }
+      if (!raw && window.ZDB && typeof window.ZDB.getItem === 'function') {
+        try { raw = window.ZDB.getItem('zeralda-settings'); } catch (_) {}
+      }
+      var parsed = raw ? JSON.parse(raw) : {};
+      var companies = Array.isArray(parsed.companies) ? parsed.companies : [];
+
+      // Fallback: check legacy shadow keys if companies list is empty
+      if (!companies.length) {
+        try {
+          var legRaw = (window.ZS && typeof window.ZS.getItem === 'function') ? window.ZS.getItem('zeralda-companies') : null;
+          if (!legRaw) legRaw = localStorage.getItem('zeralda-companies');
+          if (legRaw) {
+            var legParsed = JSON.parse(legRaw);
+            if (Array.isArray(legParsed) && legParsed.length) {
+              companies = legParsed;
+            }
+          }
+        } catch (_) {}
+      }
+
+      return {
+        companies: companies,
+        activeCompanyId: parsed.activeCompanyId || null,
+        ...parsed
+      };
+    } catch (e) {
+      return { companies: [], activeCompanyId: null };
+    }
+  }
+
+  function saveSettings(next) {
+    const current = getSettings();
+    // حماية: لا تحذف الشركات إذا لم يتم تمريرها في next
+    if (!next.hasOwnProperty('companies') && current.companies) {
+      next.companies = current.companies;
+    }
+    if (!next.hasOwnProperty('activeCompanyId') && current.activeCompanyId) {
+      next.activeCompanyId = current.activeCompanyId;
+    }
+    var str = JSON.stringify(next);
+    if (window.ZS && typeof window.ZS.setItem === 'function') {
+      window.ZS.setItem('zeralda-settings', str);
+      if (next.activeCompanyId) {
+        window.ZS.setItem('zeralda-active-company', next.activeCompanyId);
+      }
+    }
+    try {
+      localStorage.setItem('zeralda-settings', str);
+      if (next.activeCompanyId) {
+        localStorage.setItem('zeralda-active-company', next.activeCompanyId);
+        localStorage.setItem('zeralda_last_active_company', next.activeCompanyId);
+      }
+    } catch (_) {}
+    if (window.ZDB && typeof window.ZDB.setItem === 'function') {
+      try {
+        window.ZDB.setItem('zeralda-settings', str);
+        if (next.activeCompanyId) {
+          window.ZDB.setItem('zeralda-active-company', next.activeCompanyId);
+        }
+      } catch (_) {}
+    }
+  }
+
+  function normalizeActive(settings) {
+    const companies = Array.isArray(settings.companies) ? settings.companies : [];
+    if (!companies.length) return { companies: [], activeId: null };
+    
+    // Check user persistent preference first
+    let activeId = null;
+    try {
+      var savedPref = localStorage.getItem('zeralda_last_active_company');
+      if (savedPref && companies.some(function (c) { return c && c.id === savedPref; })) {
+        activeId = savedPref;
+      }
+    } catch (_) {}
+
+    if (!activeId) {
+      activeId = settings.activeCompanyId;
+    }
+
+    // If activeCompanyId is missing or invalid, try zeralda-active-company fallback
+    if (!activeId || !companies.some(function (c) { return c && c.id === activeId; })) {
+      try {
+        var ac = (window.ZS && typeof window.ZS.getItem === 'function') ? window.ZS.getItem('zeralda-active-company') : localStorage.getItem('zeralda-active-company');
+        if (ac) {
+          try { activeId = String(JSON.parse(ac).id || ''); } catch (_) { activeId = String(ac); }
+        }
+      } catch (_) {}
+    }
+    // If still missing or invalid, pick first available company
+    if (!activeId || !companies.some(function (c) { return c && c.id === activeId; })) {
+      activeId = companies[0].id;
+      saveSettings({ ...settings, activeCompanyId: activeId });
+    }
+    return { companies: companies, activeId: activeId };
+  }
+
+  var _fetchAttempted = false;
+
+  function renderCompanySwitcher() {
+    const switcher = document.getElementById('companySwitcher');
+    if (!switcher) return;
+
+    const wrap = switcher.closest('.company-switcher');
+    const settings = getSettings();
+    const state = normalizeActive(settings);
+
+    // If companies are still empty, try async fetch from server once
+    if (!state.companies.length && !_fetchAttempted) {
+      _fetchAttempted = true;
+      tryFetchSettingsFromServer();
+    }
+
+    switcher.innerHTML = '';
+
+    if (!state.companies.length) {
+      const opt = document.createElement('option');
+      opt.value = '';
+      opt.textContent = '...جاري التحميل / Loading';
+      switcher.appendChild(opt);
+      switcher.disabled = true;
+      // Do NOT hide the wrap on mobile! Keep it visible so layout remains stable
+      if (wrap) {
+        wrap.style.display = 'inline-flex';
+        wrap.style.opacity = '0.85';
+      }
+      return;
+    }
+
+    if (wrap) {
+      wrap.style.display = 'inline-flex';
+      wrap.style.opacity = '1';
+    }
+    switcher.disabled = false;
+
+    state.companies.forEach(function (company) {
+      if (!company || !company.id) return;
+      const opt = document.createElement('option');
+      opt.value = company.id;
+      opt.textContent = company.name || 'Company';
+      switcher.appendChild(opt);
+    });
+
+    switcher.value = state.activeId || '';
+
+    if (typeof window.applyLayoutGeometry === 'function') {
+      try { window.applyLayoutGeometry(); } catch (_) {}
+    }
+  }
+
+  function tryFetchSettingsFromServer() {
+    try {
+      fetch('/api/store?key=zeralda-settings', {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      })
+      .then(function (res) {
+        if (!res.ok) throw new Error('status ' + res.status);
+        return res.json();
+      })
+      .then(function (data) {
+        var val = data && data.value;
+        if (!val && data && typeof data === 'object' && data['zeralda-settings']) {
+          val = data['zeralda-settings'];
+        }
+        if (typeof val === 'string') {
+          try { val = JSON.parse(val); } catch (_) {}
+        }
+        if (val && Array.isArray(val.companies) && val.companies.length) {
+          var str = JSON.stringify(val);
+          if (window.ZS && typeof window.ZS.setItem === 'function') {
+            window.ZS.setItem('zeralda-settings', str);
+          }
+          try { localStorage.setItem('zeralda-settings', str); } catch (_) {}
+          renderCompanySwitcher();
+        }
+      })
+      .catch(function () {});
+    } catch (_) {}
+  }
+
+  if (typeof window.onHeaderCompanySwitch !== 'function') {
+    window.onHeaderCompanySwitch = function (id) {
+      console.log('[header_company_switcher] onHeaderCompanySwitch called with id:', id);
+      const settings = getSettings();
+      const companies = Array.isArray(settings.companies) ? settings.companies : [];
+      if (!id || !companies.some(function (c) { return c && c.id === id; })) return;
+
+      if (String(settings.activeCompanyId || '') === String(id)) {
+        renderCompanySwitcher();
+        return;
+      }
+
+      // إصلاح جذري: flush pending writes BEFORE changing company ID.
+      // إذا غيّرنا ID أولاً، فإن flushPending سيستخدم ID الجديد ويُرسل
+      // بيانات الشركة القديمة بمفتاح الشركة الجديدة (تلوث البيانات!).
+      // المفاتيح في _pendingWrites هي بالفعل scoped (من queueSet)،
+      // لكن ZDB.flush و AppSync.flushPending يجب أن يكتملا قبل التبديل.
+      var flushPromise = Promise.resolve();
+      if (window.AppSync && typeof window.AppSync.flushPending === 'function') {
+        flushPromise = flushPromise.then(function () {
+          return window.AppSync.flushPending().catch(function () {});
+        });
+      }
+      if (window.ZDB && typeof window.ZDB.flush === 'function') {
+        flushPromise = flushPromise.then(function () {
+          return window.ZDB.flush().catch(function () {});
+        });
+      }
+
+      flushPromise.then(function () {
+        // NOW safe to switch — all pending writes for the old company are flushed
+        saveSettings({ ...settings, activeCompanyId: id });
+        // Keep zeralda-active-company in sync (used as sync fallback in company_storage.js)
+        if (window.ZS && typeof window.ZS.setItem === 'function') {
+          window.ZS.setItem('zeralda-active-company', id);
+        }
+        try { localStorage.setItem('zeralda-active-company', id); } catch (_) {}
+        try { localStorage.setItem('zeralda_last_active_company', id); } catch (_) {}
+        renderCompanySwitcher();
+
+        // Apply company-specific data context immediately across current module.
+        // company_storage.js listens for this event, flushes pending state,
+        // and safely reloads the page.
+        console.log('[header_company_switcher] Dispatching activeCompanyChanged event for company:', id);
+        window.dispatchEvent(new CustomEvent('activeCompanyChanged', { detail: { companyId: id } }));
+      });
+    };
+  }
+
+  window.addEventListener('storage', function (event) {
+    if (!event || event.key === 'zeralda-settings' || event.key === 'zeralda-companies' || event.key === 'zeralda-active-company') {
+      renderCompanySwitcher();
+    }
+  });
+
+  // Re-render when store or cache becomes ready
+  document.addEventListener('zeraldaStorageReady', renderCompanySwitcher);
+  document.addEventListener('zeraldaStoreChange', function (e) {
+    if (!e || !e.detail || !e.detail.keys || e.detail.keys.indexOf('zeralda-settings') !== -1 || e.detail.keys.indexOf('zeralda-companies') !== -1) {
+      renderCompanySwitcher();
+    }
+  });
+  window.addEventListener('activeCompanyChanged', renderCompanySwitcher);
+  window.addEventListener('zdb-remote-write', renderCompanySwitcher);
+  window.addEventListener('zdb-remote-company-change', renderCompanySwitcher);
+  document.addEventListener('sharedLayoutLoaded', renderCompanySwitcher);
+
+  // Poll / retry for the first few seconds if companies are not yet loaded
+  var retryCount = 0;
+  var retryTimer = setInterval(function () {
+    retryCount++;
+    var s = getSettings();
+    if ((s.companies && s.companies.length) || retryCount > 15) {
+      clearInterval(retryTimer);
+    }
+    renderCompanySwitcher();
+  }, 300);
+
+  function startInit() {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', renderCompanySwitcher);
+    } else {
+      renderCompanySwitcher();
+    }
+  }
+
+  // Wait for cacheReady (not just openDB ready) to ensure cache is populated
+  var cachePromise = Promise.resolve();
+  if (window.ZDB && typeof window.ZDB.cacheReady === 'function') {
+    cachePromise = window.ZDB.cacheReady();
+  } else if (window.ZS && typeof window.ZS.cacheReady === 'function') {
+    cachePromise = window.ZS.cacheReady();
+  } else if (window.ZDB && window.ZDB.ready) {
+    cachePromise = window.ZDB.ready();
+  }
+
+  cachePromise.then(startInit).catch(startInit);
+})();
+
+;
+(function () {
+  const STORAGE_KEY = 'zeralda-settings';
+
+  function readSettings() {
+    try {
+      const raw = ZS.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function writeLanguage(lang) {
+    const settings = readSettings();
+    settings.preferredLanguage = lang;
+    settings.language = lang;
+    try { ZS.setItem(STORAGE_KEY, JSON.stringify(settings)); } catch(_) {}
+    try { ZS.setItem('preferred-language', lang); } catch(_) {}
+    try { ZS.setItem('language', lang); } catch(_) {}
+    try { localStorage.setItem('preferred-language', lang); } catch(_) {}
+    try { localStorage.setItem('language', lang); } catch(_) {}
+    try { document.cookie = 'preferred-language=' + encodeURIComponent(lang) + ';path=/;max-age=31536000;SameSite=Lax'; } catch(_) {}
+  }
+
+  function getLanguage() {
+    const settings = readSettings();
+    const fromSettings = (settings.preferredLanguage || settings.language || '').toLowerCase();
+    if (fromSettings === 'ar' || fromSettings === 'fr' || fromSettings === 'en') return fromSettings;
+    const fromPreferred = (ZS.getItem('preferred-language') || '').toLowerCase();
+    if (fromPreferred === 'ar' || fromPreferred === 'fr' || fromPreferred === 'en') return fromPreferred;
+    const legacy = (ZS.getItem('language') || '').toLowerCase();
+    if (legacy === 'ar' || legacy === 'fr' || legacy === 'en') return legacy;
+    return 'ar';
+  }
+
+  function updateLangLabel(lang) {
+    const label = document.getElementById('current-lang');
+    if (!label) return;
+    const names = { en: 'English', ar: 'العربية', fr: 'Français' };
+    label.textContent = names[lang] || 'العربية';
+  }
+
+  function updateDirection(lang) {
+    document.documentElement.lang = lang;
+    document.documentElement.dir = (lang === 'ar') ? 'rtl' : 'ltr';
+    if (document.body) {
+      if (lang === 'ar') {
+        document.body.classList.add('rtl');
+      } else {
+        document.body.classList.remove('rtl');
+      }
+    }
+  }
+
+  function getSelectElement() {
+    return document.getElementById('headerLanguageSelect') || document.getElementById('headerLanguageSwitcher');
+  }
+
+  function applySelectionOnly(lang) {
+    const select = getSelectElement();
+    if (select && select.value !== lang) select.value = lang;
+    updateLangLabel(lang);
+    updateDirection(lang);
+    if (window.applyUnifiedTranslations) {
+      try { window.applyUnifiedTranslations(lang); } catch (e) {}
+    }
+    if (window.applyLayoutLanguage) {
+      try { window.applyLayoutLanguage(); } catch (e) {}
+    }
+  }
+
+  function onChangeLanguage(lang) {
+    writeLanguage(lang);
+    applySelectionOnly(lang);
+
+    // Broadcast through UnifiedI18N
+    if (window.UnifiedI18N && typeof window.UnifiedI18N.setCurrentLang === 'function') {
+      try { window.UnifiedI18N.setCurrentLang(lang); } catch(e) {}
+    }
+
+    // Call page-level handlers if present
+    if (typeof window.loadLanguage === 'function') {
+      try { window.loadLanguage(); } catch(e) {}
+    } else if (typeof window.changeLanguage === 'function') {
+      try { window.changeLanguage(lang); } catch(e) {}
+    } else if (typeof window.applyTranslations === 'function' && window.applyTranslations !== window.applyUnifiedTranslations) {
+      try { window.applyTranslations(lang); } catch(e) {}
+    }
+
+    // Dispatch event across DOM
+    try {
+      document.dispatchEvent(new CustomEvent('layoutLanguageChanged', { detail: { language: lang } }));
+    } catch(e) {}
+
+    // Flush IndexedDB in background
+    if (window.ZDB && typeof window.ZDB.flush === 'function') {
+      window.ZDB.flush().catch(function() {});
+    }
+
+    // Only reload if the page specifically demands it
+    if (window.__ZERALDA_RELOAD_ON_LANG_CHANGE__ === true) {
+      location.reload();
+    }
+  }
+
+  // Expose globally so inline onchange works
+  window.onHeaderLanguageSwitch = function (value) {
+    var lang = String(value || 'ar').toLowerCase();
+    if (lang !== 'en' && lang !== 'ar' && lang !== 'fr') return;
+    onChangeLanguage(lang);
+  };
+
+  function initLanguageSwitcher() {
+    var select = getSelectElement();
+    if (!select) return;
+
+    var current = getLanguage();
+    applySelectionOnly(current);
+
+    if (!select._hasLangListener) {
+      select._hasLangListener = true;
+      select.addEventListener('change', function (e) {
+        onChangeLanguage(e.target.value);
+      });
+    }
+  }
+
+  window.addEventListener('storage', function (event) {
+    if (!event || (event.key !== 'preferred-language' && event.key !== STORAGE_KEY && event.key !== 'language')) return;
+    applySelectionOnly(getLanguage());
+  });
+
+  function startInit() {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initLanguageSwitcher);
+    } else {
+      initLanguageSwitcher();
+    }
+  }
+
+  // Wait for ZDB (IndexedDB cache) to be ready
+  if (window.ZDB && window.ZDB.ready) {
+    window.ZDB.ready().then(startInit).catch(startInit);
+  } else {
+    startInit();
+  }
+
+  // Re-init when shared layout is loaded asynchronously
+  document.addEventListener('sharedLayoutLoaded', initLanguageSwitcher);
+})();
+
+;

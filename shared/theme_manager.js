@@ -130,7 +130,7 @@
 
   // ── Auto-inject dark_theme.css if missing ──
   try {
-    if (!document.querySelector('link[href*="dark_theme.css"]')) {
+    if (!document.querySelector('link[href*="dark_theme.css"]') && !document.querySelector('link[href*="zeralda_core.bundle.css"]')) {
       var dtLink = document.createElement('link');
       dtLink.rel = 'stylesheet';
       var prefix = (window.location.pathname.indexOf('/modules/') !== -1) ? '../../' : '';

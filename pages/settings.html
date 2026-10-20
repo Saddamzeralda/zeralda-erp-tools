@@ -8,10 +8,8 @@
     <!-- External font removed on settings page to avoid cache-read failures; fallback stack is used. -->
     <title>Settings - Zeralda ERP Tools</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="styles/common_header_layout.css?v=20261012a">
-    <link rel="stylesheet" href="styles/common_header_brand.css">
-    <link rel="stylesheet" href="styles/responsive_global.css">
-    <style>
+    <link rel="stylesheet" href="styles/zeralda_core.bundle.css?v=20261021_b1">
+<style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root{
@@ -498,9 +496,7 @@
     <script src="shared/demo_seed_data.js?v=20261017_v10" defer></script>
     <script src="shared/app_sync.js?v=20261017_v10"></script>
     <script src="shared/role_access_control.js" defer></script>
-    <script src="shared/header_company_switcher.js?v=20261017_v10" defer></script>
-    <script src="shared/settings_advanced.js?v=20261017_v10" defer></script>
-    <link rel="stylesheet" href="styles/dark_theme.css">
+<script src="shared/settings_bundle.js?v=20261021_b1" defer></script>
 </head>
 <body>
     <div id="sharedLayoutMount" data-active-page="settings.html"></div>
@@ -1729,8 +1725,7 @@
     </div><!-- /mainContent -->
 
     <script src="shared/runtime_i18n.js"></script>
-    <script src="shared/header_language_switcher.js?v=20261020_hotfix5" defer></script>
-    <script>
+<script>
         /* ---------------------------
            Storage & defaults
            --------------------------- */
@@ -4482,8 +4477,7 @@
         </script>
 
         <script src="shared/google_sync.js?v=20261017_v10" defer></script>
-        <script src="shared/settings_enhancements.js" defer></script>
-        <script>
+<script>
         // Global toast helper used throughout settings page
         function showToast(msg, type, duration) {
             duration = duration || 3000;
@@ -6526,7 +6520,7 @@
     });
     </script>
 
-        <script src="shared/license_auto.js?v=20261017_v10" defer>
+        <script src="shared/license_bundle.js?v=20261021_b1?v=20261017_v10" defer>
 // ============================================================
 // MOBILE & SMARTPHONE PUSH NOTIFICATIONS HELPERS
 // ============================================================

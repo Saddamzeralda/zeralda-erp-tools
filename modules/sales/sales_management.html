@@ -9,13 +9,8 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap">
     <title data-en="Sales Management - Zeralda ERP Tools" data-ar="إدارة المبيعات - أدوات زيرالدا ERP" data-fr="Gestion des ventes - Outils Zeralda ERP">Sales Management - Zeralda ERP Tools</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="styles/common_header_layout.css?v=20261012a">
-    <link rel="stylesheet" href="styles/common_header_brand.css">
-    <link rel="stylesheet" href="styles/design_tokens.css">
-    <link rel="stylesheet" href="styles/responsive_global.css?v=20261018b">
-    <link rel="stylesheet" href="styles/animated_icons.css">
-    <link rel="stylesheet" href="styles/ocr_unified.css?v=20261012d">
-    <script src="shared/print_engine.js?v=20261018b" defer></script>
+    <link rel="stylesheet" href="styles/zeralda_core.bundle.css?v=20261021_b1">
+<script src="shared/print_engine.js?v=20261018b" defer></script>
     <script src="shared/preview_zoom.js?v=20261018j" defer></script>
     <script src="shared/professional_display_mode.js?v=20261017_v10" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
@@ -1012,12 +1007,8 @@
     <script src="shared/unified_i18n.js?v=20261020_hotfix5" defer></script>
   <script src="shared/app_sync.js?v=20261017_v10" defer></script>
   <script src="shared/role_access_control.js" defer></script>
-  <script src="shared/header_company_switcher.js?v=20261017_v10" defer></script>
-  <script src="shared/header_language_switcher.js?v=20261020_hotfix5" defer></script>
-  <script src="shared/ocr.js?v=20261017_v10"></script>
+<script src="shared/ocr.js?v=20261017_v10"></script>
   <script src="shared/erp_finance_utils.js" defer></script>
-  <script src="modules/sales/sales_intelligence_plus.js" defer></script>
-    <link rel="stylesheet" href="styles/dark_theme.css">
 </head>
 <body>
     <div id="sharedLayoutMount" data-active-page="sales_management.html"></div>
@@ -8032,12 +8023,8 @@ window.openQuotationAnalyzerModal = openQuotationAnalyzerModal;
 
 });
     </script>
-    <script src="modules/sales/sales_invoices_module.js?v=20261017_v10" defer></script>
-    <script src="modules/sales/sales_proformas_module.js?v=20261017_v10" defer></script>
-    <script src="modules/sales/sales_customers_module.js?v=20261017_v10" defer></script>
-    <script src="modules/sales/sales_ui_drafts_module.js?v=20261017_v10" defer></script>
-    <script src="modules/sales/advanced_features.js?v=20261017_v10" defer></script>
-    <script>
+    <script src="modules/sales/sales_bundle.js?v=20261021_b1" defer></script>
+<script>
       console.log('[sales_management] Page loaded. CompanyStorage:', typeof window.CompanyStorage, 'AppSync:', typeof window.AppSync, 'ZS:', typeof window.ZS);
       console.log('[sales_management] onHeaderCompanySwitch:', typeof window.onHeaderCompanySwitch);
       // FIX: defer scripts (sales_invoices_module.js, etc.) execute AFTER this inline
@@ -8181,7 +8168,7 @@ window.openQuotationAnalyzerModal = openQuotationAnalyzerModal;
     <script src="shared/erp_export_utils.js?v=20261017_v10" defer></script>
     <script src="shared/export_panel.js?v=20261017_v10" defer></script>
     <script src="shared/data_guard.js?v=20261017_v10" defer></script>
-        <script src="shared/license_auto.js?v=20261017_v10" defer>
+        <script src="shared/license_bundle.js?v=20261021_b1?v=20261017_v10" defer>
 // ============================================================
 // ADVANCED SALES EXTENSIONS: BL, STATEMENT & SCF ACCOUNTING
 // ============================================================
