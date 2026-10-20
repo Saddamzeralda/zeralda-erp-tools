@@ -2043,6 +2043,10 @@
                             <i class="fas fa-plus"></i>
                             <span data-en="Add Bank Account" data-ar="إضافة حساب بنكي" data-fr="Ajouter Compte">Add Bank Account</span>
                         </button>
+                        <button class="btn btn-warning" onclick="openBankReconciliationModal()" style="background:#f59e0b;color:#fff;" title="إجراء التسوية والمطابقة البنكية الدورية (Rapprochement bancaire)">
+                            <i class="fas fa-scale-balanced"></i>
+                            <span data-en="Bank Reconciliation" data-ar="التسوية البنكية" data-fr="Rapprochement Bancaire">التسوية البنكية</span>
+                        </button>
                         <button class="btn btn-info" onclick="openFinanceOcrModal('bank')" title="Scan RIB, check or bank statement">
                             <i class="fas fa-camera"></i>
                             <span data-en="Scan RIB" data-ar="مسح RIB / كشف حساب" data-fr="Scanner RIB">مسح RIB / كشف حساب</span>
@@ -2294,6 +2298,10 @@
                                 </div>
                             </div>
                             <div class="tax-actions">
+                                <button class="btn btn-warning" type="button" onclick="generateAutoG50()" style="background:#f59e0b; color:#fff;" title="حساب وتوليد استمارة G50 الشهرية آلياً من فواتير المبيعات والمشتريات">
+                                    <i class="fas fa-wand-magic-sparkles"></i>
+                                    <span data-en="Auto G50 Calculator" data-ar="حساب وتوليد G50 آلياً" data-fr="Calcul G50 Automatique">حساب وتوليد G50 آلياً</span>
+                                </button>
                                 <button class="btn btn-success" type="button" onclick="createTaxDeclaration()">
                                     <i class="fas fa-save"></i>
                                     <span data-en="Save Declaration" data-ar="حفظ التصريح" data-fr="Enregistrer">حفظ التصريح</span>
@@ -2866,16 +2874,16 @@
     </div>
 
     <script src="shared/zeralda_db.js?v=20261017_v10"></script>
-    <script src="shared/layout_shell.js?v=20261020_hotfix4" defer></script>
+    <script src="shared/layout_shell.js?v=20261020_hotfix5" defer></script>
     <script src="shared/ai_chat_widget.js?v=20261017_v10" defer></script>
     <script src="shared/storage_adapter.js?v=20261017_v10" defer></script>
     <script src="shared/session_timeout.js" defer></script>
     <script src="shared/company_storage.js?v=20261017_v10"></script>
-    <script src="shared/unified_i18n.js?v=20261020_hotfix4" defer></script>
+    <script src="shared/unified_i18n.js?v=20261020_hotfix5" defer></script>
     <script src="shared/app_sync.js?v=20261017_v10" defer></script>
     <script src="shared/role_access_control.js" defer></script>
     <script src="shared/header_company_switcher.js?v=20261017_v10" defer></script>
-    <script src="shared/header_language_switcher.js?v=20261020_hotfix4" defer></script>
+    <script src="shared/header_language_switcher.js?v=20261020_hotfix5" defer></script>
     <script src="shared/runtime_i18n.js"></script>
     <script>
         // FIX: Guard against zeralda_db.js failing to load
