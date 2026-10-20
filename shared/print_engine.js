@@ -61,7 +61,7 @@
       '.preview-table-wrap{border-radius:0;border:1px solid #cbd5e1;page-break-inside:auto;}' +
       '.preview-table{width:100% !important;border-collapse:collapse !important;font-size:11.5pt !important;page-break-inside:auto !important;break-inside:auto !important;}' +
       '.preview-table th,.preview-table td{text-align:' + align + ';border-color:#cbd5e1;padding:9px 11px !important;font-size:12pt !important;}' +
-      '.preview-hero{background:#1e293b !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}' +
+      '.preview-hero{background:#f8fafc !important;color:#0f172a !important;border-bottom:2px solid #0284c7 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}' +
       '.preview-table th,.preview-summary-item,.preview-notes,.preview-totals-card{-webkit-print-color-adjust:exact;print-color-adjust:exact;}' +
       '.facture-container{box-shadow:none !important;border:0 !important;max-width:100% !important;width:100% !important;min-height:auto !important;max-height:none !important;box-sizing:border-box !important;border-radius:0 !important;overflow:visible !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;padding:8mm 10mm 10mm 10mm !important;margin:0 auto !important;page-break-inside:auto !important;break-inside:auto !important;}' +
       '.facture-container .facture-content-area{padding:12px 0 0 0 !important;box-sizing:border-box !important;}' +

@@ -234,6 +234,8 @@
             nis: found.nis || found.fiscalNis || '0000000000',
             rc: found.rc || found.fiscalRc || '00/00-0000000',
             article: found.article || found.fiscalArticle || found.ai || '00000000000',
+            bp: found.bp || found.companyBP || found.boitePostale || 'BP 123 Zéralda',
+            ag: found.ag || found.agrement || found.companyAG || found.num_ag || found.numAg || found.agreementNumber || '16/0045/2024',
             capital: found.capital || found.capitalSocial || '',
             address: found.address || found.siegeSocial || 'Alger, Algérie',
             phone: found.phone || found.tel || '',
@@ -254,6 +256,8 @@
       nis: '001916000000000',
       rc: '16/00-0123456B20',
       article: '16012345678',
+      bp: 'BP 123 Zéralda',
+      ag: '16/0045/2024',
       capital: '10 000 000 DZD',
       address: 'Zone Industrielle, Alger, Algérie',
       phone: '+213 (0) 23 00 00 00',
@@ -343,6 +347,8 @@
     html += '    <div class="fiscal-chip"><span>NIS / الإحصائي:</span> <strong>' + esc(company.nis) + '</strong></div>';
     html += '    <div class="fiscal-chip"><span>RC / السجل التجاري:</span> <strong>' + esc(company.rc) + '</strong></div>';
     html += '    <div class="fiscal-chip"><span>Art. Imp. / المادة:</span> <strong>' + esc(company.article) + '</strong></div>';
+    html += '    <div class="fiscal-chip"><span>BP / ص.ب:</span> <strong>' + esc(company.bp || 'BP 123 Zéralda') + '</strong></div>';
+    html += '    <div class="fiscal-chip"><span>N° AG (Agrément) / رقم الاعتماد:</span> <strong>' + esc(company.ag || '16/0045/2024') + '</strong></div>';
     if (company.capital) {
       html += '    <div class="fiscal-chip"><span>Capital / رأس المال:</span> <strong>' + esc(company.capital) + '</strong></div>';
     }
