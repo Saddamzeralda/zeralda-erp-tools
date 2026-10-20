@@ -182,8 +182,8 @@
     // ── Floating Mobile In-App Invitation Pill ──────────────────────────────
     showMobilePromptIfNeeded: async function() {
       // Floating banner disabled per user request
-      var banner = document.getElementById('zeraldaMobileNotifBanner');
-      if (banner && banner.parentNode) banner.parentNode.removeChild(banner);
+      var existingBanner = document.getElementById('zeraldaMobileNotifBanner');
+      if (existingBanner && existingBanner.parentNode) existingBanner.parentNode.removeChild(existingBanner);
       return;
 
       // Check if mobile or small screen

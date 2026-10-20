@@ -245,18 +245,22 @@
     if (window.UnifiedI18N && typeof window.UnifiedI18N.applyTranslations === 'function') {
       try { window.UnifiedI18N.applyTranslations(safe); } catch(_) {}
     }
+
     if (window.ZDB && typeof window.ZDB.flush === 'function') {
       window.ZDB.flush().catch(function() {});
     }
-    // Only reload if the page specifically demands it
+
     if (window.__ZERALDA_RELOAD_ON_LANG_CHANGE__ === true) {
       function doReload() { location.reload(); }
       if (window.ZDB && typeof window.ZDB.flush === 'function') {
-        window.ZDB.flush().then(doReload).catch(function () { setTimeout(doReload, 150); });
+        window.ZDB.flush().then(doReload).catch(function () {
+          setTimeout(doReload, 150);
+        });
       } else {
         setTimeout(doReload, 0);
       }
     }
+  }
   window.applyGlobalLanguageSetting = applyGlobalLanguageSetting;
 
   function initHeaderLanguageSelector() {
