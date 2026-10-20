@@ -308,6 +308,21 @@
     return data;
   }
 
+  async function triggerDailySyncNow() {
+    try {
+      if (window.AppSync && typeof window.AppSync.syncNow === 'function') {
+        return await window.AppSync.syncNow();
+      }
+      if (window.syncPreferencesToServer && typeof window.syncPreferencesToServer === 'function') {
+        return await window.syncPreferencesToServer();
+      }
+      return { ok: true, status: 'idle' };
+    } catch (e) {
+      console.warn('[share_sync_hub] triggerDailySyncNow error:', e);
+      return { ok: false, error: e.message };
+    }
+  }
+
   window.ZeraldaShareHub = {
     chooseChannel: chooseChannel,
     openEmail: openEmail,

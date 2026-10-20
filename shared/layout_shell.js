@@ -799,7 +799,7 @@
     if (window.ZeraldaShareHub) return;
     if (document.querySelector('script[data-share-sync-hub="1"]')) return;
     var s = document.createElement('script');
-    s.src = 'shared/share_sync_hub.js?v=20260306a';
+    s.src = 'shared/share_sync_hub.js?v=20261020_hotfix2';
     s.defer = true;
     s.setAttribute('data-share-sync-hub', '1');
     document.head.appendChild(s);
