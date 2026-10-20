@@ -7360,6 +7360,9 @@ function showInvoiceNotification(inv){
       updateDateTime();
     }
   });
+  document.addEventListener("layoutLanguageChanged", function(e){
+    loadLanguage();
+  });
 renderMonthlySalesChartFromData();
 
 // ────────────────────────────────────────────────────────────────────────

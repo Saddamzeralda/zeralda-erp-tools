@@ -1650,6 +1650,13 @@
                 }
             });
 
+            document.addEventListener("layoutLanguageChanged", function(e) {
+                var newLang = (e && e.detail && e.detail.language) ? e.detail.language : null;
+                if (newLang && newLang !== _currentLang) {
+                    setLanguage(newLang, false);
+                }
+            });
+
             // Setup barcode scanner listener
             var barcodeInp = document.getElementById('barcodeInput');
             if (barcodeInp) {

@@ -14,9 +14,12 @@
     const settings = readSettings();
     settings.preferredLanguage = lang;
     settings.language = lang;
-    ZS.setItem(STORAGE_KEY, JSON.stringify(settings));
-    ZS.setItem('preferred-language', lang);
-    ZS.setItem('language', lang);
+    try { ZS.setItem(STORAGE_KEY, JSON.stringify(settings)); } catch(_) {}
+    try { ZS.setItem('preferred-language', lang); } catch(_) {}
+    try { ZS.setItem('language', lang); } catch(_) {}
+    try { localStorage.setItem('preferred-language', lang); } catch(_) {}
+    try { localStorage.setItem('language', lang); } catch(_) {}
+    try { document.cookie = 'preferred-language=' + encodeURIComponent(lang) + ';path=/;max-age=31536000;SameSite=Lax'; } catch(_) {}
   }
 
   function getLanguage() {
@@ -27,14 +30,14 @@
     if (fromPreferred === 'ar' || fromPreferred === 'fr' || fromPreferred === 'en') return fromPreferred;
     const legacy = (ZS.getItem('language') || '').toLowerCase();
     if (legacy === 'ar' || legacy === 'fr' || legacy === 'en') return legacy;
-    return 'en';
+    return 'ar';
   }
 
   function updateLangLabel(lang) {
     const label = document.getElementById('current-lang');
     if (!label) return;
     const names = { en: 'English', ar: 'العربية', fr: 'Français' };
-    label.textContent = names[lang] || 'English';
+    label.textContent = names[lang] || 'العربية';
   }
 
   function updateDirection(lang) {
@@ -61,28 +64,48 @@
     if (window.applyUnifiedTranslations) {
       try { window.applyUnifiedTranslations(lang); } catch (e) {}
     }
+    if (window.applyLayoutLanguage) {
+      try { window.applyLayoutLanguage(); } catch (e) {}
+    }
   }
 
   function onChangeLanguage(lang) {
     writeLanguage(lang);
     applySelectionOnly(lang);
-    // Wait for ZDB (IndexedDB) to flush the write before reloading.
-    // Without this, the async IndexedDB write may not complete before
-    // the reload and the language change is lost.
-    function doReload() { location.reload(); }
+
+    // Broadcast through UnifiedI18N
+    if (window.UnifiedI18N && typeof window.UnifiedI18N.setCurrentLang === 'function') {
+      try { window.UnifiedI18N.setCurrentLang(lang); } catch(e) {}
+    }
+
+    // Call page-level handlers if present
+    if (typeof window.loadLanguage === 'function') {
+      try { window.loadLanguage(); } catch(e) {}
+    } else if (typeof window.changeLanguage === 'function') {
+      try { window.changeLanguage(lang); } catch(e) {}
+    } else if (typeof window.applyTranslations === 'function' && window.applyTranslations !== window.applyUnifiedTranslations) {
+      try { window.applyTranslations(lang); } catch(e) {}
+    }
+
+    // Dispatch event across DOM
+    try {
+      document.dispatchEvent(new CustomEvent('layoutLanguageChanged', { detail: { language: lang } }));
+    } catch(e) {}
+
+    // Flush IndexedDB in background
     if (window.ZDB && typeof window.ZDB.flush === 'function') {
-      window.ZDB.flush().then(doReload).catch(function () {
-        setTimeout(doReload, 150);
-      });
-    } else {
-      setTimeout(doReload, 0);
+      window.ZDB.flush().catch(function() {});
+    }
+
+    // Only reload if the page specifically demands it
+    if (window.__ZERALDA_RELOAD_ON_LANG_CHANGE__ === true) {
+      location.reload();
     }
   }
 
-  // Expose globally so the inline onchange in layout_shell.html works
-  // (same pattern as onHeaderCompanySwitch)
+  // Expose globally so inline onchange works
   window.onHeaderLanguageSwitch = function (value) {
-    var lang = String(value || 'en').toLowerCase();
+    var lang = String(value || 'ar').toLowerCase();
     if (lang !== 'en' && lang !== 'ar' && lang !== 'fr') return;
     onChangeLanguage(lang);
   };

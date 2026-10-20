@@ -241,20 +241,22 @@
     // the correct RTL/LTR layout from the first paint.
     applyLayoutLanguage();
 
-    // Wait for ZDB to flush pending IndexedDB writes, THEN reload.
-    // Without this, the async IndexedDB write may not complete before the
-    // reload, and the new language is lost (cache reloads from stale IDB).
-    function doReload() { location.reload(); }
-    if (window.ZDB && typeof window.ZDB.flush === 'function') {
-      window.ZDB.flush().then(doReload).catch(function () {
-        // Fallback: wait 150ms then reload (IDB write usually completes by then)
-        setTimeout(doReload, 150);
-      });
-    } else {
-      // No ZDB — reload immediately
-      setTimeout(doReload, 0);
+    // In-place language transition without forced reload
+    if (window.UnifiedI18N && typeof window.UnifiedI18N.applyTranslations === 'function') {
+      try { window.UnifiedI18N.applyTranslations(safe); } catch(_) {}
     }
-  }
+    if (window.ZDB && typeof window.ZDB.flush === 'function') {
+      window.ZDB.flush().catch(function() {});
+    }
+    // Only reload if the page specifically demands it
+    if (window.__ZERALDA_RELOAD_ON_LANG_CHANGE__ === true) {
+      function doReload() { location.reload(); }
+      if (window.ZDB && typeof window.ZDB.flush === 'function') {
+        window.ZDB.flush().then(doReload).catch(function () { setTimeout(doReload, 150); });
+      } else {
+        setTimeout(doReload, 0);
+      }
+    }
   window.applyGlobalLanguageSetting = applyGlobalLanguageSetting;
 
   function initHeaderLanguageSelector() {
