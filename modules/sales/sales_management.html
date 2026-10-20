@@ -3148,7 +3148,7 @@ function getActiveCompanyFromSettings(){
       if(found){
         return {
           ...found,
-          bp: found.bp || found.companyBP || found.boitePostale || 'BP 123 Zéralda',
+          bp: found.bp || found.companyBP || found.boitePostale || '',
           ag: found.ag || found.agrement || found.companyAG || found.num_ag || found.numAg || found.agreementNumber || '16/0045/2024'
         };
       }
@@ -3165,7 +3165,7 @@ function getActiveCompanyFromSettings(){
         rc: old.rc || "",
         nif: old.nif || "",
         nis: old.nis || "",
-        bp: old.bp || old.companyBP || old.boitePostale || "BP 123 Zéralda",
+        bp: old.bp || old.companyBP || old.boitePostale || "",
         ag: old.ag || old.agrement || old.companyAG || old.num_ag || old.numAg || old.agreementNumber || "16/0045/2024",
         bankName: old.bankName || "",
         bankAccount: old.bankAccount || old.accountNumber || "",
@@ -3193,7 +3193,7 @@ function buildCompanyInfoHTML(){
   const nis = c && c.nis ? c.nis : "";
   const nin = c && c.nin ? c.nin : "";
   const ai = c && c.ai ? c.ai : (c && c.artNumber ? c.artNumber : "");
-  const bp = c && (c.bp || c.companyBP || c.boitePostale) ? (c.bp || c.companyBP || c.boitePostale) : "BP 123 Zéralda";
+  const bp = c && (c.bp || c.companyBP || c.boitePostale) ? String(c.bp || c.companyBP || c.boitePostale).trim() : "";
   const ag = c && (c.ag || c.agrement || c.companyAG || c.num_ag || c.numAg) ? (c.ag || c.agrement || c.companyAG || c.num_ag || c.numAg) : "16/0045/2024";
   const artNumber = c && c.artNumber ? c.artNumber : "";
   const vat = c && c.vat ? c.vat : "";
@@ -5653,7 +5653,7 @@ function buildFactureHTML(opts){
   var compRc = company.rc || '';
   var compNif = company.nif || '';
   var compNis = company.nis || '';
-  var compBp = company.bp || company.companyBP || company.boitePostale || 'BP 123 Zéralda';
+  var compBp = String(company.bp || company.companyBP || company.boitePostale || '').trim();
   var compAg = company.ag || company.agrement || company.companyAG || company.num_ag || company.numAg || company.agreementNumber || '16/0045/2024';
   var compArt = company.artNumber || company.art || '';
   var compBank = company.bankName || '';
@@ -5795,7 +5795,12 @@ function buildFactureHTML(opts){
   if(compRc) h += '| RC: <strong>' + escapeHTML(compRc) + '</strong> ';
   if(compNis) h += '<br>NIS: <strong>' + escapeHTML(compNis) + '</strong> ';
   if(compArt) h += '| Art: <strong>' + escapeHTML(compArt) + '</strong>';
-  h += '<br>BP: <strong>' + escapeHTML(compBp || 'BP 123 Zéralda') + '</strong> | N° AG (Agrément): <strong>' + escapeHTML(compAg || '16/0045/2024') + '</strong>';
+  var compExtraFiscal = [];
+  if (compBp) compExtraFiscal.push('BP: <strong>' + escapeHTML(compBp) + '</strong>');
+  if (compAg) compExtraFiscal.push('N° AG (Agrément): <strong>' + escapeHTML(compAg) + '</strong>');
+  if (compExtraFiscal.length > 0) {
+    h += '<br>' + compExtraFiscal.join(' | ');
+  }
   if(compRib) h += '<br>RIB: <strong>' + escapeHTML(compRib) + '</strong>' + (compBank ? (' (' + escapeHTML(compBank) + ')') : '');
   h += '</div>';
   h += '</div>';
