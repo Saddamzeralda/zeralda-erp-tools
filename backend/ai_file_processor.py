@@ -2611,7 +2611,7 @@ def _fix_invoice_supplier_customer(analysis: Dict, text: str) -> Dict:
                 return analysis
 
         # Fallback 1: database/kv_store.json
-        _kv_path = os.path.join(project_root, 'database', 'kv_store.json')
+        _kv_path = os.path.join(project_root, 'data', 'kv_store.json')
         if os.path.exists(_kv_path):
             with open(_kv_path, 'r', encoding='utf-8') as _f:
                 _kv = _json.load(_f)
@@ -2623,7 +2623,7 @@ def _fix_invoice_supplier_customer(analysis: Dict, text: str) -> Dict:
                 return analysis
 
         # Fallback 2: database/zeralda-system-settings.json
-        _sys_path = os.path.join(project_root, 'database', 'zeralda-system-settings.json')
+        _sys_path = os.path.join(project_root, 'data', 'zeralda-system-settings.json')
         if os.path.exists(_sys_path):
             with open(_sys_path, 'r', encoding='utf-8') as _f:
                 _sys = _json.load(_f)
