@@ -196,7 +196,7 @@ _VISION_FALLBACK_ORDER = ['gemini', 'groq']
 def _try_fallback_vision(file_base64: str, mime_type: str, prompt: str, system_prompt: str = '', json_mode: bool = False, exclude_provider: str = '') -> Optional[Dict[str, Any]]:
     """Try fallback vision providers when the primary provider fails with quota/error."""
     from app.services.cloud_ai_service import _read_ai_settings, chat_with_vision, VISION_MODELS, PROVIDER_CONFIGS
-    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     ai_cfg = _read_ai_settings(project_root)
     for fb_provider in _VISION_FALLBACK_ORDER:
         if fb_provider == exclude_provider:
@@ -250,7 +250,7 @@ def _try_fallback_vision(file_base64: str, mime_type: str, prompt: str, system_p
 def _provider_supports_vision() -> tuple:
     """Check if the current AI provider supports vision. Returns (supports, provider_name, reason)."""
     try:
-        project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         from app.services.cloud_ai_service import _read_ai_settings, _resolve_provider, VISION_MODELS, PROVIDER_CONFIGS
         _ai_cfg = _read_ai_settings(project_root)
         _provider = _resolve_provider(_ai_cfg)
@@ -980,7 +980,7 @@ def _analyze_with_ai(
         # Gemini Flash is ~5x faster than OpenRouter free models for text analysis
         try:
             from app.services.cloud_ai_service import _openai_compatible_chat, _read_ai_settings
-            project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
             _ai_cfg = _read_ai_settings(project_root)
             _gemini_api_key = _ai_cfg.get('gemini_api_key') or os.getenv('GEMINI_API_KEY', '')
             _gemini_model = _ai_cfg.get('gemini_model') or 'gemini-3.6-flash'
@@ -2159,7 +2159,7 @@ def _chat_with_fallback(messages: List[Dict], system_prompt: str, json_mode: boo
     # 1) DeepSeek (fast, good for structured extraction)
     try:
         from app.services.cloud_ai_service import _openai_compatible_chat, _read_ai_settings
-        project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         _ai_cfg = _read_ai_settings(project_root)
         _ds_api_key = _ai_cfg.get('deepseek_api_key') or os.getenv('DEEPSEEK_API_KEY', '')
         if _ds_api_key:
@@ -2564,7 +2564,7 @@ def _fix_invoice_supplier_customer(analysis: Dict, text: str) -> Dict:
     # Last resort: use the company name from system store as the customer
     # (the invoice is addressed TO this company)
     try:
-        project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         import json as _json
 
         def _extract_company_name(_store_data):

@@ -17,14 +17,17 @@ from datetime import datetime, timedelta
 from typing import Optional, Dict, List, Tuple, Any
 
 # Data directories
-_BASE_DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data')
+from pathlib import Path
+from app.services import storage
+
+_BASE_DATA_DIR = str(storage.DATA_DIR)
 DATA_DIR = os.getenv("DATA_DIR", _BASE_DATA_DIR)
 USERS_FILE = os.path.join(DATA_DIR, 'users.json')
 SESSIONS_FILE = os.path.join(DATA_DIR, 'sessions.json')
 LOGIN_ATTEMPTS_FILE = os.path.join(DATA_DIR, 'login_attempts.json')
 
 os.makedirs(DATA_DIR, exist_ok=True)
-_SEED_AUTH_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data_defaults')
+_SEED_AUTH_DIR = str(storage._SEED_DIR) if hasattr(storage, '_SEED_DIR') else os.path.join(str(storage._BASE_DIR), 'data_defaults')
 if not os.path.exists(_SEED_AUTH_DIR):
     _SEED_AUTH_DIR = _BASE_DATA_DIR
 

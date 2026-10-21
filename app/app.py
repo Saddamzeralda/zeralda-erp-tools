@@ -116,7 +116,7 @@ def create_app() -> FastAPI:
         )
         if is_trustworthy_context:
             # 'unsafe-none' allows Google Identity Services (GSI) and OAuth popups to check window.closed without COOP errors
-            response.headers["Cross-Origin-Opener-Policy"] = "same-origin-allow-popups"
+            response.headers["Cross-Origin-Opener-Policy"] = "unsafe-none"
         if is_https:
             response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         # CSP for HTML pages

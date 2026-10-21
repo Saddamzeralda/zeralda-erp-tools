@@ -16,6 +16,9 @@ import urllib.request
 import urllib.error
 import urllib.parse
 from typing import Any, Dict, List, Optional, Tuple
+from pathlib import Path
+
+_BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
 _DPAPI_PREFIX = 'DPAPI:'
@@ -575,7 +578,11 @@ PROVIDER_CONFIGS: Dict[str, Dict[str, Any]] = {
 
 
 def _read_ai_settings(project_root: str) -> Dict[str, Any]:
-    ai_settings_file = os.path.join(project_root, 'data', 'ai_settings.json')
+    try:
+        from app.services import storage
+        ai_settings_file = str(storage.DATA_DIR / 'ai_settings.json')
+    except Exception:
+        ai_settings_file = os.path.join(str(_BASE_DIR), 'data', 'ai_settings.json')
     try:
         with open(ai_settings_file, 'r', encoding='utf-8-sig') as f:
             cfg = json.load(f)
@@ -989,7 +996,7 @@ def _try_fallback_providers(ai_cfg: Dict[str, Any], messages: List[Dict], system
 
 
 def chat_with_assistant_ai(messages: List[Dict], system_prompt: Optional[str] = None, provider_override: Optional[str] = None, max_tokens: Optional[int] = None, temperature: Optional[float] = None) -> Dict[str, Any]:
-    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    project_root = str(_BASE_DIR)
     ai_cfg = _read_ai_settings(project_root)
     if provider_override and provider_override in PROVIDER_CONFIGS:
         cfg = PROVIDER_CONFIGS[provider_override]
@@ -1062,7 +1069,7 @@ def chat_with_vision(image_base64: str, mime_type: str, prompt: str, system_prom
     json_mode=True enables structured JSON output (Gemini responseMimeType=application/json).
     provider_override: force a specific provider (for fallback vision calls).
     """
-    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    project_root = str(_BASE_DIR)
     ai_cfg = _read_ai_settings(project_root)
     if provider_override and provider_override in PROVIDER_CONFIGS:
         cfg = PROVIDER_CONFIGS[provider_override]
@@ -1253,7 +1260,7 @@ def _gemini_vision(api_key: str, model: str, image_b64: str, mime_type: str, pro
 
 
 def get_cloud_status() -> Dict[str, Any]:
-    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    project_root = str(_BASE_DIR)
     ai_cfg = _read_ai_settings(project_root)
     provider_info = _get_provider_config(ai_cfg)
     provider = provider_info['provider']
@@ -1378,7 +1385,7 @@ def chat_with_assistant_ai_stream(messages: List[Dict], system_prompt: Optional[
                   {'type': 'done', 'text': full_reply, 'model': '...', 'provider': '...'} when complete,
                   {'type': 'error', 'error': '...'} on failure.
     """
-    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    project_root = str(_BASE_DIR)
     ai_cfg = _read_ai_settings(project_root)
     provider_info = _get_provider_config(ai_cfg)
     provider = provider_info['provider']

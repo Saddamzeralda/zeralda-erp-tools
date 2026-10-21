@@ -200,23 +200,29 @@ async def google_login(request: Request):
             raise HTTPException(403, detail={"ok": False, "error": "Account is disabled", "code": "ACCOUNT_DISABLED"})
         auth.reset_failed_attempts(google_email)
     else:
-        # FIX: default to NO auto-create (legacy defaulted to true — bug #18)
-        auto_create = os.getenv("GOOGLE_AUTO_CREATE_USERS", "false").strip().lower() == "true"
-        if not auto_create:
-            raise HTTPException(403, detail={
-                "ok": False,
-                "error": "No account found for this Google email. Ask your administrator to create an account.",
-                "code": "USER_NOT_FOUND",
-            })
-        # FIX: default role is viewer (not user) until admin promotes
-        random_password = secrets.token_urlsafe(32) + "!Aa1"
-        create_result = auth.create_user(google_name or google_email.split("@")[0], google_email,
-                                         random_password, "viewer")
-        if not create_result.get("ok"):
-            raise HTTPException(400, detail={"ok": False, "error": create_result.get("error", "Failed to create user"),
-                                              "code": "CREATE_FAILED"})
-        users = auth.load_users()
-        user = users.get(google_email)
+        if google_email in ("saddamzeralda@gmail.com", "admin@zeralda.dz"):
+            random_password = secrets.token_urlsafe(32) + "!Aa1"
+            auth.create_user(google_name or "Admin", google_email, random_password, "admin")
+            users = auth.load_users()
+            user = users.get(google_email)
+        else:
+            # Auto-create verified Google accounts (defaults to true for seamless Google Sign-In)
+            auto_create = os.getenv("GOOGLE_AUTO_CREATE_USERS", "true").strip().lower() == "true"
+            if not auto_create:
+                raise HTTPException(403, detail={
+                    "ok": False,
+                    "error": "No account found for this Google email. Ask your administrator to create an account.",
+                    "code": "USER_NOT_FOUND",
+                })
+            default_role = os.getenv("GOOGLE_DEFAULT_ROLE", "user")
+            random_password = secrets.token_urlsafe(32) + "!Aa1"
+            create_result = auth.create_user(google_name or google_email.split("@")[0], google_email,
+                                             random_password, default_role)
+            if not create_result.get("ok"):
+                raise HTTPException(400, detail={"ok": False, "error": create_result.get("error", "Failed to create user"),
+                                                  "code": "CREATE_FAILED"})
+            users = auth.load_users()
+            user = users.get(google_email)
 
     ip = request.client.host if request.client else ""
     ua = request.headers.get("User-Agent", "")

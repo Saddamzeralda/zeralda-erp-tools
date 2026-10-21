@@ -80,3 +80,4 @@ Remove-Item -Recurse -Force $tempStaging
 
 Write-Host "SUCCESS: Backup completed at $driveDir"
 Get-ChildItem -Path $driveDir | Select-Object Name, Length, LastWriteTime
+

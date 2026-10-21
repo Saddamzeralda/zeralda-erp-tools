@@ -7,7 +7,9 @@ import datetime
 from pathlib import Path
 
 # Path to keys database
-_BASE_DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data')
+from app.services import storage
+
+_BASE_DATA_DIR = str(storage.DATA_DIR)
 DATA_DIR = os.getenv("DATA_DIR", _BASE_DATA_DIR)
 KEYS_FILE = os.path.join(DATA_DIR, 'keys.json')
 

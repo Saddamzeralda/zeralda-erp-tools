@@ -19,6 +19,7 @@ import tempfile
 import threading
 import zipfile
 from typing import Dict, List, Optional
+from pathlib import Path
 
 _logger = logging.getLogger('zeralda.ocr_service')
 if not _logger.handlers:
@@ -33,7 +34,8 @@ _MAX_BASE64_BYTES = 65 * 1024 * 1024
 _MAX_DECODED_BYTES = 85 * 1024 * 1024
 
 # Local bundled Tesseract paths (lazy-configured on first use, not at import).
-_TESS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'tools', 'tesseract')
+_BASE_DIR = Path(__file__).resolve().parent.parent.parent
+_TESS_DIR = str(_BASE_DIR / 'tools' / 'tesseract')
 _TESS_BIN = os.path.join(_TESS_DIR, 'tesseract.exe')
 _TESS_DATA = os.path.join(_TESS_DIR, 'tessdata')
 _tess_env_configured = False
@@ -425,7 +427,7 @@ def _configure_tesseract_cmd():
                     break
         # Local bundled tools directory
         if not cmd:
-            _local = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'tools', 'tesseract', 'tesseract.exe')
+            _local = str(_BASE_DIR / 'tools' / 'tesseract' / 'tesseract.exe')
             if os.path.isfile(_local):
                 cmd = _local
         # Standard Windows installation paths
