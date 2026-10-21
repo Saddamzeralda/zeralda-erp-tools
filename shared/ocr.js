@@ -136,6 +136,60 @@
     return m ? String(m[1] || '').trim() : '';
   }
 
+  function extractAmountInWords(text) {
+    var raw = String(text || '');
+    if (!raw) return '';
+    var patterns = [
+      /(?:أوقفت\s+هذه\s+الفاتورة\s+عند\s+مبلغ\s+وقدره|أوقف\s+هذا\s+السند\s+عند\s+مبلغ\s+وقدره|المبلغ\s+بالحروف|المبلغ\s+بالأحرف|مبلغا\s+وقدره|مبلغ\s+وقدره|فقط\s+وقدره)\s*[:\-]?\s*([^\n\r.]+)/i,
+      /(?:arr[eê]t[eé]e?\s+(?:la\s+pr[eé]sente\s+facture|le\s+pr[eé]sent\s+bon|le\s+pr[eé]sent\s+devis)?\s+[aà]\s+la\s+somme\s+de|la\s+somme\s+de|soit\s+la\s+somme\s+de|montant\s+en\s+lettres?)\s*[:\-]?\s*([^\n\r.]+)/i
+    ];
+    for (var i = 0; i < patterns.length; i++) {
+      var m = raw.match(patterns[i]);
+      if (m && m[1]) {
+        var s = String(m[1]).trim();
+        if (s.length >= 4 && !s.replace(/\s+/g, '').match(/^\d+$/)) return s.substring(0, 160);
+      }
+    }
+    return '';
+  }
+
+  function detectDocumentType(text) {
+    var raw = String(text || '').toLowerCase();
+    if (!raw) return { type: 'universal', label_ar: 'مستند عام', label_fr: 'Document', confidence: 0 };
+    var scores = { invoice: 0, delivery_note: 0, purchase_order: 0, proforma: 0, receipt: 0, cheque: 0, tax_return: 0, commercial_register: 0, id_card: 0, tender: 0 };
+
+    if (raw.indexOf('bon de livraison') > -1 || raw.indexOf('وصل تسليم') > -1 || raw.indexOf('bl n°') > -1) scores.delivery_note += 6;
+    if (raw.indexOf('bon de commande') > -1 || raw.indexOf('سند طلب') > -1 || raw.indexOf('bc n°') > -1) scores.purchase_order += 6;
+    if (raw.indexOf('facture proforma') > -1 || raw.indexOf('devis') > -1 || raw.indexOf('عرض أسعار') > -1 || raw.indexOf('فاتورة شكلية') > -1) scores.proforma += 6;
+    if (raw.indexOf('chèque') > -1 || raw.indexOf('cheque') > -1 || raw.indexOf('شيك') > -1 || raw.indexOf('payez contre') > -1) scores.cheque += 7;
+    if (raw.indexOf('g50') > -1 || raw.indexOf('تصريح جبائي') > -1 || raw.indexOf('direction des impôts') > -1) scores.tax_return += 8;
+    if (raw.indexOf('registre du commerce') > -1 || raw.indexOf('مستخرج السجل التجاري') > -1 || raw.indexOf('cnrc') > -1) scores.commercial_register += 7;
+    if (raw.indexOf('carte nationale') > -1 || raw.indexOf('بطاقة التعريف الوطنية') > -1 || raw.indexOf('republique algerienne') > -1) scores.id_card += 7;
+    if (raw.indexOf('appel d\'offres') > -1 || raw.indexOf('مناقصة') > -1 || raw.indexOf('دفتر الشروط') > -1) scores.tender += 6;
+    if (raw.indexOf('facture') > -1 || raw.indexOf('فاتورة') > -1 || raw.indexOf('net à payer') > -1 || raw.indexOf('total ttc') > -1) scores.invoice += 4;
+    if (raw.indexOf('tva') > -1 || raw.indexOf('الرسم على القيمة') > -1) scores.invoice += 2;
+    if (raw.indexOf('ticket de caisse') > -1 || raw.indexOf('reçu') > -1 || raw.indexOf('تذكرة صندوق') > -1) scores.receipt += 4;
+
+    var best = 'invoice', maxS = 0;
+    for (var k in scores) { if (scores[k] > maxS) { maxS = scores[k]; best = k; } }
+    if (maxS < 3) return { type: 'universal', label_ar: 'مستند تجاري', label_fr: 'Document Commercial', confidence: 0.3 };
+
+    var meta = {
+      invoice: ['فاتورة تجارية', 'Facture Commerciale'],
+      delivery_note: ['وصل تسليم (BL)', 'Bon de Livraison (BL)'],
+      purchase_order: ['سند طلب (BC)', 'Bon de Commande (BC)'],
+      proforma: ['فاتورة شكلية / عرض أسعار', 'Facture Proforma / Devis'],
+      receipt: ['وصل دفع / تذكرة صندوق', 'Reçu / Ticket de Caisse'],
+      cheque: ['شيك بنكي / بريدي', 'Chèque Bancaire / Postal'],
+      tax_return: ['تصريح جبائي G50', 'Déclaration Fiscale G50'],
+      commercial_register: ['مستخرج السجل التجاري', 'Registre du Commerce (CNRC)'],
+      id_card: ['وثيقة هوية رسمية', 'Pièce d\'Identité (CNI)'],
+      tender: ['إعلان مناقصة / استشارة', 'Appel d\'Offres / Consultation']
+    };
+    var m = meta[best] || ['مستند عام', 'Document'];
+    return { type: best, label_ar: m[0], label_fr: m[1], confidence: 0.95 };
+  }
+
   function extractCustomerName(text) {
     var raw = String(text || '');
     if (!raw) return '';
@@ -1150,6 +1204,11 @@
       var ext = global.OcrFieldExtractors || {};
       var raw = normalizeArabicOcrText(text || '');
       var fields = (payload.analysis && payload.analysis.fields) || {};
+      var docTypeMeta = detectDocumentType(raw);
+      var amountInWords = payload.amountInWords || fields.amount_in_words || (ext.extractAmountInWords ? ext.extractAmountInWords(raw) : '');
+      if (!amountInWords && total > 0 && typeof window !== 'undefined' && window.ZeraldaPrinter && window.ZeraldaPrinter.Tafqeet) {
+        try { amountInWords = window.ZeraldaPrinter.Tafqeet.toWords(total, self.getLang()); } catch(_) {}
+      }
 
       // 1. Separate Customer and Supplier carefully
       var customerName = payload.customer || fields.customer_name || fields.customer || '';
@@ -1494,6 +1553,9 @@
         city: city,
         items: items,
         totals: { subtotal: subtotal, vat: vat, timbre: timbre, discount: discount, total: total },
+        documentType: docTypeMeta.type,
+        documentTypeLabel: (self.getLang() === 'ar' ? docTypeMeta.label_ar : docTypeMeta.label_fr),
+        amountInWords: amountInWords,
         subtotal: subtotal,
         vat: vat,
         timbre: timbre,

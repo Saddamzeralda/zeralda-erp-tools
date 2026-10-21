@@ -2227,9 +2227,22 @@ def _regex_invoice_extract(text: str) -> Optional[Dict[str, Any]]:
     if not fields.get('supplier_name') and not fields.get('total') and not line_items:
         return None
 
+    from app.services.ocr_service import extract_amount_in_words, tafqeet_arabic, detect_document_type
+
+    # Extract or generate legal amount in words (Tafqeet)
+    in_words = extract_amount_in_words(text)
+    if not in_words and fields.get('total'):
+        in_words = tafqeet_arabic(fields['total'])
+    if in_words:
+        fields['amount_in_words'] = in_words
+
+    doc_classification = detect_document_type(text)
+
     return {
-        'document_type': 'invoice',
-        'confidence': 0.5,
+        'document_type': doc_classification.get('type', 'invoice'),
+        'document_type_label_ar': doc_classification.get('label_ar', 'فاتورة تجارية'),
+        'document_type_label_fr': doc_classification.get('label_fr', 'Facture Commerciale'),
+        'confidence': doc_classification.get('confidence', 0.5),
         'fields': fields,
         'line_items': line_items,
         'extraction_method': 'regex'

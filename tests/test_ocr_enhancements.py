@@ -1,4 +1,4 @@
-"""Unit tests for OCR precision improvements and Arabic language normalization."""
+"""Unit tests for OCR precision improvements, Arabic normalization, Tafqeet, and Document Classification."""
 
 import sys
 import unittest
@@ -12,7 +12,10 @@ from app.services.ocr_service import (
     normalize_arabic_ocr_text,
     _otsu_threshold,
     _text_quality,
-    _resolve_safe_lang
+    _resolve_safe_lang,
+    tafqeet_arabic,
+    extract_amount_in_words,
+    detect_document_type
 )
 from app.services.ai_file_processor import (
     _extract_arabic_textual_date,
@@ -73,6 +76,44 @@ class TestOcrEnhancements(unittest.TestCase):
         extracted_nov = _extract_arabic_textual_date(sample_nov)
         self.assertEqual(extracted_nov, "2026-11-01")
 
+    def test_tafqeet_arabic(self):
+        words_125k = tafqeet_arabic(125000.0)
+        self.assertIn("مائة وخمسة وعشرون ألف", words_125k)
+        self.assertIn("دينار جزائري", words_125k)
+        self.assertIn("فقط لا غير", words_125k)
+
+        words_fraction = tafqeet_arabic(1500.50)
+        self.assertIn("ألف وخمسمائة", words_fraction)
+        self.assertIn("سنتيم", words_fraction)
+
+    def test_extract_amount_in_words(self):
+        arabic_sample = "المجموع الإجمالي: 120000.00 دج\nأوقفت هذه الفاتورة عند مبلغ وقدره مائة وعشرون ألف دينار جزائري فقط لا غير"
+        in_words = extract_amount_in_words(arabic_sample)
+        self.assertIsNotNone(in_words)
+        self.assertIn("مائة وعشرون ألف", in_words)
+
+        french_sample = "Montant TTC : 50000 DA\nArrêtée la présente facture à la somme de cinquante mille dinars algériens."
+        in_words_fr = extract_amount_in_words(french_sample)
+        self.assertIsNotNone(in_words_fr)
+        self.assertIn("cinquante mille dinars", in_words_fr)
+
+    def test_detect_document_type(self):
+        doc_inv = "FACTURE N° 2026-001\nDoit: Client SARL\nTVA 19% Total TTC: 50000 DA"
+        meta_inv = detect_document_type(doc_inv)
+        self.assertEqual(meta_inv["type"], "invoice")
+
+        doc_bl = "BON DE LIVRAISON N° BL-884\nLieu de livraison: Alger\nSignature du réceptionnaire"
+        meta_bl = detect_document_type(doc_bl)
+        self.assertEqual(meta_bl["type"], "delivery_note")
+
+        doc_bc = "BON DE COMMANDE N° BC-104\nFournisseur: Entreprise ABC"
+        meta_bc = detect_document_type(doc_bc)
+        self.assertEqual(meta_bc["type"], "purchase_order")
+
+        doc_chq = "Payez contre ce chèque non endossable la somme de cent mille dinars\nBanque BNA"
+        meta_chq = detect_document_type(doc_chq)
+        self.assertEqual(meta_chq["type"], "cheque")
+
     def test_regex_invoice_fiscal_breakdown(self):
         invoice_doc = """
         شركة التوزيع الحديثة
@@ -88,6 +129,7 @@ class TestOcrEnhancements(unittest.TestCase):
         الرسم على القيمة المضافة: 19 000,00 DA
         حق الطابع: 1 000,00 DA
         المجموع الإجمالي: 120 000,00 DA
+        أوقفت هذه الفاتورة عند مبلغ وقدره مائة وعشرون ألف دينار جزائري
         """
         extracted = _regex_invoice_extract(invoice_doc)
         self.assertIsNotNone(extracted)
@@ -98,6 +140,8 @@ class TestOcrEnhancements(unittest.TestCase):
         self.assertEqual(fields.get("vat"), 19000.0)
         self.assertEqual(fields.get("timbre"), 1000.0)
         self.assertEqual(fields.get("total"), 120000.0)
+        self.assertIn("مائة وعشرون ألف", fields.get("amount_in_words", ""))
+        self.assertEqual(extracted.get("document_type"), "invoice")
 
     def test_otsu_thresholding(self):
         # Bimodal histogram with dark text peak (30-60) and light background peak (180-220)

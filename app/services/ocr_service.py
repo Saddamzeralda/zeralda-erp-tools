@@ -19,7 +19,7 @@ import tempfile
 import threading
 import zipfile
 import unicodedata
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 from pathlib import Path
 
 _logger = logging.getLogger('zeralda.ocr_service')
@@ -630,6 +630,187 @@ def normalize_arabic_ocr_text(text: str) -> str:
         fixed_lines.append(' '.join(fixed_words))
 
     return '\n'.join(fixed_lines)
+
+def tafqeet_arabic(amount: float, currency_name: str = "دينار جزائري", subunit_name: str = "سنتيم") -> str:
+    """Convert a numeric amount into official Algerian Arabic spelled-out words (التفقيط).
+
+    Example:
+    125450.75 -> 'مائة وخمسة وعشرون ألف وأربعمائة وخمسون دينار جزائري وخمسة وسبعون سنتيماً فقط لا غير'
+    """
+    if amount is None or amount == 0:
+        return f"صفر {currency_name} فقط لا غير"
+
+    n = abs(float(amount))
+    integer_part = int(n)
+    fraction_part = int(round((n - integer_part) * 100))
+
+    ones = ["", "واحد", "اثنان", "ثلاثة", "أربعة", "خمسة", "ستة", "سبعة", "ثمانية", "تسعة"]
+    teens = ["عشرة", "أحد عشر", "اثنا عشر", "ثلاثة عشر", "أربعة عشر", "خمسة عشر", "ستة عشر", "سبعة عشر", "ثمانية عشر", "تسعة عشر"]
+    tens = ["", "", "عشرون", "ثلاثون", "أربعون", "خمسون", "ستون", "سبعون", "ثمانون", "تسعون"]
+    hundreds = ["", "مائة", "مائتان", "ثلاثمائة", "أربعمائة", "خمسمائة", "ستمائة", "سبعمائة", "ثمانمائة", "تسعمائة"]
+
+    def _under100(val: int) -> str:
+        if val < 10:
+            return ones[val]
+        if val < 20:
+            return teens[val - 10]
+        t = val // 10
+        o = val % 10
+        if o == 0:
+            return tens[t]
+        return f"{ones[o]} و{tens[t]}"
+
+    def _under1000(val: int) -> str:
+        h = val // 100
+        rest = val % 100
+        if h == 0:
+            return _under100(rest)
+        if rest == 0:
+            return hundreds[h]
+        return f"{hundreds[h]} و{_under100(rest)}"
+
+    scales = [
+        (1_000_000_000, "مليار", "ملياران", "مليارات"),
+        (1_000_000, "مليون", "مليونان", "ملايين"),
+        (1_000, "ألف", "ألفان", "آلاف"),
+    ]
+
+    parts = []
+    rem = integer_part
+    for scale_val, one, two, many in scales:
+        if rem >= scale_val:
+            chunk = rem // scale_val
+            rem = rem % scale_val
+            if chunk == 1:
+                parts.append(one)
+            elif chunk == 2:
+                parts.append(two)
+            elif 3 <= chunk <= 10:
+                parts.append(f"{_under1000(chunk)} {many}")
+            else:
+                parts.append(f"{_under1000(chunk)} {one}")
+
+    if rem > 0 or not parts:
+        parts.append(_under1000(rem))
+
+    main_text = " و".join(p for p in parts if p)
+    res = f"{main_text} {currency_name}"
+
+    if fraction_part > 0:
+        res += f" و{_under100(fraction_part)} {subunit_name}"
+
+    return f"{res} فقط لا غير"
+
+
+def extract_amount_in_words(text: str) -> Optional[str]:
+    """Extract legally spelled-out amount in words from French or Arabic invoice/check text."""
+    if not text:
+        return None
+    patterns = [
+        # Arabic patterns
+        r'(?:أوقفت\s+هذه\s+الفاتورة\s+عند\s+مبلغ\s+وقدره|أوقف\s+هذا\s+السند\s+عند\s+مبلغ\s+وقدره|المبلغ\s+بالحروف|المبلغ\s+بالأحرف|مبلغا\s+وقدره|مبلغ\s+وقدره|فقط\s+وقدره)\s*[:\-]?\s*([^\n\r.]+)',
+        # French patterns
+        r'(?:arr[eê]t[eé]e?\s+(?:la\s+pr[eé]sente\s+facture|le\s+pr[eé]sent\s+bon|le\s+pr[eé]sent\s+devis)?\s+[aà]\s+la\s+somme\s+de|la\s+somme\s+de|soit\s+la\s+somme\s+de|montant\s+en\s+lettres?)\s*[:\-]?\s*([^\n\r.]+)',
+    ]
+    for pat in patterns:
+        m = re.search(pat, text, re.IGNORECASE)
+        if m:
+            candidate = m.group(1).strip()
+            if len(candidate) >= 4 and not candidate.replace(' ', '').isdigit():
+                return candidate[:160]
+    return None
+
+
+def detect_document_type(text: str) -> Dict[str, Any]:
+    """Fast local heuristic classifier for Algerian and French business and administrative documents."""
+    if not text:
+        return {'type': 'universal', 'label_ar': 'مستند عام', 'label_fr': 'Document', 'confidence': 0.0}
+
+    t_lower = text.lower()
+    scores = {
+        'invoice': 0,
+        'delivery_note': 0,
+        'purchase_order': 0,
+        'proforma': 0,
+        'receipt': 0,
+        'cheque': 0,
+        'tax_return': 0,
+        'commercial_register': 0,
+        'id_card': 0,
+        'tender': 0
+    }
+
+    # Delivery Note
+    if any(k in t_lower for k in ['bon de livraison', 'وصل تسليم', 'b.l.', 'bl n°', 'bon de réception', 'bon de décharge']):
+        scores['delivery_note'] += 6
+
+    # Purchase Order
+    if any(k in t_lower for k in ['bon de commande', 'سند طلب', 'b.c.', 'bc n°', 'bon d\'achat', 'ordre d\'achat']):
+        scores['purchase_order'] += 6
+
+    # Proforma / Quotation
+    if any(k in t_lower for k in ['facture proforma', 'devis', 'عرض أسعار', 'فاتورة شكلية', 'offre de prix', 'cotation']):
+        scores['proforma'] += 6
+
+    # Cheque
+    if any(k in t_lower for k in ['chèque', 'cheque', 'شيك', 'payez contre ce chèque', 'ادفعوا مقابل هذا الشيك', 'cmc7']):
+        scores['cheque'] += 7
+
+    # Tax return G50
+    if any(k in t_lower for k in ['g50', 'série g n° 50', 'تصريح جبائي', 'direction des impôts', 'tva collectée', 'tap']):
+        scores['tax_return'] += 8
+
+    # Commercial register
+    if any(k in t_lower for k in ['registre du commerce', 'مستخرج السجل التجاري', 'cnrc', 'extrait du registre']):
+        scores['commercial_register'] += 7
+
+    # ID Card
+    if any(k in t_lower for k in ['carte nationale d\'identité', 'بطاقة التعريف الوطنية', 'republique algerienne', 'cni', 'nin:']):
+        scores['id_card'] += 7
+
+    # Tender
+    if any(k in t_lower for k in ['appel d\'offres', 'avis d\'appel', 'مناقصة', 'طلب عروض', 'دفتر الشروط', 'cahier des charges', 'soumission']):
+        scores['tender'] += 6
+
+    # Invoice
+    if any(k in t_lower for k in ['facture', 'فاتورة', 'doit:', 'client:', 'fournisseur:', 'net à payer', 'total ttc', 'total ht', 'timbre fiscal']):
+        scores['invoice'] += 4
+    if 'tva' in t_lower or 'الرسم على القيمة المضافة' in text:
+        scores['invoice'] += 2
+    if 'nif' in t_lower or 'الرقم الجبائي' in text:
+        scores['invoice'] += 2
+
+    # Receipt
+    if any(k in t_lower for k in ['ticket de caisse', 'reçu', 'تذكرة صندوق', 'وصل صندوق', 'quittance']):
+        scores['receipt'] += 4
+
+    best_type = max(scores, key=scores.get)
+    best_score = scores[best_type]
+
+    if best_score < 3:
+        return {'type': 'universal', 'label_ar': 'مستند تجاري', 'label_fr': 'Document Commercial', 'confidence': 0.3}
+
+    type_meta = {
+        'invoice': ('فاتورة تجارية', 'Facture Commerciale', 0.95),
+        'delivery_note': ('وصل تسليم (BL)', 'Bon de Livraison (BL)', 0.95),
+        'purchase_order': ('سند طلب (BC)', 'Bon de Commande (BC)', 0.95),
+        'proforma': ('فاتورة شكلية / عرض أسعار', 'Facture Proforma / Devis', 0.90),
+        'receipt': ('وصل دفع / تذكرة صندوق', 'Reçu / Ticket de Caisse', 0.85),
+        'cheque': ('شيك بنكي / بريدي', 'Chèque Bancaire / Postal', 0.95),
+        'tax_return': ('تصريح جبائي G50', 'Déclaration Fiscale G50', 0.95),
+        'commercial_register': ('مستخرج السجل التجاري', 'Registre du Commerce (CNRC)', 0.95),
+        'id_card': ('وثيقة هوية رسمية', 'Pièce d\'Identité (CNI)', 0.95),
+        'tender': ('إعلان مناقصة / استشارة', 'Appel d\'Offres / Consultation', 0.90)
+    }
+
+    ar_lbl, fr_lbl, conf = type_meta.get(best_type, ('مستند عام', 'Document', 0.5))
+    return {
+        'type': best_type,
+        'label_ar': ar_lbl,
+        'label_fr': fr_lbl,
+        'confidence': conf
+    }
+
 
 def _otsu_threshold(hist: List[int]) -> int:
     """Compute optimal binarization threshold via Otsu's method from a 256-bin histogram."""
