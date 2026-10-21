@@ -153,10 +153,41 @@
     return '';
   }
 
+  function isProductOrHardwareTitle(name) {
+    if (!name) return false;
+    var s = String(name).toLowerCase();
+    var productKeywords = [
+      'notebook', 'laptop', 'desktop', 'pc', 'ordinateur', 'fiche technique', 'datasheet',
+      'data sheet', 'spécification', 'specification', 'caractéristique', 'caracteristique',
+      'imprimante', 'printer', 'scanner', 'serveur', 'server', 'moniteur', 'monitor', 'écran', 'ecran',
+      'tablette', 'tablet', 'processeur', 'processor', 'core i3', 'core i5', 'core i7', 'core i9',
+      'ryzen', 'geforce', 'radeon', 'ram ', 'ssd', 'hdd', 'disque', 'carte mère', 'switch',
+      'routeur', 'router', 'access point', 'point d\'accès', 'onduleur', 'ups', 'souris',
+      'clavier', 'keyboard', 'mouse', 'toner', 'cartouche', 'câble', 'cable', 'modèle', 'modele',
+      'hp 250', 'hp probook', 'hp elitebook', 'thinkpad', 'latitude', 'ideapad', 'inspiron', 'vostro',
+      'حاسوب', 'كمبيوتر', 'لابتوب', 'طابعة', 'شاشة', 'خادم', 'بطاقة تقنية', 'مواصفات', 'بطاقة المواصفات'
+    ];
+    for (var i = 0; i < productKeywords.length; i++) {
+      if (s.indexOf(productKeywords[i]) > -1) return true;
+    }
+    return false;
+  }
+
+  function cleanInvoiceRef(ref) {
+    if (!ref) return '';
+    var s = String(ref).trim().replace(/^[:\/\-\s#№]+/, '').replace(/[:\/\-\s#№]+$/, '');
+    var upper = s.toUpperCase();
+    var stopWords = ['LET', 'REF', 'THE', 'AND', 'FOR', 'NOT', 'NON', 'OUI', 'YES', 'PAGE', 'DATE', 'USER', 'HTTP', 'HTTPS', 'WWW', 'PDF', 'URL', 'TEL', 'FAX', 'EMAIL', 'MAIL', 'NOM', 'NAME', 'TOTAL', 'ITEM', 'ITEMS', 'PROD', 'DOC', 'TXT', 'N', 'NO', 'NUM', 'REF.'];
+    if (stopWords.indexOf(upper) > -1) return '';
+    if (!/\d/.test(s) && s.length <= 4) return '';
+    return s;
+  }
+
   function detectDocumentType(text) {
     var raw = String(text || '').toLowerCase();
     if (!raw) return { type: 'universal', label_ar: 'مستند عام', label_fr: 'Document', confidence: 0 };
-    var scores = { invoice: 0, delivery_note: 0, purchase_order: 0, proforma: 0, receipt: 0, cheque: 0, tax_return: 0, commercial_register: 0, id_card: 0, tender: 0 };
+    var scores = { invoice: 0, delivery_note: 0, purchase_order: 0, proforma: 0, receipt: 0, cheque: 0, tax_return: 0, commercial_register: 0, id_card: 0, tender: 0, technical_sheet: 0 };
+    if (raw.indexOf('fiche technique') > -1 || raw.indexOf('datasheet') > -1 || raw.indexOf('spécifications') > -1 || raw.indexOf('caractéristiques') > -1 || raw.indexOf('notebook pc') > -1 || raw.indexOf('quickspecs') > -1 || raw.indexOf('بطاقة تقنية') > -1 || raw.indexOf('بطاقة المواصفات') > -1 || raw.indexOf('المواصفات الفنية') > -1 || raw.indexOf('fiche produit') > -1) scores.technical_sheet += 8;
 
     if (raw.indexOf('bon de livraison') > -1 || raw.indexOf('وصل تسليم') > -1 || raw.indexOf('bl n°') > -1) scores.delivery_note += 6;
     if (raw.indexOf('bon de commande') > -1 || raw.indexOf('سند طلب') > -1 || raw.indexOf('bc n°') > -1) scores.purchase_order += 6;
@@ -184,7 +215,8 @@
       tax_return: ['تصريح جبائي G50', 'Déclaration Fiscale G50'],
       commercial_register: ['مستخرج السجل التجاري', 'Registre du Commerce (CNRC)'],
       id_card: ['وثيقة هوية رسمية', 'Pièce d\'Identité (CNI)'],
-      tender: ['إعلان مناقصة / استشارة', 'Appel d\'Offres / Consultation']
+      tender: ['إعلان مناقصة / استشارة', 'Appel d\'Offres / Consultation'],
+      technical_sheet: ['بطاقة تقنية / مواصفات منتج', 'Fiche Technique / Spécifications']
     };
     var m = meta[best] || ['مستند عام', 'Document'];
     return { type: best, label_ar: m[0], label_fr: m[1], confidence: 0.95 };
@@ -657,7 +689,12 @@
         website: "الموقع الإلكتروني",
         bp: "صندوق البريد (BP)",
         ag: "رقم الترخيص (N° AG)",
-        bankAccount: "الحساب البنكي"
+        bankAccount: "الحساب البنكي",
+        issuer: "المحرر / المصدر",
+        clientTag: "العميل",
+        aiParsed: "تم الاستخراج بالذكاء الاصطناعي",
+        technicalSheetNoticeTitle: "تنبيه: بطاقة مواصفات تقنية",
+        technicalSheetNoticeDesc: "تم التعرف على المستند كبطاقة مواصفات تقنية لمنتج. تم استخراج اسم ومواصفات المنتج كبند تلقائياً دون اعتباره اسماً للمورد أو مرجع فاتورة."
       },
       fr: {
         modalTitle: "Copilote IA : Scan et extraction intelligente",
@@ -723,7 +760,12 @@
         website: "Site Web",
         bp: "Boîte Postale (BP)",
         ag: "N° AG (Agrément)",
-        bankAccount: "Compte Bancaire"
+        bankAccount: "Compte Bancaire",
+        issuer: "Émetteur",
+        clientTag: "Client",
+        aiParsed: "Analysé par IA",
+        technicalSheetNoticeTitle: "Fiche Technique Détectée",
+        technicalSheetNoticeDesc: "Ce document est une fiche technique / spécification produit. Les caractéristiques du produit ont été extraites comme article sans confusion avec le fournisseur."
       },
       en: {
         modalTitle: "AI Copilot: Smart Scan & Extraction",
@@ -789,15 +831,31 @@
         website: "Website",
         bp: "P.O. Box (BP)",
         ag: "License No (AG)",
-        bankAccount: "Bank Account"
+        bankAccount: "Bank Account",
+        issuer: "Issuer",
+        clientTag: "Customer",
+        aiParsed: "AI Parsed",
+        technicalSheetNoticeTitle: "Technical Datasheet Detected",
+        technicalSheetNoticeDesc: "This document is a technical spec sheet. Product name and specifications have been extracted as a product item."
       }
     },
 
     getLang: function() {
       try {
+        if (this.state && this.state.options) {
+          var optL = this.state.options.lang || this.state.options.language;
+          if (optL && (optL === 'ar' || optL === 'fr' || optL === 'en')) return optL;
+          if (this.state.options.title && /[\u0600-\u06FF]/.test(this.state.options.title)) return 'ar';
+          if (this.state.options.subtitle && /[\u0600-\u06FF]/.test(this.state.options.subtitle)) return 'ar';
+        }
         if (typeof window !== 'undefined' && window.UnifiedI18N && typeof window.UnifiedI18N.getCurrentLang === 'function') {
           var ul = window.UnifiedI18N.getCurrentLang();
           if (ul === 'ar' || ul === 'fr' || ul === 'en') return ul;
+        }
+        if (typeof document !== 'undefined') {
+          var htmlDir = (document.documentElement && document.documentElement.getAttribute('dir')) || '';
+          var bodyDir = (document.body && document.body.getAttribute('dir')) || '';
+          if (htmlDir.toLowerCase() === 'rtl' || bodyDir.toLowerCase() === 'rtl') return 'ar';
         }
         if (typeof localStorage !== 'undefined' && localStorage) {
           var _s = localStorage.getItem('zeralda-settings');
@@ -815,6 +873,7 @@
         }
       } catch (e) {}
       var fallback = ((typeof window !== 'undefined' && window.currentLanguage) || (typeof document !== 'undefined' && document.documentElement && document.documentElement.lang) || 'ar').toLowerCase();
+      if (fallback.indexOf('ar') === 0) return 'ar';
       if (fallback.indexOf('fr') === 0) return 'fr';
       if (fallback.indexOf('en') === 0) return 'en';
       return 'ar';
@@ -869,12 +928,14 @@
 
     renderModalHtml: function(options) {
       var opts = options || {};
+      var lang = this.getLang();
+      var isRtl = (lang === 'ar');
       var title = opts.title || this.t('modalTitle');
       var subtitle = opts.subtitle || this.t('dropzoneSubtitle');
       var icon = opts.icon || 'fas fa-robot';
 
       return '' +
-        '<div class="modal-content ocr-modal-content" role="document">' +
+        '<div class="modal-content ocr-modal-content" role="document"' + (isRtl ? ' dir="rtl"' : ' dir="ltr"') + '>' +
           '<div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--ocr-border);">' +
             '<h2 style="margin:0;font-size:17px;font-weight:700;display:flex;align-items:center;gap:10px;">' +
               '<i class="' + icon + '" style="color:var(--ocr-primary);" aria-hidden="true"></i>' +
@@ -1222,6 +1283,11 @@
       var customerCity = payload.customerCity || fields.customer_city || '';
 
       var supplierName = payload.supplier || fields.supplier_name || fields.company_name || fields.supplier || '';
+      var detectedProductName = payload.productName || fields.product_name || '';
+      if (isProductOrHardwareTitle(supplierName)) {
+        if (!detectedProductName) detectedProductName = supplierName;
+        supplierName = '';
+      }
       var supplierRc = payload.supplierRc || fields.supplier_rc || '';
       var supplierNif = payload.supplierTaxId || fields.supplier_nif || '';
       var supplierNis = payload.supplierNis || fields.supplier_nis || '';
@@ -1382,6 +1448,24 @@
         }
       }
 
+      if (!rawItems.length && (detectedProductName || isProductOrHardwareTitle(raw))) {
+        var pTitle = detectedProductName;
+        if (!pTitle && raw) {
+          var fLines = raw.split(/\r?\n/).map(function(l){ return l.trim(); }).filter(Boolean);
+          for (var fi = 0; fi < Math.min(fLines.length, 5); fi++) {
+            if (isProductOrHardwareTitle(fLines[fi])) { pTitle = fLines[fi]; break; }
+          }
+        }
+        if (pTitle) {
+          rawItems.push({
+            description: pTitle,
+            quantity: 1,
+            unit_price: 0,
+            total: 0
+          });
+        }
+      }
+
       var items = rawItems.map(function(it, idx) {
         var q = cleanOcrNum(it.quantity);
         var p = cleanOcrNum(it.unit_price || it.unitPrice || it.price);
@@ -1466,11 +1550,11 @@
       var quantity = cleanOcrNum(payload.quantity || (items[0] && items[0].quantity) || 1);
       var category = payload.category || fields.category || 'General';
 
-      var journalDate = payload.billDate || payload.date || fields.invoice_date || fields.date || new Date().toISOString().slice(0, 10);
-      var invoiceNumber = payload.externalRef || payload.invoiceNumber || payload.number || fields.invoice_number || '';
+      var journalDate = payload.billDate || payload.date || fields.invoice_date || fields.date || '';
+      var invoiceNumber = cleanInvoiceRef(payload.externalRef || payload.invoiceNumber || payload.number || fields.invoice_number || '');
       if (!invoiceNumber && raw) {
-        var invM = raw.match(/(?:(?:n[°º]|réf|ref|facture|proforma|quittance|reçu|رقم|مرجع)\s*[:\/\-]?\s*([A-Za-z0-9\/\-_]{3,30}))/i);
-        if (invM) invoiceNumber = invM[1].trim();
+        var invM = raw.match(/(?:(?:n[°º]|réf|ref|facture|proforma|quittance|reçu|رقم|مرجع)\s*[:\/\-]?\s*([A-Za-z0-9\/\-_]{2,30}))/i);
+        if (invM) invoiceNumber = cleanInvoiceRef(invM[1]);
       }
       var bankName = payload.bankName || payload.supplierBank || '';
       if (!bankName && raw) {
@@ -1586,22 +1670,32 @@
       var mode = this.state.mode;
       var html = '<div class="ocr-preview-header">' +
         '<div class="ocr-preview-title"><i class="fas fa-check-circle text-success"></i> <span>' + this.t('itemsExtracted') + '</span></div>' +
-        '<span class="ocr-confidence-badge"><i class="fas fa-magic"></i> AI Parsed</span>' +
+        '<div style="display:flex;align-items:center;gap:8px;">' +
+          (data.documentTypeLabel ? '<span class="ocr-confidence-badge" style="background:#e0f2fe;color:#0369a1;border-color:#bae6fd;"><i class="fas fa-file-alt"></i> ' + ZeraldaOCR.escapeHtml(data.documentTypeLabel) + '</span>' : '') +
+          '<span class="ocr-confidence-badge"><i class="fas fa-magic"></i> ' + this.t('aiParsed') + '</span>' +
+        '</div>' +
       '</div>';
+
+      if (data.documentType === 'technical_sheet' || isProductOrHardwareTitle(data.rawText)) {
+        html += '<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#1e40af;display:flex;align-items:center;gap:10px;">' +
+          '<i class="fas fa-info-circle" style="font-size:18px;"></i>' +
+          '<div><strong>' + this.t('technicalSheetNoticeTitle') + '</strong>: ' + this.t('technicalSheetNoticeDesc') + '</div>' +
+        '</div>';
+      }
 
       // 1. Entity Fields Grid
       var fieldsList = [];
       if (mode === 'customer' || mode === 'invoice' || mode === 'proforma') {
         if (data.customerName) fieldsList.push({ label: this.t('customerName'), val: data.customerName });
-        if (data.customerRc) fieldsList.push({ label: 'RC (Client)', val: data.customerRc });
-        if (data.customerNif) fieldsList.push({ label: 'NIF (Client)', val: data.customerNif });
+        if (data.customerRc) fieldsList.push({ label: this.t('rc') + ' (' + this.t('clientTag') + ')', val: data.customerRc });
+        if (data.customerNif) fieldsList.push({ label: this.t('nif') + ' (' + this.t('clientTag') + ')', val: data.customerNif });
         if (data.customerPhone) fieldsList.push({ label: this.t('phone'), val: data.customerPhone });
         if (data.customerAddress) fieldsList.push({ label: this.t('address'), val: data.customerAddress });
 
-        if (data.supplierName && data.supplierName !== data.customerName) {
-          fieldsList.push({ label: this.t('supplierName') + ' (Émetteur)', val: data.supplierName });
+        if (data.supplierName && data.supplierName !== data.customerName && !isProductOrHardwareTitle(data.supplierName)) {
+          fieldsList.push({ label: this.t('supplierName') + ' (' + this.t('issuer') + ')', val: data.supplierName });
         }
-        if (data.invoiceNumber) fieldsList.push({ label: this.t('journalRef'), val: data.invoiceNumber });
+        if (data.invoiceNumber && !cleanInvoiceRef(data.invoiceNumber) === false) fieldsList.push({ label: this.t('journalRef'), val: cleanInvoiceRef(data.invoiceNumber) });
         if (data.date) fieldsList.push({ label: this.t('journalDate'), val: data.date });
       } else if (mode === 'supplier' || mode === 'po' || mode === 'bill') {
         if (data.supplierName) fieldsList.push({ label: this.t('supplierName'), val: data.supplierName });

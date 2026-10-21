@@ -4514,12 +4514,16 @@ function triggerInvoiceOcrImport(type){
 
   if (openMethod) {
     try {
+      var _curLang = (window.UnifiedI18N && typeof window.UnifiedI18N.getCurrentLang === 'function')
+        ? window.UnifiedI18N.getCurrentLang()
+        : (window.currentLanguage || 'ar');
       openMethod({
         mode: type === 'proforma' ? 'proforma' : 'invoice',
+        lang: _curLang,
         title: type === 'proforma' ?
-          (window.currentLanguage === 'fr' ? 'Copilote IA : Scan & Extraction Proforma' : (window.currentLanguage === 'en' ? 'Copilot IA: Proforma & Quotation Scan' : 'المساعد الذكي (Copilot IA) : مسح الفاتورة الشكلية')) :
-          (window.currentLanguage === 'fr' ? 'Copilote IA : Scan & Extraction Facture' : (window.currentLanguage === 'en' ? 'Copilot IA: Invoice Scan' : 'المساعد الذكي (Copilot IA) : مسح واستخراج الفاتورة')),
-        subtitle: (window.currentLanguage === 'fr' ? 'Glissez une facture pour extraire les articles et totaux' : (window.currentLanguage === 'en' ? 'Drag & drop invoice to extract line items and totals' : 'اسحب وأفلت الفاتورة لاستخراج البنود والكميات والمجاميع تلقائياً')),
+          (_curLang === 'fr' ? 'Copilote IA : Scan & Extraction Proforma' : (_curLang === 'en' ? 'Copilot IA: Proforma & Quotation Scan' : 'المساعد الذكي (Copilot IA) : مسح الفاتورة الشكلية')) :
+          (_curLang === 'fr' ? 'Copilote IA : Scan & Extraction Facture' : (_curLang === 'en' ? 'Copilot IA: Invoice Scan' : 'المساعد الذكي (Copilot IA) : مسح واستخراج الفاتورة')),
+        subtitle: (_curLang === 'fr' ? 'Glissez une facture pour extraire les articles et totaux' : (_curLang === 'en' ? 'Drag & drop invoice to extract line items and totals' : 'اسحب وأفلت الفاتورة لاستخراج البنود والكميات والمجاميع تلقائياً')),
         icon: 'fas fa-robot',
         onApply: function(data) {
           latestInvoiceOcrPayload = data.payload || {};

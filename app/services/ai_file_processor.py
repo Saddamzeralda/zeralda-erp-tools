@@ -1651,6 +1651,17 @@ def _regex_invoice_extract(text: str) -> Optional[Dict[str, Any]]:
             # FIX: skip "Societe / Company / ···:" label lines (don't add as supplier name)
             if any(kw in ll for kw in ['societe', 'société', 'company', 'الشركة', 'fournisseur', 'supplier']):
                 continue
+            # FIX: skip product / hardware / specsheet titles (e.g. HP 250 G10 Notebook PC)
+            _prod_kws = ('notebook', 'laptop', 'desktop', 'pc', 'ordinateur', 'fiche technique', 'datasheet',
+                         'spécification', 'specification', 'caractéristique', 'caracteristique', 'imprimante',
+                         'printer', 'scanner', 'serveur', 'server', 'moniteur', 'monitor', 'écran', 'ecran',
+                         'tablette', 'tablet', 'processeur', 'processor', 'core i3', 'core i5', 'core i7', 'core i9',
+                         'ryzen', 'geforce', 'radeon', 'ssd', 'hdd', 'carte mère', 'motherboard', 'switch',
+                         'routeur', 'router', 'onduleur', 'ups', 'clavier', 'keyboard', 'souris', 'mouse',
+                         'toner', 'cartouche', 'câble', 'cable', 'حاسوب', 'كمبيوتر', 'لابتوب', 'طابعة', 'شاشة',
+                         'خادم', 'بطاقة تقنية', 'مواصفات')
+            if any(pkw in ll for pkw in _prod_kws):
+                continue
             if len(l) > 2 and not l.replace('.', '').replace(',', '').replace(' ', '').isdigit():
                 supplier_parts.append(l)
                 if len(supplier_parts) >= 1:
@@ -1847,13 +1858,17 @@ def _regex_invoice_extract(text: str) -> Optional[Dict[str, Any]]:
     # --- Invoice number ---
     inv_patterns = [
         r'(?:facture\s*n[°o]?\s*[:\-]?\s*|invoice\s*(?:no|number|#)\s*[:\-]?\s*|proforma\s*n[°o]?\s*[:\-]?\s*|n[°o]\s*facture\s*[:\-]?\s*|رقم\s*الفاتورة\s*[:\-]?\s*|فاتورة\s*رقم\s*[:\-]?\s*|وصل\s*رقم\s*[:\-]?\s*|رقم\s*الوصل\s*[:\-]?\s*|سند\s*رقم\s*[:\-]?\s*)([A-Z0-9/\-]{2,30})',
-        r'(?:n[°o]\s*[:\-]\s*|ref\s*[:\-]\s*|reference\s*[:\-]\s*)([A-Z0-9/\-]{2,30})',
+        r'(?:n[°o]\s*[:\-]\s*|ref\s*[:\-]\s*|reference\s*[:\-]\s*)([A-Z0-9/\-]*\d[A-Z0-9/\-]*)',
     ]
     for pat in inv_patterns:
         m = re.search(pat, text, re.IGNORECASE)
         if m:
-            fields['invoice_number'] = m.group(1).strip()
-            break
+            cand_inv = m.group(1).strip()
+            cand_upper = cand_inv.upper()
+            if cand_upper not in {'LET', 'REF', 'THE', 'AND', 'FOR', 'NOT', 'NON', 'OUI', 'YES', 'PAGE', 'DATE', 'USER', 'HTTP', 'HTTPS', 'WWW', 'PDF', 'URL', 'TEL', 'FAX', 'EMAIL', 'MAIL', 'NOM', 'NAME', 'TOTAL', 'ITEM', 'ITEMS', 'PROD', 'DOC', 'TXT'}:
+                if any(c.isdigit() for c in cand_inv) or len(cand_inv) > 4:
+                    fields['invoice_number'] = cand_inv
+                    break
 
     # --- Date ---
     # 1. Explicit keyword date patterns (Arabic & French)

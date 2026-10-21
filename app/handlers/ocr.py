@@ -334,9 +334,30 @@ async def invoice_extract(request: Request):
             if _customer_name and _supplier_name and _customer_name.lower() == _supplier_name.lower():
                 _customer_name = ""
 
+            # Avoid false positives: product model (e.g. HP 250 G10 Notebook PC) should NOT be supplier
+            _prod_test_kws = ('notebook', 'laptop', 'desktop', 'pc', 'ordinateur', 'fiche technique', 'datasheet',
+                              'imprimante', 'printer', 'serveur', 'server', 'moniteur', 'monitor', 'écran', 'ecran',
+                              'tablette', 'tablet', 'حاسوب', 'كمبيوتر', 'لابتوب', 'بطاقة تقنية', 'مواصفات')
+            if _supplier_name and any(pkw in _supplier_name.lower() for pkw in _prod_test_kws):
+                if not line_items:
+                    line_items = [{'description': _supplier_name, 'quantity': 1, 'unit_price': 0.0, 'total': 0.0}]
+                _supplier_name = ""
+
+            # Sanitize reference to prevent noise words like 'LET'
+            _ext_ref = fields.get("invoice_number") or ""
+            if _ext_ref:
+                _eru = str(_ext_ref).strip().upper()
+                if _eru in ('LET', 'REF', 'THE', 'AND', 'PAGE', 'DATE', 'USER', 'PDF', 'URL', 'TEL', 'FAX') or (not any(c.isdigit() for c in _eru) and len(_eru) <= 4):
+                    _ext_ref = ""
+
+            from app.services.ocr_service import detect_document_type
+            doc_type_meta = detect_document_type(source_text)
+
             return {
                 "ok": True, "text": source_text,
-                "externalRef": fields.get("invoice_number"),
+                "documentType": doc_type_meta.get("type", "universal"),
+                "documentTypeLabel": doc_type_meta.get("label_ar", "مستند عام"),
+                "externalRef": _ext_ref,
                 "supplier": _supplier_name, "supplierContact": None,
                 "supplierEmail": fields.get("supplier_email"), "supplierPhone": fields.get("supplier_phone"),
                 "supplierTaxId": fields.get("supplier_nif") or fields.get("nif"),

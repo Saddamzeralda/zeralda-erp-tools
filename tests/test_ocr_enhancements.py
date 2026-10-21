@@ -178,6 +178,34 @@ class TestOcrEnhancements(unittest.TestCase):
         resolved_subset = _resolve_safe_lang("ara+fra+eng", MockTessSubset)
         self.assertEqual(resolved_subset, "fra+eng")
 
+    def test_detect_document_type_technical_sheet(self):
+        doc_tech = "FICHE TECHNIQUE\nHP 250 G10 Notebook PC\nCaractéristiques techniques et spécifications"
+        meta_tech = detect_document_type(doc_tech)
+        self.assertEqual(meta_tech["type"], "technical_sheet")
+        self.assertIn("بطاقة تقنية", meta_tech["label_ar"])
+
+    def test_reject_product_title_as_supplier_name(self):
+        sample = """
+        HP 250 G10 Notebook PC
+        Fiche Technique
+        Processeur Intel Core i5
+        RAM 8GB SSD 512GB
+        """
+        extracted = _regex_invoice_extract(sample)
+        # Should not falsely identify 'HP 250 G10 Notebook PC' as supplier
+        if extracted and extracted.get("fields"):
+            self.assertNotEqual(extracted["fields"].get("supplier_name"), "HP 250 G10 Notebook PC")
+
+    def test_reject_noise_invoice_number_let(self):
+        sample_let = """
+        HP 250 G10 Notebook PC
+        Ref : LET
+        Bullet points features
+        """
+        extracted = _regex_invoice_extract(sample_let)
+        if extracted and extracted.get("fields"):
+            self.assertNotEqual(extracted["fields"].get("invoice_number"), "LET")
+
 
 if __name__ == "__main__":
     unittest.main()

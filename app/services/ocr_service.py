@@ -737,8 +737,18 @@ def detect_document_type(text: str) -> Dict[str, Any]:
         'tax_return': 0,
         'commercial_register': 0,
         'id_card': 0,
-        'tender': 0
+        'tender': 0,
+        'technical_sheet': 0
     }
+
+    # Technical Datasheet / Product Spec Sheet
+    if any(k in t_lower for k in [
+        'fiche technique', 'datasheet', 'data sheet', 'caractéristiques techniques',
+        'spécifications techniques', 'technical specifications', 'product overview',
+        'quickspecs', 'notebook pc', 'fiche produit', 'بطاقة تقنية', 'بطاقة المواصفات',
+        'المواصفات الفنية', 'دليل المواصفات', 'بطاقة فنية'
+    ]):
+        scores['technical_sheet'] += 8
 
     # Delivery Note
     if any(k in t_lower for k in ['bon de livraison', 'وصل تسليم', 'b.l.', 'bl n°', 'bon de réception', 'bon de décharge']):
@@ -800,7 +810,8 @@ def detect_document_type(text: str) -> Dict[str, Any]:
         'tax_return': ('تصريح جبائي G50', 'Déclaration Fiscale G50', 0.95),
         'commercial_register': ('مستخرج السجل التجاري', 'Registre du Commerce (CNRC)', 0.95),
         'id_card': ('وثيقة هوية رسمية', 'Pièce d\'Identité (CNI)', 0.95),
-        'tender': ('إعلان مناقصة / استشارة', 'Appel d\'Offres / Consultation', 0.90)
+        'tender': ('إعلان مناقصة / استشارة', 'Appel d\'Offres / Consultation', 0.90),
+        'technical_sheet': ('بطاقة تقنية / مواصفات منتج', 'Fiche Technique / Spécifications', 0.95)
     }
 
     ar_lbl, fr_lbl, conf = type_meta.get(best_type, ('مستند عام', 'Document', 0.5))
