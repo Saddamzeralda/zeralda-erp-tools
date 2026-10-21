@@ -34,7 +34,18 @@
       'مقرلا': 'الرقم', 'يمكلا': 'الكمية', 'رعسلا': 'السعر',
       'ةبيرضلا': 'الضريبة', 'يملا': 'الإجمالي', 'يفاصلا': 'الصافي',
       'لمعل': 'العمل', 'ناونعلا': 'العنوان', 'فتاهلا': 'الهاتف',
-      'لسلسلا': 'السلسلة', 'عقوملا': 'الموقع', 'كحبلا': 'البحث'
+      'لسلسلا': 'السلسلة', 'عقوملا': 'الموقع', 'كحبلا': 'البحث',
+      'عئاضبلا': 'البضائع', 'جتنملا': 'المنتج', 'تاجتنملا': 'المنتجات',
+      'لسرملا': 'المرسل', 'ملتسملا': 'المستلم', 'عيقوتلا': 'التوقيع',
+      'متخلا': 'الختم', 'لصولا': 'الوصل', 'سابحلا': 'الحساب',
+      'فرصملا': 'المصرف', 'كنبلا': 'البنك', 'نمثلا': 'الثمن',
+      'ةعاطبلا': 'البضاعة', 'لسوتلا': 'التسليم', 'ةقداصملا': 'المصادقة',
+      'ةيرئازجلا': 'الجزائرية', 'ةيروهمجلا': 'الجمهورية', 'ةيدلبلا': 'البلدية',
+      'ةيلاولا': 'الولاية', 'ةرازو': 'وزارة', 'ةيريدم': 'مديرية',
+      'ةقفصلا': 'الصفقة', 'ةصقانملا': 'المناقصة', 'ةراشتسلا': 'الاستشارة',
+      'ضرعلا': 'العرض', 'ليصافتلا': 'التفاصيل', 'ةينقتلا': 'التقنية',
+      'ةيلاملا': 'المالية', 'ةداهشلا': 'الشهادة', 'ليجستلا': 'التسجيل',
+      'خيراتب': 'بتاريخ', 'ملاسلا': 'الاستلام', 'ةداملا': 'المادة'
     };
     for (var rev in dict) {
       // Support prefix and postfix conjunctions (e.g., وعومجملا -> والمجموع, عومجملاو -> والمجموع)
@@ -105,6 +116,24 @@
     // Algerian "Article d'Imposition" — appears as "AI:" or "N° AI:" or "Art:" on invoices
     var m = raw.match(/(?:\bN\s*[°º]?\s*AI\b|\bAI\b\s*[:\-]?\s*|article\s+d['']?imposition\s*[:\-]?\s*)([0-9]{6,20})/i);
     return m ? String(m[1] || '').replace(/[\s.،؛,;]+$/g, '').trim() : '';
+  }
+
+  function extractSubtotal(text) {
+    var raw = normalizeArabicDigits(text);
+    var m = raw.match(/(?:total\s*ht|montant\s*ht|sous-total|المجموع\s*الخام|المبلغ\s*الخام|المجموع\s*بدون\s*رسوم|الإجمالي\s*الخام)\s*[:\-]?\s*\n?\s*(?:da|dzd)?\s*(\d[\d.,\s]*\d|\d+)/i);
+    return m ? String(m[1] || '').trim() : '';
+  }
+
+  function extractTimbre(text) {
+    var raw = normalizeArabicDigits(text);
+    var m = raw.match(/(?:droit\s*de\s*timbre|timbre(?:\s*fiscal)?|حق\s*الطابع|طابع\s*جبائي|حقوق\s*الطابع)\s*[:\-]?\s*\n?\s*(?:da|dzd)?\s*(\d[\d.,\s]*\d|\d+)/i);
+    return m ? String(m[1] || '').trim() : '';
+  }
+
+  function extractDiscount(text) {
+    var raw = normalizeArabicDigits(text);
+    var m = raw.match(/(?:remise|rabais|ristourne|خصم|تخفيض|تخفيضات)\s*[:\-]?\s*\n?\s*(?:da|dzd)?\s*(\d[\d.,\s]*\d|\d+)/i);
+    return m ? String(m[1] || '').trim() : '';
   }
 
   function extractCustomerName(text) {
@@ -202,7 +231,10 @@
     extractWebsite,
     extractBankName,
     extractCustomerName,
-    extractSupplierName
+    extractSupplierName,
+    extractSubtotal,
+    extractTimbre,
+    extractDiscount
   };
 
   // ── UnifiedOCR ────────────────────────────────────────────────
@@ -521,7 +553,11 @@
         noTextFound: "لم يتم العثور على نصوص قابلة للاستخراج في هذا المستند.",
         fileRequired: "يرجى اختيار ملف مستند أولاً.",
         itemsExtracted: "البنود والمنتجات المستخرجة",
-        totalAmount: "المجموع الإجمالي",
+        totalAmount: "المجموع الإجمالي (TTC)",
+        subtotal: "المجموع الخام (HT)",
+        vat: "الرسم على القيمة المضافة (TVA)",
+        timbre: "حق الطابع الجبائي (Timbre)",
+        discount: "التخفيض / الخصم",
         selectAll: "تحديد الكل",
         itemDesc: "الوصف / البند",
         qty: "الكمية",
@@ -583,7 +619,11 @@
         noTextFound: "Aucun texte exploitable trouvé dans ce document.",
         fileRequired: "Veuillez d'abord sélectionner un fichier.",
         itemsExtracted: "Articles et lignes extraits",
-        totalAmount: "Montant Total",
+        totalAmount: "Montant Total (TTC)",
+        subtotal: "Total Hors Taxes (HT)",
+        vat: "TVA",
+        timbre: "Droit de Timbre",
+        discount: "Remise",
         selectAll: "Tout sélectionner",
         itemDesc: "Description / Article",
         qty: "Qté",
@@ -645,7 +685,11 @@
         noTextFound: "No usable text found in this document.",
         fileRequired: "Please select a document file first.",
         itemsExtracted: "Extracted Line Items",
-        totalAmount: "Total Amount",
+        totalAmount: "Total Amount (TTC)",
+        subtotal: "Subtotal (HT)",
+        vat: "VAT",
+        timbre: "Fiscal Stamp",
+        discount: "Discount",
         selectAll: "Select All",
         itemDesc: "Description / Item",
         qty: "Qty",
@@ -1315,10 +1359,14 @@
         };
       });
 
-      var subtotal = cleanOcrNum(payload.subtotal || payload.totalHT || fields.subtotal || 0);
-      var vat = cleanOcrNum(payload.vat || payload.vatAmount || payload.totalTVA || payload.tax || fields.tax || 0);
+      var subtotal = cleanOcrNum(payload.subtotal || payload.totalHT || fields.subtotal || (ext.extractSubtotal ? ext.extractSubtotal(raw) : 0));
+      var vat = cleanOcrNum(payload.vat || payload.vatAmount || payload.totalTVA || payload.tax || fields.tax || (ext.extractVat ? ext.extractVat(raw) : 0));
+      var timbre = cleanOcrNum(payload.timbre || payload.timbreFiscal || fields.timbre || fields.stamp_duty || (ext.extractTimbre ? ext.extractTimbre(raw) : 0));
+      var discount = cleanOcrNum(payload.discount || payload.remise || fields.discount || fields.remise || (ext.extractDiscount ? ext.extractDiscount(raw) : 0));
       var total = cleanOcrNum(payload.total || payload.amount || payload.totalTTC || fields.total || 0);
-      if (!total && items.length && !isTenderMode) {
+      if (!total && subtotal > 0) {
+        total = subtotal + vat + timbre - discount;
+      } else if (!total && items.length && !isTenderMode) {
         total = items.reduce(function(acc, i) { return acc + i.total; }, 0);
       }
 
@@ -1445,7 +1493,11 @@
         address: address || siege,
         city: city,
         items: items,
-        totals: { subtotal: subtotal, vat: vat, total: total },
+        totals: { subtotal: subtotal, vat: vat, timbre: timbre, discount: discount, total: total },
+        subtotal: subtotal,
+        vat: vat,
+        timbre: timbre,
+        discount: discount,
         date: journalDate,
         invoiceNumber: invoiceNumber,
         productName: productName,
@@ -1598,8 +1650,17 @@
 
         // Totals Strip
         if (data.totals && (data.totals.total > 0 || data.totals.subtotal > 0)) {
-          html += '<div class="ocr-totals-strip">' +
-            '<div class="ocr-total-badge">' + this.t('totalAmount') + ': <strong>' + (data.totals.total || data.totals.subtotal).toFixed(2) + ' DZD</strong></div>' +
+          html += '<div class="ocr-totals-strip">';
+          if (data.totals.subtotal > 0) {
+            html += '<div class="ocr-total-badge" style="background:rgba(59,130,246,0.1);color:#2563eb;border-color:rgba(59,130,246,0.25);">' + this.t('subtotal') + ': <strong>' + data.totals.subtotal.toFixed(2) + ' DZD</strong></div>';
+          }
+          if (data.totals.vat > 0) {
+            html += '<div class="ocr-total-badge" style="background:rgba(234,179,8,0.1);color:#ca8a04;border-color:rgba(234,179,8,0.25);">' + this.t('vat') + ': <strong>' + data.totals.vat.toFixed(2) + ' DZD</strong></div>';
+          }
+          if (data.totals.timbre > 0) {
+            html += '<div class="ocr-total-badge" style="background:rgba(168,85,247,0.1);color:#9333ea;border-color:rgba(168,85,247,0.25);">' + this.t('timbre') + ': <strong>' + data.totals.timbre.toFixed(2) + ' DZD</strong></div>';
+          }
+          html += '<div class="ocr-total-badge">' + this.t('totalAmount') + ': <strong>' + (data.totals.total || data.totals.subtotal).toFixed(2) + ' DZD</strong></div>' +
           '</div>';
         }
       }

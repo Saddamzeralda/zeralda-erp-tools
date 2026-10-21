@@ -1591,6 +1591,37 @@ def _try_direct_products_parse(text: str) -> Optional[Dict[str, Any]]:
         return None
 
 
+_ARABIC_MONTH_MAP = {
+    'جانفي': '01', 'يناير': '01',
+    'فيفري': '02', 'فبراير': '02',
+    'مارس': '03',
+    'أفريل': '04', 'افريل': '04', 'أبريل': '04', 'ابريل': '04',
+    'ماي': '05', 'مايو': '05',
+    'جوان': '06', 'يونيو': '06',
+    'جويلية': '07', 'يوليو': '07',
+    'أوت': '08', 'اوت': '08', 'أغسطس': '08', 'اغسطس': '08',
+    'سبتمبر': '09', 'شتنبر': '09',
+    'أكتوبر': '10', 'اكتوبر': '10',
+    'نوفمبر': '11', 'نونبر': '11',
+    'ديسمبر': '12', 'دجنبر': '12'
+}
+
+
+def _extract_arabic_textual_date(text: str) -> Optional[str]:
+    """Extract dates with Arabic month names (e.g., '25 جانفي 2026' -> '2026-01-25')."""
+    if not text:
+        return None
+    months_pattern = '|'.join(_ARABIC_MONTH_MAP.keys())
+    m = re.search(r'(\d{1,2})\s*(?:من)?\s*(' + months_pattern + r')\s*(\d{4})', text)
+    if m:
+        day = int(m.group(1))
+        month_name = m.group(2)
+        year = m.group(3)
+        month_num = _ARABIC_MONTH_MAP.get(month_name, '01')
+        return f"{year}-{month_num}-{day:02d}"
+    return None
+
+
 def _regex_invoice_extract(text: str) -> Optional[Dict[str, Any]]:
     """Extract invoice data from raw text using regex patterns (no AI needed).
     Returns structured dict or None if nothing useful found."""
@@ -1815,7 +1846,7 @@ def _regex_invoice_extract(text: str) -> Optional[Dict[str, Any]]:
 
     # --- Invoice number ---
     inv_patterns = [
-        r'(?:facture\s*n[°o]?\s*[:\-]?\s*|invoice\s*(?:no|number|#)\s*[:\-]?\s*|proforma\s*n[°o]?\s*[:\-]?\s*|n[°o]\s*facture\s*[:\-]?\s*|رقم\s*الفاتورة\s*[:\-]?\s*)([A-Z0-9/\-]{2,30})',
+        r'(?:facture\s*n[°o]?\s*[:\-]?\s*|invoice\s*(?:no|number|#)\s*[:\-]?\s*|proforma\s*n[°o]?\s*[:\-]?\s*|n[°o]\s*facture\s*[:\-]?\s*|رقم\s*الفاتورة\s*[:\-]?\s*|فاتورة\s*رقم\s*[:\-]?\s*|وصل\s*رقم\s*[:\-]?\s*|رقم\s*الوصل\s*[:\-]?\s*|سند\s*رقم\s*[:\-]?\s*)([A-Z0-9/\-]{2,30})',
         r'(?:n[°o]\s*[:\-]\s*|ref\s*[:\-]\s*|reference\s*[:\-]\s*)([A-Z0-9/\-]{2,30})',
     ]
     for pat in inv_patterns:
@@ -1825,18 +1856,100 @@ def _regex_invoice_extract(text: str) -> Optional[Dict[str, Any]]:
             break
 
     # --- Date ---
-    # FIX: require 4-digit year to avoid matching RC numbers like "62-16/01"
-    # Also support "le 23/04/2025" (common in Algerian invoices)
-    date_patterns = [
-        r'(?:date\s*[:\-]?\s*|日期\s*[:\-]?\s*)(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})',
+    # 1. Explicit keyword date patterns (Arabic & French)
+    explicit_date_patterns = [
+        r'(?:date\s*[:\-]?\s*|日期\s*[:\-]?\s*|التاريخ\s*[:\-]?\s*|بتاريخ\s*[:\-]?\s*|تاريخ\s*[:\-]?\s*)(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})',
         r'(?:\ble\s+|fait\s+(?:à|a)\s+\w+,?\s*le\s+)(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})',
-        r'(\d{1,2}[/-]\d{1,2}[/-]\d{4})',
     ]
-    for pat in date_patterns:
+    for pat in explicit_date_patterns:
         m = re.search(pat, text, re.IGNORECASE)
         if m:
             fields['invoice_date'] = m.group(1).strip()
             break
+
+    # 2. Arabic textual date fallback (e.g. 25 جانفي 2026)
+    if not fields.get('invoice_date'):
+        ar_d = _extract_arabic_textual_date(text)
+        if ar_d:
+            fields['invoice_date'] = ar_d
+
+    # 3. Generic date pattern with strict month/day validation (prevents matching RC numbers like 16/00-1234)
+    if not fields.get('invoice_date'):
+        gen_m = re.search(r'\b(\d{1,2})([/-])(\d{1,2})\2(\d{4})\b', text)
+        if gen_m:
+            d_or_m1, sep, d_or_m2, yr = int(gen_m.group(1)), gen_m.group(2), int(gen_m.group(3)), gen_m.group(4)
+            if 1 <= d_or_m1 <= 31 and 1 <= d_or_m2 <= 31 and (d_or_m1 <= 12 or d_or_m2 <= 12):
+                fields['invoice_date'] = f"{d_or_m1:02d}{sep}{d_or_m2:02d}{sep}{yr}" 
+
+    def _clean_num_val(s_raw: str) -> float:
+        if not s_raw:
+            return 0.0
+        raw_num = str(s_raw).strip().replace(' ', '').replace('\u00a0', '').replace('\n', '').replace('\r', '')
+        for i in range(10):
+            raw_num = raw_num.replace(chr(0x0660 + i), str(i)).replace(chr(0x06F0 + i), str(i))
+        while raw_num.endswith('.') and raw_num.count('.') > 1:
+            raw_num = raw_num[:-1]
+        if ',' in raw_num and '.' in raw_num:
+            if raw_num.rindex(',') < raw_num.rindex('.'):
+                raw_num = raw_num.replace(',', '')
+            else:
+                raw_num = raw_num.replace('.', '').replace(',', '.')
+        elif ',' in raw_num and '.' not in raw_num:
+            parts = raw_num.split(',')
+            if len(parts) == 2 and len(parts[1]) <= 2:
+                raw_num = parts[0] + '.' + parts[1]
+            else:
+                raw_num = raw_num.replace(',', '')
+        try:
+            return float(raw_num)
+        except Exception:
+            return 0.0
+
+    # --- Fiscal Breakdown: Subtotal (HT), TVA, Timbre, Remise ---
+    subtotal_patterns = [
+        r'(?:total\s*ht|montant\s*ht|sous-total|المجموع\s*الخام|المبلغ\s*الخام|المجموع\s*بدون\s*رسوم|الإجمالي\s*الخام)\s*[:\-]?\s*\n?\s*(?:da|dzd)?\s*(\d[\d.,\s]*\d|\d+)\s*(?:da|dzd|eur|€|\$)?',
+    ]
+    for pat in subtotal_patterns:
+        m = re.search(pat, text, re.IGNORECASE)
+        if m:
+            sub_val = _clean_num_val(m.group(1))
+            if sub_val > 0:
+                fields['subtotal'] = sub_val
+                break
+
+    vat_patterns = [
+        r'(?:tva|vat|الرسم\s*على\s*القيمة\s*المضافة|مبلغ\s*الرسم|مبلغ\s*الضريبة|ض\.?ق\.?م)\s*(?:\(?\s*\d{1,2}\s*%\s*\)?)?\s*[:\-]?\s*\n?\s*(?:da|dzd)?\s*(\d[\d.,\s]*\d|\d+)\s*(?:da|dzd|eur|€|\$)?',
+    ]
+    for pat in vat_patterns:
+        m = re.search(pat, text, re.IGNORECASE)
+        if m:
+            v_val = _clean_num_val(m.group(1))
+            if v_val > 0:
+                fields['vat'] = v_val
+                break
+
+    timbre_patterns = [
+        r'(?:droit\s*de\s*timbre|timbre(?:\s*fiscal)?|حق\s*الطابع|طابع\s*جبائي|حقوق\s*الطابع)\s*[:\-]?\s*\n?\s*(?:da|dzd)?\s*(\d[\d.,\s]*\d|\d+)\s*(?:da|dzd|eur|€|\$)?',
+    ]
+    for pat in timbre_patterns:
+        m = re.search(pat, text, re.IGNORECASE)
+        if m:
+            t_val = _clean_num_val(m.group(1))
+            if t_val > 0:
+                fields['timbre'] = t_val
+                break
+
+    discount_patterns = [
+        r'(?:remise|rabais|ristourne|خصم|تخفيض|تخفيضات)\s*[:\-]?\s*\n?\s*(?:da|dzd)?\s*(\d[\d.,\s]*\d|\d+)\s*(?:da|dzd|eur|€|\$)?',
+    ]
+    for pat in discount_patterns:
+        m = re.search(pat, text, re.IGNORECASE)
+        if m:
+            d_val = _clean_num_val(m.group(1))
+            if d_val > 0:
+                fields['discount'] = d_val
+                break
+
 
     # --- Total amount: search NET A PAYER first (final total), then Total TTC, then Total HT ---
     # FIX: allow ":" after the label (e.g. "TOTAL TTC: 300000")
@@ -1871,6 +1984,12 @@ def _regex_invoice_extract(text: str) -> Optional[Dict[str, Any]]:
             except Exception as _num_exc:
                 _logger.debug('regex invoice: failed to parse total "%s": %s', raw_num, _num_exc)
             break
+
+    # Balanced total fallback if total is missing but subtotal is present
+    if not fields.get('total') and fields.get('subtotal'):
+        calc_tot = fields['subtotal'] + fields.get('vat', 0.0) + fields.get('timbre', 0.0) - fields.get('discount', 0.0)
+        if calc_tot > 0:
+            fields['total'] = round(calc_tot, 2)
 
     # --- Currency ---
     # FIX: use word boundaries to avoid matching "eur" inside "EURL" (company type)

@@ -507,10 +507,11 @@ def normalize_arabic_ocr_text(text: str) -> str:
 
     Fixes:
     1. Unicode NFKC normalization (converts presentation forms U+FB50-U+FEFC to standard Arabic).
-    2. Removes Arabic Tatweel (Kashida U+0640) and spurious diacritics.
-    3. Merges disconnected Arabic letters (e.g., 'ف ا ت و ر ة' -> 'فاتورة').
-    4. Detects and corrects reversed Arabic words from LTR visual order (e.g. 'ةروتالفلا' -> 'الفاتورة').
-    5. Normalizes Arabic-Indic digits to standard digits.
+    2. Converts Arabic-Indic digits (٠-٩, ۰-۹) to standard digits.
+    3. Removes Arabic Tatweel (Kashida U+0640) and spurious diacritics.
+    4. Merges disconnected Arabic letters (e.g., 'ف ا ت و ر ة' -> 'فاتورة').
+    5. Detects and corrects reversed Arabic words from LTR visual order (e.g. 'ةروتالفلا' -> 'الفاتورة').
+    6. Corrects full visual LTR lines where words were rendered in reverse order.
     """
     if not text:
         return ""
@@ -518,19 +519,26 @@ def normalize_arabic_ocr_text(text: str) -> str:
     # 1. Unicode NFKC normalization (critical for Arabic ligatures like Lam-Alef)
     text = unicodedata.normalize('NFKC', text)
 
-    # 2. Strip Tatweel (Kashida: U+0640)
+    # 2. Normalize Arabic-Indic and Eastern Arabic-Indic digits
+    for i in range(10):
+        text = text.replace(chr(0x0660 + i), str(i))
+        text = text.replace(chr(0x06F0 + i), str(i))
+    text = text.replace('\u066B', '.')  # Arabic decimal separator
+    text = text.replace('\u066C', '')   # Arabic thousands separator
+
+    # 3. Strip Tatweel (Kashida: U+0640)
     text = re.sub(r'[\u0640]', '', text)
 
-    # 3. Strip Tashkeel / diacritical noise (Fatha, Damma, Kasra, Sukun, Tanween, Shadda)
+    # 4. Strip Tashkeel / diacritical noise (Fatha, Damma, Kasra, Sukun, Tanween, Shadda)
     text = re.sub(r'[\u064B-\u065F\u0670]', '', text)
 
-    # 4. Fix spaced cursive letters (e.g. "ف ا ت و ر ة" -> "فاتورة")
+    # 5. Fix spaced cursive letters (e.g. "ف ا ت و ر ة" -> "فاتورة")
     def _merge_spaced(m):
         return re.sub(r'\s+', '', m.group(0))
 
     text = re.sub(r'(?<![^\s])(?:[\u0621-\u064A] ){2,}[\u0621-\u064A](?![^\s])', _merge_spaced, text)
 
-    # 5. Fix reversed Arabic words caused by LTR rendering
+    # 6. Fix reversed Arabic words caused by LTR rendering (Extended commercial dictionary)
     known_reversed = {
         'ةروتالفلا': 'الفاتورة', 'ةروتالف': 'فاتورة', 'عومجملا': 'المجموع',
         'خيراتلا': 'التاريخ', 'ةكرشلا': 'الشركة', 'ليمعلا': 'العميل',
@@ -538,7 +546,19 @@ def normalize_arabic_ocr_text(text: str) -> str:
         'مقرلا': 'الرقم', 'يمكلا': 'الكمية', 'رعسلا': 'السعر',
         'ةبيرضلا': 'الضريبة', 'يملا': 'الإجمالي', 'يفاصلا': 'الصافي',
         'لمعل': 'العمل', 'ناونعلا': 'العنوان', 'فتاهلا': 'الهاتف',
-        'لسلسلا': 'السلسلة', 'عقوملا': 'الموقع', 'كحبلا': 'البحث'
+        'لسلسلا': 'السلسلة', 'عقوملا': 'الموقع', 'كحبلا': 'البحث',
+        'عئاضبلا': 'البضائع', 'جتنملا': 'المنتج', 'تاجتنملا': 'المنتجات',
+        'لسرملا': 'المرسل', 'ملتسملا': 'المستلم', 'عيقوتلا': 'التوقيع',
+        'متخلا': 'الختم', 'لصولا': 'الوصل', 'سابحلا': 'الحساب',
+        'فرصملا': 'المصرف', 'كنبلا': 'البنك', 'نمثلا': 'الثمن',
+        'ةعاطبلا': 'البضاعة', 'لسوتلا': 'التسليم', 'ةقداصملا': 'المصادقة',
+        'ةيرئازجلا': 'الجزائرية', 'ةيروهمجلا': 'الجمهورية', 'ةيدلبلا': 'البلدية',
+        'ةيلاولا': 'الولاية', 'ةرازو': 'وزارة', 'ةيريدم': 'مديرية',
+        'ةقفصلا': 'الصفقة', 'ةصقانملا': 'المناقصة', 'ةراشتسلا': 'الاستشارة',
+        'ضرعلا': 'العرض', 'ليصافتلا': 'التفاصيل', 'ةينقتلا': 'التقنية',
+        'ةيلاملا': 'المالية', 'ةداهشلا': 'الشهادة', 'ليجستلا': 'التسجيل',
+        'خيراتب': 'بتاريخ', 'ملاسلا': 'الاستلام', 'ةداملا': 'المادة',
+        'عجارلا': 'الراجع', 'فارصنا': 'انصراف', 'روضحلا': 'الحضور'
     }
 
     lines = text.splitlines()
@@ -550,24 +570,32 @@ def normalize_arabic_ocr_text(text: str) -> str:
 
         words = line.split(' ')
         fixed_words = []
+        reversed_count = 0
+        arabic_word_count = 0
+
         for word in words:
             w_stem = re.sub(r'[^\u0621-\u064A]', '', word)
             if not w_stem or len(w_stem) < 2:
                 fixed_words.append(word)
                 continue
 
+            arabic_word_count += 1
+
             if w_stem in known_reversed:
                 fixed_words.append(word.replace(w_stem, known_reversed[w_stem]))
+                reversed_count += 1
                 continue
 
             # Attached conjunctions / prepositions at start (e.g. وعومجملا -> والمجموع)
             if w_stem[0] in ('و', 'ف', 'ب', 'ل', 'ك') and w_stem[1:] in known_reversed:
                 fixed_words.append(word.replace(w_stem, w_stem[0] + known_reversed[w_stem[1:]]))
+                reversed_count += 1
                 continue
 
             # Attached conjunctions at end from full LTR reversal (e.g. عومجملاو -> والمجموع)
             if w_stem[-1] in ('و', 'ف') and w_stem[:-1] in known_reversed:
                 fixed_words.append(word.replace(w_stem, w_stem[-1] + known_reversed[w_stem[:-1]]))
+                reversed_count += 1
                 continue
 
             # Heuristic detection for reversed Arabic:
@@ -582,15 +610,22 @@ def normalize_arabic_ocr_text(text: str) -> str:
             if sub_stem.startswith('ة') and not sub_stem.endswith('ة'):
                 rev = prefix + sub_stem[::-1]
                 fixed_words.append(word.replace(w_stem, rev))
+                reversed_count += 1
             elif sub_stem.endswith('لا') and not sub_stem.startswith('ال') and len(sub_stem) >= 4:
                 rev = prefix + sub_stem[::-1]
                 fixed_words.append(word.replace(w_stem, rev))
-            elif w_stem.endswith(('لاو', 'لاف')) and len(w_stem) >= 5:
+                reversed_count += 1
+            elif w_stem.endswith(('لاو', 'لاف', 'لاب', 'لل')) and len(w_stem) >= 5:
                 # Fully reversed with trailing conjunction: e.g. عومجملاو -> والمجموع
                 rev = w_stem[-1] + w_stem[:-1][::-1]
                 fixed_words.append(word.replace(w_stem, rev))
+                reversed_count += 1
             else:
                 fixed_words.append(word)
+
+        # Detect if entire line was laid out in visual LTR (reorder words RTL)
+        if reversed_count >= 2 and arabic_word_count >= 2 and (reversed_count / arabic_word_count) >= 0.5:
+            fixed_words = fixed_words[::-1]
 
         fixed_lines.append(' '.join(fixed_words))
 
@@ -663,12 +698,32 @@ def _deskew_image(img):
     return img
 
 
-def _preprocess_image_multistage(img):
-    """Create two enhanced versions of the image:
-    1. Clean grayscale with autocontrast and unsharp mask (best for digital documents/tables).
-    2. Adaptive Otsu binarized with median denoising (best for phone photos/receipts with shadows).
+def _flatten_illumination(gray_img):
+    """Eliminate shadows, phone silhouettes, and uneven lighting gradients across documents.
+
+    Uses a low-pass background estimation filter and high-pass subtraction
+    to normalize the background surface to uniform pure white.
     """
-    from PIL import Image, ImageEnhance, ImageFilter, ImageOps
+    try:
+        from PIL import ImageFilter, ImageOps, ImageChops
+        w, h = gray_img.size
+        # Blur radius proportional to image dimensions (smooth background surface)
+        radius = max(15, min(w, h) // 35)
+        bg = gray_img.filter(ImageFilter.BoxBlur(radius))
+        diff = ImageChops.difference(gray_img, bg)
+        inv = ImageOps.invert(diff)
+        return ImageOps.autocontrast(inv, cutoff=1)
+    except Exception:
+        return gray_img
+
+
+def _preprocess_image_multistage(img):
+    """Create three specialized enhanced versions of the image:
+    1. Version A: Autocontrast + Sharpness (best for clean scans & PDF text layers).
+    2. Version B: Adaptive Otsu binarization with median denoising (best for thermal receipts/tables).
+    3. Version C: Illumination-flattened + contrast stretch (best for mobile photos with shadows).
+    """
+    from PIL import Image, ImageEnhance, ImageFilter, ImageOps, ImageChops
 
     # Grayscale
     if img.mode != 'L':
@@ -676,11 +731,11 @@ def _preprocess_image_multistage(img):
     else:
         gray = img.copy()
 
-    # Upscale if character strokes are too tiny (< 1600px max side)
+    # Optimal scaling for OCR (Tesseract performs best around 300 DPI / 1800-2400px side)
     w, h = gray.size
     max_side = max(w, h)
     if max_side < 1600:
-        scale = 1600.0 / max_side
+        scale = 1800.0 / max_side
         resample = getattr(Image, 'Resampling', getattr(Image, 'LANCZOS', None))
         if resample is not None and hasattr(resample, 'LANCZOS'):
             resample = resample.LANCZOS
@@ -700,8 +755,10 @@ def _preprocess_image_multistage(img):
     except Exception:
         ver_b = ver_a
 
-    return ver_a, ver_b
+    # 3. Version C: Shadow removal / Illumination flattened
+    ver_c = _flatten_illumination(gray)
 
+    return ver_a, ver_b, ver_c
 
 def _resolve_safe_lang(requested_lang: str, tess_mod) -> str:
     """Filter requested languages against available Tesseract traineddata."""
@@ -756,7 +813,7 @@ def _extract_from_image_bytes(image_bytes: bytes, lang: str = "ara+fra+eng", mim
 
     Improvements:
     - Auto-corrects 90/180/270 degree scan rotations and subtle skew (+/-10 deg).
-    - Multi-stage preprocessing: generates contrast-normalized & Otsu-binarized versions.
+    - Multi-stage preprocessing: generates contrast-normalized, Otsu-binarized, and shadow-flattened versions.
     - Multi-pass execution: runs PSM 3 (auto layout) and PSM 6 (single block/table).
     - Arabic post-processor: corrects reversed Arabic words, Unicode presentation forms, and spaced letters.
     """
@@ -789,8 +846,8 @@ def _extract_from_image_bytes(image_bytes: bytes, lang: str = "ara+fra+eng", mim
         gray = _correct_image_orientation(gray, _tess)
         gray = _deskew_image(gray)
 
-        # 2. Multi-stage preprocessing
-        ver_a, ver_b = _preprocess_image_multistage(gray)
+        # 2. Multi-stage preprocessing: 3 targets
+        ver_a, ver_b, ver_c = _preprocess_image_multistage(gray)
 
         candidates = []
 
@@ -810,22 +867,32 @@ def _extract_from_image_bytes(image_bytes: bytes, lang: str = "ara+fra+eng", mim
         except Exception:
             pass
 
-        # Pass 3: If sparse (< 30 chars), try testing 180° inversion
+        # Pass 3: Version C (illumination-flattened) if previous candidates are sparse
         best_candidate = max(candidates, key=_text_quality) if candidates else ""
-        if _text_quality(best_candidate) < 30:
+        if _text_quality(best_candidate) < 40:
+            try:
+                p3 = _tess.image_to_string(ver_c, lang=safe_lang, config='--psm 6').strip()
+                p3 = normalize_arabic_ocr_text(p3)
+                if _text_quality(p3) > _text_quality(best_candidate):
+                    best_candidate = p3
+                    candidates.append(p3)
+            except Exception:
+                pass
+
+        # Pass 4: Inversion check (180 deg) if still sparse
+        if _text_quality(best_candidate) < 25:
             try:
                 rot180 = ver_a.rotate(180, expand=True)
-                p3 = _tess.image_to_string(rot180, lang=safe_lang, config='--psm 3').strip()
-                p3 = normalize_arabic_ocr_text(p3)
-                if _text_quality(p3) > _text_quality(best_candidate) + 15:
-                    best_candidate = p3
+                p4 = _tess.image_to_string(rot180, lang=safe_lang, config='--psm 3').strip()
+                p4 = normalize_arabic_ocr_text(p4)
+                if _text_quality(p4) > _text_quality(best_candidate) + 15:
+                    best_candidate = p4
             except Exception:
                 pass
 
         return best_candidate
     except Exception as exc:
         raise RuntimeError(f"Image OCR failed: {exc}") from exc
-
 
 def _extract_from_pdf_bytes(pdf_bytes: bytes, lang: str, max_pages: int = 35) -> str:
     """Extract text from PDF with guaranteed timeout protection and fast 1-pass OCR.
