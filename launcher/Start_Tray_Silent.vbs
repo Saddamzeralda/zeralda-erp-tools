@@ -109,10 +109,4 @@ If Len(Url) = 0 Then
         Url = "https://zeralda-erp-employees-main-production.up.railway.app/zeralda_erp_dashboard.html"
     End If
 End If
-Dim PakeExe
-PakeExe = LauncherDir & "\Zeralda ERP.exe"
-If serverReady And Port = "8080" And FSO.FileExists(PakeExe) Then
-    WShell.Run Chr(34) & PakeExe & Chr(34), 1, False
-Else
-    WShell.Run Url, 1, False
-End If
+WShell.Run Url, 1, False
