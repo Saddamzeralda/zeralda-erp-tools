@@ -99,7 +99,11 @@ def action_toolkit():
         subprocess.run([sys.executable, py_toolkit])
 
 def action_keygen():
-    print("\n[*] تشغيل مولد التراخيص Keygen...")
+    print("\n[*] تشغيل محرر ومولد التراخيص Keygen...")
+    standalone_cmd = os.path.join(os.path.dirname(BASE_DIR), "Zeralda_Key_Editor", "START_KEY_EDITOR.cmd")
+    if os.path.exists(standalone_cmd):
+        subprocess.Popen(["cmd.exe", "/c", standalone_cmd])
+        return
     keygen_py = os.path.join(BASE_DIR, "tools", "keygen_tool.py")
     if not os.path.exists(keygen_py):
         keygen_py = os.path.join(BASE_DIR, "tools", "keygen_cli.py")
