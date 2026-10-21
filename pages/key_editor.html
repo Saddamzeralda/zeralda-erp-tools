@@ -1,0 +1,1825 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>محرر ومولد مفاتيح زيرالدا ERP | Zeralda Key Master Pro</title>
+  <meta name="description" content="أداة مستقلة متكاملة لتوليد وإدارة وتصدير مفاتيح وتراخيص زيرالda ERP مع دعم Google Drive والواتساب">
+  <link rel="icon" type="image/png" href="https://zeralda-erp-employees-main-production.up.railway.app/favicon.ico">
+  <style>
+    :root {
+      --bg-primary: #0a0f1d;
+      --bg-secondary: #111827;
+      --bg-card: #1e293b;
+      --bg-input: #0f172a;
+      --border-color: #334155;
+      --border-hover: #475569;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent-emerald: #10b981;
+      --accent-emerald-glow: rgba(16, 185, 129, 0.25);
+      --accent-cyan: #06b6d4;
+      --accent-blue: #3b82f6;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 18px;
+      --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    [data-theme="light"] {
+      --bg-primary: #f1f5f9;
+      --bg-secondary: #ffffff;
+      --bg-card: #ffffff;
+      --bg-input: #f8fafc;
+      --border-color: #e2e8f0;
+      --border-hover: #cbd5e1;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --accent-emerald: #059669;
+      --accent-emerald-glow: rgba(5, 150, 105, 0.15);
+      --accent-cyan: #0891b2;
+      --accent-blue: #2563eb;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: var(--font-family);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      line-height: 1.6;
+    }
+
+    /* Header */
+    header {
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(12px);
+    }
+
+    .header-container {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .brand-icon {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, var(--accent-emerald), var(--accent-cyan));
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      box-shadow: 0 4px 14px var(--accent-emerald-glow);
+    }
+
+    .brand-titles h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge-pro {
+      font-size: 0.7rem;
+      background: linear-gradient(90deg, #10b981, #06b6d4);
+      color: white;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .brand-titles p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 9px 18px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: var(--transition);
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent-emerald), #059669);
+      color: white;
+      box-shadow: 0 4px 12px var(--accent-emerald-glow);
+    }
+
+    .btn-primary:hover {
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: var(--bg-card);
+      color: var(--text-main);
+      border-color: var(--border-color);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-input);
+      border-color: var(--border-hover);
+    }
+
+    .btn-accent {
+      background: linear-gradient(135deg, var(--accent-blue), #1d4ed8);
+      color: white;
+    }
+
+    .btn-whatsapp {
+      background: #25d366;
+      color: white;
+    }
+
+    .btn-whatsapp:hover {
+      background: #20bd5a;
+    }
+
+    .btn-danger {
+      background: rgba(244, 63, 94, 0.15);
+      color: var(--accent-rose);
+      border-color: rgba(244, 63, 94, 0.3);
+    }
+
+    .btn-danger:hover {
+      background: var(--accent-rose);
+      color: white;
+    }
+
+    .btn-icon {
+      padding: 8px;
+      border-radius: var(--radius-sm);
+    }
+
+    /* Navigation Tabs */
+    .nav-tabs {
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .nav-container {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 18px;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.92rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: var(--transition);
+      white-space: nowrap;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-main);
+    }
+
+    .tab-btn.active {
+      color: var(--accent-emerald);
+      border-bottom-color: var(--accent-emerald);
+      background: rgba(16, 185, 129, 0.05);
+    }
+
+    /* Main Container */
+    main {
+      flex: 1;
+      max-width: 1300px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 24px;
+    }
+
+    /* Stat Cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: var(--transition);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--border-hover);
+    }
+
+    .stat-info h3 {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .stat-info p {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
+    .stat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Card Panels */
+    .panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border-color);
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .panel-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Forms */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .form-group.full-width {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    input[type="text"],
+    input[type="tel"],
+    input[type="email"],
+    input[type="number"],
+    select,
+    textarea {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      color: var(--text-main);
+      font-size: 0.95rem;
+      outline: none;
+      transition: var(--transition);
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent-emerald);
+      box-shadow: 0 0 0 3px var(--accent-emerald-glow);
+    }
+
+    .checkbox-group {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      color: var(--text-main);
+      transition: var(--transition);
+    }
+
+    .checkbox-label:hover {
+      border-color: var(--border-hover);
+    }
+
+    .checkbox-label input[type="checkbox"] {
+      accent-color: var(--accent-emerald);
+      width: 18px;
+      height: 18px;
+    }
+
+    /* Result Box */
+    .result-box {
+      margin-top: 24px;
+      background: linear-gradient(180deg, rgba(16, 185, 129, 0.08), rgba(15, 23, 42, 0.6));
+      border: 1px solid var(--accent-emerald);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      display: none;
+    }
+
+    .result-box.show {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .key-display {
+      font-family: 'Consolas', monospace;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--accent-emerald);
+      letter-spacing: 2px;
+      background: rgba(0,0,0,0.3);
+      padding: 12px 16px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      direction: ltr;
+      text-align: center;
+      margin: 10px 0;
+      border: 1px dashed var(--accent-emerald);
+    }
+
+    /* Tables */
+    .table-container {
+      overflow-x: auto;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-color);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: right;
+      font-size: 0.9rem;
+    }
+
+    th {
+      background: var(--bg-input);
+      color: var(--text-muted);
+      padding: 12px 16px;
+      font-weight: 600;
+      border-bottom: 1px solid var(--border-color);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-main);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .badge-success {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--accent-emerald);
+    }
+
+    .badge-warning {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--accent-amber);
+    }
+
+    .badge-danger {
+      background: rgba(244, 63, 94, 0.15);
+      color: var(--accent-rose);
+    }
+
+    .badge-blue {
+      background: rgba(59, 130, 246, 0.15);
+      color: var(--accent-blue);
+    }
+
+    /* Drive Integration Banner */
+    .drive-banner {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(6, 182, 212, 0.12));
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+
+    .drive-info {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .drive-logo {
+      width: 52px;
+      height: 52px;
+      flex-shrink: 0;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.75);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 20px;
+      backdrop-filter: blur(6px);
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      max-width: 650px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 24px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Toast Notification */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      left: 24px;
+      background: var(--bg-card);
+      color: var(--text-main);
+      padding: 12px 20px;
+      border-radius: var(--radius-sm);
+      border-right: 4px solid var(--accent-emerald);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+      display: none;
+      align-items: center;
+      gap: 10px;
+      z-index: 200;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header-container { flex-direction: column; align-items: stretch; }
+      .header-actions { justify-content: space-between; }
+      .form-grid { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .drive-banner { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="header-container">
+      <a href="#" class="brand">
+        <div class="brand-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+          </svg>
+        </div>
+        <div class="brand-titles">
+          <h1>زيرالدا ERP • محرر التراخيص والمفاتيح <span class="badge-pro">Master Pro</span></h1>
+          <p>أداة إدارة المفاتيح السريعة، تراخيص الأجهزة، والمزامنة السحابية مع Google Drive</p>
+        </div>
+      </a>
+
+      <div class="header-actions">
+        <a href="https://drive.google.com" target="_blank" class="btn btn-secondary" title="فتح Google Drive">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+          </svg>
+          Google Drive
+        </a>
+        <a href="https://zeralda-erp-employees-main-production.up.railway.app/" target="_blank" class="btn btn-primary" title="فتح برنامج زيرالدا ERP المباشر">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polygon points="10 8 16 12 10 16 10 8"></polygon>
+          </svg>
+          فتح Zeralda ERP Live
+        </a>
+        <button id="themeToggle" class="btn btn-secondary btn-icon" title="تبديل المظهر الداكن/الفاتح">
+          🌙
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <nav class="nav-tabs">
+    <div class="nav-container">
+      <button class="tab-btn active" onclick="switchTab('dashboard')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        لوحة الإحصائيات
+      </button>
+      <button class="tab-btn" onclick="switchTab('generator')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        توليد مفتاح جديد
+      </button>
+      <button class="tab-btn" onclick="switchTab('keys-list')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+        قاعدة المفاتيح والعملاء
+      </button>
+      <button class="tab-btn" onclick="switchTab('validator')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        فحص والتحقق من المفاتيح
+      </button>
+      <button class="tab-btn" onclick="switchTab('drive-backup')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Google Drive والنسخ الاحتياطي
+      </button>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main>
+
+    <!-- TAB 1: DASHBOARD -->
+    <section id="tab-dashboard" class="tab-content">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-info">
+            <h3>إجمالي المفاتيح المسجلة</h3>
+            <p id="stat-total">0</p>
+          </div>
+          <div class="stat-icon" style="background: rgba(59, 130, 246, 0.15); color: var(--accent-blue);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5"/></svg>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-info">
+            <h3>المفاتيح النشطة</h3>
+            <p id="stat-active" style="color: var(--accent-emerald);">0</p>
+          </div>
+          <div class="stat-icon" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-emerald);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-info">
+            <h3>تراخيص مدى الحياة</h3>
+            <p id="stat-lifetime" style="color: var(--accent-cyan);">0</p>
+          </div>
+          <div class="stat-icon" style="background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-info">
+            <h3>مفاتيح منتهية / ملغاة</h3>
+            <p id="stat-expired" style="color: var(--accent-rose);">0</p>
+          </div>
+          <div class="stat-icon" style="background: rgba(244, 63, 94, 0.15); color: var(--accent-rose);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions Banner -->
+      <div class="drive-banner">
+        <div class="drive-info">
+          <div class="drive-logo">
+            <svg viewBox="0 0 87.3 78" width="100%" height="100%">
+              <path d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8H0c0 1.55.4 3.1 1.2 4.5z" fill="#0066da"/>
+              <path d="m43.65 25-13.75-23.8c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44c-.8 1.4-1.2 2.95-1.2 4.5h27.5z" fill="#00ac47"/>
+              <path d="m73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5h-27.5l5.85 10.15z" fill="#ea4335"/>
+              <path d="m43.65 25 13.75-23.8c-1.35-.8-2.9-1.2-4.5-1.2h-18.5c-1.6 0-3.15.45-4.5 1.2z" fill="#00832d"/>
+              <path d="m59.8 53h-32.3l-13.75 23.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.45 4.5-1.2z" fill="#2684fc"/>
+              <path d="m73.4 26.5-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3l-13.75 23.8 16.15 28h27.45c0-1.55-.4-3.1-1.2-4.5z" fill="#ffba00"/>
+            </svg>
+          </div>
+          <div>
+            <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 4px;">تخزين سحابي آمن مع Google Drive</h3>
+            <p style="font-size: 0.88rem; color: var(--text-muted);">
+              احفظ نسخة من محرر المفاتيح وقاعدة البيانات وبرنامج Zeralda ERP بالكامل في حسابك على Google Drive بضغطة واحدة.
+            </p>
+          </div>
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <button onclick="switchTab('drive-backup')" class="btn btn-accent">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            إدارة النسخ والمزامنة
+          </button>
+          <button onclick="switchTab('generator')" class="btn btn-primary">
+            + إنشاء ترخيص جديد
+          </button>
+        </div>
+      </div>
+
+      <!-- Recent Keys Panel -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            آخر المفاتيح والتراخيص الصادرة
+          </div>
+          <button onclick="switchTab('keys-list')" class="btn btn-secondary" style="font-size: 0.82rem; padding: 6px 12px;">عرض الكل</button>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>العميل / الشركة</th>
+                <th>الهاتف</th>
+                <th>مفتاح التفعيل</th>
+                <th>نوع الترخيص</th>
+                <th>تاريخ الانتهاء</th>
+                <th>الحالة</th>
+                <th>إجراء سريع</th>
+              </tr>
+            </thead>
+            <tbody id="recent-keys-tbody">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: GENERATOR -->
+    <section id="tab-generator" class="tab-content" style="display: none;">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+            توليد مفتاح وترخيص جديد لعميل زيرالدا ERP
+          </div>
+          <button type="button" onclick="resetForm()" class="btn btn-secondary" style="font-size: 0.82rem; padding: 6px 12px;">تفريغ الحقول</button>
+        </div>
+
+        <form id="keyGenForm" onsubmit="handleGenerateKey(event)">
+          <div class="form-grid">
+            
+            <div class="form-group">
+              <label for="clientName">اسم العميل أو المؤسسة <span style="color:var(--accent-rose)">*</span></label>
+              <input type="text" id="clientName" placeholder="مثال: مؤسسة النور للتجارة والتوزيع" required>
+            </div>
+
+            <div class="form-group">
+              <label for="clientPhone">رقم هاتف العميل (أو الواتساب) <span style="color:var(--accent-rose)">*</span></label>
+              <input type="tel" id="clientPhone" placeholder="مثال: 0559666951 أو +213559666951" required>
+            </div>
+
+            <div class="form-group">
+              <label for="clientEmail">البريد الإلكتروني (اختياري)</label>
+              <input type="email" id="clientEmail" placeholder="client@example.com">
+            </div>
+
+            <div class="form-group">
+              <label for="licenseTier">مدة وصلاحية الترخيص <span style="color:var(--accent-rose)">*</span></label>
+              <select id="licenseTier" onchange="handleDurationChange(this.value)">
+                <option value="lifetime">مدى الحياة (Lifetime Enterprise - دائم بدون انتهاء)</option>
+                <option value="365">سنة كاملة (اشتراك سنوي - 365 يوم)</option>
+                <option value="180">نصف سنوي (اشتراك 6 أشهر - 180 يوم)</option>
+                <option value="90">فصلي (اشتراك 3 أشهر - 90 يوم)</option>
+                <option value="30">شهري (اشتراك شهر واحد - 30 يوم)</option>
+                <option value="14">نسخة تجريبية (Trial Demo - 14 يوم)</option>
+                <option value="7">نسخة تجريبية سريعة (7 أيام)</option>
+                <option value="custom">مخصص (تحديد الأيام يدوياً)</option>
+              </select>
+            </div>
+
+            <div class="form-group" id="customDaysGroup" style="display: none;">
+              <label for="customDays">عدد أيام الصلاحية المخصصة</label>
+              <input type="number" id="customDays" min="1" max="3650" placeholder="أدخل عدد الأيام">
+            </div>
+
+            <div class="form-group">
+              <label for="maxDevices">عدد الأجهزة المصرح بها</label>
+              <select id="maxDevices">
+                <option value="1">جهاز واحد فقط (Single PC)</option>
+                <option value="2">جهازين (Dual Terminal)</option>
+                <option value="3">3 أجهزة (Small Business)</option>
+                <option value="5">5 أجهزة (Enterprise Team)</option>
+                <option value="10">10 أجهزة</option>
+                <option value="999">أجهزة غير محدودة (Unlimited)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="hwFingerprint">قفل المفتاح على بصمة جهاز العميل (Hardware Lock - اختياري)</label>
+              <input type="text" id="hwFingerprint" placeholder="مثال: HW-9F8A-42C1-7B03 أو بصمة الجهاز">
+              <span style="font-size: 0.75rem; color: var(--text-muted);">اتركه فارغاً للسماح بتفعيل البرنامج على أي جهاز للعميل</span>
+            </div>
+
+            <div class="form-group full-width">
+              <label>الوحدات والوحدات الوظيفية المسموح بها في البرنامج</label>
+              <div class="checkbox-group">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="modAll" checked onchange="toggleAllModules(this.checked)">
+                  <strong>★ كامل الموديولات (*)</strong>
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" class="mod-item" value="pos" checked>
+                  المبيعات ونقاط البيع (POS)
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" class="mod-item" value="inventory" checked>
+                  المخزون والمنتجات
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" class="mod-item" value="purchases" checked>
+                  المشتريات والموردين
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" class="mod-item" value="accounting" checked>
+                  المحاسبة والتقارير المالية
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" class="mod-item" value="hr" checked>
+                  الموظفين والرواتب
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" class="mod-item" value="sync" checked>
+                  المزامنة السحابية و Google Drive
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" class="mod-item" value="ai" checked>
+                  الذكاء الاصطناعي و OCR
+                </label>
+              </div>
+            </div>
+
+          </div>
+
+          <div style="margin-top: 24px; display: flex; gap: 12px; justify-content: flex-end;">
+            <button type="submit" class="btn btn-primary" style="padding: 12px 28px; font-size: 1rem;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5"/></svg>
+              توليد وحفظ المفتاح الآن
+            </button>
+          </div>
+        </form>
+
+        <!-- Result Box -->
+        <div id="resultBox" class="result-box">
+          <h3 style="color: var(--accent-emerald); font-size: 1.1rem; display: flex; align-items: center; gap: 8px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            تم توليد المفتاح وحفظه في قاعدة البيانات بنجاح!
+          </h3>
+
+          <div style="margin-top: 16px;">
+            <label style="font-size: 0.85rem;">مفتاح التفعيل السريع للبرنامج (KEY):</label>
+            <div class="key-display">
+              <span id="resKeyStr">KEY-XXXX-XXXX-XXXX</span>
+              <button onclick="copyToClipboard(document.getElementById('resKeyStr').innerText)" class="btn btn-secondary btn-icon" title="نسخ المفتاح">📋</button>
+            </div>
+          </div>
+
+          <div style="margin-top: 10px;">
+            <label style="font-size: 0.85rem;">رقم ترخيص المؤسسات (Enterprise License):</label>
+            <div class="key-display" style="font-size: 1.05rem; color: var(--accent-cyan); border-color: var(--accent-cyan);">
+              <span id="resLicStr">ZERALDA-XXXX-XXXX-XXXX-XXXX</span>
+              <button onclick="copyToClipboard(document.getElementById('resLicStr').innerText)" class="btn btn-secondary btn-icon" title="نسخ الترخيص">📋</button>
+            </div>
+          </div>
+
+          <div style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+            <button id="resWaBtn" class="btn btn-whatsapp" onclick="sendViaWhatsApp()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766 0-3.18-2.587-5.771-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86.173.086.275.072.376-.044.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.043.073.043.419-.101.824z"/></svg>
+              إرسال التفاصيل عبر WhatsApp للعميل
+            </button>
+
+            <button onclick="copyFormattedMessage()" class="btn btn-secondary">
+              📄 نسخ رسالة العميل بالكامل
+            </button>
+
+            <button onclick="switchTab('keys-list')" class="btn btn-secondary">
+              الانتقال إلى جدول المفاتيح
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: KEYS LIST & MANAGER -->
+    <section id="tab-keys-list" class="tab-content" style="display: none;">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+            سجل وتفاصيل المفاتيح المسجلة
+          </div>
+
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button onclick="exportKeysJSON()" class="btn btn-secondary" style="font-size: 0.82rem;">
+              📥 تصدير JSON
+            </button>
+            <button onclick="exportKeysCSV()" class="btn btn-secondary" style="font-size: 0.82rem;">
+              📊 تصدير Excel / CSV
+            </button>
+            <label class="btn btn-secondary" style="font-size: 0.82rem; cursor: pointer; margin-bottom: 0;">
+              📤 استيراد JSON
+              <input type="file" id="importJsonInput" accept=".json" style="display: none;" onchange="importKeysJSON(event)">
+            </label>
+          </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div style="display: flex; gap: 12px; margin-bottom: 18px; flex-wrap: wrap;">
+          <input type="text" id="searchKeys" oninput="renderKeysTable()" placeholder="ابحث باسم العميل، الهاتف، أو المفتاح..." style="max-width: 380px;">
+          <select id="filterStatus" onchange="renderKeysTable()" style="max-width: 200px;">
+            <option value="all">جميع الحالات</option>
+            <option value="active">النشطة فقط</option>
+            <option value="lifetime">مدى الحياة فقط</option>
+            <option value="expired">المنتهية فقط</option>
+            <option value="revoked">الملغاة فقط</option>
+          </select>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>العميل / المؤسسة</th>
+                <th>رقم الهاتف</th>
+                <th>مفتاح التفعيل (KEY)</th>
+                <th>نوع الترخيص</th>
+                <th>الانتهاء</th>
+                <th>الحالة</th>
+                <th>إجراءات الإدارة</th>
+              </tr>
+            </thead>
+            <tbody id="keys-table-body">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: VALIDATOR & INSPECTOR -->
+    <section id="tab-validator" class="tab-content" style="display: none;">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            أداة فحص واختبار التراخيص والمفاتيح
+          </div>
+        </div>
+
+        <p style="color: var(--text-muted); margin-bottom: 16px;">
+          الصق أي مفتاح تفعيل (مثل <code>KEY-XXXX-XXXX-XXXX</code> أو <code>ZERALDA-XXXX...</code>) للتحقق من صلاحيته، بيانات العميل، تاريخ انتهائه، والوحدات المفتوحة.
+        </p>
+
+        <div style="display: flex; gap: 12px; margin-bottom: 20px;">
+          <input type="text" id="valKeyInput" placeholder="أدخل أو الصق المفتاح هنا..." style="font-family: monospace; font-size: 1.05rem;">
+          <button onclick="validateKeyInput()" class="btn btn-primary" style="padding: 10px 24px;">فحص المفتاح</button>
+        </div>
+
+        <div id="valResultBox" style="display: none; padding: 20px; border-radius: var(--radius-md); border: 1px solid var(--border-color); background: var(--bg-input);">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: GOOGLE DRIVE & CLOUD BACKUP -->
+    <section id="tab-drive-backup" class="tab-content" style="display: none;">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+            النسخ الاحتياطي السحابي عبر Google Drive
+          </div>
+        </div>
+
+        <div class="drive-banner">
+          <div class="drive-info">
+            <div class="drive-logo">
+              <svg viewBox="0 0 87.3 78" width="100%" height="100%">
+                <path d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8H0c0 1.55.4 3.1 1.2 4.5z" fill="#0066da"/>
+                <path d="m43.65 25-13.75-23.8c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44c-.8 1.4-1.2 2.95-1.2 4.5h27.5z" fill="#00ac47"/>
+                <path d="m73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5h-27.5l5.85 10.15z" fill="#ea4335"/>
+                <path d="m43.65 25 13.75-23.8c-1.35-.8-2.9-1.2-4.5-1.2h-18.5c-1.6 0-3.15.45-4.5 1.2z" fill="#00832d"/>
+                <path d="m59.8 53h-32.3l-13.75 23.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.45 4.5-1.2z" fill="#2684fc"/>
+                <path d="m73.4 26.5-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3l-13.75 23.8 16.15 28h27.45c0-1.55-.4-3.1-1.2-4.5z" fill="#ffba00"/>
+              </svg>
+            </div>
+            <div>
+              <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 4px;">حفظ وتخزين مفاتيح التراخيص والبرنامج في Google Drive</h3>
+              <p style="font-size: 0.9rem; color: var(--text-muted);">
+                يمكنك رفع ملف المفاتيح تلقائياً أو فتح Google Drive في مجلدك المفضل لحفظ نسخة دائمة ومشاركتها مع فريقك بأمان.
+              </p>
+            </div>
+          </div>
+          <a href="https://drive.google.com" target="_blank" class="btn btn-primary" style="padding: 12px 24px;">
+            🚀 الانتقال إلى Google Drive في المتصفح
+          </a>
+        </div>
+
+        <div class="form-grid" style="margin-top: 24px;">
+          <!-- Card 1: Key Editor HTML & Backup File -->
+          <div class="panel" style="background: var(--bg-input); border-color: var(--border-color);">
+            <h3 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 8px; color: var(--accent-emerald);">
+              1. تنزيل نسخة ملف المفاتيح (JSON)
+            </h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">
+              قم بتنزيل ملف <code>zeralda_keys_backup.json</code> وارفعه مباشرة إلى مجلد Google Drive لحفظ بيانات جميع المفاتيح والعملاء.
+            </p>
+            <button onclick="exportKeysJSON()" class="btn btn-primary" style="width: 100%;">
+              📥 تنزيل zeralda_keys_backup.json
+            </button>
+          </div>
+
+          <!-- Card 2: ERP Complete System ZIP -->
+          <div class="panel" style="background: var(--bg-input); border-color: var(--border-color);">
+            <h3 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 8px; color: var(--accent-cyan);">
+              2. حزمة البرنامج الكلي المجهزة للدرايف
+            </h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">
+              تم إنشاء حزمة كاملة ونظيفة بصيغة ZIP على سطح المكتب داخل مجلد <code>Zeralda_Google_Drive_Backup</code> جاهزة للرفع إلى Google Drive فوراً.
+            </p>
+            <button onclick="showBackupLocationInfo()" class="btn btn-secondary" style="width: 100%;">
+              📁 إظهار مسار حزمة سطح المكتب
+            </button>
+          </div>
+        </div>
+
+        <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 20px; margin-top: 20px;">
+          <h4 style="font-size: 0.95rem; margin-bottom: 10px; color: var(--accent-amber);">📌 خطوات التخزين في Google Drive:</h4>
+          <ol style="margin-right: 20px; font-size: 0.88rem; color: var(--text-muted); line-height: 1.9;">
+            <li>اضغط على زر <strong>"الانتقال إلى Google Drive في المتصفح"</strong> أعلاه لفتح حسابك.</li>
+            <li>أنشئ مجلداً جديداً باسم <code>Zeralda ERP Backups</code> أو افتح المجلد الحالي.</li>
+            <li>اسحب ملف <code>zeralda_key_editor.html</code> وملف <code>Zeralda_ERP_Complete_Backup_v2.0.zip</code> وضعهما داخل المجلد.</li>
+            <li>الآن أصبحت نسختك السحابية متوفرة دائماً، ويمكنك تشغيل محرر المفاتيح من أي حاسوب أو هاتف محمول عبر المتصفح!</li>
+          </ol>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Modal: View Key Details -->
+  <div id="keyDetailsModal" class="modal-overlay">
+    <div class="modal-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+        <h3 id="modalTitle" style="font-size: 1.15rem; font-weight: 700;">تفاصيل ترخيص العميل</h3>
+        <button onclick="closeModal()" class="btn btn-secondary btn-icon" style="font-size: 1.1rem; line-height: 1;">✕</button>
+      </div>
+
+      <div id="modalBody">
+        <!-- Rendered via JS -->
+      </div>
+
+      <div style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+        <button onclick="closeModal()" class="btn btn-secondary">إغلاق</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast">
+    <span id="toastIcon">✔</span>
+    <span id="toastMsg">تمت العملية بنجاح</span>
+  </div>
+
+  <!-- Application Logic (Vanilla JS, 100% Offline & Client-Side) -->
+  <script>
+    'use strict';
+
+    // ─────────────────────────────────────────────────────────
+    // Configuration & Initial State
+    // ─────────────────────────────────────────────────────────
+    const DB_KEY = 'zeralda_keys_master_db';
+
+    // Default Seed Data if fresh browser
+    const INITIAL_KEYS = [
+      {
+        id: 'KEY-2F94-8318-D39E',
+        key: 'KEY-2F94-8318-D39E',
+        licenseKey: 'ZERALDA-FB27-430C-208C-9E64',
+        customer: 'Saddam Zeralda (المدير العام)',
+        phone: '+213559666951',
+        email: 'saddamzeralda@gmail.com',
+        tier: 'lifetime',
+        tierLabel: 'مدى الحياة (Lifetime Enterprise)',
+        issuedAt: new Date('2026-10-16T22:56:22').getTime(),
+        expiresAt: 0,
+        hwFingerprint: '',
+        maxDevices: 999,
+        features: ['*'],
+        active: true,
+        revoked: false,
+        usageCount: 1,
+        createdBy: 'Admin / Saddam'
+      }
+    ];
+
+    let currentKeys = [];
+    let lastGeneratedKey = null;
+
+    // Load Database on Startup
+    function loadKeysDatabase() {
+      try {
+        const stored = localStorage.getItem(DB_KEY);
+        if (stored) {
+          currentKeys = JSON.parse(stored);
+        } else {
+          currentKeys = [...INITIAL_KEYS];
+          saveKeysDatabase();
+        }
+      } catch (e) {
+        console.error('Error loading keys:', e);
+        currentKeys = [...INITIAL_KEYS];
+      }
+      updateDashboardStats();
+      renderRecentKeys();
+      renderKeysTable();
+    }
+
+    function saveKeysDatabase() {
+      try {
+        localStorage.setItem(DB_KEY, JSON.stringify(currentKeys));
+      } catch (e) {
+        console.error('Failed to save to localStorage:', e);
+      }
+      updateDashboardStats();
+      renderRecentKeys();
+      renderKeysTable();
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // Phone Normalizer (Algerian + International)
+    // ─────────────────────────────────────────────────────────
+    function normalizePhoneNumber(raw) {
+      if (!raw) return '';
+      let clean = raw.trim().replace(/[\s\-\(\)]/g, '');
+      if (clean.startsWith('+')) return clean;
+      if (clean.startsWith('0')) return '+213' + clean.slice(1);
+      if (clean.startsWith('213')) return '+' + clean;
+      if (/^\d{8,10}$/.test(clean)) return '+213' + clean;
+      return '+' + clean;
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // Random Key Generators
+    // ─────────────────────────────────────────────────────────
+    function generateSecureHex(bytesLength) {
+      const array = new Uint8Array(bytesLength);
+      window.crypto.getRandomValues(array);
+      return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('').toUpperCase();
+    }
+
+    function generateKeyString() {
+      const hex = generateSecureHex(6);
+      return `KEY-${hex.slice(0, 4)}-${hex.slice(4, 8)}-${hex.slice(8, 12)}`;
+    }
+
+    function generateLicenseString() {
+      const hex = generateSecureHex(10);
+      return `ZERALDA-${hex.slice(0, 4)}-${hex.slice(4, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}`;
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // Key Generation Handler
+    // ─────────────────────────────────────────────────────────
+    function handleDurationChange(val) {
+      const customGroup = document.getElementById('customDaysGroup');
+      if (val === 'custom') {
+        customGroup.style.display = 'flex';
+        document.getElementById('customDays').required = true;
+      } else {
+        customGroup.style.display = 'none';
+        document.getElementById('customDays').required = false;
+      }
+    }
+
+    function toggleAllModules(checked) {
+      document.querySelectorAll('.mod-item').forEach(cb => {
+        cb.checked = checked;
+      });
+    }
+
+    function handleGenerateKey(event) {
+      event.preventDefault();
+
+      const name = document.getElementById('clientName').value.trim();
+      const rawPhone = document.getElementById('clientPhone').value.trim();
+      const email = document.getElementById('clientEmail').value.trim();
+      const tierVal = document.getElementById('licenseTier').value;
+      const hwId = document.getElementById('hwFingerprint').value.trim();
+      const maxDev = parseInt(document.getElementById('maxDevices').value, 10) || 1;
+
+      if (!name || !rawPhone) {
+        showToast('يرجى إدخال اسم العميل ورقم الهاتف', '❌');
+        return;
+      }
+
+      const phone = normalizePhoneNumber(rawPhone);
+      const now = Date.now();
+      let expiresAt = 0;
+      let tierLabel = 'مدى الحياة (Lifetime)';
+
+      if (tierVal === 'lifetime') {
+        expiresAt = 0;
+        tierLabel = 'مدى الحياة (Lifetime)';
+      } else if (tierVal === 'custom') {
+        const days = parseInt(document.getElementById('customDays').value, 10) || 30;
+        expiresAt = now + (days * 24 * 60 * 60 * 1000);
+        tierLabel = `مخصص (${days} يوم)`;
+      } else {
+        const days = parseInt(tierVal, 10);
+        expiresAt = now + (days * 24 * 60 * 60 * 1000);
+        const map = {
+          '365': 'اشتراك سنوي (سنة كاملة)',
+          '180': 'اشتراك نصف سنوي (6 أشهر)',
+          '90': 'اشتراك فصلي (3 أشهر)',
+          '30': 'اشتراك شهري (30 يوم)',
+          '14': 'نسخة تجريبية (14 يوم)',
+          '7': 'نسخة تجريبية (7 أيام)'
+        };
+        tierLabel = map[tierVal] || `${days} يوم`;
+      }
+
+      // Collect features
+      let features = [];
+      const allSelected = document.getElementById('modAll').checked;
+      if (allSelected) {
+        features = ['*'];
+      } else {
+        document.querySelectorAll('.mod-item:checked').forEach(cb => {
+          features.push(cb.value);
+        });
+        if (features.length === 0) features = ['pos'];
+      }
+
+      const keyStr = generateKeyString();
+      const licStr = generateLicenseString();
+
+      const keyRecord = {
+        id: keyStr,
+        key: keyStr,
+        licenseKey: licStr,
+        customer: name,
+        phone: phone,
+        email: email || '',
+        tier: tierVal,
+        tierLabel: tierLabel,
+        issuedAt: now,
+        expiresAt: expiresAt,
+        hwFingerprint: hwId,
+        maxDevices: maxDev,
+        features: features,
+        active: true,
+        revoked: false,
+        usageCount: 0,
+        createdBy: 'Admin / Key Master Pro'
+      };
+
+      currentKeys.unshift(keyRecord);
+      saveKeysDatabase();
+
+      lastGeneratedKey = keyRecord;
+
+      // Display Results
+      document.getElementById('resKeyStr').innerText = keyStr;
+      document.getElementById('resLicStr').innerText = licStr;
+      document.getElementById('resultBox').classList.add('show');
+
+      showToast('تم إنشاء وحفظ المفتاح بنجاح!', '🔑');
+    }
+
+    function resetForm() {
+      document.getElementById('keyGenForm').reset();
+      document.getElementById('modAll').checked = true;
+      toggleAllModules(true);
+      document.getElementById('customDaysGroup').style.display = 'none';
+      document.getElementById('resultBox').classList.remove('show');
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // WhatsApp Message Generator
+    // ─────────────────────────────────────────────────────────
+    function getCustomerMessage(rec) {
+      const expDate = rec.expiresAt === 0 
+        ? 'مدى الحياة (بدون تاريخ انتهاء)' 
+        : new Date(rec.expiresAt).toLocaleDateString('ar-DZ', { year: 'numeric', month: 'long', day: 'numeric' });
+
+      return `مرحباً ${rec.customer}،
+شكراً لثقتكم بنظام *Zeralda ERP* لإدارة وتسيير المؤسسات.
+
+تفاصيل ترخيص وتفعيل نسختكم:
+━━━━━━━━━━━━━━━━━━━━
+🔑 *مفتاح التفعيل السريع:* ${rec.key}
+📜 *رقم ترخيص المؤسسة:* ${rec.licenseKey}
+🏢 *اسم العميل:* ${rec.customer}
+⏳ *نوع الترخيص:* ${rec.tierLabel}
+📅 *الصلاحية:* ${expDate}
+💻 *عدد الأجهزة:* ${rec.maxDevices === 999 ? 'غير محدود' : rec.maxDevices}
+━━━━━━━━━━━━━━━━━━━━
+🌐 *رابط الدخول واستخدام النظام:*
+https://zeralda-erp-employees-main-production.up.railway.app/
+
+طريقة التفعيل:
+1- افتح الرابط أعلاه.
+2- أدخل رقم هاتفك (${rec.phone}).
+3- أدخل مفتاح التفعيل السريع أعلاه واضغط (تفعيل الترخيص).
+
+لأي استفسار أو دعم فني نحن في خدمتكم دائماً!`;
+    }
+
+    function sendViaWhatsApp() {
+      if (!lastGeneratedKey) return;
+      const phoneDigits = lastGeneratedKey.phone.replace(/[^0-9]/g, '');
+      const text = encodeURIComponent(getCustomerMessage(lastGeneratedKey));
+      const url = `https://wa.me/${phoneDigits}?text=${text}`;
+      window.open(url, '_blank');
+    }
+
+    function sendCustomerWhatsApp(keyId) {
+      const rec = currentKeys.find(k => k.id === keyId || k.key === keyId);
+      if (!rec) return;
+      const phoneDigits = rec.phone.replace(/[^0-9]/g, '');
+      const text = encodeURIComponent(getCustomerMessage(rec));
+      const url = `https://wa.me/${phoneDigits}?text=${text}`;
+      window.open(url, '_blank');
+    }
+
+    function copyFormattedMessage() {
+      if (!lastGeneratedKey) return;
+      copyToClipboard(getCustomerMessage(lastGeneratedKey));
+      showToast('تم نسخ رسالة العميل إلى الحافظة!', '📄');
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // Dashboard & Table Renderers
+    // ─────────────────────────────────────────────────────────
+    function updateDashboardStats() {
+      const total = currentKeys.length;
+      let active = 0;
+      let lifetime = 0;
+      let expired = 0;
+
+      const now = Date.now();
+
+      currentKeys.forEach(k => {
+        const isExp = (k.expiresAt !== 0 && k.expiresAt < now) || k.revoked || !k.active;
+        if (isExp) {
+          expired++;
+        } else {
+          active++;
+        }
+        if (k.expiresAt === 0 && !k.revoked && k.active) {
+          lifetime++;
+        }
+      });
+
+      document.getElementById('stat-total').innerText = total;
+      document.getElementById('stat-active').innerText = active;
+      document.getElementById('stat-lifetime').innerText = lifetime;
+      document.getElementById('stat-expired').innerText = expired;
+    }
+
+    function renderRecentKeys() {
+      const tbody = document.getElementById('recent-keys-tbody');
+      if (!tbody) return;
+
+      const top5 = currentKeys.slice(0, 5);
+      if (top5.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 20px;">لا توجد مفاتيح مسجلة حتى الآن</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = top5.map(k => createTableRowHTML(k)).join('');
+    }
+
+    function renderKeysTable() {
+      const tbody = document.getElementById('keys-table-body');
+      if (!tbody) return;
+
+      const query = (document.getElementById('searchKeys')?.value || '').toLowerCase().trim();
+      const statusFilter = document.getElementById('filterStatus')?.value || 'all';
+      const now = Date.now();
+
+      const filtered = currentKeys.filter(k => {
+        // Query match
+        const matchQ = !query || 
+          k.customer.toLowerCase().includes(query) ||
+          k.phone.includes(query) ||
+          k.key.toLowerCase().includes(query) ||
+          (k.licenseKey && k.licenseKey.toLowerCase().includes(query));
+
+        if (!matchQ) return false;
+
+        // Status filter
+        const isExp = k.expiresAt !== 0 && k.expiresAt < now;
+        if (statusFilter === 'active') return k.active && !k.revoked && !isExp;
+        if (statusFilter === 'lifetime') return k.expiresAt === 0 && k.active && !k.revoked;
+        if (statusFilter === 'expired') return isExp;
+        if (statusFilter === 'revoked') return k.revoked || !k.active;
+
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 24px;">لا توجد مفاتيح تطابق معايير البحث</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map((k, index) => createTableRowHTML(k, index + 1)).join('');
+    }
+
+    function createTableRowHTML(k, indexNum = null) {
+      const now = Date.now();
+      const isExpired = k.expiresAt !== 0 && k.expiresAt < now;
+      let badgeHTML = '';
+
+      if (k.revoked || !k.active) {
+        badgeHTML = `<span class="badge badge-danger">ملغى / معطل</span>`;
+      } else if (isExpired) {
+        badgeHTML = `<span class="badge badge-warning">منتهي الصلاحية</span>`;
+      } else if (k.expiresAt === 0) {
+        badgeHTML = `<span class="badge badge-success">★ مدى الحياة</span>`;
+      } else {
+        const remainingDays = Math.ceil((k.expiresAt - now) / (1000 * 60 * 60 * 24));
+        badgeHTML = `<span class="badge badge-blue">نشط (متبقي ${remainingDays} يوم)</span>`;
+      }
+
+      const expiryText = k.expiresAt === 0 
+        ? 'دائم (غير محدد)' 
+        : new Date(k.expiresAt).toLocaleDateString('ar-DZ');
+
+      return `
+        <tr>
+          ${indexNum ? `<td>${indexNum}</td>` : ''}
+          <td><strong>${escapeHtml(k.customer)}</strong></td>
+          <td dir="ltr" style="text-align: right;">${escapeHtml(k.phone)}</td>
+          <td>
+            <code style="color: var(--accent-emerald); font-weight: bold; cursor: pointer;" title="انقر للنسخ" onclick="copyToClipboard('${k.key}')">
+              ${k.key}
+            </code>
+          </td>
+          <td>${escapeHtml(k.tierLabel || k.tier)}</td>
+          <td>${expiryText}</td>
+          <td>${badgeHTML}</td>
+          <td>
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <button onclick="viewKeyModal('${k.id}')" class="btn btn-secondary btn-icon" title="عرض التفاصيل الكاملة">👁️</button>
+              <button onclick="sendCustomerWhatsApp('${k.id}')" class="btn btn-whatsapp btn-icon" title="إرسال عبر واتساب">💬</button>
+              <button onclick="copyToClipboard('${k.key}')" class="btn btn-secondary btn-icon" title="نسخ المفتاح">📋</button>
+              <button onclick="toggleRevokeKey('${k.id}')" class="btn ${k.revoked ? 'btn-primary' : 'btn-danger'} btn-icon" title="${k.revoked ? 'إعادة التفعيل' : 'إلغاء الترخيص'}">
+                ${k.revoked ? '🔄' : '🚫'}
+              </button>
+              <button onclick="deleteKey('${k.id}')" class="btn btn-danger btn-icon" title="حذف نهائي">🗑️</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // Key Actions (Revoke, Delete, Modal)
+    // ─────────────────────────────────────────────────────────
+    function toggleRevokeKey(keyId) {
+      const idx = currentKeys.findIndex(k => k.id === keyId || k.key === keyId);
+      if (idx === -1) return;
+
+      currentKeys[idx].revoked = !currentKeys[idx].revoked;
+      currentKeys[idx].active = !currentKeys[idx].revoked;
+      saveKeysDatabase();
+
+      showToast(currentKeys[idx].revoked ? 'تم إلغاء ترخيص المفتاح' : 'تمت إعادة تفعيل المفتاح', '✔');
+    }
+
+    function deleteKey(keyId) {
+      const rec = currentKeys.find(k => k.id === keyId || k.key === keyId);
+      if (!rec) return;
+
+      if (!confirm(`هل أنت متأكد من حذف مفتاح العميل (${rec.customer}) نهائياً؟`)) return;
+
+      currentKeys = currentKeys.filter(k => k.id !== keyId && k.key !== keyId);
+      saveKeysDatabase();
+      showToast('تم حذف المفتاح من قاعدة البيانات', '🗑️');
+    }
+
+    function viewKeyModal(keyId) {
+      const rec = currentKeys.find(k => k.id === keyId || k.key === keyId);
+      if (!rec) return;
+
+      const modal = document.getElementById('keyDetailsModal');
+      const body = document.getElementById('modalBody');
+
+      const expDate = rec.expiresAt === 0 
+        ? 'مدى الحياة (Perpetual / Lifetime)' 
+        : new Date(rec.expiresAt).toLocaleString('ar-DZ');
+
+      const issuedDate = new Date(rec.issuedAt).toLocaleString('ar-DZ');
+
+      body.innerHTML = `
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <div style="background: var(--bg-input); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+            <div style="font-size: 0.8rem; color: var(--text-muted);">مفتاح التفعيل السريع:</div>
+            <div style="font-family: monospace; font-size: 1.2rem; color: var(--accent-emerald); font-weight: bold; margin-top: 4px;">${rec.key}</div>
+          </div>
+
+          <div style="background: var(--bg-input); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+            <div style="font-size: 0.8rem; color: var(--text-muted);">ترخيص المؤسسة (Enterprise License Key):</div>
+            <div style="font-family: monospace; font-size: 1.05rem; color: var(--accent-cyan); font-weight: bold; margin-top: 4px;">${rec.licenseKey}</div>
+          </div>
+
+          <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div><strong>اسم العميل:</strong> ${escapeHtml(rec.customer)}</div>
+            <div dir="ltr" style="text-align: right;"><strong>الهاتف:</strong> ${escapeHtml(rec.phone)}</div>
+            <div><strong>البريد:</strong> ${escapeHtml(rec.email || 'غير مسجل')}</div>
+            <div><strong>نوع الترخيص:</strong> ${escapeHtml(rec.tierLabel || rec.tier)}</div>
+            <div><strong>تاريخ الإصدار:</strong> ${issuedDate}</div>
+            <div><strong>تاريخ الانتهاء:</strong> ${expDate}</div>
+            <div><strong>الأجهزة المسموحة:</strong> ${rec.maxDevices === 999 ? 'غير محدود' : rec.maxDevices}</div>
+            <div><strong>قفل الجهاز (HWID):</strong> ${rec.hwFingerprint || 'مفتوح لجميع الأجهزة'}</div>
+          </div>
+
+          <div style="background: var(--bg-input); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+            <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px;">الوحدات المفعلة:</div>
+            <div>${rec.features.join(' • ')}</div>
+          </div>
+
+          <div style="margin-top: 10px; display: flex; gap: 10px;">
+            <button onclick="copyToClipboard('${rec.key}')" class="btn btn-secondary">نسخ KEY</button>
+            <button onclick="copyToClipboard('${rec.licenseKey}')" class="btn btn-secondary">نسخ License</button>
+            <button onclick="sendCustomerWhatsApp('${rec.id}')" class="btn btn-whatsapp">إرسال بالواتساب</button>
+          </div>
+        </div>
+      `;
+
+      modal.classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('keyDetailsModal').classList.remove('active');
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // Key Validator Tool
+    // ─────────────────────────────────────────────────────────
+    function validateKeyInput() {
+      const input = document.getElementById('valKeyInput').value.trim();
+      const resBox = document.getElementById('valResultBox');
+
+      if (!input) {
+        showToast('يرجى إدخال مفتاح لفحصه', '❌');
+        return;
+      }
+
+      const match = currentKeys.find(k => 
+        k.key.toLowerCase() === input.toLowerCase() || 
+        (k.licenseKey && k.licenseKey.toLowerCase() === input.toLowerCase())
+      );
+
+      resBox.style.display = 'block';
+
+      if (!match) {
+        resBox.innerHTML = `
+          <div style="color: var(--accent-rose); display: flex; align-items: center; gap: 10px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+            <h3 style="font-size: 1.1rem;">المفتاح غير موجود أو غير صالح!</h3>
+          </div>
+          <p style="margin-top: 8px; color: var(--text-muted); font-size: 0.9rem;">
+            لم يتم العثور على هذا المفتاح في قاعدة البيانات المحلية. تأكد من صحة الحروف أو استورد نسخة البيانات الأحدث.
+          </p>
+        `;
+        return;
+      }
+
+      const now = Date.now();
+      const isExp = match.expiresAt !== 0 && match.expiresAt < now;
+      const isValid = match.active && !match.revoked && !isExp;
+
+      resBox.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; color: ${isValid ? 'var(--accent-emerald)' : 'var(--accent-rose)'};">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            ${isValid ? '<polyline points="20 6 9 17 4 12"/>' : '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>'}
+          </svg>
+          <h3 style="font-size: 1.2rem;">${isValid ? 'المفتاح ساري وصالح للاستخدام' : 'المفتاح غير نشط أو منتهي الصلاحية'}</h3>
+        </div>
+
+        <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px;">
+          <div><strong>العميل:</strong> ${escapeHtml(match.customer)}</div>
+          <div dir="ltr" style="text-align: right;"><strong>الهاتف:</strong> ${escapeHtml(match.phone)}</div>
+          <div><strong>نوع الترخيص:</strong> ${escapeHtml(match.tierLabel || match.tier)}</div>
+          <div><strong>حالة الترخيص:</strong> ${match.revoked ? 'ملغى يدويًا' : (isExp ? 'منتهي الصلاحية' : 'نشط ومعتمد')}</div>
+          <div><strong>تاريخ الانتهاء:</strong> ${match.expiresAt === 0 ? 'مدى الحياة' : new Date(match.expiresAt).toLocaleDateString('ar-DZ')}</div>
+          <div><strong>أقصى عدد للأجهزة:</strong> ${match.maxDevices}</div>
+        </div>
+      `;
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // Import & Export Handlers
+    // ─────────────────────────────────────────────────────────
+    function exportKeysJSON() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentKeys, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `zeralda_keys_backup_${new Date().toISOString().slice(0,10)}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      showToast('تم تنزيل ملف النسخة الاحتياطية JSON بنجاح', '📥');
+    }
+
+    function exportKeysCSV() {
+      let csv = "\uFEFFالاسم,الهاتف,البريد,مفتاح التفعيل,رقم الترخيص,النوع,تاريخ الانتهاء,الحالة\n";
+      currentKeys.forEach(k => {
+        const exp = k.expiresAt === 0 ? "مدى الحياة" : new Date(k.expiresAt).toLocaleDateString();
+        const status = k.revoked ? "ملغى" : (k.expiresAt !== 0 && k.expiresAt < Date.now() ? "منتهي" : "نشط");
+        csv += `"${k.customer}","${k.phone}","${k.email}","${k.key}","${k.licenseKey}","${k.tierLabel || k.tier}","${exp}","${status}"\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `zeralda_keys_report_${new Date().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      showToast('تم تصدير ملف Excel / CSV بنجاح', '📊');
+    }
+
+    function importKeysJSON(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (Array.isArray(imported)) {
+            // Merge unique keys
+            let count = 0;
+            imported.forEach(imp => {
+              if (imp && (imp.key || imp.id)) {
+                const id = imp.id || imp.key;
+                const existing = currentKeys.find(k => k.id === id || k.key === id);
+                if (!existing) {
+                  currentKeys.push(imp);
+                  count++;
+                }
+              }
+            });
+            saveKeysDatabase();
+            showToast(`تم استيراد ${count} مفتاح جديد بنجاح!`, '📥');
+          } else if (typeof imported === 'object') {
+            // Handled keygen_service / keys.json format
+            let count = 0;
+            Object.entries(imported).forEach(([k, v]) => {
+              if (!currentKeys.find(item => item.key === k)) {
+                currentKeys.push({
+                  id: k,
+                  key: k,
+                  licenseKey: v.licenseKey || k,
+                  customer: v.phone || 'عميل مسجل',
+                  phone: v.phone || '',
+                  email: v.email || '',
+                  tier: 'lifetime',
+                  tierLabel: 'مدى الحياة',
+                  issuedAt: v.created_at ? new Date(v.created_at).getTime() : Date.now(),
+                  expiresAt: v.expires_at ? new Date(v.expires_at).getTime() : 0,
+                  hwFingerprint: '',
+                  maxDevices: 1,
+                  features: ['*'],
+                  active: v.active !== false,
+                  revoked: false,
+                  usageCount: v.usage_count || 0
+                });
+                count++;
+              }
+            });
+            saveKeysDatabase();
+            showToast(`تم استيراد ${count} مفتاح جديد من ملف النظام!`, '📥');
+          }
+        } catch (err) {
+          showToast('فشل قراءة الملف: تنسيق JSON غير صالح', '❌');
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = '';
+    }
+
+    function showBackupLocationInfo() {
+      alert("مسار حزمة زيرالدا ERP الكاملة المجهزة للرفع على Google Drive:\nC:\\Users\\sadda\\Desktop\\Zeralda_Google_Drive_Backup\\\n\nالملفات الجاهزة:\n1- zeralda_key_editor.html (محرر المفاتيح المستقل)\n2- Zeralda_ERP_Complete_Backup_v2.0.zip (برنامج زيرالدا بالكامل)\n3- رابط سريع للدخول إلى Google Drive بضغطة زر.");
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // UI Helpers (Tabs, Toast, Clipboard, Theme)
+    // ─────────────────────────────────────────────────────────
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+
+      const target = document.getElementById(`tab-${tabId}`);
+      if (target) target.style.display = 'block';
+
+      const clickedBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => 
+        b.getAttribute('onclick')?.includes(tabId)
+      );
+      if (clickedBtn) clickedBtn.classList.add('active');
+
+      if (tabId === 'dashboard') {
+        updateDashboardStats();
+        renderRecentKeys();
+      } else if (tabId === 'keys-list') {
+        renderKeysTable();
+      }
+    }
+
+    function showToast(msg, icon = '✔') {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastMsg').innerText = msg;
+      document.getElementById('toastIcon').innerText = icon;
+      toast.style.display = 'flex';
+      setTimeout(() => {
+        toast.style.display = 'none';
+      }, 3500);
+    }
+
+    function copyToClipboard(text) {
+      if (!text) return;
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('تم النسخ إلى الحافظة بنجاح: ' + text.slice(0, 24) + '...', '📋');
+      }).catch(() => {
+        // Fallback
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        ta.remove();
+        showToast('تم النسخ بنجاح!', '📋');
+      });
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // Theme Switcher
+    const themeToggleBtn = document.getElementById('themeToggle');
+    themeToggleBtn.addEventListener('click', () => {
+      const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+      if (isLight) {
+        document.documentElement.removeAttribute('data-theme');
+        themeToggleBtn.innerText = '🌙';
+        localStorage.setItem('zeralda_theme', 'dark');
+      } else {
+        document.documentElement.setAttribute('data-theme', 'light');
+        themeToggleBtn.innerText = '☀️';
+        localStorage.setItem('zeralda_theme', 'light');
+      }
+    });
+
+    if (localStorage.getItem('zeralda_theme') === 'light') {
+      document.documentElement.setAttribute('data-theme', 'light');
+      themeToggleBtn.innerText = '☀️';
+    }
+
+    // Initial Load
+    document.addEventListener('DOMContentLoaded', () => {
+      loadKeysDatabase();
+    });
+  </script>
+</body>
+</html>
