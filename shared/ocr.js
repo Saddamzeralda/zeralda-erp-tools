@@ -19,6 +19,34 @@
       .replace(/\u066C/g, '');
   }
 
+  function normalizeArabicOcrText(text) {
+    if (!text) return '';
+    var s = String(text);
+    try { if (typeof s.normalize === 'function') s = s.normalize('NFKC'); } catch (_) {}
+    s = s.replace(/[\u0640]/g, '').replace(/[\u064B-\u065F\u0670]/g, '');
+    s = s.replace(/(?:^|\s)([\u0621-\u064A])\s+([\u0621-\u064A])\s+([\u0621-\u064A])(?:\s+([\u0621-\u064A]))*(?=\s|$)/g, function(m) {
+      return m.replace(/\s+/g, '');
+    });
+    var dict = {
+      'ةروتالفلا': 'الفاتورة', 'ةروتالف': 'فاتورة', 'عومجملا': 'المجموع',
+      'خيراتلا': 'التاريخ', 'ةكرشلا': 'الشركة', 'ليمعلا': 'العميل',
+      'دروملا': 'المورد', 'نوبزلا': 'الزبون', 'غلبملا': 'المبلغ',
+      'مقرلا': 'الرقم', 'يمكلا': 'الكمية', 'رعسلا': 'السعر',
+      'ةبيرضلا': 'الضريبة', 'يملا': 'الإجمالي', 'يفاصلا': 'الصافي',
+      'لمعل': 'العمل', 'ناونعلا': 'العنوان', 'فتاهلا': 'الهاتف',
+      'لسلسلا': 'السلسلة', 'عقوملا': 'الموقع', 'كحبلا': 'البحث'
+    };
+    for (var rev in dict) {
+      // Support prefix and postfix conjunctions (e.g., وعومجملا -> والمجموع, عومجملاو -> والمجموع)
+      var re = new RegExp('([وفبلك]?)' + rev + '([وف]?)', 'g');
+      s = s.replace(re, function(_, pre, post) {
+        var prefix = pre || post || '';
+        return prefix + dict[rev];
+      });
+    }
+    return s;
+  }
+
   function pickFirstNonEmpty(values) {
     var list = Array.isArray(values) ? values : [];
     for (var i = 0; i < list.length; i++) {
@@ -797,7 +825,7 @@
             '<div class="ocr-scanning-container" id="ocrScanningContainer">' +
               '<div class="ocr-laser-sim"><div class="ocr-laser-beam"></div></div>' +
               '<div class="ocr-scanning-text"><i class="fas fa-spinner fa-spin"></i> ' + this.t('scanning') + '</div>' +
-              '<div class="ocr-scanning-subtext">Gemini Vision AI Engine</div>' +
+              '<div class="ocr-scanning-subtext">' + (this.getLang() === 'ar' ? 'المسح الضوئي الذكي والتعرف الدقيق على النصوص' : (this.getLang() === 'fr' ? 'Scan Intelligent & OCR Haute Précision' : 'AI Smart Scan & Precision OCR')) + '</div>' +
             '</div>' +
 
             '<!-- Status Banner -->' +
@@ -1076,7 +1104,7 @@
       var self = this;
       var cleanOcrNum = function(v) { return self.cleanOcrNum(v); };
       var ext = global.OcrFieldExtractors || {};
-      var raw = text || '';
+      var raw = normalizeArabicOcrText(text || '');
       var fields = (payload.analysis && payload.analysis.fields) || {};
 
       // 1. Separate Customer and Supplier carefully

@@ -18,6 +18,7 @@ import subprocess
 import tempfile
 import threading
 import zipfile
+import unicodedata
 from typing import Dict, List, Optional
 from pathlib import Path
 
@@ -500,39 +501,240 @@ def _decode_base64_payload(file_b64: str) -> bytes:
 
 
 
-def _enhance_image_for_ocr(img, threshold: int = 140):
-    """Enhance image for better OCR results, especially for faint/light-colored text.
-    Applies: grayscale, contrast enhancement, adaptive thresholding, and upscaling for small images.
-    threshold: pixel value below which text becomes black (0-255, lower = only darker text captured)."""
-    from PIL import Image, ImageEnhance, ImageFilter
+# ── Arabic OCR Text Normalization & Post-Processing ─────────────────────────
+def normalize_arabic_ocr_text(text: str) -> str:
+    """Post-process and normalize Arabic text extracted by OCR or PDF layers.
 
-    # Convert to grayscale
+    Fixes:
+    1. Unicode NFKC normalization (converts presentation forms U+FB50-U+FEFC to standard Arabic).
+    2. Removes Arabic Tatweel (Kashida U+0640) and spurious diacritics.
+    3. Merges disconnected Arabic letters (e.g., 'ف ا ت و ر ة' -> 'فاتورة').
+    4. Detects and corrects reversed Arabic words from LTR visual order (e.g. 'ةروتالفلا' -> 'الفاتورة').
+    5. Normalizes Arabic-Indic digits to standard digits.
+    """
+    if not text:
+        return ""
+
+    # 1. Unicode NFKC normalization (critical for Arabic ligatures like Lam-Alef)
+    text = unicodedata.normalize('NFKC', text)
+
+    # 2. Strip Tatweel (Kashida: U+0640)
+    text = re.sub(r'[\u0640]', '', text)
+
+    # 3. Strip Tashkeel / diacritical noise (Fatha, Damma, Kasra, Sukun, Tanween, Shadda)
+    text = re.sub(r'[\u064B-\u065F\u0670]', '', text)
+
+    # 4. Fix spaced cursive letters (e.g. "ف ا ت و ر ة" -> "فاتورة")
+    def _merge_spaced(m):
+        return re.sub(r'\s+', '', m.group(0))
+
+    text = re.sub(r'(?<![^\s])(?:[\u0621-\u064A] ){2,}[\u0621-\u064A](?![^\s])', _merge_spaced, text)
+
+    # 5. Fix reversed Arabic words caused by LTR rendering
+    known_reversed = {
+        'ةروتالفلا': 'الفاتورة', 'ةروتالف': 'فاتورة', 'عومجملا': 'المجموع',
+        'خيراتلا': 'التاريخ', 'ةكرشلا': 'الشركة', 'ليمعلا': 'العميل',
+        'دروملا': 'المورد', 'نوبزلا': 'الزبون', 'غلبملا': 'المبلغ',
+        'مقرلا': 'الرقم', 'يمكلا': 'الكمية', 'رعسلا': 'السعر',
+        'ةبيرضلا': 'الضريبة', 'يملا': 'الإجمالي', 'يفاصلا': 'الصافي',
+        'لمعل': 'العمل', 'ناونعلا': 'العنوان', 'فتاهلا': 'الهاتف',
+        'لسلسلا': 'السلسلة', 'عقوملا': 'الموقع', 'كحبلا': 'البحث'
+    }
+
+    lines = text.splitlines()
+    fixed_lines = []
+    for line in lines:
+        if not re.search(r'[\u0621-\u064A]', line):
+            fixed_lines.append(line)
+            continue
+
+        words = line.split(' ')
+        fixed_words = []
+        for word in words:
+            w_stem = re.sub(r'[^\u0621-\u064A]', '', word)
+            if not w_stem or len(w_stem) < 2:
+                fixed_words.append(word)
+                continue
+
+            if w_stem in known_reversed:
+                fixed_words.append(word.replace(w_stem, known_reversed[w_stem]))
+                continue
+
+            # Attached conjunctions / prepositions at start (e.g. وعومجملا -> والمجموع)
+            if w_stem[0] in ('و', 'ف', 'ب', 'ل', 'ك') and w_stem[1:] in known_reversed:
+                fixed_words.append(word.replace(w_stem, w_stem[0] + known_reversed[w_stem[1:]]))
+                continue
+
+            # Attached conjunctions at end from full LTR reversal (e.g. عومجملاو -> والمجموع)
+            if w_stem[-1] in ('و', 'ف') and w_stem[:-1] in known_reversed:
+                fixed_words.append(word.replace(w_stem, w_stem[-1] + known_reversed[w_stem[:-1]]))
+                continue
+
+            # Heuristic detection for reversed Arabic:
+            prefix = ""
+            sub_stem = w_stem
+            if w_stem[0] in ('و', 'ف') and len(w_stem) >= 4:
+                prefix = w_stem[0]
+                sub_stem = w_stem[1:]
+
+            # - Starts with Taa Marbuta 'ة' (impossible in correct Arabic)
+            # - Ends with 'لا' (reversed 'ال') while not starting with 'ال'
+            if sub_stem.startswith('ة') and not sub_stem.endswith('ة'):
+                rev = prefix + sub_stem[::-1]
+                fixed_words.append(word.replace(w_stem, rev))
+            elif sub_stem.endswith('لا') and not sub_stem.startswith('ال') and len(sub_stem) >= 4:
+                rev = prefix + sub_stem[::-1]
+                fixed_words.append(word.replace(w_stem, rev))
+            elif w_stem.endswith(('لاو', 'لاف')) and len(w_stem) >= 5:
+                # Fully reversed with trailing conjunction: e.g. عومجملاو -> والمجموع
+                rev = w_stem[-1] + w_stem[:-1][::-1]
+                fixed_words.append(word.replace(w_stem, rev))
+            else:
+                fixed_words.append(word)
+
+        fixed_lines.append(' '.join(fixed_words))
+
+    return '\n'.join(fixed_lines)
+
+def _otsu_threshold(hist: List[int]) -> int:
+    """Compute optimal binarization threshold via Otsu's method from a 256-bin histogram."""
+    total = sum(hist)
+    if total == 0:
+        return 128
+    current_max = 0.0
+    threshold = 128
+    weight_background = 0
+    sum_b = 0
+    sum_total = sum(i * hist[i] for i in range(256))
+    for t in range(256):
+        weight_background += hist[t]
+        if weight_background == 0:
+            continue
+        weight_foreground = total - weight_background
+        if weight_foreground == 0:
+            break
+        sum_b += t * hist[t]
+        mean_background = sum_b / weight_background
+        mean_foreground = (sum_total - sum_b) / weight_foreground
+        between_class_variance = weight_background * weight_foreground * ((mean_background - mean_foreground) ** 2)
+        if between_class_variance > current_max:
+            current_max = between_class_variance
+            threshold = t
+    return threshold
+
+
+def _deskew_image(img):
+    """Detect and correct document skew (tilt) within +/- 10 degrees using projection profile variance."""
+    try:
+        from PIL import Image
+        w, h = img.size
+        scale = min(1.0, 360.0 / max(w, h))
+        if scale < 1.0:
+            resample = getattr(Image, 'Resampling', getattr(Image, 'BILINEAR', None))
+            if resample is not None and hasattr(resample, 'BILINEAR'):
+                resample = resample.BILINEAR
+            thumb = img.resize((int(w * scale), int(h * scale)), resample)
+        else:
+            thumb = img
+
+        if thumb.mode != 'L':
+            thumb = thumb.convert('L')
+
+        tw, th = thumb.size
+        best_angle = 0
+        best_var = -1.0
+
+        for angle in range(-8, 9, 2):
+            rot = thumb.rotate(angle, expand=False, fillcolor=255)
+            hist = [0] * th
+            pix = rot.load()
+            for y in range(th):
+                hist[y] = sum(1 for x in range(0, tw, 2) if pix[x, y] < 128)
+            mean = sum(hist) / max(1, th)
+            var = sum((v - mean) ** 2 for v in hist) / max(1, th)
+            if var > best_var:
+                best_var = var
+                best_angle = angle
+
+        if abs(best_angle) >= 2:
+            return img.rotate(best_angle, expand=True, fillcolor=255)
+    except Exception:
+        pass
+    return img
+
+
+def _preprocess_image_multistage(img):
+    """Create two enhanced versions of the image:
+    1. Clean grayscale with autocontrast and unsharp mask (best for digital documents/tables).
+    2. Adaptive Otsu binarized with median denoising (best for phone photos/receipts with shadows).
+    """
+    from PIL import Image, ImageEnhance, ImageFilter, ImageOps
+
+    # Grayscale
     if img.mode != 'L':
-        img = img.convert('L')
+        gray = img.convert('L')
+    else:
+        gray = img.copy()
 
-    # Upscale small images for better OCR (min 1500px on longest side)
-    w, h = img.size
+    # Upscale if character strokes are too tiny (< 1600px max side)
+    w, h = gray.size
     max_side = max(w, h)
-    if max_side < 1500:
-        scale = 1500 / max_side
-        # Support both old and new Pillow Resampling enum locations
+    if max_side < 1600:
+        scale = 1600.0 / max_side
         resample = getattr(Image, 'Resampling', getattr(Image, 'LANCZOS', None))
         if resample is not None and hasattr(resample, 'LANCZOS'):
             resample = resample.LANCZOS
-        img = img.resize((int(w * scale), int(h * scale)), resample)
+        gray = gray.resize((int(w * scale), int(h * scale)), resample)
 
-    # Enhance contrast (moderate — too high destroys faint text)
-    enhancer = ImageEnhance.Contrast(img)
-    img = enhancer.enhance(1.5)
+    # 1. Version A: Autocontrast + Sharpness
+    ver_a = ImageOps.autocontrast(gray, cutoff=1)
+    sharpener = ImageEnhance.Sharpness(ver_a)
+    ver_a = sharpener.enhance(1.4)
 
-    # Enhance sharpness
-    sharpness = ImageEnhance.Sharpness(img)
-    img = sharpness.enhance(1.3)
+    # 2. Version B: Otsu binarization with noise reduction
+    try:
+        denoised = ver_a.filter(ImageFilter.MedianFilter(size=3))
+        hist = denoised.histogram()
+        otsu_t = _otsu_threshold(hist)
+        ver_b = denoised.point(lambda p: 0 if p < otsu_t else 255, 'L')
+    except Exception:
+        ver_b = ver_a
 
-    # Apply thresholding: convert to pure black/white
-    img = img.point(lambda x: 0 if x < threshold else 255, 'L')
+    return ver_a, ver_b
 
-    return img
+
+def _resolve_safe_lang(requested_lang: str, tess_mod) -> str:
+    """Filter requested languages against available Tesseract traineddata."""
+    try:
+        avail = tess_mod.get_languages()
+        if avail:
+            parts = [p.strip() for p in (requested_lang or "").split("+") if p.strip()]
+            valid_parts = [p for p in parts if p in avail]
+            if valid_parts:
+                return "+".join(valid_parts)
+            for fallback in ["ara", "fra", "eng"]:
+                if fallback in avail:
+                    return fallback
+            return avail[0]
+    except Exception:
+        pass
+    return requested_lang or "ara+fra+eng"
+
+
+def _text_quality(text: str) -> int:
+    """Quality scoring for OCR output with high priority on Arabic text and keywords."""
+    if not text:
+        return 0
+    t = text.strip()
+    score = 0
+    score += sum(1 for c in t if c.isalnum())
+    # Arabic characters get double weight
+    score += sum(2 for c in t if '\u0621' <= c <= '\u064A')
+    lower = t.lower()
+    for kw in ('facture', 'فاتورة', 'total', 'مجموع', 'tva', 'ضريبة', 'nif', 'rc', 'da', 'dzd', 'زبون', 'مورد'):
+        if kw in lower:
+            score += 15
+    return score
 
 
 def _correct_image_orientation(img, tess_mod):
@@ -549,14 +751,14 @@ def _correct_image_orientation(img, tess_mod):
     return img
 
 
-def _extract_from_image_bytes(image_bytes: bytes, lang: str, mime_type: str = "image/jpeg") -> str:
-    """Perform fast, accurate OCR on image bytes using pytesseract + Pillow.
+def _extract_from_image_bytes(image_bytes: bytes, lang: str = "ara+fra+eng", mime_type: str = "image/jpeg") -> str:
+    """Perform high-precision multi-pass OCR on image bytes using pytesseract + Pillow.
 
-    Optimized for responsiveness:
-    - Auto-corrects scan orientation (inverted 180° or rotated scans).
-    - Downscales oversized images (>2048px) to reduce CPU load.
-    - Uses grayscale + PSM 3 as primary single-pass execution.
-    - Only falls back to contrast enhancement if initial extraction is sparse.
+    Improvements:
+    - Auto-corrects 90/180/270 degree scan rotations and subtle skew (+/-10 deg).
+    - Multi-stage preprocessing: generates contrast-normalized & Otsu-binarized versions.
+    - Multi-pass execution: runs PSM 3 (auto layout) and PSM 6 (single block/table).
+    - Arabic post-processor: corrects reversed Arabic words, Unicode presentation forms, and spaced letters.
     """
     try:
         import pytesseract as _tess
@@ -564,9 +766,10 @@ def _extract_from_image_bytes(image_bytes: bytes, lang: str, mime_type: str = "i
         raise RuntimeError("pytesseract is not installed")
 
     _configure_tesseract_cmd()
+    safe_lang = _resolve_safe_lang(lang, _tess)
 
     try:
-        from PIL import Image, ImageEnhance
+        from PIL import Image
     except Exception:
         raise RuntimeError('Pillow is required for image OCR')
 
@@ -574,56 +777,54 @@ def _extract_from_image_bytes(image_bytes: bytes, lang: str, mime_type: str = "i
         img = Image.open(io.BytesIO(image_bytes))
         w, h = img.size
         max_dim = max(w, h)
-        if max_dim > 2048:
-            scale = 1800 / max_dim
+        if max_dim > 2400:
+            scale = 2200.0 / max_dim
             resample = getattr(Image, 'Resampling', getattr(Image, 'LANCZOS', None))
             if resample is not None and hasattr(resample, 'LANCZOS'):
                 resample = resample.LANCZOS
             img = img.resize((int(w * scale), int(h * scale)), resample)
 
+        # 1. Orientation & Deskewing
         gray = img.convert('L')
-        # Auto-correct inverted or rotated document
         gray = _correct_image_orientation(gray, _tess)
+        gray = _deskew_image(gray)
 
-        # Fast Primary Pass: PSM 3 (automatic layout)
+        # 2. Multi-stage preprocessing
+        ver_a, ver_b = _preprocess_image_multistage(gray)
+
+        candidates = []
+
+        # Pass 1: Version A with PSM 3 (automatic layout)
         try:
-            text = _tess.image_to_string(gray, lang=lang, config='--psm 3').strip()
-        except Exception:
-            text = ''
-
-        # If primary pass got good content, return immediately
-        if _text_quality(text) >= 25:
-            return text
-
-        # Secondary fallback: contrast enhancement with PSM 6 (single block)
-        enhancer = ImageEnhance.Contrast(gray)
-        enhanced = enhancer.enhance(1.4)
-        try:
-            alt_text = _tess.image_to_string(enhanced, lang=lang, config='--psm 6').strip()
-            if _text_quality(alt_text) > _text_quality(text):
-                text = alt_text
+            p1 = _tess.image_to_string(ver_a, lang=safe_lang, config='--psm 3').strip()
+            p1 = normalize_arabic_ocr_text(p1)
+            candidates.append(p1)
         except Exception:
             pass
 
-        # Tertiary fallback: test 180° rotation if primary & contrast passes yielded sparse text (< 25 chars)
-        if _text_quality(text) < 25:
+        # Pass 2: Version B with PSM 6 (single block / tables - excellent for receipts/invoices)
+        try:
+            p2 = _tess.image_to_string(ver_b, lang=safe_lang, config='--psm 6').strip()
+            p2 = normalize_arabic_ocr_text(p2)
+            candidates.append(p2)
+        except Exception:
+            pass
+
+        # Pass 3: If sparse (< 30 chars), try testing 180° inversion
+        best_candidate = max(candidates, key=_text_quality) if candidates else ""
+        if _text_quality(best_candidate) < 30:
             try:
-                rot180 = gray.rotate(180, expand=True)
-                rot_text = _tess.image_to_string(rot180, lang=lang, config='--psm 3').strip()
-                if _text_quality(rot_text) > _text_quality(text) + 15:
-                    text = rot_text
+                rot180 = ver_a.rotate(180, expand=True)
+                p3 = _tess.image_to_string(rot180, lang=safe_lang, config='--psm 3').strip()
+                p3 = normalize_arabic_ocr_text(p3)
+                if _text_quality(p3) > _text_quality(best_candidate) + 15:
+                    best_candidate = p3
             except Exception:
                 pass
 
-        return text
+        return best_candidate
     except Exception as exc:
         raise RuntimeError(f"Image OCR failed: {exc}") from exc
-
-
-def _text_quality(text: str) -> int:
-    """Heuristic: count alphanumeric characters (letters + digits) as a quality score.
-    Better than raw length which counts whitespace and noise."""
-    return sum(1 for c in (text or '') if c.isalnum())
 
 
 def _extract_from_pdf_bytes(pdf_bytes: bytes, lang: str, max_pages: int = 35) -> str:
@@ -669,7 +870,7 @@ def _extract_from_pdf_bytes(pdf_bytes: bytes, lang: str, max_pages: int = 35) ->
 
         if has_text_layer and text_layer_parts:
             doc.close()
-            return "\n\n".join(text_layer_parts).strip()
+            return normalize_arabic_ocr_text("\n\n".join(text_layer_parts).strip())
 
         # Pass 2: Scanned document OCR fallback (only if pytesseract is available)
         if not _tess:
@@ -744,6 +945,7 @@ def _extract_from_pdf_bytes(pdf_bytes: bytes, lang: str, max_pages: int = 35) ->
                         pass
 
                 if page_ocr:
+                    page_ocr = normalize_arabic_ocr_text(page_ocr)
                     out_parts.append(f"--- [Page {i+1}] ---\n" + page_ocr)
             except Exception as page_exc:
                 _logger.warning("PDF page %d OCR render failed: %s", i + 1, page_exc)

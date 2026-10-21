@@ -443,7 +443,7 @@ def process_file_for_analysis(
                     print(f'[OCR] Tesseract fallback exception: {t_err}')
 
                 if not extracted_text:
-                    err_msg = f'Échec du scan (IA Copilot indisponible: {_vision_reason or "non configuré"}, et Tesseract: {ocr_error or "aucun texte"})'
+                    err_msg = f'فشل المسح الضوئي واستخراج النصوص: (محرك الذكاء الاصطناعي: {_vision_reason or "غير مفعل"}، ومحرك Tesseract: {ocr_error or "لم يتم العثور على نص مقروء"}). يرجى التأكد من وضوح الصورة.'
                     return {
                         'ok': False,
                         'error': err_msg,
@@ -454,9 +454,9 @@ def process_file_for_analysis(
         if not extracted_text or extracted_text == '[vision-first-mode]':
             if extracted_text != '[vision-first-mode]':
                 # Document parser failed (Excel/Word/TXT) — return error
-                err_parts = ['Échec de l\'extraction du texte du fichier.']
+                err_parts = ['فشل استخراج النصوص من الملف. يُرجى التحقق من سلامة الملف.']
                 if ocr_error:
-                    err_parts.append(f'Reason: {ocr_error}')
+                    err_parts.append(f'التفاصيل: {ocr_error}')
                 return {
                     'ok': False,
                     'error': ' '.join(err_parts),
@@ -466,6 +466,11 @@ def process_file_for_analysis(
             # vision-first mode: text will be extracted by the AI vision analysis step
             extracted_text_for_analysis = ''
         else:
+            try:
+                from app.services.ocr_service import normalize_arabic_ocr_text
+                extracted_text = normalize_arabic_ocr_text(extracted_text)
+            except Exception:
+                pass
             extracted_text_for_analysis = extracted_text
 
         # Step 1b: FAST PATH — for CSV/Excel files with structured data, parse directly
@@ -2643,7 +2648,16 @@ def _fix_invoice_supplier_customer(analysis: Dict, text: str) -> Dict:
 
 
 def _get_invoice_prompt() -> str:
-    return """Vous êtes un extracteur de factures/proformas expert. Analysez le document et extrayez TOUTES les données au format JSON.
+    return """Vous êtes un extracteur de factures/proformas/bons de livraison expert (contexte bilingue Arabe/Français pour l'Algérie et le Maghreb). Analysez le document et extrayez TOUTES les données au format JSON.
+
+INSTRUCTIONS CRITIQUES pour la langue et les textes arabes (مهم جداً):
+- Si le document est en arabe ou bilingue, CONSERVEZ les noms de produits, de clients et de fournisseurs en ARABE. Ne traduisez JAMAIS l'arabe en français.
+- Normalisez les chiffres arabes/indiens (٠-٩) en chiffres réguliers (0-9).
+- Prise en compte des termes équivalents arabes:
+  * Fournisseur: المورد، البائع، الشركة، المؤسسة، صاحب الفاتورة
+  * Client: العميل، الزبون، المشتري، السيد، إلى السيد(ة)، فاتورة إلى
+  * Identifiants: السجل التجاري (RC)، الرقم الجبائي (NIF)، التعريف الإحصائي (NIS)، المادة الجبائية (AI)، رقم النشاط (ART)، الحساب البنكي (RIB)
+  * Totaux: المجموع الخام (HT)، الضريبة / الرسم على القيمة المضافة (TVA)، حق الطابع (Timbre)، المجموع الإجمالي الصافي للدفع (TTC)
 
 INSTRUCTIONS CRITIQUES pour la distinction fournisseur/client:
 - "supplier_name" = le nom de l'entreprise QUI ÉMET/ENVOIE la facture (le vendeur, le fournisseur)
@@ -2782,9 +2796,10 @@ Retournez UNIQUEMENT le JSON, sans markdown ni explication."""
 
 
 def _get_receipt_prompt() -> str:
-    return """Analysez ce reçu/ticket de caisse et extrayez les données au format JSON.
-Le document peut contenir du texte arabe, français ou anglais.
-Les nombres peuvent utiliser des chiffres arabes (٠١٢٣) ou occidentaux (0123).
+    return """Analysez ce reçu/ticket de caisse (وصل استلام أو تذكرة صندوق) et extrayez les données au format JSON.
+Le document peut contenir du texte arabe, français ou mixte.
+Conservez impérativement les noms de produits et de commerçants en arabe sans traduction.
+Les nombres peuvent utiliser des chiffres arabes/indiens (٠١٢٣٤٥٦٧٨٩) ou occidentaux (0123456789).
 Retournez UNIQUEMENT le JSON, sans markdown ni explication.
 {
   "document_type": "receipt",
