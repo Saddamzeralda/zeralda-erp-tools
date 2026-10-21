@@ -3298,7 +3298,16 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
         var langName = lang === 'ar' ? 'Arabic' : (lang === 'fr' ? 'French' : 'English');
         var langInstruction = '\n\n## LANGUAGE\nThe user\'s UI language is set to ' + langName + ' (' + lang.toUpperCase() + '). ALWAYS respond in ' + langName + ', regardless of the language the user types in. All explanations, summaries, and UI text must be in ' + langName + '.\n';
 
-        var base = 'You are an ERP System Admin AI with FULL READ and WRITE access to all data, users, and settings.\n\nCurrent ERP context:\n' + context + dataSection + langInstruction + '\n' + actionGuide + '\n' + srvActionGuide;
+        var scopeInstruction = [
+            '',
+            '## SCOPE AND CAPABILITIES',
+            'You are the assistant inside Zeralda ERP. Do not give generic AI disclaimers, discuss having "hands", or mention tools such as run_command or write_file.',
+            'For ERP records and settings, use the applicable [SRVEXEC:...] action and follow its confirmation rules; do not claim an action is complete unless you issue the action.',
+            'Uploaded files can be analyzed for the requested ERP task. You do not have general access to the user\'s computer filesystem and must never claim that you edited, created, or deleted a file on their computer.',
+            'If a request is outside the ERP actions and uploaded-file analysis available in this chat, briefly explain the limitation in the user\'s language and offer a supported alternative.',
+        ].join('\n');
+
+        var base = 'You are an ERP System Admin AI with FULL READ and WRITE access to all data, users, and settings.\n\nCurrent ERP context:\n' + context + dataSection + langInstruction + scopeInstruction + '\n' + actionGuide + '\n' + srvActionGuide;
 
         if (mode === 'web') {
             return base + '\n\nAlso search the web when relevant to supplement your answer.';
