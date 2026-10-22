@@ -2905,20 +2905,20 @@
         };
 
         const tRuntime = createRuntimeTranslator({
-                account_saved: { en: 'Account saved successfully! ✅\n\nThis is a demo. In production, data will be saved to the database.', ar: 'تم حفظ الحساب بنجاح! ✅\n\nهذه نسخة تجريبية. في بيئة الإنتاج سيتم حفظ البيانات في قاعدة البيانات.', fr: 'Compte enregistré avec succès ! ✅\n\nCeci est une démo. En production, les données seront enregistrées dans la base de données.' },
-                opening_account: { en: 'Opening account {code} details...\n\nThis feature will be fully implemented in production.', ar: 'جاري فتح تفاصيل الحساب {code}...\n\nسيتم تنفيذ هذه الميزة بالكامل في بيئة الإنتاج.', fr: 'Ouverture des détails du compte {code}...\n\nCette fonctionnalité sera entièrement implémentée en production.' },
+                account_saved: { en: 'Account saved successfully to database! ✅', ar: 'تم حفظ الحساب بنجاح في قاعدة البيانات! ✅', fr: 'Compte enregistré avec succès dans la base de données ! ✅' },
+                opening_account: { en: 'Opening account {code} details...', ar: 'جاري فتح تفاصيل الحساب {code}...', fr: 'Ouverture des détails du compte {code}...' },
                 at_least_two_lines: { en: 'At least two lines are required!', ar: 'مطلوب سطران على الأقل!', fr: 'Au moins deux lignes sont requises !' },
-                journal_saved_draft: { en: 'Journal entry saved as draft! ✅\n\nThis is a demo. In production, data will be saved to the database.', ar: 'تم حفظ قيد اليومية كمسودة! ✅\n\nهذه نسخة تجريبية. في بيئة الإنتاج سيتم حفظ البيانات في قاعدة البيانات.', fr: 'Écriture de journal enregistrée comme brouillon ! ✅\n\nCeci est une démo. En production, les données seront enregistrées dans la base de données.' },
-                debit_credit_equal: { en: '⚠️ Warning: Debit and Credit must be equal!\n\nDebit: ${debit}\nCredit: ${credit}', ar: '⚠️ تحذير: يجب أن يكون المدين والدائن متساويين!\n\nالمدين: ${debit}\nالدائن: ${credit}', fr: '⚠️ Avertissement : Débit et Crédit doivent être égaux !\n\nDébit : ${debit}\nCrédit : ${credit}' },
+                journal_saved_draft: { en: 'Journal entry saved as draft! ✅', ar: 'تم حفظ قيد اليومية كمسودة بنجاح! ✅', fr: 'Écriture de journal enregistrée comme brouillon ! ✅' },
+                debit_credit_equal: { en: '⚠️ Warning: Debit and Credit must be equal!\n\nDebit: {debit}\nCredit: {credit}', ar: '⚠️ تحذير: يجب أن يكون المدين والدائن متساويين!\n\nالمدين: {debit}\nالدائن: {credit}', fr: '⚠️ Avertissement : Débit et Crédit doivent être égaux !\n\nDébit : {debit}\nCrédit : {credit}' },
                 add_journal_lines: { en: '⚠️ Please add journal lines with amounts!', ar: '⚠️ يرجى إضافة أسطر يومية بمبالغ!', fr: '⚠️ Veuillez ajouter des lignes de journal avec des montants !' },
-                journal_posted: { en: 'Journal entry posted successfully! ✅\n\nThis is a demo. In production, data will be saved to the database.', ar: 'تم ترحيل قيد اليومية بنجاح! ✅\n\nهذه نسخة تجريبية. في بيئة الإنتاج سيتم حفظ البيانات في قاعدة البيانات.', fr: 'Écriture de journal enregistrée avec succès ! ✅\n\nCeci est une démo. En production, les données seront enregistrées dans la base de données.' },
-                opening_journal_details: { en: 'Opening journal entry #{id} details...\n\nThis feature will be fully implemented in production.', ar: 'جاري فتح تفاصيل قيد اليومية #{id}...\n\nسيتم تنفيذ هذه الميزة بالكامل في بيئة الإنتاج.', fr: 'Ouverture des détails de l\'écriture #{id}...\n\nCette fonctionnalité sera entièrement implémentée en production.' },
-                opening_journal_edit: { en: 'Opening journal entry #{id} for editing...\n\nThis feature will be fully implemented in production.', ar: 'جاري فتح قيد اليومية #{id} للتعديل...\n\nسيتم تنفيذ هذه الميزة بالكامل في بيئة الإنتاج.', fr: 'Ouverture de l\'écriture #{id} pour modification...\n\nCette fonctionnalité sera entièrement implémentée en production.' },
-                preparing_journal_print: { en: 'Preparing journal entry #{id} for printing...\n\nThis will open the print dialog in production.', ar: 'جاري تجهيز قيد اليومية #{id} للطباعة...\n\nسيؤدي ذلك إلى فتح نافذة الطباعة في بيئة الإنتاج.', fr: 'Préparation de l\'écriture #{id} pour impression...\n\nCela ouvrira la boîte d\'impression en production.' },
-                loading_report: { en: 'Loading {type} report...\n\nThe report is already displayed below. In production, this will generate a PDF.', ar: 'جاري تحميل تقرير {type}...\n\nالتقرير معروض بالفعل أدناه. في بيئة الإنتاج سيتم إنشاء ملف PDF.', fr: 'Chargement du rapport {type}...\n\nLe rapport est déjà affiché ci-dessous. En production, cela générera un PDF.' },
-                bank_saved: { en: 'Bank account saved successfully! ✅\n\nThis is a demo. In production, data will be saved to the database.', ar: 'تم حفظ الحساب البنكي بنجاح! ✅\n\nهذه نسخة تجريبية. في بيئة الإنتاج سيتم حفظ البيانات في قاعدة البيانات.', fr: 'Compte bancaire enregistré avec succès ! ✅\n\nCeci est une démo. En production, les données seront enregistrées dans la base de données.' },
-                bank_transactions_open: { en: 'Opening bank account #{id} transactions...\n\nThis feature will be fully implemented in production.', ar: 'جاري فتح حركات الحساب البنكي #{id}...\n\nسيتم تنفيذ هذه الميزة بالكامل في بيئة الإنتاج.', fr: 'Ouverture des transactions du compte bancaire #{id}...\n\nCette fonctionnalité sera entièrement implémentée en production.' },
-                transfer_done: { en: 'Bank transfer completed successfully! ✅\n\nThis is a demo. In production, the transfer will be recorded in the database.', ar: 'تم التحويل البنكي بنجاح! ✅\n\nهذه نسخة تجريبية. في بيئة الإنتاج سيتم تسجيل التحويل في قاعدة البيانات.', fr: 'Virement bancaire effectué avec succès ! ✅\n\nCeci est une démo. En production, le transfert sera enregistré dans la base de données.' }
+                journal_posted: { en: 'Journal entry posted successfully to ledger! ✅', ar: 'تم ترحيل قيد اليومية وتحديث السجلات بنجاح! ✅', fr: 'Écriture de journal enregistrée et validée avec succès ! ✅' },
+                opening_journal_details: { en: 'Opening journal entry #{id} details...', ar: 'جاري عرض تفاصيل قيد اليومية #{id}...', fr: 'Affichage des détails de l\'écriture #{id}...' },
+                opening_journal_edit: { en: 'Opening journal entry #{id} for editing...', ar: 'جاري فتح قيد اليومية #{id} للتعديل...', fr: 'Ouverture de l\'écriture #{id} pour modification...' },
+                preparing_journal_print: { en: 'Preparing journal entry #{id} for printing...', ar: 'جاري تجهيز سند القيد المحاسبي #{id} للطباعة...', fr: 'Préparation de la pièce comptable #{id} pour impression...' },
+                loading_report: { en: 'Loading {type} report...', ar: 'جاري تحميل تقرير {type}...', fr: 'Chargement du rapport {type}...' },
+                bank_saved: { en: 'Bank account saved successfully to database! ✅', ar: 'تم حفظ الحساب البنكي بنجاح في قاعدة البيانات! ✅', fr: 'Compte bancaire enregistré avec succès ! ✅' },
+                bank_transactions_open: { en: 'Opening bank account #{id} transactions...', ar: 'جاري فتح حركات الحساب البنكي #{id}...', fr: 'Ouverture des transactions du compte bancaire #{id}...' },
+                transfer_done: { en: 'Bank transfer recorded successfully! ✅', ar: 'تم تسجيل التحويل المالي وتحديث الأرصدة بنجاح! ✅', fr: 'Virement bancaire enregistré avec succès ! ✅' }
         });
 
         function applyLocalizedAriaLabels(lang) {
@@ -3002,12 +3002,12 @@
                 const raw = ZS.getItem('zeralda-settings');
                 if(raw){
                     const settings = JSON.parse(raw);
-                    const code = settings && settings.systemCurrency ? settings.systemCurrency : 'USD';
+                    const code = settings && settings.systemCurrency ? settings.systemCurrency : 'DZD';
                     const map = { 'USD':'$', 'EUR':'€', 'GBP':'£', 'DZD':'DA', 'SAR':'SAR', 'MAD':'MAD', 'TND':'TND', 'EGP':'EGP' };
-                    return map[code] || '$';
+                    return map[code] || 'DA';
                 }
             } catch(e){}
-            return '$';
+            return 'DA';
         }
 
         function applyCurrencyText(){
@@ -3037,10 +3037,10 @@
                 const raw = ZS.getItem('zeralda-settings');
                 if(raw){
                     const settings = JSON.parse(raw);
-                    return settings && settings.systemCurrency ? settings.systemCurrency : 'USD';
+                    return settings && settings.systemCurrency ? settings.systemCurrency : 'DZD';
                 }
             } catch(e){}
-            return 'USD';
+            return 'DZD';
         }
 
         function startCurrencyTicker(){
@@ -3080,7 +3080,7 @@
         window.addEventListener('load', function(){
             applyCurrencyText();
             startCurrencyTicker();
-            scaleReportAmounts(0.0145);
+            scaleReportAmounts(1.0);
         });
 
         window.addEventListener('storage', function(event){
@@ -6103,6 +6103,24 @@
             updateCheckPreview();
         });
 
+                function _appendOcrJournalRow(table, accCode, lineDesc, debit, credit) {
+            const newRow = document.createElement('tr');
+            let optHtml = '<option value="">-- اختر الحساب SCF --</option>';
+            const accounts = _financeAccounts && _financeAccounts.length ? _financeAccounts : DEFAULT_SCF_ACCOUNTS;
+            accounts.forEach(function(acc) {
+                const selected = (acc.code === accCode || acc.code.startsWith(accCode.slice(0, 3))) ? ' selected' : '';
+                optHtml += '<option value="' + acc.code + '"' + selected + '>' + acc.code + ' - ' + _ckEsc(acc.name) + '</option>';
+            });
+
+            newRow.innerHTML = '<td><select style="width:100%; padding:8px; border:2px solid var(--light-color); border-radius:8px;">' + optHtml + '</select></td>'
+                + '<td><input type="text" style="width:100%; padding:8px;" value="' + _ckEsc(lineDesc) + '"></td>'
+                + '<td><input type="number" style="width:110px; padding:8px;" value="' + (debit > 0 ? debit.toFixed(2) : '') + '" placeholder="0.00" step="0.01" onchange="calculateJournalBalance()" oninput="calculateJournalBalance()"></td>'
+                + '<td><input type="number" style="width:110px; padding:8px;" value="' + (credit > 0 ? credit.toFixed(2) : '') + '" placeholder="0.00" step="0.01" onchange="calculateJournalBalance()" oninput="calculateJournalBalance()"></td>'
+                + '<td><button type="button" class="btn btn-danger" onclick="removeJournalLine(this)" style="padding:8px 12px;"><i class="fas fa-trash"></i></button></td>';
+
+            table.appendChild(newRow);
+        }
+
         function openFinanceOcrModal(type) {
             if (!window.ZeraldaOCR) {
                 alert('جاري تحميل محرك المسح الضوئي...');
@@ -6146,8 +6164,43 @@
                                 const textInputs = form.querySelectorAll('input[type="text"]');
                                 if (textInputs[1] && data.reference) textInputs[1].value = data.reference;
                                 const desc = form.querySelector('textarea');
-                                if (desc && (data.description || data.supplier)) {
-                                    desc.value = data.description || ('فاتورة ' + (data.supplier || ''));
+                                const partnerName = data.supplierName || data.customerName || data.supplier || '';
+                                if (desc && (data.description || partnerName)) {
+                                    desc.value = data.description || ('فاتورة: ' + partnerName);
+                                }
+
+                                // Auto-generate balanced SCF journal entry lines from extracted invoice amounts
+                                const totals = data.totals || {};
+                                const totalTTC = parseFloat(totals.total || data.amount || 0);
+                                const vatAmt = parseFloat(totals.vat || data.vatAmount || 0);
+                                const totalHT = parseFloat(totals.subtotal || (totalTTC - vatAmt) || (totalTTC > 0 ? (totalTTC / 1.19) : 0));
+
+                                if (totalTTC > 0) {
+                                    const table = document.getElementById('journalLinesTable');
+                                    if (table) {
+                                        table.innerHTML = '';
+                                        const isSales = Boolean(data.customerName && !data.supplierName);
+
+                                        if (isSales) {
+                                            // Sales Invoice: 411000 (Debit TTC) = 700000 (Credit HT) + 445700 (Credit TVA)
+                                            _appendOcrJournalRow(table, '411000', 'استحقاق الزبون: ' + partnerName, totalTTC, 0);
+                                            _appendOcrJournalRow(table, '700000', 'إيراد المبيعات (خام HT)', 0, totalHT > 0 ? totalHT : totalTTC);
+                                            if (vatAmt > 0) {
+                                                _appendOcrJournalRow(table, '445700', 'رسم القيمة المضافة المحصل TVA (19%)', 0, vatAmt);
+                                            }
+                                        } else {
+                                            // Supplier / Purchase Invoice: 607000 (Debit HT) + 445600 (Debit TVA) = 401000 (Credit TTC)
+                                            _appendOcrJournalRow(table, '607000', 'مشتريات بضائع وأعباء (خام HT)', totalHT > 0 ? totalHT : totalTTC, 0);
+                                            if (vatAmt > 0) {
+                                                _appendOcrJournalRow(table, '445600', 'رسم القيمة المضافة القابل للاسترجاع TVA', vatAmt, 0);
+                                            }
+                                            _appendOcrJournalRow(table, '401000', 'مستحقات المورد: ' + partnerName, 0, totalTTC);
+                                        }
+                                        calculateJournalBalance();
+                                        if (typeof financeToast === 'function') {
+                                            financeToast('✓ تم استخراج مبالغ الفاتورة وتوليد أسطر القيد المحاسبي المتوازن تلقائياً!');
+                                        }
+                                    }
                                 }
                             }
                         }, 150);
