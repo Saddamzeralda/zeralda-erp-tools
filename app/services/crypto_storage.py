@@ -129,7 +129,8 @@ def decrypt_bytes(raw_data: bytes) -> bytes:
         return raw_data
 
     if not HAS_CRYPTOGRAPHY or not AESGCM:
-        return raw_data
+        logger.error("Data is AES-256-GCM encrypted but cryptography library is not installed.")
+        raise RuntimeError("Encrypted storage requires 'cryptography' library.")
 
     header_offset = MAGIC_LEN
     nonce = raw_data[header_offset:header_offset + NONCE_LEN]
@@ -137,7 +138,8 @@ def decrypt_bytes(raw_data: bytes) -> bytes:
 
     key = get_encryption_key()
     if not key:
-        return raw_data
+        logger.error("Data is AES-256-GCM encrypted but encryption key is missing.")
+        raise RuntimeError("Storage encryption key is missing or unreadable.")
     aesgcm = AESGCM(key)
     try:
         return aesgcm.decrypt(nonce, ciphertext, None)
