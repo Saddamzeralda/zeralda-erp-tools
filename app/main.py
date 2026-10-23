@@ -480,9 +480,12 @@ def main() -> None:
         from app.services import license_service
         # Integrity check — verify critical files haven't been tampered with.
         # In production, strict=True will refuse to start if files are modified.
-        is_production = ENVIRONMENT == "production"
+        # In production on local machines, strict=True refuses to start if files are modified.
+        # On cloud container platforms (Railway, Render, etc.), avoid hard SystemExit so containers never crash-loop.
+        is_cloud = bool(os.getenv("RAILWAY_ENVIRONMENT") or os.getenv("RENDER") or os.getenv("DYNO") or os.getenv("K_SERVICE"))
+        strict_mode = (ENVIRONMENT == "production") and not is_cloud
         try:
-            integrity_result = license_service.check_integrity(strict=is_production)
+            integrity_result = license_service.check_integrity(strict=strict_mode)
             if not integrity_result["ok"]:
                 print(f"[LICENSE] [WARN] Integrity check: {len(integrity_result['mismatches'])} file(s) modified")
                 # Log tampering events to usage analytics
