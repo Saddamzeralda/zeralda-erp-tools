@@ -13,8 +13,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# Install system dependencies (build tools, libpq, curl, and native Tesseract OCR with Arabic, French, and English)
+# Install system dependencies (build tools, libpq, curl, certificates, and native Tesseract OCR)
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
     gcc \
     libpq-dev \
     curl \

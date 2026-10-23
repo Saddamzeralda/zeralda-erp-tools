@@ -111,12 +111,8 @@ def create_app() -> FastAPI:
             or os.getenv("USE_HTTPS", "false").lower() == "true"
             or request.url.scheme == "https"
         )
-        is_trustworthy_context = bool(
-            is_https or host_hdr in ("localhost", "127.0.0.1", "::1") or host_hdr.endswith((".railway.app", ".trycloudflare.com"))
-        )
-        if is_trustworthy_context:
-            # 'unsafe-none' allows Google Identity Services (GSI) and OAuth popups to check window.closed without COOP errors
-            response.headers["Cross-Origin-Opener-Policy"] = "unsafe-none"
+        # 'unsafe-none' allows Google Identity Services (GSI) and OAuth popups to check window.closed without COOP errors
+        response.headers["Cross-Origin-Opener-Policy"] = "unsafe-none"
         if is_https:
             response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         # CSP for HTML pages

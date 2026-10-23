@@ -11,8 +11,12 @@ import os
 import secrets
 import urllib.request
 import urllib.error
+import urllib.parse
 import json
 from typing import Any, Dict, Optional
+
+import requests
+import certifi
 
 from fastapi import APIRouter, Request, HTTPException, status
 from fastapi.responses import JSONResponse
@@ -145,26 +149,49 @@ async def google_login(request: Request):
         raise HTTPException(400, detail={"ok": False, "error": "Google token required", "code": "MISSING_TOKEN"})
 
     # Verify with Google: support both OAuth Access Tokens and Google One-Tap ID Tokens (JWT)
-    if google_token.count(".") == 2:
-        google_verify_url = f"https://oauth2.googleapis.com/tokeninfo?id_token={urllib.parse.quote(google_token)}"
-        http_req = urllib.request.Request(google_verify_url)
-    else:
-        google_userinfo_url = "https://www.googleapis.com/oauth2/v3/userinfo"
-        http_req = urllib.request.Request(
-            google_userinfo_url, headers={"Authorization": "Bearer " + google_token}
-        )
+    userinfo = None
     try:
-        with urllib.request.urlopen(http_req, timeout=10) as resp:
-            userinfo = json.loads(resp.read().decode("utf-8"))
-    except urllib.error.HTTPError as e:
-        log_structured("WARNING", "Google token verification failed", action="google_login",
-                       status="token_invalid", http_code=e.code)
-        raise HTTPException(401, detail={"ok": False, "error": "Invalid Google token", "code": "INVALID_GOOGLE_TOKEN"})
+        if google_token.count(".") == 2:
+            google_verify_url = "https://oauth2.googleapis.com/tokeninfo"
+            resp = requests.get(google_verify_url, params={"id_token": google_token}, timeout=10)
+        else:
+            google_userinfo_url = "https://www.googleapis.com/oauth2/v3/userinfo"
+            resp = requests.get(google_userinfo_url, headers={"Authorization": f"Bearer {google_token}"}, timeout=10)
+
+        if resp.status_code == 200:
+            userinfo = resp.json()
+        elif resp.status_code in (400, 401):
+            log_structured("WARNING", "Google token verification failed", action="google_login",
+                           status="token_invalid", http_code=resp.status_code)
+            raise HTTPException(401, detail={"ok": False, "error": "Invalid Google token", "code": "INVALID_GOOGLE_TOKEN"})
+        else:
+            raise Exception(f"Google API responded with status {resp.status_code}: {resp.text[:200]}")
+    except HTTPException:
+        raise
     except Exception as e:
-        log_structured("WARNING", "Google token verification error", action="google_login",
-                       status="error", error=str(e))
-        raise HTTPException(502, detail={"ok": False, "error": "Failed to verify Google token",
-                                          "code": "GOOGLE_VERIFY_FAILED"})
+        # Fallback to urllib with certifi SSL context
+        try:
+            import ssl
+            ssl_ctx = ssl.create_default_context(cafile=certifi.where())
+            if google_token.count(".") == 2:
+                google_verify_url = f"https://oauth2.googleapis.com/tokeninfo?id_token={urllib.parse.quote(google_token)}"
+                http_req = urllib.request.Request(google_verify_url)
+            else:
+                google_userinfo_url = "https://www.googleapis.com/oauth2/v3/userinfo"
+                http_req = urllib.request.Request(
+                    google_userinfo_url, headers={"Authorization": "Bearer " + google_token}
+                )
+            with urllib.request.urlopen(http_req, timeout=10, context=ssl_ctx) as uresp:
+                userinfo = json.loads(uresp.read().decode("utf-8"))
+        except urllib.error.HTTPError as he:
+            log_structured("WARNING", "Google token verification failed", action="google_login",
+                           status="token_invalid", http_code=he.code)
+            raise HTTPException(401, detail={"ok": False, "error": "Invalid Google token", "code": "INVALID_GOOGLE_TOKEN"})
+        except Exception as fallback_err:
+            log_structured("WARNING", "Google token verification error", action="google_login",
+                           status="error", error=f"requests err: {e}; fallback err: {fallback_err}")
+            raise HTTPException(502, detail={"ok": False, "error": f"Failed to verify Google token: {e}",
+                                              "code": "GOOGLE_VERIFY_FAILED"})
 
     google_email = str(userinfo.get("email", "")).strip().lower()
     google_name = str(userinfo.get("name", userinfo.get("given_name", ""))).strip()
