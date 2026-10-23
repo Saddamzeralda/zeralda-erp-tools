@@ -6,6 +6,7 @@ ProjectRoot = FSO.GetParentFolderName(LauncherDir)
 
 ' Bundled embedded Python (installed by the installer to {app}\python\)
 BundledPyExe  = ProjectRoot & "\python\python.exe"
+VenvPyExe     = ProjectRoot & "\.venv\Scripts\python.exe"
 
 ServerScript  = ProjectRoot & "\app\main.py"
 LegacyServer  = ProjectRoot & "\server.py"
@@ -18,6 +19,8 @@ WShell.CurrentDirectory = ProjectRoot
 Dim PythonExe
 If FSO.FileExists(BundledPyExe) Then
     PythonExe = BundledPyExe
+ElseIf FSO.FileExists(VenvPyExe) Then
+    PythonExe = VenvPyExe
 Else
     PythonExe = "python"
 End If

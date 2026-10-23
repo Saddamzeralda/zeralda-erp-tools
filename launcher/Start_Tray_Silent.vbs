@@ -3,9 +3,14 @@ Set FSO = CreateObject("Scripting.FileSystemObject")
 LauncherDir = FSO.GetParentFolderName(WScript.ScriptFullName)
 ProjectRoot = FSO.GetParentFolderName(LauncherDir)
 BundledPy = ProjectRoot & "\python\python.exe"
+VenvPy = ProjectRoot & "\.venv\Scripts\python.exe"
 AppMain = ProjectRoot & "\app\main.py"
 LegacyServer = ProjectRoot & "\server.py"
 LogFile = ProjectRoot & "\logs\server.log"
+LogDir = ProjectRoot & "\logs"
+If Not FSO.FolderExists(LogDir) Then
+    FSO.CreateFolder LogDir
+End If
 ' Read port and startup URL from .env if available
 Port = "8080"
 StartupUrl = ""
@@ -31,6 +36,8 @@ WShell.CurrentDirectory = ProjectRoot
 Dim PythonExe
 If FSO.FileExists(BundledPy) Then
     PythonExe = BundledPy
+ElseIf FSO.FileExists(VenvPy) Then
+    PythonExe = VenvPy
 Else
     PythonExe = "python"
 End If
@@ -46,6 +53,8 @@ End If
 ' Using cmd /c with direct command for reliability across Windows versions
 Dim FullCmd
 FullCmd = Chr(34) & Command & " >> " & Chr(34) & LogFile & Chr(34) & " 2>&1" & Chr(34)
+WShell.Environment("PROCESS")("LAUNCH_MODE") = "launcher"
+WShell.Environment("PROCESS")("AUTO_OPEN_BROWSER") = "false"
 WShell.Run "cmd /c " & FullCmd, 0, False
 ' Wait for server to be ready (up to 30 seconds)
 ' Check both /api/ping AND the main page to ensure full readiness
@@ -79,6 +88,10 @@ Do While waitCount < 60
     WScript.Sleep 500
     waitCount = waitCount + 1
 Loop
+If Not serverReady Then
+    MsgBox "Zeralda ERP could not start. Check the server log:" & vbCrLf & LogFile, vbCritical, "Zeralda ERP"
+    WScript.Quit 1
+End If
 ' Extra safety delay to ensure all modules are fully loaded
 If serverReady Then
     WScript.Sleep 2000
@@ -106,7 +119,7 @@ If Len(Url) = 0 Then
     If Len(StartupUrl) > 0 Then
         Url = StartupUrl
     Else
-        Url = "https://zeralda-erp-employees-main-production.up.railway.app/zeralda_erp_dashboard.html"
+        Url = "http://127.0.0.1:" & Port & "/login.html"
     End If
 End If
 WShell.Run Url, 1, False

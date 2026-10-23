@@ -18,7 +18,7 @@ $venvConfig   = Join-Path $projectRoot '.venv\pyvenv.cfg'
 $serverScript = Join-Path $projectRoot 'server.py'
 $appMainPy    = Join-Path $projectRoot 'app\main.py'
 $iconPath     = Join-Path $scriptDir 'app.ico'
-$erpUrl       = "https://zeralda-erp-employees-main-production.up.railway.app/zeralda_erp_dashboard.html"
+$erpUrl       = $null
 
 # Prefer active public URL from remote_access_info.json if present
 $remoteInfoFile = Join-Path $projectRoot 'data\remote_access_info.json'
@@ -40,6 +40,9 @@ if (-not $PSBoundParameters.ContainsKey('Port')) {
             if ($line -match '^STARTUP_URL=(.+)') { $erpUrl = $Matches[1].Trim() }
         }
     }
+}
+if ([string]::IsNullOrWhiteSpace($erpUrl)) {
+    $erpUrl = "http://127.0.0.1:$Port/login.html"
 }
 
 # ── Server control helpers ─────────────────────────────────────────────────────

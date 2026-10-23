@@ -374,7 +374,8 @@ if (-not $alreadyRunning) {
     $env:PYTHONIOENCODING = 'utf-8'
     $env:PYTHONUTF8      = '1'
     $env:PORT            = [string]$Port
-    $env:ZERALDA_LAUNCH_MODE = 'launcher'
+    $env:LAUNCH_MODE = 'launcher'
+    $env:AUTO_OPEN_BROWSER = 'false'
 
         # Start PostgreSQL if installed and not running
     $pgSvc = Get-Service -Name 'postgresql*' -ErrorAction SilentlyContinue | Select-Object -First 1
@@ -438,13 +439,6 @@ if (-not $alreadyRunning) {
     Write-Host "[info] Server already running on port $Port."
 }
 
-# ── launch the ERP launcher .exe ─────────────────────────────────────────────
-if (-not (Test-Path $launcherExe)) {
-    Write-Host "[error] Launcher not found: $launcherExe"
-    Stop-Server
-    exit 1
-}
-
 # ── start system tray monitor (background, STA thread) ───────────────────────
 $trayScript = Join-Path $launcherDir 'Zeralda_Tray.ps1'
 $trayProc   = $null
@@ -465,13 +459,24 @@ if (Test-Path $watchdogScript) {
     Write-Host "[start] Server watchdog launched (PID $($watchdogProc.Id))."
 }
 
-Write-Host "[start] Opening Zeralda ERP Launcher..."
-$erpProc = Start-Process -FilePath $launcherExe -PassThru
+if (Test-Path $launcherExe) {
+    Write-Host "[start] Opening Zeralda ERP Launcher..."
+    $erpProc = Start-Process -FilePath $launcherExe -PassThru
+} else {
+    $erpUrl = "http://127.0.0.1:$Port/login.html"
+    Write-Host "[warn] Desktop launcher executable not found. Opening the local ERP in the default browser."
+    Start-Process -FilePath $erpUrl | Out-Null
+    $erpProc = $trayProc
+}
 
-# ── wait for launcher to exit, then stop server ───────────────────────────────
-Write-Host "[wait] Monitoring launcher (PID $($erpProc.Id))... Close the window to stop the server."
+# ── wait for the launcher/tray controller to exit, then stop the server ──────
 try {
-    $erpProc.WaitForExit()
+    if ($erpProc) {
+        Write-Host "[wait] Monitoring launcher (PID $($erpProc.Id))... Exit the tray app to stop the server."
+        $erpProc.WaitForExit()
+    } else {
+        Write-Host "[warn] No tray controller is available; the server will remain running."
+    }
 } finally {
     Write-Host "[stop] Launcher closed. Stopping server..."
 
