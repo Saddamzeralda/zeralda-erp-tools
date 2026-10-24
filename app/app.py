@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import os
 import sys
+import time
 from pathlib import Path
 from typing import Optional
 
@@ -396,6 +397,12 @@ def create_app() -> FastAPI:
             return RedirectResponse(url=f"/{MODULE_SHORTCUTS[clean_fn]}", status_code=302)
 
         return JSONResponse(status_code=404, content={"ok": False, "error": "File not found"})
+
+    # ── Health check endpoint for Railway / Render / Upstream Load Balancers ────
+    @app.get("/healthz", include_in_schema=False)
+    @app.get("/api/healthz", include_in_schema=False)
+    async def health_check():
+        return {"status": "ok", "service": "zeralda-erp", "timestamp": time.time()}
 
     # ── Startup / shutdown ──────────────────────────────────────────────
     @app.on_event("startup")

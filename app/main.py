@@ -271,6 +271,8 @@ atexit.register(_cleanup_remote_tunnel)
 
 def _start_remote_tunnel() -> None:
     """Auto-start Cloudflare Quick Tunnel in background for worldwide access."""
+    if sys.platform != "win32":
+        return
     enabled = os.getenv("ENABLE_REMOTE_TUNNEL", "true").lower() in ("true", "1", "yes")
     if not enabled:
         return
@@ -333,6 +335,8 @@ def _start_port_80_forwarder() -> None:
     """Start transparent TCP stream forwarder on port 80 -> PORT (8080).
     Allows typing http://www.zeralda-erp.dz/ directly in browsers without specifying :8080!
     """
+    if sys.platform != "win32":
+        return
     def _worker():
         try:
             srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -376,6 +380,8 @@ def _start_port_80_forwarder() -> None:
 
 def _start_dns_responder() -> None:
     """Start local LAN DNS server to resolve www.zeralda-erp.dz on other devices."""
+    if sys.platform != "win32":
+        return
     try:
         from app.services import dns_service
         dns_service.start_dns_server()
@@ -385,7 +391,7 @@ def _start_dns_responder() -> None:
 
 def _start_browser_auto_opener() -> None:
     """Auto-opens the ERP client in default browser on server startup."""
-    if not AUTO_OPEN_BROWSER:
+    if sys.platform != "win32" or not AUTO_OPEN_BROWSER:
         return
 
     def _worker():

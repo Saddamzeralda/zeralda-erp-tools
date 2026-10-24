@@ -1528,10 +1528,17 @@
       return;
     }
 
-    // Load the license protection stack in order
-    await _loadScript(SHARED_BASE + 'license_crypto.js?v=' + SCRIPT_VERSION);
-    await _loadScript(SHARED_BASE + 'license_manager.js?v=' + SCRIPT_VERSION);
-    await _loadScript(SHARED_BASE + 'license_guard.js?v=' + SCRIPT_VERSION);
+    // The production bundle already defines these globals; load standalone
+    // scripts only when the bundle is not providing that part of the stack.
+    if (!window.LicenseCrypto) {
+      await _loadScript(SHARED_BASE + 'license_crypto.js?v=' + SCRIPT_VERSION);
+    }
+    if (!window.LicenseManager) {
+      await _loadScript(SHARED_BASE + 'license_manager.js?v=' + SCRIPT_VERSION);
+    }
+    if (!window.LicenseGuard) {
+      await _loadScript(SHARED_BASE + 'license_guard.js?v=' + SCRIPT_VERSION);
+    }
 
     // Wait for LicenseGuard to be available
     if (typeof window.LicenseGuard === 'undefined') {
@@ -1560,9 +1567,7 @@
   // This is a soft check — a determined attacker can bypass it, but it catches
   // casual tampering (e.g., editing license_guard.js to disable protection).
   var CRITICAL_SCRIPTS = [
-    'shared/license_crypto.js',
-    'shared/license_manager.js',
-    'shared/license_guard.js',
+    'shared/license_bundle.js',
   ];
 
   async function _verifyScriptIntegrity() {

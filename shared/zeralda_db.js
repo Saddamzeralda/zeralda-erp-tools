@@ -1141,7 +1141,11 @@
             cache: 'no-store',
             headers: _buildHeaders()
         }).then(function(r) {
-            if (!r.ok) throw new Error('Server returned ' + r.status);
+            if (!r.ok) {
+                var error = new Error('Server returned ' + r.status);
+                error.status = r.status;
+                throw error;
+            }
             return r.json();
         }).then(function(j) {
             if (!j.ok || !j.data || typeof j.data !== 'object') throw new Error('Invalid server response');
@@ -1410,19 +1414,28 @@
         _memReadyPromise = new Promise(function(resolve) {
             var _attempt = 0;
             var _maxAttempts = 5;
+            var _lastLoadError = null;
             function tryLoad() {
                 _attempt++;
                 if (_attempt > _maxAttempts) {
-                    console.warn('[ZS] Max load attempts reached (' + _maxAttempts + ') — giving up. Redirecting to login.');
-                    // لا تحوّل تلقائياً على صفحات login/restore لتجنب الحلقة
-                    if (!_isLoginPage) {
-                        try { window.location.href = 'login.html'; } catch(e) {}
+                    var shouldRedirectToLogin = !_getServerToken() ||
+                        (_lastLoadError && _lastLoadError.status === 401);
+                    if (shouldRedirectToLogin) {
+                        console.warn('[ZS] Max load attempts reached (' + _maxAttempts + ') — no valid session. Redirecting to login.');
+                        // لا تحوّل تلقائياً على صفحات login/restore لتجنب الحلقة
+                        if (!_isLoginPage) {
+                            try { window.location.href = 'login.html'; } catch(e) {}
+                        }
+                    } else {
+                        console.error('[ZS] Max load attempts reached (' + _maxAttempts + ') — server data unavailable; staying on page.',
+                            _lastLoadError && _lastLoadError.message);
                     }
                     resolve(0);
                     return;
                 }
                 if (_getServerToken()) {
-                    _loadFromServer().then(function(n) { resolve(n); }).catch(function() {
+                    _loadFromServer().then(function(n) { resolve(n); }).catch(function(err) {
+                        _lastLoadError = err;
                         setTimeout(tryLoad, 2000);
                     });
                 } else {
