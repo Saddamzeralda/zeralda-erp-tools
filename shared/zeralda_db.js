@@ -1304,6 +1304,16 @@
                 _lastSyncTime = Date.now();
                 _dispatchSyncStatus('synced');
             } else {
+                if (xhr.status === 401) {
+                    console.warn('[ZS] Server token invalid or expired (401). Clearing stale token.');
+                    try {
+                        document.cookie = "zeralda-auth-token=; path=/; max-age=0";
+                        localStorage.removeItem('zeralda-auth-token');
+                        localStorage.removeItem('zeralda-session-token');
+                        delete _memStore['zeralda-auth-token'];
+                        delete _memStore['zeralda-session-token'];
+                    } catch(_) {}
+                }
                 console.warn('[ZS] Server write failed for', key, xhr.status);
                 _offlineServerQueue[key] = value;
                 _saveOfflineQueue();
