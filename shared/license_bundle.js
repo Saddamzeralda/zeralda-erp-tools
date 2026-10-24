@@ -726,7 +726,20 @@
       if (s.serverHwId && (!_state.hwId || _state.hwId === '—')) {
         _state.hwId = s.serverHwId;
       }
-      if (s.status === 'expired') {
+      if (s.status === 'active') {
+        _state.status = 'active';
+        _state.license = {
+          licenseKey: s.licenseKey,
+          type: s.licenseType || 'standard',
+          expiresAt: s.expiresAt || 0
+        };
+        _state.lastCheck = Date.now();
+        _state.nextCheck = Date.now() + REVALIDATE_INTERVAL_MS;
+        _clearTrial();
+        _notifyListeners();
+        _startRevalidation();
+        return _getStatus();
+      } else if (s.status === 'expired') {
         _state.status = 'expired';
         _state.daysLeft = 0;
         _state.error = s.error || 'انتهت الفترة التجريبية | Trial expired';
