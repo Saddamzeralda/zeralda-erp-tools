@@ -28,7 +28,12 @@
 	function endSync() { if (_syncDepth > 0) _syncDepth--; }
 
 	function getToken() {
-		var token = ZS.getItem(TOKEN_KEY) || "";
+		var token = (typeof ZS !== 'undefined' && ZS && ZS.getItem ? ZS.getItem(TOKEN_KEY) : '') || '';
+		if (!token) {
+			try {
+				token = localStorage.getItem(TOKEN_KEY) || localStorage.getItem('zeralda-session-token') || '';
+			} catch(e) {}
+		}
 		// FIX: if token is missing from ZS, try to recover from cookie
 		// (cookies survive cache clears better than IndexedDB)
 		if (!token) {
@@ -37,7 +42,8 @@
 				if (m && m[1]) {
 					token = decodeURIComponent(m[1]);
 					// Restore to ZS
-					try { ZS.setItem(TOKEN_KEY, token); } catch(e){}
+					try { if (typeof ZS !== 'undefined' && ZS && ZS.setItem) ZS.setItem(TOKEN_KEY, token); } catch(e){}
+					try { localStorage.setItem(TOKEN_KEY, token); } catch(e){}
 					console.log('[app_sync] Token recovered from cookie');
 				}
 			} catch(e) {}

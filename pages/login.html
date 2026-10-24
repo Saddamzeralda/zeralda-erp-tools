@@ -1003,9 +1003,15 @@
 
         ZS.setItem(TOKEN_KEY, token);
         ZS.setItem('zeralda-session-token', token);
+        try {
+          localStorage.setItem(TOKEN_KEY, token);
+          localStorage.setItem('zeralda-session-token', token);
+        } catch (_) {}
         // FIX: also store token in cookie (survives cache clears)
-        document.cookie = "zeralda-auth-token=" + encodeURIComponent(token) +
-          "; path=/; max-age=604800; SameSite=Lax";
+        try {
+          document.cookie = "zeralda-auth-token=" + encodeURIComponent(token) +
+            "; path=/; max-age=604800; SameSite=Lax";
+        } catch (_) {}
         ZS.setItem(AUTH_META_KEY, JSON.stringify({
           failedByUser: {},
           userId: user.email || user.username || username,
@@ -1430,9 +1436,15 @@
 
         ZS.setItem(TOKEN_KEY, token);
         ZS.setItem('zeralda-session-token', token);
+        try {
+          localStorage.setItem(TOKEN_KEY, token);
+          localStorage.setItem('zeralda-session-token', token);
+        } catch (_) {}
         // FIX: also store token in cookie (survives cache clears)
-        document.cookie = "zeralda-auth-token=" + encodeURIComponent(token) +
-          "; path=/; max-age=604800; SameSite=Lax";
+        try {
+          document.cookie = "zeralda-auth-token=" + encodeURIComponent(token) +
+            "; path=/; max-age=604800; SameSite=Lax";
+        } catch (_) {}
         ZS.setItem(AUTH_META_KEY, JSON.stringify({
           userId: data.user_email || phone,
           phone: phone,

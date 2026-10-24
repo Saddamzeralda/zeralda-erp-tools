@@ -1064,10 +1064,15 @@
         try {
             // اقرأ من cookie أولاً (يبقى بعد مسح localStorage)
             var m = document.cookie.match(/zeralda-auth-token=([^;]+)/);
-            if (m) return decodeURIComponent(m[1]);
+            if (m && m[1]) return decodeURIComponent(m[1]);
         } catch(_) {}
         // ثم من الذاكرة
         if (_memStore['zeralda-auth-token']) return _memStore['zeralda-auth-token'];
+        // ثم من localStorage
+        try {
+            var lsToken = localStorage.getItem('zeralda-auth-token') || localStorage.getItem('zeralda-session-token');
+            if (lsToken) return lsToken;
+        } catch(_) {}
         return '';
     }
 
@@ -1465,10 +1470,14 @@
         },
         getItem: function (key) {
             var sk = _scopeKey(key);
-            // الـ token: اقرأ من cookie أولاً
+            // الـ token: اقرأ من cookie أولاً ثم localStorage
             if (sk === 'zeralda-auth-token') {
                 var m = document.cookie.match(/zeralda-auth-token=([^;]+)/);
-                if (m) { var t = decodeURIComponent(m[1]); _memStore[sk] = t; return t; }
+                if (m && m[1]) { var t = decodeURIComponent(m[1]); _memStore[sk] = t; return t; }
+                try {
+                    var lsT = localStorage.getItem('zeralda-auth-token') || localStorage.getItem('zeralda-session-token');
+                    if (lsT) { _memStore[sk] = lsT; return lsT; }
+                } catch(e) {}
             }
             return _memStore.hasOwnProperty(sk) ? _memStore[sk] : null;
         },
@@ -1491,10 +1500,13 @@
             }
             _memStore[sk] = value;
             if (_memKeys.indexOf(sk) === -1) _memKeys.push(sk);
-            // الـ token: احفظ في cookie فقط، لا ترسله للخادم
-            if (sk === 'zeralda-auth-token') {
+            // الـ token: احفظ في cookie و localStorage
+            if (sk === 'zeralda-auth-token' || sk === 'zeralda-session-token') {
                 try {
-                    document.cookie = "zeralda-auth-token=" + encodeURIComponent(value) + "; path=/; max-age=2592000; SameSite=Lax";
+                    localStorage.setItem(sk, value);
+                    if (sk === 'zeralda-auth-token') {
+                        document.cookie = "zeralda-auth-token=" + encodeURIComponent(value) + "; path=/; max-age=2592000; SameSite=Lax";
+                    }
                 } catch(e) {}
                 return;
             }
