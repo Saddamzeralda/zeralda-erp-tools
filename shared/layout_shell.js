@@ -667,17 +667,21 @@
   }
 
   /* ── Load Shared Layout via fetch ────────────────────── */
-  // Cache the layout HTML in ZS to avoid re-fetching on every page navigation.
-  // ZS is synchronous (in-memory cache) and survives navigation within the same tab.
-  var _layoutCacheVersion = '20261018L';
+  // Cache the layout HTML in sessionStorage (tab-local only; never pollute server kv_store).
+  var _layoutCacheVersion = '20261027_v3';
   var _cachedLayoutHTML = null;
   try {
-    var cachedVersion = ZS.getItem('zeralda-layout-shell-version');
-    if (cachedVersion === _layoutCacheVersion) {
-      _cachedLayoutHTML = ZS.getItem('zeralda-layout-shell-html');
-    } else {
+    // Purge legacy server-synced layout shell key from ZS so stale menu links never return
+    if (typeof ZS !== 'undefined' && ZS.removeItem) {
       ZS.removeItem('zeralda-layout-shell-html');
-      ZS.setItem('zeralda-layout-shell-version', _layoutCacheVersion);
+      ZS.removeItem('zeralda-layout-shell-version');
+    }
+    var cachedVersion = sessionStorage.getItem('zeralda-layout-shell-version');
+    if (cachedVersion === _layoutCacheVersion) {
+      _cachedLayoutHTML = sessionStorage.getItem('zeralda-layout-shell-html');
+    } else {
+      sessionStorage.removeItem('zeralda-layout-shell-html');
+      sessionStorage.setItem('zeralda-layout-shell-version', _layoutCacheVersion);
     }
   } catch (_) {}
 
@@ -692,14 +696,14 @@
     // Use cached HTML if available (avoids fetch on every page navigation)
     var fetchPromise = _cachedLayoutHTML
       ? Promise.resolve(_cachedLayoutHTML)
-      : fetch('shared/layout_shell.html?v=20261018L')
+      : fetch('shared/layout_shell.html?v=20261027_v3')
           .then(function (res) {
             if (!res.ok) throw new Error('Failed to load layout_shell.html: ' + res.status);
             return res.text();
           })
           .then(function (html) {
             _cachedLayoutHTML = html; // Cache for subsequent navigations
-            try { ZS.setItem('zeralda-layout-shell-html', html); } catch (_) {}
+            try { sessionStorage.setItem('zeralda-layout-shell-html', html); } catch (_) {}
             return html;
           });
 
@@ -1005,7 +1009,7 @@
     if (!document.querySelector('link[href*="ocr_unified.css"]') && !document.querySelector('link[href*="zeralda_core.bundle.css"]')) {
       var link = document.createElement('link');
       link.rel = 'stylesheet';
-      link.href = 'styles/ocr_unified.css?v=20261012d';
+      link.href = 'styles/zeralda_core.bundle.css?v=20261021_b1';
       document.head.appendChild(link);
     }
     var existingScript = document.querySelector('script[src*="ocr.js"]');

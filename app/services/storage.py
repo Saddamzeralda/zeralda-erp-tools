@@ -588,6 +588,14 @@ def migrate_unified_settings() -> None:
         else:
             logger.debug("Unified settings migration: no changes needed")
 
+        # Purge stale layout shell HTML from server store so clients always fetch fresh layout_shell.html
+        for stale_key in ("zeralda-layout-shell-html", "zeralda-layout-shell-version"):
+            if stale_key in store:
+                try:
+                    delete_key(stale_key)
+                except Exception:
+                    pass
+
         # Automatically check and compact history if it exceeds threshold
         auto_maintain_history()
 

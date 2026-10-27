@@ -891,7 +891,7 @@
         var link = document.createElement('link');
         link.id = 'zeralda-ocr-unified-css';
         link.rel = 'stylesheet';
-        link.href = 'styles/ocr_unified.css?v=20261012d';
+        link.href = 'styles/zeralda_core.bundle.css?v=20261021_b1';
         document.head.appendChild(link);
       }
     },

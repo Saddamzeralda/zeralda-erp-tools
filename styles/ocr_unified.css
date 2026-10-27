@@ -1,0 +1,5 @@
+/* ==============================================================================
+   Zeralda ERP — Unified OCR Stylesheet Stub
+   Ensures compatibility with pages and scripts expecting styles/ocr_unified.css
+   ============================================================================== */
+@import url('./zeralda_core.bundle.css');

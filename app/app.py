@@ -19,7 +19,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import JSONResponse, FileResponse, RedirectResponse
+from fastapi.responses import JSONResponse, FileResponse, RedirectResponse, Response
 
 from app.services.security import (
     ALLOWED_ORIGINS,
@@ -93,10 +93,98 @@ def create_app() -> FastAPI:
     app.add_middleware(GZipMiddleware, minimum_size=1000)
 
     # ── Security & Caching headers middleware ────────────────────────────
+    _base_dir_mw = Path(__file__).resolve().parent.parent
+    _MODULE_SHORTCUTS_MW = {
+        "inventory_management.html": "modules/inventory/inventory_management.html",
+        "sales_management.html": "modules/sales/sales_management.html",
+        "purchasing_management.html": "modules/purchasing/purchasing_management.html",
+        "finance_accounting.html": "modules/finance/finance_accounting.html",
+        "hr_management.html": "modules/hr/hr_management.html",
+        "crm_management.html": "modules/crm/crm_management.html",
+        "reports_analytics.html": "modules/reports/reports_analytics.html",
+        "services_management.html": "modules/services/services_management.html",
+        "consulting_tenders_management.html": "modules/consulting/consulting_tenders_management.html",
+        "ecommerce_admin.html": "modules/ecommerce/ecommerce_admin.html",
+        "storefront.html": "modules/ecommerce/storefront.html",
+    }
+    _LEGACY_BUNDLED_CSS = {
+        "ocr_unified.css",
+        "common_header_layout.css",
+        "common_header_brand.css",
+        "design_tokens.css",
+        "responsive_global.css",
+        "animated_icons.css",
+        "ai_chat_widget.css",
+    }
+    _LEGACY_SALES_JS = {
+        "sales_invoices_module.js",
+        "sales_proformas_module.js",
+        "sales_customers_module.js",
+        "sales_ui_drafts_module.js",
+        "advanced_features.js",
+        "sales_intelligence_plus.js",
+    }
+    _LEGACY_LICENSE_JS = {
+        "license_auto.js",
+        "license_crypto.js",
+        "license_guard.js",
+        "license_manager.js",
+    }
+    _LEGACY_SETTINGS_JS = {
+        "settings_advanced.js",
+        "settings_enhancements.js",
+    }
+    _LEGACY_NOOP_JS = {
+        "header_company_switcher.js",
+        "header_language_switcher.js",
+        "erp_finance_utils.js",
+        "storage_adapter.js",
+        "runtime_i18n.js",
+    }
+
     @app.middleware("http")
     async def security_headers(request: Request, call_next):
         response = await call_next(request)
         path = request.url.path.lower()
+
+        # Smart 404 recovery for legacy bundled assets and misplaced relative module paths
+        if (
+            response.status_code == 404
+            and request.method.upper() in ("GET", "HEAD")
+            and not path.startswith("/api/")
+            and ".." not in path
+        ):
+            basename = path.rstrip("/").split("/")[-1]
+            if basename in _MODULE_SHORTCUTS_MW:
+                target_rel = _MODULE_SHORTCUTS_MW[basename]
+                response = RedirectResponse(url=f"/{target_rel}", status_code=302)
+            elif basename in _LEGACY_BUNDLED_CSS:
+                bundle_css = _base_dir_mw / "styles" / "zeralda_core.bundle.css"
+                if bundle_css.is_file():
+                    response = FileResponse(str(bundle_css), media_type="text/css")
+            elif basename in _LEGACY_SALES_JS:
+                response = Response(
+                    content="if(!window.__zSalesBundleLoaded){window.__zSalesBundleLoaded=true;var s=document.createElement('script');s.src='/modules/sales/sales_bundle.js?v=20261027';document.head.appendChild(s);}",
+                    media_type="application/javascript",
+                )
+            elif basename in _LEGACY_LICENSE_JS:
+                response = Response(
+                    content="if(!window.__zLicBundleLoaded){window.__zLicBundleLoaded=true;var s=document.createElement('script');s.src='/shared/license_bundle.js?v=20261027';document.head.appendChild(s);}",
+                    media_type="application/javascript",
+                )
+            elif basename in _LEGACY_SETTINGS_JS:
+                response = Response(
+                    content="if(!window.__zSetBundleLoaded){window.__zSetBundleLoaded=true;var s=document.createElement('script');s.src='/shared/settings_bundle.js?v=20261027';document.head.appendChild(s);}",
+                    media_type="application/javascript",
+                )
+            elif basename in _LEGACY_NOOP_JS:
+                response = Response(content="/* bundled */", media_type="application/javascript")
+            elif basename:
+                for fallback_dir in (_base_dir_mw / "pages", _base_dir_mw, _base_dir_mw / "shared", _base_dir_mw / "styles"):
+                    cand = fallback_dir / basename
+                    if cand.is_file():
+                        response = FileResponse(str(cand))
+                        break
         # X-Frame-Options: SAMEORIGIN allows same-origin iframes (AI settings modal, previews)
         response.headers["X-Frame-Options"] = "SAMEORIGIN"
         response.headers["X-Content-Type-Options"] = "nosniff"
@@ -152,10 +240,10 @@ def create_app() -> FastAPI:
             if "pragma" in response.headers: del response.headers["pragma"]
             if "expires" in response.headers: del response.headers["expires"]
         elif path.endswith(".html") or path == "/":
-            # HTML pages: no-cache allows fast ETag validation (304) and enables browser bfcache
-            response.headers["Cache-Control"] = "no-cache"
-            if "pragma" in response.headers: del response.headers["pragma"]
-            if "expires" in response.headers: del response.headers["expires"]
+            # HTML pages: force fresh validation so stale cached pages never reference removed assets
+            response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+            response.headers["Pragma"] = "no-cache"
+            response.headers["Expires"] = "0"
         return response
 
     # ── CSRF protection middleware ──────────────────────────────────────
@@ -339,14 +427,14 @@ def create_app() -> FastAPI:
         return {"status": "ok", "service": "zeralda-erp", "timestamp": time.time()}
 
     # Root-level HTML files (index.html, login.html, settings.html, dashboard, etc.)
-    @app.get("/", include_in_schema=False)
+    @app.api_route("/", methods=["GET", "HEAD"], include_in_schema=False)
     async def root_index():
         for candidate_path in (base_dir / "pages" / "index.html", base_dir / "index.html"):
             if candidate_path.is_file():
                 return FileResponse(str(candidate_path))
         return JSONResponse({"ok": True, "message": "Zeralda ERP API", "docs": "/api/docs"})
 
-    @app.get("/{filename:path}", include_in_schema=False)
+    @app.api_route("/{filename:path}", methods=["GET", "HEAD"], include_in_schema=False)
     async def serve_root_file(filename: str):
         # Reject paths that look like API calls (already routed)
         if filename.startswith("api/"):
