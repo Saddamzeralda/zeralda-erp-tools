@@ -1308,6 +1308,19 @@
 
     // If already logged in, validate token before redirect
     function validateExistingSessionAndRedirect() {
+      var urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('logged_out') === '1' || urlParams.has('logout')) {
+        try { if (window.ZS) { ZS.removeItem(TOKEN_KEY); ZS.removeItem('zeralda-session-token'); } } catch(_) {}
+        try { localStorage.removeItem(TOKEN_KEY); localStorage.removeItem('zeralda-session-token'); } catch(_) {}
+        try { sessionStorage.removeItem(TOKEN_KEY); sessionStorage.removeItem('zeralda-session-token'); } catch(_) {}
+        try { document.cookie = "zeralda-auth-token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax"; } catch(_) {}
+        var msg = urlParams.get('msg');
+        if (msg) {
+          try { showError(msg); } catch (_) {}
+        }
+        return;
+      }
+
       var existingToken = ZS.getItem(TOKEN_KEY);
       if (!existingToken) return;
 

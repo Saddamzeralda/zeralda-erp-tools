@@ -810,9 +810,13 @@
 			markAuthActivity();
 			return false;
 		}
-		ZS.removeItem(TOKEN_KEY);
-		clearSessionMeta();
-		redirectToLogin();
+		if (typeof window.zeraldaLogout === 'function') {
+			window.zeraldaLogout({ automatic: true, msg: 'Session expired' });
+		} else {
+			try { window.ZS && window.ZS.removeItem(TOKEN_KEY); } catch (_) {}
+			clearSessionMeta();
+			window.location.replace('/login.html?logged_out=1');
+		}
 		return true;
 	}
 
@@ -1074,16 +1078,31 @@
 		logoutBtn.id = "headerLogoutBtn";
 		logoutBtn.type = "button";
 		logoutBtn.textContent = tHeader("logout");
-		logoutBtn.style.cssText = "background: #ef4444; color: white; border: none; border-radius: 10px; padding: 8px 10px; font-size: 12px; cursor: pointer;";
-		logoutBtn.addEventListener("click", () => {
-			ZS.removeItem(TOKEN_KEY);
-			clearSessionMeta();
-			redirectToLogin();
-		});
+		logoutBtn.style.cssText = "background: #ef4444; color: white; border: none; border-radius: 10px; padding: 8px 10px; font-size: 12px; cursor: pointer; transition: opacity 0.2s;";
+
+		function onLogoutClick(e) {
+			if (e) {
+				try { e.preventDefault(); } catch (_) {}
+				try { e.stopPropagation(); } catch (_) {}
+			}
+			logoutBtn.disabled = true;
+			logoutBtn.style.opacity = '0.6';
+			logoutBtn.textContent = '...';
+			if (typeof window.zeraldaLogout === 'function') {
+				window.zeraldaLogout();
+			} else {
+				try { window.ZS && window.ZS.removeItem(TOKEN_KEY); } catch (_) {}
+				clearSessionMeta();
+				window.location.replace('/login.html?logged_out=1');
+			}
+		}
+
+		logoutBtn.addEventListener("click", onLogoutClick);
 
 		wrap.appendChild(select);
 		wrap.appendChild(logoutBtn);
-		headerRight.appendChild(wrap);
+		const targetHeaderRight = headerRight.querySelector(".header-row.row-1") || headerRight;
+		targetHeaderRight.appendChild(wrap);
 
 		const langSwitcher = document.getElementById("headerLanguageSwitcher");
 		if (langSwitcher && !langSwitcher.dataset.roleTranslationBound) {
@@ -1713,10 +1732,14 @@
 			}).then(function (res) {
 				if (res.status === 401) {
 					console.warn('[app_sync] Token rejected (401) — clearing stale session');
-					ZS.removeItem(TOKEN_KEY);
-					clearSessionMeta();
 					callback(false);
-					redirectToLogin();
+					if (typeof window.zeraldaLogout === 'function') {
+						window.zeraldaLogout({ automatic: true });
+					} else {
+						try { window.ZS && window.ZS.removeItem(TOKEN_KEY); } catch (_) {}
+						clearSessionMeta();
+						window.location.replace('/login.html?logged_out=1');
+					}
 					return;
 				}
 				callback(res.ok);

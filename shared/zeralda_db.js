@@ -418,6 +418,12 @@
         if (_isSyncKey(key)) {
             _deleteCookie(key);
         }
+        if (key === 'zeralda-auth-token' || key === 'zeralda-session-token') {
+            try { localStorage.removeItem('zeralda-auth-token'); } catch(_) {}
+            try { localStorage.removeItem('zeralda-session-token'); } catch(_) {}
+            try { sessionStorage.removeItem('zeralda-auth-token'); } catch(_) {}
+            try { sessionStorage.removeItem('zeralda-session-token'); } catch(_) {}
+        }
     }
 
     // ── Keys cache (avoids O(n²) when iterating keys) ──
@@ -1529,9 +1535,27 @@
             delete _memStore[sk];
             var idx = _memKeys.indexOf(sk);
             if (idx >= 0) _memKeys.splice(idx, 1);
-            // الـ token: احذف من cookie
-            if (sk === 'zeralda-auth-token') {
-                try { document.cookie = "zeralda-auth-token=; path=/; max-age=0"; } catch(e) {}
+            // الـ token: احذف من cookie و localStorage و sessionStorage
+            if (sk === 'zeralda-auth-token' || sk === 'zeralda-session-token' || key === 'zeralda-auth-token' || key === 'zeralda-session-token') {
+                delete _memStore['zeralda-auth-token'];
+                delete _memStore['zeralda-session-token'];
+                try {
+                    var pastExpiry = "; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
+                    document.cookie = "zeralda-auth-token=" + pastExpiry;
+                    document.cookie = "zeralda-session-token=" + pastExpiry;
+                    if (window.location && window.location.hostname) {
+                        document.cookie = "zeralda-auth-token=" + pastExpiry + "; domain=" + window.location.hostname;
+                        document.cookie = "zeralda-session-token=" + pastExpiry + "; domain=" + window.location.hostname;
+                    }
+                } catch(e) {}
+                try {
+                    localStorage.removeItem('zeralda-auth-token');
+                    localStorage.removeItem('zeralda-session-token');
+                } catch(e) {}
+                try {
+                    sessionStorage.removeItem('zeralda-auth-token');
+                    sessionStorage.removeItem('zeralda-session-token');
+                } catch(e) {}
                 return;
             }
             if (_isLocalOnly(sk)) return;
@@ -1569,6 +1593,96 @@
             };
         },
         flushOfflineQueue: function() { return _flushOfflineServerQueue(); }
+    };
+
+    /**
+     * Complete, secure logout routine:
+     * 1. Dispatches 'zeralda-before-logout' event.
+     * 2. Immediately notifies backend server (/api/auth/logout) via beacon + fetch.
+     * 3. Completely wipes tokens & auth metadata across ZS, ZDB, localStorage, sessionStorage.
+     * 4. Expiration of all authentication cookies across / and current domain.
+     * 5. Navigates cleanly to /login.html?logged_out=1 (using location.replace to prevent back-button loops).
+     */
+    window.zeraldaLogout = function (options) {
+        options = options || {};
+        var isAutomatic = Boolean(options.automatic);
+
+        try {
+            if (typeof window.dispatchEvent === 'function') {
+                window.dispatchEvent(new CustomEvent('zeralda-before-logout', { detail: options }));
+            }
+        } catch (_) {}
+
+        var token = '';
+        try {
+            if (window.ZS && window.ZS.getItem) token = window.ZS.getItem('zeralda-auth-token') || window.ZS.getItem('zeralda-session-token') || '';
+        } catch (_) {}
+        if (!token) {
+            try {
+                token = localStorage.getItem('zeralda-auth-token') || localStorage.getItem('zeralda-session-token') || '';
+            } catch (_) {}
+        }
+        if (!token) {
+            try {
+                var m = document.cookie.match(/zeralda-auth-token=([^;]+)/);
+                if (m && m[1]) token = decodeURIComponent(m[1]);
+            } catch (_) {}
+        }
+
+        if (token) {
+            try {
+                if (navigator.sendBeacon) {
+                    var blob = new Blob([JSON.stringify({ token: token, automatic: isAutomatic })], { type: 'application/json' });
+                    navigator.sendBeacon('/api/auth/logout', blob);
+                }
+            } catch (_) {}
+            try {
+                fetch('/api/auth/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token,
+                        'X-Session-Token': token
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ token: token, automatic: isAutomatic }),
+                    keepalive: true
+                }).catch(function () {});
+            } catch (_) {}
+        }
+
+        var purgeKeys = [
+            'zeralda-auth-token',
+            'zeralda-session-token',
+            'zeralda-auth-meta',
+            'zeralda-client-session-id',
+            'zeralda-google-token',
+            'zeralda-temp-credential'
+        ];
+
+        purgeKeys.forEach(function (k) {
+            try { if (window.ZS && window.ZS.removeItem) window.ZS.removeItem(k); } catch (_) {}
+            try { if (window.ZDB && window.ZDB.removeItem) window.ZDB.removeItem(k); } catch (_) {}
+            try { localStorage.removeItem(k); } catch (_) {}
+            try { sessionStorage.removeItem(k); } catch (_) {}
+        });
+
+        try {
+            var host = (window.location && window.location.hostname) || '';
+            var pastExpiry = '; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
+            ['zeralda-auth-token', 'zeralda-session-token', 'session_token', 'zeralda_session'].forEach(function (cn) {
+                document.cookie = cn + '=' + pastExpiry;
+                if (host) {
+                    document.cookie = cn + '=' + pastExpiry + '; domain=' + host;
+                }
+            });
+        } catch (_) {}
+
+        var target = '/login.html?logged_out=1';
+        if (options.msg) {
+            target += '&msg=' + encodeURIComponent(options.msg);
+        }
+        window.location.replace(target);
     };
 
 })();

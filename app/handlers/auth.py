@@ -18,7 +18,7 @@ from typing import Any, Dict, Optional
 import requests
 import certifi
 
-from fastapi import APIRouter, Request, HTTPException, status
+from fastapi import APIRouter, Request, Response, HTTPException, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
@@ -268,11 +268,21 @@ async def google_login(request: Request):
 
 
 @router.post("/logout")
-async def logout(request: Request):
+async def logout(request: Request, response: Response):
     from app.services import auth
     token = get_session_token(request)
+    if not token:
+        try:
+            body = await request.json()
+            if isinstance(body, dict):
+                token = body.get("token") or body.get("session_token")
+        except Exception:
+            pass
     if token:
         auth.destroy_session(token)
+    response.delete_cookie("zeralda-auth-token", path="/")
+    response.delete_cookie("session_token", path="/")
+    response.delete_cookie("zeralda_session", path="/")
     return {"ok": True, "message": "Logged out"}
 
 

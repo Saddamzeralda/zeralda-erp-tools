@@ -247,6 +247,15 @@
   }
 
   async function performLogout(isAutomatic) {
+    const message = isAutomatic 
+      ? 'انتهت جلستك بسبب استنزاف الوقت. يرجى تسجيل الدخول مرة أخرى.'
+      : 'تم تسجيل خروجك بنجاح.';
+
+    if (typeof window.zeraldaLogout === 'function') {
+      window.zeraldaLogout({ automatic: Boolean(isAutomatic), msg: message });
+      return;
+    }
+
     try {
       // Try to notify backend about logout
       const token = getSessionTokenForLogout();
@@ -268,16 +277,20 @@
 
     // Clear session data
     try {
-      ZS.removeItem('zeralda-session-token');
-      ZS.removeItem('zeralda-auth-token');
+      if (window.ZS) {
+        ZS.removeItem('zeralda-session-token');
+        ZS.removeItem('zeralda-auth-token');
+      }
+    } catch (e) {}
+    try {
+      localStorage.removeItem('zeralda-session-token');
+      localStorage.removeItem('zeralda-auth-token');
+      sessionStorage.removeItem('zeralda-session-token');
+      sessionStorage.removeItem('zeralda-auth-token');
     } catch (e) {}
 
     // Redirect to login
-    const message = isAutomatic 
-      ? 'انتهت جلستك بسبب استنزاف الوقت. يرجى تسجيل الدخول مرة أخرى.'
-      : 'تم تسجيل خروجك بنجاح.';
-    
-    window.location.href = '/login.html?msg=' + encodeURIComponent(message);
+    window.location.replace('/login.html?logged_out=1&msg=' + encodeURIComponent(message));
   }
 
   function getSessionTokenForLogout() {
