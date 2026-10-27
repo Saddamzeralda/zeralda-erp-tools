@@ -21,19 +21,25 @@ echo.
 
 REM Step 2: Build installer
 echo [2/4] Building installer...
-"C:\Program Files\Inno Setup 7\ISCC.exe" "installer\Zeralda_ERP_Setup.iss" >nul 2>&1
+set "ISCC=C:\Users\sadda\AppData\Local\Programs\Inno Setup 7\ISCC.exe"
+if not exist "!ISCC!" set "ISCC=C:\Program Files\Inno Setup 7\ISCC.exe"
+if not exist "!ISCC!" set "ISCC=C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+if not exist "!ISCC!" set "ISCC=iscc.exe"
+
+"!ISCC!" "installer\Zeralda_ERP_Setup.iss" >nul 2>&1
 if errorlevel 1 (
     echo     ❌ Build failed! Running with output:
-    "C:\Program Files\Inno Setup 7\ISCC.exe" "installer\Zeralda_ERP_Setup.iss"
+    "!ISCC!" "installer\Zeralda_ERP_Setup.iss"
     pause
     exit /b 1
 )
-echo     ✅ Installer built: installer\dist\Zeralda_ERP_Setup_v1.3.8.exe
+echo     ✅ Installer built: installer\dist\Zeralda_ERP_Setup_v3.0.0.exe
 echo.
 
 REM Step 3: Install silently (requires admin - will UAC prompt)
 echo [3/4] Installing (silent mode)...
-set "INSTALLER=%SCRIPT_DIR%installer\dist\Zeralda_ERP_Setup_v1.3.8.exe"
+set "INSTALLER=%~dp0..\installer\dist\Zeralda_ERP_Setup_v3.0.0.exe"
+if not exist "!INSTALLER!" set "INSTALLER=%SCRIPT_DIR%..\installer\dist\Zeralda_ERP_Setup_v3.0.0.exe"
 powershell -Command "Start-Process -FilePath '%INSTALLER%' -ArgumentList '/SILENT','/NORESTART' -Verb RunAs -Wait"
 echo     ✅ Installation complete.
 echo.
