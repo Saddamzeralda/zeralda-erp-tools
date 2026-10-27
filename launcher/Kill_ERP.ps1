@@ -24,10 +24,7 @@ function Get-ZeraldaPythonProcs {
             $cl = [string]$p.CommandLine
             # Match Zeralda server (legacy server.py OR FastAPI app.main) and tray launcher
             if ($cl -like '*server.py*' -or $cl -like '*app.main*' -or $cl -like '*app\main*' -or $cl -like '*tray.pyw*') {
-                # Only match if the path is inside our project root
-                if ($cl -like "*$projectRoot*") {
-                    $found += [PSCustomObject]@{ Id = [int]$p.ProcessId; CommandLine = $cl }
-                }
+                $found += [PSCustomObject]@{ Id = [int]$p.ProcessId; CommandLine = $cl }
             }
         }
     } catch {}

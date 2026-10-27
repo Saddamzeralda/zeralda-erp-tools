@@ -3,7 +3,8 @@ setlocal
 cd /d "%~dp0"
 
 set "PY_BIN="
-if exist "%LOCALAPPDATA%\Programs\Python311\python.exe" set "PY_BIN=%LOCALAPPDATA%\Programs\Python311\python.exe"
+if exist "%~dp0.venv\Scripts\python.exe" set "PY_BIN=%~dp0.venv\Scripts\python.exe"
+if not defined PY_BIN if exist "%LOCALAPPDATA%\Programs\Python311\python.exe" set "PY_BIN=%LOCALAPPDATA%\Programs\Python311\python.exe"
 if not defined PY_BIN if exist "%LOCALAPPDATA%\Programs\Python\Python311\python.exe" set "PY_BIN=%LOCALAPPDATA%\Programs\Python\Python311\python.exe"
 if not defined PY_BIN if exist "C:\Python311\python.exe" set "PY_BIN=C:\Python311\python.exe"
 if not defined PY_BIN (

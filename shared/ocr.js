@@ -1267,9 +1267,6 @@
       var fields = (payload.analysis && payload.analysis.fields) || {};
       var docTypeMeta = detectDocumentType(raw);
       var amountInWords = payload.amountInWords || fields.amount_in_words || (ext.extractAmountInWords ? ext.extractAmountInWords(raw) : '');
-      if (!amountInWords && total > 0 && typeof window !== 'undefined' && window.ZeraldaPrinter && window.ZeraldaPrinter.Tafqeet) {
-        try { amountInWords = window.ZeraldaPrinter.Tafqeet.toWords(total, self.getLang()); } catch(_) {}
-      }
 
       // 1. Separate Customer and Supplier carefully
       var customerName = payload.customer || fields.customer_name || fields.customer || '';
@@ -1512,6 +1509,9 @@
       } else if (!total && items.length && !isTenderMode) {
         total = items.reduce(function(acc, i) { return acc + i.total; }, 0);
       }
+      if (!amountInWords && total > 0 && typeof window !== 'undefined' && window.ZeraldaPrinter && window.ZeraldaPrinter.Tafqeet) {
+        try { amountInWords = window.ZeraldaPrinter.Tafqeet.toWords(total, self.getLang()); } catch(_) {}
+      }
 
       if (!phone && raw) {
         var pm = raw.match(/(?:(?:0[567][0-9]{8})|(?:\+213\s?[567][0-9]{8})|(?:0[234][0-9]{7}))/);
@@ -1551,6 +1551,10 @@
       var category = payload.category || fields.category || 'General';
 
       var journalDate = payload.billDate || payload.date || fields.invoice_date || fields.date || '';
+      if (journalDate && /^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4}$/.test(String(journalDate).trim())) {
+        var dp = String(journalDate).trim().split(/[\/\-]/);
+        journalDate = dp[2] + '-' + ('0' + dp[1]).slice(-2) + '-' + ('0' + dp[0]).slice(-2);
+      }
       var invoiceNumber = cleanInvoiceRef(payload.externalRef || payload.invoiceNumber || payload.number || fields.invoice_number || '');
       if (!invoiceNumber && raw) {
         var invM = raw.match(/(?:(?:n[°º]|réf|ref|facture|proforma|quittance|reçu|رقم|مرجع)\s*[:\/\-]?\s*([A-Za-z0-9\/\-_]{2,30}))/i);
@@ -1806,17 +1810,18 @@
 
         // Totals Strip
         if (data.totals && (data.totals.total > 0 || data.totals.subtotal > 0)) {
+          var curSym = (typeof window !== 'undefined' && typeof window.getCurrencySymbol === 'function') ? window.getCurrencySymbol() : 'DA';
           html += '<div class="ocr-totals-strip">';
           if (data.totals.subtotal > 0) {
-            html += '<div class="ocr-total-badge" style="background:rgba(59,130,246,0.1);color:#2563eb;border-color:rgba(59,130,246,0.25);">' + this.t('subtotal') + ': <strong>' + data.totals.subtotal.toFixed(2) + ' DZD</strong></div>';
+            html += '<div class="ocr-total-badge" style="background:rgba(59,130,246,0.1);color:#2563eb;border-color:rgba(59,130,246,0.25);">' + this.t('subtotal') + ': <strong>' + data.totals.subtotal.toFixed(2) + ' ' + curSym + '</strong></div>';
           }
           if (data.totals.vat > 0) {
-            html += '<div class="ocr-total-badge" style="background:rgba(234,179,8,0.1);color:#ca8a04;border-color:rgba(234,179,8,0.25);">' + this.t('vat') + ': <strong>' + data.totals.vat.toFixed(2) + ' DZD</strong></div>';
+            html += '<div class="ocr-total-badge" style="background:rgba(234,179,8,0.1);color:#ca8a04;border-color:rgba(234,179,8,0.25);">' + this.t('vat') + ': <strong>' + data.totals.vat.toFixed(2) + ' ' + curSym + '</strong></div>';
           }
           if (data.totals.timbre > 0) {
-            html += '<div class="ocr-total-badge" style="background:rgba(168,85,247,0.1);color:#9333ea;border-color:rgba(168,85,247,0.25);">' + this.t('timbre') + ': <strong>' + data.totals.timbre.toFixed(2) + ' DZD</strong></div>';
+            html += '<div class="ocr-total-badge" style="background:rgba(168,85,247,0.1);color:#9333ea;border-color:rgba(168,85,247,0.25);">' + this.t('timbre') + ': <strong>' + data.totals.timbre.toFixed(2) + ' ' + curSym + '</strong></div>';
           }
-          html += '<div class="ocr-total-badge">' + this.t('totalAmount') + ': <strong>' + (data.totals.total || data.totals.subtotal).toFixed(2) + ' DZD</strong></div>' +
+          html += '<div class="ocr-total-badge">' + this.t('totalAmount') + ': <strong>' + (data.totals.total || data.totals.subtotal).toFixed(2) + ' ' + curSym + '</strong></div>' +
           '</div>';
         }
       }
@@ -1944,7 +1949,7 @@
           if (descInput) descInput.value = data.journalDesc || ('فاتورة ' + (data.supplierName || data.customerName || data.reference || ''));
           if (data.items && data.items.length && typeof window.addJournalLine === 'function') {
             var tbody = document.getElementById('journalLinesTable');
-            if (tbody) {
+            if (tbody && tbody.querySelectorAll('tr').length === 0) {
               tbody.innerHTML = '';
               data.items.filter(function(i){ return i.selected; }).forEach(function(it) {
                 window.addJournalLine();

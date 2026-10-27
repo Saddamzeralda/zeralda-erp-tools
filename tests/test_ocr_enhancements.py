@@ -206,6 +206,35 @@ class TestOcrEnhancements(unittest.TestCase):
         if extracted and extracted.get("fields"):
             self.assertNotEqual(extracted["fields"].get("invoice_number"), "LET")
 
+    def test_algerian_phone_validation_and_normalization(self):
+        from app.services.keygen_service import _validate_phone_number, _normalize_phone
+        self.assertTrue(_validate_phone_number("0559666951"))
+        self.assertTrue(_validate_phone_number("05 59 66 69 51"))
+        self.assertTrue(_validate_phone_number("+213559666951"))
+        self.assertEqual(_normalize_phone("0559666951"), "+213559666951")
+
+    def test_reject_stop_words_as_invoice_ref(self):
+        for stop_word in ("TTC", "TVA", "TEL", "FAX", "RIB", "NIF", "NIS"):
+            sample = f"Facture Comerciale\nRef: {stop_word}\nTotal: 15000 DA"
+            extracted = _regex_invoice_extract(sample)
+            if extracted and extracted.get("fields"):
+                self.assertNotEqual(extracted["fields"].get("invoice_number"), stop_word)
+
+    def test_hardware_datasheet_classification(self):
+        doc_dell = "CARACTÉRISTIQUES TECHNIQUES\nDell Latitude 5540 Intel Core i7\nRAM 16GB SSD 512GB"
+        meta = detect_document_type(doc_dell)
+        self.assertEqual(meta["type"], "technical_sheet")
+
+    def test_mixed_eastern_and_persian_digits_normalization(self):
+        mixed = "المبلغ: ٢٥٠٠٠٫٧٥ دج - الرقم: ۰۱۲۳۴۵۶۷۸۹"
+        norm = normalize_arabic_ocr_text(mixed)
+        self.assertIn("25000.75", norm)
+        self.assertIn("0123456789", norm)
+
+    def test_textual_date_french_and_arabic_months(self):
+        self.assertEqual(_extract_arabic_textual_date("الجزائر في 14 أوت 2026"), "2026-08-14")
+        self.assertEqual(_extract_arabic_textual_date("بتاريخ 3 فيفري 2026"), "2026-02-03")
+
 
 if __name__ == "__main__":
     unittest.main()

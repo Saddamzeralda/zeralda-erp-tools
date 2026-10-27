@@ -138,8 +138,10 @@ def _save_keys(keys_data, sync=True):
 
 
 def _validate_phone_number(phone):
-    """Validate phone number format (international)"""
-    phone = str(phone or '').strip()
+    """Validate phone number format (international or local Algerian 0XXXXXXXXX)."""
+    phone = str(phone or '').strip().replace(' ', '').replace('-', '').replace('.', '')
+    if phone.startswith('0') and len(phone) == 10 and phone.isdigit():
+        phone = '+213' + phone[1:]
     # Simple validation: starts with +, followed by digits
     if not phone.startswith('+'):
         return False
