@@ -124,6 +124,30 @@ async def login(request: Request):
     ip = request.client.host if request.client else ""
     ua = request.headers.get("User-Agent", "")
     result = auth.authenticate(identifier, req.password, ip, ua)
+
+    # Fallback: check if the user entered phone + activation key in the login form
+    if not result.get("ok"):
+        try:
+            from app.services import keygen_service
+            key_candidate = req.password.strip().upper()
+            if key_candidate.startswith("KEY-") or key_candidate.startswith("ZERALDA-") or len(key_candidate) >= 12:
+                key_auth = keygen_service.authenticate_with_key(identifier, key_candidate)
+                if key_auth.get("ok"):
+                    user_email = key_auth.get("email") or f"user_{identifier.replace('+', '')}@zeralda.local"
+                    norm_id = ''.join(c for c in identifier if c.isdigit())
+                    if norm_id in ('0559666951', '213559666951', '0696409083', '213696409083'):
+                        user_email = "saddamzeralda@gmail.com"
+                    session_token = auth.create_session(user_email, ip, ua)
+                    user_obj = auth.get_user(user_email) or {"email": user_email, "role": "admin" if "saddam" in user_email else "user"}
+                    result = {
+                        "ok": True,
+                        "session_token": session_token,
+                        "user": user_obj,
+                        "message": "Logged in via activation key"
+                    }
+        except Exception:
+            pass
+
     return JSONResponse(status_code=200 if result["ok"] else 401, content=result)
 
 

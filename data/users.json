@@ -2,8 +2,8 @@
   "saddamzeralda@gmail.com": {
     "username": "Admin",
     "email": "saddamzeralda@gmail.com",
-    "password": "6032880604d766e7388aa0e2c1caf4ef5a2e89986dbfd5a5ad53c6d31d5788c5",
-    "salt": "c16afe9e3e80e2ca32a94c9276a3ed624ee58fbce900c85bf863802b6284a225",
+    "password": "021f49352efdfad968810c754b68d6a7445618b36100e7d795e2cfbf5c52a71c",
+    "salt": "a1697ebe20506f5851217cb2b0fa7a2d600a6e40387e8979cd159a8c7ef0ab70",
     "role": "admin",
     "created_at": "2026-07-31T17:47:39.055338",
     "active": true,
