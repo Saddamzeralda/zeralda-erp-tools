@@ -59,7 +59,12 @@ try:
             _db_port = os.getenv("DB_PORT", "5432")
             _DB_URL = f"postgresql+psycopg2://{_db_user}:{_db_pass}@{_db_host}:{_db_port}/{_db_name}"
     if _DB_URL:
-        _engine = create_engine(_DB_URL, pool_pre_ping=True, pool_recycle=3600)
+        _engine = create_engine(
+            _DB_URL,
+            pool_pre_ping=True,
+            pool_recycle=3600,
+            connect_args={"connect_timeout": 5},
+        )
         _SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=_engine)
         with _engine.connect() as _conn:
             _conn.execute(text("SELECT 1"))
@@ -391,6 +396,9 @@ def read_store() -> Dict[str, Any]:
                             return _deep_copy(data)
             except Exception as be:
                 logger.error("Backup recovery also failed: %s", be)
+            # Cache empty dict for current mtime to avoid re-reading corrupt file on every call
+            _store_cache = {}
+            _store_cache_mtime_ns = mtime
             return {}
 
 
@@ -1097,13 +1105,6 @@ def _flush_history_to_disk() -> None:
                 _undo_stack_dirty = False
             except Exception as e:
                 logger.error("Undo flush failed: %s", e)
-
-        # Auto-compact history if exceeds 1MB threshold
-        try:
-            if HISTORY_FILE.exists() and HISTORY_FILE.stat().st_size > (1024 * 1024):
-                auto_maintain_history(threshold_bytes=1024 * 1024)
-        except Exception:
-            pass
 
 
 def write_history(hist: Dict[str, Any]) -> None:

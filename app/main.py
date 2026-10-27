@@ -50,9 +50,20 @@ from app.services.security import ENVIRONMENT, log_structured
 
 
 # ── Config ─────────────────────────────────────────────────────────────────
-PORT = int(os.getenv("PORT", "8080"))
+PORT = int((os.getenv("PORT") or "8080").strip() or "8080")
 SERVER_HOST = "0.0.0.0"
-USE_HTTPS = os.getenv("USE_HTTPS", "false").lower() == "true"
+_IS_CLOUD_CONTAINER = bool(
+    sys.platform != "win32"
+    or os.getenv("RAILWAY_ENVIRONMENT")
+    or os.getenv("RAILWAY_PROJECT_ID")
+    or os.getenv("RAILWAY_SERVICE_ID")
+    or os.getenv("RENDER")
+    or os.getenv("DYNO")
+    or os.getenv("K_SERVICE")
+)
+# Cloud edge proxies (Railway, Render, Heroku, Cloud Run) terminate TLS at the edge
+# and forward plain HTTP to $PORT. Enabling self-signed TLS inside the container causes 502!
+USE_HTTPS = (os.getenv("USE_HTTPS", "false").lower() == "true") and not _IS_CLOUD_CONTAINER
 LAUNCH_MODE = os.getenv("LAUNCH_MODE", "manual")
 AUTO_SHUTDOWN_ON_CLIENT_CLOSE = os.getenv("AUTO_SHUTDOWN_ON_CLIENT_CLOSE", "false").lower() == "true"
 AUTO_SHUTDOWN_GRACE_SECONDS = int(os.getenv("AUTO_SHUTDOWN_GRACE_SECONDS", "300"))
@@ -487,8 +498,8 @@ def main() -> None:
         # Integrity check — verify critical files haven't been tampered with.
         # In production, strict=True will refuse to start if files are modified.
         # In production on local machines, strict=True refuses to start if files are modified.
-        # On cloud container platforms (Railway, Render, etc.), avoid hard SystemExit so containers never crash-loop.
-        is_cloud = bool(os.getenv("RAILWAY_ENVIRONMENT") or os.getenv("RENDER") or os.getenv("DYNO") or os.getenv("K_SERVICE"))
+        # On cloud container platforms (Railway, Render, Linux Docker, etc.), avoid hard SystemExit so containers never crash-loop.
+        is_cloud = _IS_CLOUD_CONTAINER
         strict_mode = (ENVIRONMENT == "production") and not is_cloud
         try:
             integrity_result = license_service.check_integrity(strict=strict_mode)

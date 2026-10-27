@@ -143,9 +143,44 @@ def decrypt_bytes(raw_data: bytes) -> bytes:
     aesgcm = AESGCM(key)
     try:
         return aesgcm.decrypt(nonce, ciphertext, None)
-    except Exception as e:
-        logger.error("AES-256-GCM decryption failed (tampering or wrong key): %s", e)
-        raise ValueError("Decryption failed: corrupted storage or invalid key") from e
+    except Exception as primary_err:
+        # Try fallback candidate keys (e.g. data/.storage_key or data_defaults/.storage_key
+        # when STORAGE_ENCRYPTION_KEY env var differs from the repo's seeded store key)
+        candidate_keys = []
+        for kf in (_KEY_FILE, _BASE_DIR / "data_defaults" / ".storage_key"):
+            try:
+                if kf.exists():
+                    raw = kf.read_bytes()
+                    for cand in (raw.strip()[:32], raw[:32]):
+                        if len(cand) == 32 and cand != key and cand not in candidate_keys:
+                            candidate_keys.append(cand)
+            except Exception:
+                pass
+        if HKDF and hashes:
+            for env_name in ("STORAGE_ENCRYPTION_KEY", "SECRET_KEY"):
+                val = os.getenv(env_name, "").strip()
+                if val and len(val) >= 32:
+                    try:
+                        derived = HKDF(
+                            algorithm=hashes.SHA256(),
+                            length=32,
+                            salt=HKDF_SALT,
+                            info=HKDF_INFO,
+                        ).derive(val.encode("utf-8"))
+                        if derived != key and derived not in candidate_keys:
+                            candidate_keys.append(derived)
+                    except Exception:
+                        pass
+        for cand_key in candidate_keys:
+            try:
+                plain = AESGCM(cand_key).decrypt(nonce, ciphertext, None)
+                global _cached_aes_key
+                _cached_aes_key = cand_key
+                return plain
+            except Exception:
+                continue
+        logger.error("AES-256-GCM decryption failed (tampering or wrong key): %s", primary_err)
+        raise ValueError("Decryption failed: corrupted storage or invalid key") from primary_err
 
 
 def encrypt_json(obj: Any) -> bytes:

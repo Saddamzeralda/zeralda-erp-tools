@@ -248,6 +248,7 @@ def create_app() -> FastAPI:
         "/api/auth/google",
         "/api/config/keygen-status",
         "/api/ping",
+        "/api/healthz",
         "/api/notifications/vapid-public-key",
     )
 
@@ -331,6 +332,12 @@ def create_app() -> FastAPI:
     async def redirect_pages_to_root(page_name: str):
         return RedirectResponse(url=f"/{page_name}", status_code=302)
 
+    # ── Health check endpoint for Railway / Render / Upstream Load Balancers ────
+    @app.get("/healthz", include_in_schema=False)
+    @app.get("/api/healthz", include_in_schema=False)
+    async def health_check():
+        return {"status": "ok", "service": "zeralda-erp", "timestamp": time.time()}
+
     # Root-level HTML files (index.html, login.html, settings.html, dashboard, etc.)
     @app.get("/", include_in_schema=False)
     async def root_index():
@@ -398,12 +405,6 @@ def create_app() -> FastAPI:
 
         return JSONResponse(status_code=404, content={"ok": False, "error": "File not found"})
 
-    # ── Health check endpoint for Railway / Render / Upstream Load Balancers ────
-    @app.get("/healthz", include_in_schema=False)
-    @app.get("/api/healthz", include_in_schema=False)
-    async def health_check():
-        return {"status": "ok", "service": "zeralda-erp", "timestamp": time.time()}
-
     # ── Startup / shutdown ──────────────────────────────────────────────
     @app.on_event("startup")
     async def _startup():
@@ -415,12 +416,16 @@ def create_app() -> FastAPI:
         except Exception as e:
             log_structured("WARN", "Default users init failed", error=str(e))
 
-        try:
-            from app.services import storage
-            storage.init_db_schema()
-            storage.migrate_unified_settings()
-        except Exception as e:
-            log_structured("WARN", "Database schema / settings init failed", error=str(e))
+        def _bg_init():
+            try:
+                from app.services import storage
+                storage.init_db_schema()
+                storage.migrate_unified_settings()
+            except Exception as e:
+                log_structured("WARN", "Database schema / settings init failed", error=str(e))
+
+        import threading
+        threading.Thread(target=_bg_init, daemon=True, name="startup-store-init").start()
 
     @app.on_event("shutdown")
     async def _shutdown():

@@ -41,5 +41,5 @@ RUN mkdir -p /app/data /app/logs && cp -r /app/data /app/data_defaults
 # Default port
 EXPOSE 8080
 
-# Launch the FastAPI app via app.main
-CMD ["python", "-m", "app.main"]
+# Launch the FastAPI app via uvicorn
+CMD ["sh", "-c", "uvicorn app.app:app --host 0.0.0.0 --port ${PORT:-8080}"]
