@@ -108,5 +108,6 @@ log_test_*.txt
 # ملفات Windows
 Thumbs.db
 Desktop.ini
+*.code-workspace
 
 push_to_github.bat
