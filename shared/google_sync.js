@@ -727,6 +727,8 @@
   //  GIS with prompt:'' will silently refresh if Google session is active.
   // ─────────────────────────────────────────────────────────
   var _silentRefreshInProgress = false;
+  var _silentRefreshTimeout = null;
+  var _autoReconnectAttempted = false;
 
   function silentRefreshToken(cb) {
     if (_silentRefreshInProgress) {
@@ -745,8 +747,25 @@
     }
 
     _silentRefreshInProgress = true;
+    if (_silentRefreshTimeout) {
+      clearTimeout(_silentRefreshTimeout);
+      _silentRefreshTimeout = null;
+    }
+    _silentRefreshTimeout = setTimeout(function () {
+      if (_silentRefreshInProgress) {
+        _silentRefreshInProgress = false;
+        pendingTokenCallback = null;
+        if (cb) cb(false);
+      }
+    }, 7000);
+
     pendingTokenCallback = function (err, resp) {
+      if (_silentRefreshTimeout) {
+        clearTimeout(_silentRefreshTimeout);
+        _silentRefreshTimeout = null;
+      }
       _silentRefreshInProgress = false;
+      pendingTokenCallback = null;
       if (err) {
         if (cb) cb(false);
       } else {
@@ -756,6 +775,10 @@
 
     initTokenClient(true);
     if (!tokenClient) {
+      if (_silentRefreshTimeout) {
+        clearTimeout(_silentRefreshTimeout);
+        _silentRefreshTimeout = null;
+      }
       _silentRefreshInProgress = false;
       pendingTokenCallback = null;
       if (cb) cb(false);
@@ -766,6 +789,10 @@
     try {
       tokenClient.requestAccessToken({ prompt: '' });
     } catch (e) {
+      if (_silentRefreshTimeout) {
+        clearTimeout(_silentRefreshTimeout);
+        _silentRefreshTimeout = null;
+      }
       _silentRefreshInProgress = false;
       pendingTokenCallback = null;
       if (cb) cb(false);
@@ -781,8 +808,13 @@
       return;
     }
 
-    // Token expired — attempt silent refresh before giving up
+    // Token expired — attempt silent refresh once per session before giving up
     if (savedToken.expired || !savedToken.access_token) {
+      if (_autoReconnectAttempted) {
+        if (cb) cb(false);
+        return;
+      }
+      _autoReconnectAttempted = true;
       silentRefreshToken(function (ok) {
         if (ok) {
           // Refresh succeeded — re-load the fresh token and verify
@@ -2307,8 +2339,38 @@
     return !!(profile && profile.email);
   }
 
+  var _googleSyncInitDone = false;
+  var _googleSyncInitInProgress = false;
+  var _googleSyncInitQueue = [];
+
+  function _flushInitQueue(ok) {
+    while (_googleSyncInitQueue.length > 0) {
+      var cb = _googleSyncInitQueue.shift();
+      try { if (typeof cb === 'function') cb(ok); } catch (e) { console.warn('[GoogleSync] Init callback error:', e); }
+    }
+  }
+
   function init(callbacks) {
     callbacks = callbacks || {};
+    if (typeof callbacks.onReady === 'function') {
+      _googleSyncInitQueue.push(callbacks.onReady);
+    }
+
+    if (_googleSyncInitDone) {
+      _flushInitQueue(isConnected());
+      return;
+    }
+
+    if (_googleSyncInitInProgress) {
+      return;
+    }
+    _googleSyncInitInProgress = true;
+
+    function _finishInit(ok) {
+      _googleSyncInitDone = true;
+      _googleSyncInitInProgress = false;
+      _flushInitQueue(ok);
+    }
 
     // Migrate old global keys to per-user keys (one-time)
     migrateOldGoogleKeys();
@@ -2322,7 +2384,7 @@
     if (tryHandleManualOAuthRedirect()) {
       // Manual OAuth redirect was handled; signal ready after profile fetch
       _retryPendingInBackground();
-      if (callbacks.onReady) callbacks.onReady(true);
+      _finishInit(true);
       return;
     }
 
@@ -2333,7 +2395,7 @@
       if (error) {
         console.error('[OAuth Redirect] Error:', error);
         window.history.replaceState({}, document.title, window.location.pathname);
-        if (callbacks.onReady) callbacks.onReady(false);
+        _finishInit(false);
         return;
       }
     }
@@ -2343,10 +2405,10 @@
       if (savedToken && (savedToken.access_token || savedToken.expired)) {
         tryAutoReconnect(function (ok) {
           if (ok) _retryPendingInBackground();
-          if (callbacks.onReady) callbacks.onReady(ok);
+          _finishInit(ok);
         });
       } else {
-        if (callbacks.onReady) callbacks.onReady(false);
+        _finishInit(false);
       }
       return;
     }
@@ -2359,10 +2421,10 @@
     if (savedToken && (savedToken.access_token || savedToken.expired)) {
       tryAutoReconnect(function (ok) {
         if (ok) _retryPendingInBackground();
-        if (callbacks.onReady) callbacks.onReady(ok);
+        _finishInit(ok);
       });
-    } else if (callbacks.onReady) {
-      callbacks.onReady(false);
+    } else {
+      _finishInit(false);
     }
   }
 

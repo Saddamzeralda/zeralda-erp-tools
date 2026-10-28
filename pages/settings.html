@@ -5493,10 +5493,18 @@
 
 
         // Pre-load Google Identity Services eagerly so user gesture is NOT broken later.
-        loadGoogleApisOnDemand().then(function () {
+        var _googleSettingsInitDone = false;
+        function ensureGoogleInitialized() {
+            if (_googleSettingsInitDone) return;
             if (typeof ZeraldaGoogle !== 'undefined') {
+                _googleSettingsInitDone = true;
                 ZeraldaGoogle.init({ onReady: function () { refreshGoogleUI(); } });
+                refreshGoogleUI();
             }
+        }
+
+        loadGoogleApisOnDemand().then(function () {
+            ensureGoogleInitialized();
             refreshGoogleUI();
         }).catch(function () {
             refreshGoogleUI();
@@ -5504,13 +5512,12 @@
 
         (function waitGoogle(tries) {
             tries = tries || 0;
-            if (tries > 50) {
+            if (_googleSettingsInitDone || tries > 50) {
                 refreshGoogleUI();
                 return;
             }
             if (typeof ZeraldaGoogle !== 'undefined') {
-                ZeraldaGoogle.init({ onReady: function () { refreshGoogleUI(); } });
-                refreshGoogleUI();
+                ensureGoogleInitialized();
             } else {
                 setTimeout(function () { waitGoogle(tries + 1); }, 120);
             }
