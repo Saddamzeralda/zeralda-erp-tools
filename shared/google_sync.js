@@ -2104,6 +2104,196 @@
     });
   }
 
+  function _base64ToBlob(base64, mimeType) {
+    var byteChars = atob(base64);
+    var byteNumbers = new Array(byteChars.length);
+    for (var i = 0; i < byteChars.length; i++) {
+      byteNumbers[i] = byteChars.charCodeAt(i);
+    }
+    var byteArray = new Uint8Array(byteNumbers);
+    return new Blob([byteArray], { type: mimeType || 'application/pdf' });
+  }
+
+  function findOrCreateSubFolder(name, parentFolderId) {
+    var escapedName = String(name || '').replace(/'/g, "\\'");
+    var q = "name='" + escapedName + "' and mimeType='application/vnd.google-apps.folder' and '" + parentFolderId + "' in parents and trashed=false";
+
+    return gFetch('https://www.googleapis.com/drive/v3/files?q=' + encodeURIComponent(q) + '&fields=files(id,name)')
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data.files && data.files.length > 0) return data.files[0].id;
+
+        return gFetch('https://www.googleapis.com/drive/v3/files', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: name,
+            mimeType: 'application/vnd.google-apps.folder',
+            parents: [parentFolderId]
+          })
+        }).then(function (r) { return r.json(); }).then(function (f) { return f.id; });
+      });
+  }
+
+  function uploadPdfFileToFolder(folderId, fileName, pdfBlob) {
+    var escapedName = String(fileName || '').replace(/'/g, "\\'");
+    var q = "name='" + escapedName + "' and '" + folderId + "' in parents and trashed=false";
+
+    return gFetch('https://www.googleapis.com/drive/v3/files?q=' + encodeURIComponent(q) + '&fields=files(id,name)')
+      .then(function (r) { return r.json(); })
+      .then(function (searchRes) {
+        if (searchRes.files && searchRes.files.length > 0) {
+          var existingId = searchRes.files[0].id;
+          return gFetch('https://www.googleapis.com/upload/drive/v3/files/' + existingId + '?uploadType=media', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/pdf' },
+            body: pdfBlob
+          }).then(function (r) { return r.json(); });
+        }
+
+        var metadata = {
+          name: fileName,
+          mimeType: 'application/pdf',
+          parents: [folderId]
+        };
+        var form = new FormData();
+        form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+        form.append('file', pdfBlob, fileName);
+
+        return gFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+          method: 'POST',
+          body: form
+        }).then(function (r) { return r.json(); });
+      });
+  }
+
+  function downloadOrganizedInvoicesZip() {
+    var token = _getSessionToken();
+    var headers = { 'Content-Type': 'application/json' };
+    if (token) {
+      headers['Authorization'] = 'Bearer ' + token;
+      headers['X-Session-Token'] = token;
+    }
+    var payload = collectAllData();
+
+    return fetch('/api/backup/invoices/zip', {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify({
+        companyId: payload.companyId || '',
+        data: payload.data || {}
+      })
+    }).then(function (res) {
+      if (!res.ok) {
+        throw new Error('Server ZIP generation failed (' + res.status + ')');
+      }
+      var disp = res.headers.get('Content-Disposition') || '';
+      var fname = 'Zeralda_Invoices_Archive.zip';
+      var match = disp.match(/filename="([^"]+)"/);
+      if (match && match[1]) {
+        fname = match[1];
+      }
+      return res.blob().then(function (blob) {
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = fname;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+        return { ok: true, filename: fname, size: blob.size };
+      });
+    });
+  }
+
+  function backupOrganizedInvoicesToDrive(onProgress) {
+    if (!accessToken) return Promise.reject(new Error('Google Drive account not connected'));
+    if (onProgress) onProgress({ step: 'init', message: 'جاري الاتصال بـ Google Drive وتجهيز الفواتير...' });
+
+    var token = _getSessionToken();
+    var headers = { 'Content-Type': 'application/json' };
+    if (token) {
+      headers['Authorization'] = 'Bearer ' + token;
+      headers['X-Session-Token'] = token;
+    }
+    var payload = collectAllData();
+    var company = getActiveCompany() || {};
+    var safeComp = (company && company.name) ? String(company.name).replace(/[/\\:*?"<>|]/g, '_') : 'Zeralda_ERP';
+    var companyArchiveFolderName = 'أرشيف الفواتير المنظمة - ' + safeComp;
+
+    // 1. Fetch file bundle from backend
+    return fetch('/api/backup/invoices/bundle', {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify({
+        companyId: payload.companyId || '',
+        data: payload.data || {}
+      })
+    }).then(function (res) {
+      if (!res.ok) throw new Error('Failed to generate invoices bundle (' + res.status + ')');
+      return res.json();
+    }).then(function (bundle) {
+      var files = (bundle && bundle.files) || [];
+      if (!files.length) {
+        throw new Error('لا توجد فواتير أو وثائق متاحة للأرشفة');
+      }
+
+      if (onProgress) onProgress({ step: 'create_root', message: 'جاري إنشاء وتجهيز المجلدات على Google Drive...', total: files.length });
+
+      // 2. Find/create root folder and company subfolder
+      return findOrCreateFolder().then(function (rootId) {
+        return findOrCreateSubFolder(companyArchiveFolderName, rootId);
+      }).then(function (compFolderId) {
+        var subFolderCache = {};
+
+        function getCategoryFolder(driveFolderName) {
+          if (subFolderCache[driveFolderName]) {
+            return Promise.resolve(subFolderCache[driveFolderName]);
+          }
+          return findOrCreateSubFolder(driveFolderName, compFolderId).then(function (subId) {
+            subFolderCache[driveFolderName] = subId;
+            return subId;
+          });
+        }
+
+        // 3. Sequential upload of each PDF
+        var uploadedCount = 0;
+        var p = Promise.resolve();
+
+        files.forEach(function (f, idx) {
+          p = p.then(function () {
+            if (onProgress) {
+              onProgress({
+                step: 'uploading',
+                current: idx + 1,
+                total: files.length,
+                name: f.filename,
+                folder: f.drive_folder,
+                message: 'جاري رفع: ' + f.filename + ' (' + (idx + 1) + '/' + files.length + ')...'
+              });
+            }
+
+            return getCategoryFolder(f.drive_folder).then(function (subFolderId) {
+              var blob = _base64ToBlob(f.pdf_base64, 'application/pdf');
+              return uploadPdfFileToFolder(subFolderId, f.filename, blob);
+            }).then(function () {
+              uploadedCount += 1;
+            });
+          });
+        });
+
+        return p.then(function () {
+          return {
+            ok: true,
+            totalUploaded: uploadedCount,
+            companyFolder: companyArchiveFolderName
+          };
+        });
+      });
+    });
+  }
+
   function restoreFromDrive(onProgress, specificFileId) {
     if (!accessToken) return Promise.reject(new Error('Not signed in'));
     if (onProgress) onProgress('finding_folder');
@@ -2630,6 +2820,8 @@
     backupToDrive: backupToDrive,
     backupPdfToDrive: backupPdfToDrive,
     downloadPdfReport: downloadPdfReport,
+    backupOrganizedInvoicesToDrive: backupOrganizedInvoicesToDrive,
+    downloadOrganizedInvoicesZip: downloadOrganizedInvoicesZip,
     restoreFromDrive: restoreFromDrive,
     listDriveBackups: listDriveBackups,
     getDriveFileNameForActiveCompany: getDriveFileNameForActiveCompany,

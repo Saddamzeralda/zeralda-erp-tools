@@ -12,6 +12,7 @@ import json
 import os
 import re
 import subprocess
+import base64
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Request, HTTPException
@@ -19,7 +20,13 @@ from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel, Field
 
 from app.services import storage
-from app.services.pdf import generate_full_erp_pdf_report, generate_invoice_pdf
+from app.services.pdf import (
+    generate_full_erp_pdf_report,
+    generate_invoice_pdf,
+    generate_single_document_pdf,
+    get_organized_invoices_file_list,
+    generate_organized_invoices_zip,
+)
 from app.services.security import log_structured, read_json_body, require_auth, validate_session
 
 router = APIRouter(prefix="/api/backup", tags=["backup"])
@@ -35,8 +42,9 @@ MODULE_DEFS = [
     ("employees-data", "employees", "الموظفون", False),
     ("payroll-data", "payroll", "الرواتب", False),
     ("hr-leaves", "hr-leaves", "الإجازات", False),
-    ("purchases-data", "purchases", "المشتريات", False),
-    ("purchase-orders-data", "purchase-orders", "أوامر الشراء", False),
+    ("purchases-data", "purchases", "المشتريات", True),
+    ("purchase-orders-data", "purchase-orders", "أوامر الشراء", True),
+    ("delivery-notes-data", "delivery-notes", "وصول التسليم", True),
     ("tenders-data", "tenders", "المناقصات", False),
     ("consultations-data", "consultations", "الاستشارات", False),
     ("finance-transactions", "finance", "المالية", False),
@@ -139,6 +147,100 @@ async def backup_pdf_download(request: Request):
             "Cache-Control": "no-store",
         },
     )
+
+
+# ── /api/backup/invoices/zip (organized multi-folder archive of separate invoice PDFs) ──
+@router.api_route("/invoices/zip", methods=["GET", "POST"])
+async def backup_invoices_zip_download(request: Request):
+    user = require_auth(request)
+    company_id = request.query_params.get("companyId") or request.headers.get("X-Company-Id") or None
+    client_store: Dict[str, Any] = {}
+    if request.method == "POST":
+        try:
+            body_json = await read_json_body(request)
+            if isinstance(body_json, dict):
+                company_id = body_json.get("companyId") or company_id
+                if isinstance(body_json.get("data"), dict):
+                    client_store = body_json["data"]
+        except Exception:
+            pass
+
+    with storage._lock:
+        store = storage.read_store()
+
+    if client_store:
+        for k, v in client_store.items():
+            if k not in store or not store[k]:
+                store[k] = v
+
+    zip_res = generate_organized_invoices_zip(store, company_id=company_id)
+    zip_bytes = zip_res.get("zip_bytes")
+    if not zip_bytes:
+        raise HTTPException(500, detail={"ok": False, "error": "Failed generating invoices ZIP archive"})
+
+    log_structured("INFO", "Organized invoices ZIP generated", action="backup_invoices_zip",
+                   initiator=user.get("email"), files_count=zip_res.get("total_files"),
+                   size_bytes=len(zip_bytes), status="success")
+
+    return Response(
+        content=zip_bytes,
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": f'attachment; filename="{zip_res.get("filename")}"',
+            "Cache-Control": "no-store",
+        },
+    )
+
+
+# ── /api/backup/invoices/bundle (file manifest with base64 for Google Drive multi-folder upload) ──
+@router.post("/invoices/bundle")
+async def backup_invoices_bundle(request: Request):
+    user = require_auth(request)
+    company_id = request.query_params.get("companyId") or request.headers.get("X-Company-Id") or None
+    client_store: Dict[str, Any] = {}
+    try:
+        body_json = await read_json_body(request)
+        if isinstance(body_json, dict):
+            company_id = body_json.get("companyId") or company_id
+            if isinstance(body_json.get("data"), dict):
+                client_store = body_json["data"]
+    except Exception:
+        pass
+
+    with storage._lock:
+        store = storage.read_store()
+
+    if client_store:
+        for k, v in client_store.items():
+            if k not in store or not store[k]:
+                store[k] = v
+
+    raw_files = get_organized_invoices_file_list(store, company_id=company_id)
+
+    encoded_files = []
+    for f in raw_files:
+        encoded_files.append({
+            "folder": f["folder"],
+            "drive_folder": f.get("drive_folder") or f["folder"],
+            "filename": f["filename"],
+            "doc_type": f["doc_type"],
+            "number": f["number"],
+            "date": f["date"],
+            "partner": f["partner"],
+            "amount": f["amount"],
+            "size_bytes": len(f["pdf_bytes"]),
+            "pdf_base64": base64.b64encode(f["pdf_bytes"]).decode("ascii"),
+        })
+
+    log_structured("INFO", "Invoices bundle created for cloud sync", action="backup_invoices_bundle",
+                   initiator=user.get("email"), count=len(encoded_files), status="success")
+
+    return {
+        "ok": True,
+        "companyId": company_id or "default",
+        "total_files": len(encoded_files),
+        "files": encoded_files,
+    }
 
 
 # ── /api/backup/restore (FIX #33) ─────────────────────────────────────────
@@ -429,20 +531,35 @@ async def folder_run(request: Request):
             except Exception:
                 pass
             if is_invoice and export_pdf and isinstance(mod_val, list):
-                # Determine doc_type from the module folder (proformas vs invoices)
-                doc_type = "proforma" if mod_folder == "proformas" else "invoice"
-                file_prefix = "proforma_" if doc_type == "proforma" else "invoice_"
+                if mod_folder == "proformas":
+                    doc_type = "proforma"
+                    file_prefix = "proforma_"
+                elif "purchas" in mod_folder:
+                    doc_type = "purchase"
+                    file_prefix = "achat_"
+                elif "deliver" in mod_folder:
+                    doc_type = "delivery"
+                    file_prefix = "bl_"
+                else:
+                    doc_type = "invoice"
+                    file_prefix = "facture_"
+
                 for inv in mod_val:
                     if not isinstance(inv, dict):
                         continue
                     try:
-                        pdf_bytes = generate_invoice_pdf(inv, doc_type=doc_type)
+                        pdf_bytes = generate_single_document_pdf(inv, doc_type=doc_type, company_info=comp_info)
+                        if not pdf_bytes:
+                            pdf_bytes = generate_invoice_pdf(inv, doc_type=doc_type)
                         if pdf_bytes:
-                            # Number field differs: proformas use proformaNumber
                             if doc_type == "proforma":
                                 inv_num = str(inv.get("proformaNumber") or inv.get("number") or inv.get("id") or "unknown")
+                            elif doc_type == "purchase":
+                                inv_num = str(inv.get("orderNumber") or inv.get("number") or inv.get("id") or "unknown")
+                            elif doc_type == "delivery":
+                                inv_num = str(inv.get("deliveryNumber") or inv.get("number") or inv.get("id") or "unknown")
                             else:
-                                inv_num = str(inv.get("number") or inv.get("id") or "unknown")
+                                inv_num = str(inv.get("invoiceNumber") or inv.get("number") or inv.get("id") or "unknown")
                             safe_num = re.sub(r'[/\\:*?"<>|]', "_", inv_num)
                             pdf_path = os.path.join(mod_dir, f"{file_prefix}{safe_num}.pdf")
                             with open(pdf_path, "wb") as pf:

@@ -1,5 +1,5 @@
 // Zeralda ERP Service Worker v3.0 (Network-first to guarantee live updates)
-const CACHE_NAME = 'zeralda-erp-cache-v15';
+const CACHE_NAME = 'zeralda-erp-cache-v16';
 const STATIC_ASSETS = [
   '/manifest.json',
   '/favicon.ico'

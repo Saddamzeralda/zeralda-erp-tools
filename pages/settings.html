@@ -1559,6 +1559,29 @@
                     </button>
                 </div>
 
+                <!-- Multi-Folder Individual Invoices Actions -->
+                <div style="background: linear-gradient(135deg, #f0fdf4, #ecfdf5); border: 1.5pt solid #10b981; border-radius: 10px; padding: 14px 18px; margin-top: 14px; margin-bottom: 6px;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+                        <div>
+                            <div style="font-weight: 700; font-size: 14px; color: #065f46; display:flex; align-items:center; gap:8px;">
+                                <i class="fas fa-folder-tree" style="font-size:16px; color:#059669;"></i>
+                                <span data-en="Organized Separate Invoices Archive" data-ar="أرشيف الفواتير المنظمة (ملفات منفصلة في مجلدات)" data-fr="Archive des factures séparées en dossiers">أرشيف الفواتير المنظمة (ملفات منفصلة في مجلدات)</span>
+                            </div>
+                            <div style="font-size: 12px; color: #047857; margin-top: 4px;">
+                                تصنيف وحفظ كل فاتورة (مبيعات، مشتريات، عروض أسعار، وصول تسليم) في ملف PDF مستقل داخل مجلدات مخصصة ومنظمة.
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                            <button class="btn" type="button" onclick="doBackupOrganizedInvoicesToDrive()" style="background:#059669; color:#fff; font-weight:600; padding:10px 18px; border-radius:8px; border:none; display:inline-flex; align-items:center; gap:8px; box-shadow:0 2px 6px rgba(5,150,105,0.25);">
+                                <i class="fab fa-google-drive"></i> <span>حفظ الفواتير في مجلدات على Drive</span>
+                            </button>
+                            <button class="btn" type="button" onclick="doDownloadOrganizedInvoicesZip()" style="background:#0284c7; color:#fff; font-weight:600; padding:10px 18px; border-radius:8px; border:none; display:inline-flex; align-items:center; gap:8px; box-shadow:0 2px 6px rgba(2,132,199,0.25);">
+                                <i class="fas fa-file-zipper"></i> <span>تنزيل جميع الفواتير منظمة (ملف ZIP)</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Automation Checkboxes -->
                 <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:14px; margin-top:14px; display:flex; flex-direction:column; gap:10px;">
                     <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-weight:600; color:#1e293b;">
@@ -5187,6 +5210,43 @@
                 return;
             }
             window.open('/api/backup/pdf', '_blank');
+        };
+
+        window.doBackupOrganizedInvoicesToDrive = function () {
+            if (typeof ZeraldaGoogle === 'undefined' || !ZeraldaGoogle.backupOrganizedInvoicesToDrive) {
+                showToast(tSettings('google_module_not_loaded'), 'info');
+                return;
+            }
+            if (!ZeraldaGoogle.isSignedIn()) {
+                showToast('يرجى تسجيل الدخول أو ربط Google Drive أولاً.', 'info');
+                return;
+            }
+            setGoogleProgress('جاري فحص الفواتير وتجهيز المجلدات على Google Drive...', true);
+            ZeraldaGoogle.backupOrganizedInvoicesToDrive(function (p) {
+                if (p && p.message) setGoogleProgress(p.message, true);
+            }).then(function (res) {
+                setGoogleProgress('تم حفظ كافة الفواتير في مجلدات منظمة على Google Drive بنجاح.', false);
+                showToast('✅ تم حفظ كافة الفواتير (' + res.totalUploaded + ' ملف) في مجلدات منظمة على Google Drive بنجاح!', 'success');
+                if (typeof loadGoogleDriveBackupsList === 'function') loadGoogleDriveBackupsList();
+            }).catch(function (err) {
+                setGoogleProgress('تعذر إكمال أرشفة الفواتير.', false);
+                showToast('تعذر حفظ الفواتير على Drive: ' + (err && err.message ? err.message : err), 'info');
+            });
+        };
+
+        window.doDownloadOrganizedInvoicesZip = function () {
+            if (typeof ZeraldaGoogle !== 'undefined' && ZeraldaGoogle.downloadOrganizedInvoicesZip) {
+                setGoogleProgress('جاري تجهيز وتوليد ملفات PDF وضغطها في مجلدات منظمة...', true);
+                ZeraldaGoogle.downloadOrganizedInvoicesZip().then(function (res) {
+                    setGoogleProgress('تم تنزيل أرشيف الفواتير بنجاح.', false);
+                    showToast('✅ تم تنزيل أرشيف الفواتير المنظم (' + res.filename + ') بنجاح!', 'success');
+                }).catch(function (err) {
+                    setGoogleProgress('فشل تنزيل ملف ZIP.', false);
+                    showToast('تعذر تنزيل أرشيف الفواتير: ' + (err && err.message ? err.message : err), 'info');
+                });
+                return;
+            }
+            window.open('/api/backup/invoices/zip', '_blank');
         };
 
         window.doGoogleRestore = function () {
