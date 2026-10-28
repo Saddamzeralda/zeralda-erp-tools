@@ -848,7 +848,7 @@
         document.head.appendChild(gsi);
       }
       var s = document.createElement('script');
-      s.src = 'shared/google_sync.js?v=20261015a';
+      s.src = 'shared/google_sync.js?v=20261028_pdf_v2';
       s.defer = true;
       s.onload = function () {
         runSync();

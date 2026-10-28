@@ -1183,9 +1183,18 @@
   }
 
   function _getSessionToken() {
-    if (window.ZeraldaAuth) return window.ZeraldaAuth.getSessionToken();
-    return ZS.getItem('zeralda-auth-token') ||
-           ZS.getItem('zeralda-session-token') || '';
+    if (window.ZeraldaAuth && typeof window.ZeraldaAuth.getSessionToken === 'function') {
+      return window.ZeraldaAuth.getSessionToken();
+    }
+    try {
+      return (typeof ZS !== 'undefined' && ZS.getItem('zeralda-auth-token')) ||
+             (typeof localStorage !== 'undefined' && localStorage.getItem('zeralda-auth-token')) ||
+             (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('zeralda-auth-token')) ||
+             (typeof localStorage !== 'undefined' && localStorage.getItem('zeralda-session-token')) ||
+             (typeof localStorage !== 'undefined' && localStorage.getItem('session_token')) || '';
+    } catch (_) {
+      return '';
+    }
   }
 
   var _pendingServerSyncKey = 'zeralda-google-pending-server-sync';
@@ -1998,9 +2007,13 @@
     });
   }
 
+  function getActiveCompanyInfo() {
+    return getActiveCompany();
+  }
+
   function getDrivePdfFileNameForActiveCompany() {
-    var company = getActiveCompanyInfo();
-    if (!company.id) return 'Zeralda_ERP_Full_Report.pdf';
+    var company = getActiveCompany();
+    if (!company || !company.id) return 'Zeralda_ERP_Full_Report.pdf';
     var safeId = String(company.id).replace(/[^a-zA-Z0-9_-]/g, '_');
     return 'Zeralda_ERP_Full_Report__' + safeId + '.pdf';
   }
@@ -2031,7 +2044,7 @@
   function downloadPdfReport() {
     return _fetchServerPdfBlob().then(function (blob) {
       var dateStr = new Date().toISOString().slice(0, 10);
-      var company = getActiveCompanyInfo();
+      var company = getActiveCompany() || {};
       var safeComp = company && company.name ? String(company.name).replace(/[^a-zA-Z0-9\u0600-\u06FF_-]/g, '_') : 'Zeralda_ERP';
       var fname = 'Zeralda_ERP_Report_' + safeComp + '_' + dateStr + '.pdf';
       var url = URL.createObjectURL(blob);
@@ -2622,6 +2635,8 @@
     getDriveFileNameForActiveCompany: getDriveFileNameForActiveCompany,
     getDrivePdfFileNameForActiveCompany: getDrivePdfFileNameForActiveCompany,
     getLastBackupStorageKeyForActiveCompany: getLastBackupStorageKeyForActiveCompany,
+    getActiveCompany: getActiveCompany,
+    getActiveCompanyInfo: getActiveCompanyInfo,
 
     syncCustomersToGoogle: syncCustomersToGoogle,
     importGoogleContacts: importGoogleContacts,
@@ -2641,4 +2656,13 @@
     sendGmail: sendGmail,
     sendInvoiceByEmail: sendInvoiceByEmail
   };
+
+  if (typeof window !== 'undefined') {
+    if (!window.getActiveCompanyInfo) {
+      window.getActiveCompanyInfo = getActiveCompanyInfo;
+    }
+    if (!window.getActiveCompany) {
+      window.getActiveCompany = getActiveCompany;
+    }
+  }
 })(window);
