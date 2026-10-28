@@ -2301,6 +2301,15 @@ if (window.ZDB && typeof window.ZDB.ready === 'function') {
 } else {
   initSalesScopedData();
 }
+if (window.ZS && typeof window.ZS.ready === 'function') {
+  window.ZS.ready().then(function() {
+    initSalesScopedData();
+    try { if (typeof loadInvoicesTable === 'function') loadInvoicesTable(); } catch(e) {}
+    try { if (typeof loadProformasTable === 'function') loadProformasTable(); } catch(e) {}
+    try { if (typeof loadCustomersTable === 'function') loadCustomersTable(); } catch(e) {}
+    try { if (typeof updateStats === 'function') updateStats(); } catch(e) {}
+  }).catch(function() {});
+}
 let customerFormInitialState = null;
 let customerModalForceClose = false;
 
@@ -6562,8 +6571,21 @@ function convertProformaToInvoice(){
         console.warn('Low stock detected during proforma conversion; continuing.', shortages);
       }
     }
+    try {
+      const latestStored = ZS.getItem("invoices-data");
+      if (latestStored) {
+        const parsedLatest = JSON.parse(latestStored);
+        if (Array.isArray(parsedLatest) && parsedLatest.length > invoicesData.length) {
+          invoicesData = parsedLatest;
+          window.invoicesData = invoicesData;
+        }
+      }
+    } catch(e) {}
     const inv={id:"INV-"+Date.now(),invoiceNumber:generateInvoiceNumberForDate(new Date().toISOString().split("T")[0]),date:new Date().toISOString().split("T")[0],customer:currentProforma.customer,items:currentProforma.items.map(i=>({ ...i, unit: i.unit || "unit" })),subtotal:currentProforma.subtotal,tax:currentProforma.tax,taxRate:currentProforma.taxRate,stamp:0,stampRate:0,total:currentProforma.total,status:"Pending",paymentMethod:"",payments:[],fromProforma:currentProforma.id,lowStockNotice:hasStockShortage};
     invoicesData.push(inv);
+    if (window.DataGuard && typeof window.DataGuard.protectBeforeSave === 'function') {
+      try { window.DataGuard.protectBeforeSave('proforma-convert'); } catch(e) {}
+    }
     ZS.setItem("invoices-data",JSON.stringify(invoicesData));
     currentProforma.status="Converted";
     const idx=proformasData.findIndex(p=>p.id===currentProforma.id);
@@ -7017,8 +7039,21 @@ window.addEventListener("load", function(){
         const isAutoPaid = isAutoPaidPaymentMethod(paymentMethod);
         const initialPaid = isAutoPaid ? Number(tt || 0) : 0;
         const initialStatus = isAutoPaid ? "Paid" : "Pending";
+        try {
+          const latestStored = ZS.getItem("invoices-data");
+          if (latestStored) {
+            const parsedLatest = JSON.parse(latestStored);
+            if (Array.isArray(parsedLatest) && parsedLatest.length > invoicesData.length) {
+              invoicesData = parsedLatest;
+              window.invoicesData = invoicesData;
+            }
+          }
+        } catch(e) {}
         const inv = { id:"INV-"+Date.now(), invoiceNumber: (document.getElementById("invoiceNumberInput") && document.getElementById("invoiceNumberInput").value.trim()) || generateInvoiceNumberForDate(document.getElementById("invoiceDate").value), date:document.getElementById("invoiceDate").value, customer:cu, items:invoiceItemsArray.map(i=>({description:i.description,quantity:i.quantity,price:i.price,total:i.total,productId:i.productId,unit:i.unit||"unit",fp:i.fp||""})), subtotal:st, tax:tx, taxRate:taxRate, stamp:stamp, stampRate:stampRate, total:tt, status:initialStatus, paymentMethod:paymentMethod, paid:initialPaid, payments:[], lowStockNotice:hasStockShortageOnSave };
         invoicesData.push(inv);
+        if (window.DataGuard && typeof window.DataGuard.protectBeforeSave === 'function') {
+          try { window.DataGuard.protectBeforeSave('invoice-create'); } catch(e) {}
+        }
         ZS.setItem("invoices-data", JSON.stringify(invoicesData));
         window.invoicesData = invoicesData;
         deductStock(itemsForCheck, {

@@ -67,7 +67,7 @@
     return _initPromise;
   }
 
-  // ── جمع كل البيانات من ZDB ──
+  // ── جمع كل البيانات من ZS (الخادم) و ZDB (المحلي) ──
   function _collectAllData() {
     var snapshot = {};
     try {
@@ -75,12 +75,24 @@
         var keys = window.ZDB.keys();
         for (var i = 0; i < keys.length; i++) {
           var key = keys[i];
-          // تخطي المفاتيح المؤقتة والكاش
           if (_isExcludedKey(key)) continue;
           try {
             var val = window.ZDB.getItem(key);
             if (val !== null && val !== undefined) {
               snapshot[key] = val;
+            }
+          } catch (e) {}
+        }
+      }
+      if (window.ZS && window.ZS.keys) {
+        var zsKeys = window.ZS.keys();
+        for (var j = 0; j < zsKeys.length; j++) {
+          var zKey = zsKeys[j];
+          if (_isExcludedKey(zKey)) continue;
+          try {
+            var zVal = window.ZS.getItem(zKey);
+            if (zVal !== null && zVal !== undefined) {
+              snapshot[zKey] = zVal;
             }
           } catch (e) {}
         }
@@ -244,16 +256,21 @@
           req.onsuccess = function (e) {
             var record = e.target.result;
             if (!record || !record.data) { resolve(false); return; }
-            // استرجاع البيانات إلى ZDB
+            // استرجاع البيانات إلى ZS (الخادم) و ZDB (المحلي)
             var data = record.data;
             var keys = Object.keys(data);
             var restored = 0;
             keys.forEach(function (key) {
               try {
-                if (window.ZDB && window.ZDB.setItem) {
-                  window.ZDB.setItem(key, data[key]);
-                  restored++;
+                var val = data[key];
+                if (typeof val !== 'string') val = JSON.stringify(val);
+                if (window.ZS && window.ZS.setItem) {
+                  window.ZS.setItem(key, val);
                 }
+                if (window.ZDB && window.ZDB.setItem) {
+                  window.ZDB.setItem(key, val);
+                }
+                restored++;
               } catch (e) {}
             });
             // flush للتأكد من الكتابة

@@ -463,6 +463,16 @@ def init_db_schema() -> None:
                     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
                 );
                 CREATE INDEX IF NOT EXISTS idx_kv_store_updated_at ON kv_store (updated_at DESC);
+
+                CREATE TABLE IF NOT EXISTS kv_backups (
+                    id SERIAL PRIMARY KEY,
+                    key VARCHAR(255) NOT NULL,
+                    value JSONB NOT NULL,
+                    item_count INTEGER NOT NULL DEFAULT 0,
+                    reason VARCHAR(64) NOT NULL DEFAULT 'auto',
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+                );
+                CREATE INDEX IF NOT EXISTS idx_kv_backups_key_created ON kv_backups (key, created_at DESC);
             """))
             conn.commit()
 
@@ -714,6 +724,146 @@ def _force_backup_store(store: Dict[str, Any]) -> None:
     _backup_store(store)
 
 
+CRITICAL_COLLECTION_BASE_KEYS = frozenset({
+    "invoices-data",
+    "proformas-data",
+    "customers-data",
+    "products-data",
+    "suppliers-data",
+    "purchases-data",
+    "purchase-orders",
+    "finance-transactions",
+    "employees-data",
+    "credit-notes-data",
+    "delivery-notes-data",
+    "sales-orders-data",
+    "journal-entries",
+    "payroll-data",
+    "tenders-data",
+    "consultations-data",
+    "services-data",
+})
+
+_LAST_KEY_BACKUP_TS_NS: Dict[str, int] = {}
+_KEY_BACKUP_INTERVAL_NS = 60 * 1_000_000_000  # 60 seconds
+MAX_DB_BACKUPS_PER_KEY = 50
+
+
+def is_critical_collection_key(key: str) -> bool:
+    if not key or not isinstance(key, str):
+        return False
+    base = key.split("::", 1)[0].split("__", 1)[0].strip()
+    return base in CRITICAL_COLLECTION_BASE_KEYS
+
+
+def _parse_list_safe(val: Any) -> Optional[List[Any]]:
+    if isinstance(val, list):
+        return val
+    if isinstance(val, str):
+        s = val.strip()
+        if s.startswith("["):
+            try:
+                parsed = json.loads(s)
+                if isinstance(parsed, list):
+                    return parsed
+            except Exception:
+                pass
+    return None
+
+
+def save_db_key_backup(key: str, value: Any, reason: str = "auto", force: bool = False) -> None:
+    """Persist a versioned snapshot of a critical key in PostgreSQL kv_backups."""
+    if not DB_CONNECTED or not _SessionLocal or not is_critical_collection_key(key):
+        return
+    lst = _parse_list_safe(value)
+    if lst is None or len(lst) == 0:
+        return
+    now_ns = time.time_ns()
+    last_ns = _LAST_KEY_BACKUP_TS_NS.get(key, 0)
+    if not force and last_ns and (now_ns - last_ns) < _KEY_BACKUP_INTERVAL_NS:
+        return
+    _LAST_KEY_BACKUP_TS_NS[key] = now_ns
+    try:
+        with _SessionLocal() as db:
+            db.execute(
+                text(
+                    "INSERT INTO kv_backups (key, value, item_count, reason, created_at) "
+                    "VALUES (:key, :val, :cnt, :reason, CURRENT_TIMESTAMP)"
+                ),
+                {
+                    "key": key,
+                    "val": json.dumps(value, ensure_ascii=False),
+                    "cnt": len(lst),
+                    "reason": (reason or "auto")[:64],
+                },
+            )
+            # Prune older than MAX_DB_BACKUPS_PER_KEY for this key
+            db.execute(
+                text(
+                    "DELETE FROM kv_backups WHERE key = :key AND id NOT IN ("
+                    "  SELECT id FROM kv_backups WHERE key = :key ORDER BY created_at DESC, id DESC LIMIT :lim"
+                    ")"
+                ),
+                {"key": key, "lim": MAX_DB_BACKUPS_PER_KEY},
+            )
+            db.commit()
+    except Exception as e:
+        logger.debug("save_db_key_backup skipped/failed for %s: %s", key, e)
+
+
+def list_key_backups(key: str, limit: int = 30) -> List[Dict[str, Any]]:
+    """Return recent PostgreSQL backups metadata for a given key."""
+    if not DB_CONNECTED or not _SessionLocal:
+        return []
+    try:
+        with _SessionLocal() as db:
+            rows = db.execute(
+                text(
+                    "SELECT id, key, item_count, reason, created_at "
+                    "FROM kv_backups WHERE key = :key "
+                    "ORDER BY created_at DESC, id DESC LIMIT :lim"
+                ),
+                {"key": key, "lim": max(1, min(100, int(limit)))},
+            )
+            return [
+                {
+                    "id": r[0],
+                    "key": r[1],
+                    "item_count": r[2],
+                    "reason": r[3],
+                    "created_at": r[4].isoformat() if hasattr(r[4], "isoformat") else str(r[4]),
+                }
+                for r in rows
+            ]
+    except Exception as e:
+        logger.warning("list_key_backups failed for %s: %s", key, e)
+        return []
+
+
+def get_key_backup_value(backup_id: int) -> Optional[Tuple[str, Any]]:
+    """Fetch (key, value) from PostgreSQL kv_backups by backup ID."""
+    if not DB_CONNECTED or not _SessionLocal:
+        return None
+    try:
+        with _SessionLocal() as db:
+            row = db.execute(
+                text("SELECT key, value FROM kv_backups WHERE id = :id"),
+                {"id": int(backup_id)},
+            ).fetchone()
+            if not row:
+                return None
+            val = row[1]
+            if isinstance(val, str):
+                try:
+                    val = json.loads(val)
+                except Exception:
+                    pass
+            return (row[0], val)
+    except Exception as e:
+        logger.warning("get_key_backup_value failed for %s: %s", backup_id, e)
+        return None
+
+
 def write_store(store: Dict[str, Any]) -> None:
     """Write store to JSON (authoritative) + optional DB.
 
@@ -820,7 +970,15 @@ def write_key(key: str, value: Any) -> None:
             read_store()
 
         store = _store_cache if _store_cache is not None else {}
+        old_val = store.get(key)
         value = _sanitize_store_value(value)
+        if is_critical_collection_key(key):
+            old_lst = _parse_list_safe(old_val)
+            new_lst = _parse_list_safe(value)
+            if old_lst and (new_lst is None or len(new_lst) < len(old_lst)):
+                save_db_key_backup(key, old_val, reason="pre-shrink", force=True)
+            elif new_lst:
+                save_db_key_backup(key, value, reason="write", force=False)
         store[key] = value
 
         # Backup (throttled)

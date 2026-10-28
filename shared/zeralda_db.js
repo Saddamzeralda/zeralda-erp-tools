@@ -1214,8 +1214,21 @@
         } catch(e) {}
     }
 
+    var _CRITICAL_ARRAY_KEYS = [
+        'invoices-data', 'proformas-data', 'customers-data', 'products-data',
+        'suppliers-data', 'purchases-data', 'purchase-orders', 'finance-transactions',
+        'employees-data', 'credit-notes-data', 'delivery-notes-data', 'sales-orders-data',
+        'journal-entries', 'payroll-data', 'tenders-data', 'consultations-data', 'services-data'
+    ];
+
+    function _isCriticalArrayKey(key) {
+        if (!key || typeof key !== 'string') return false;
+        var base = key.split('::')[0].split('__')[0];
+        return _CRITICAL_ARRAY_KEYS.indexOf(base) !== -1;
+    }
+
     function _flushOfflineServerQueue() {
-        if (_isFlushingOffline) return;
+        if (_isFlushingOffline || !_memReady) return;
         var keys = Object.keys(_offlineServerQueue);
         if (!keys.length) return;
         var token = _getServerToken();
@@ -1227,13 +1240,26 @@
         var flushed = 0;
         keys.forEach(function(k) {
             try {
+                var queuedVal = _offlineServerQueue[k];
+                // حماية: لا ترسل مصفوفة فارغة من طابور قديم إذا كانت الذاكرة الحالية تحتوي على بيانات
+                if (_isCriticalArrayKey(k)) {
+                    try {
+                        var qArr = typeof queuedVal === 'string' ? JSON.parse(queuedVal) : queuedVal;
+                        var mArr = _memStore[k] ? JSON.parse(_memStore[k]) : null;
+                        if (Array.isArray(qArr) && qArr.length === 0 && Array.isArray(mArr) && mArr.length > 0) {
+                            console.warn('[ZS] Discarded stale empty offline queue entry for', k);
+                            delete _offlineServerQueue[k];
+                            return;
+                        }
+                    } catch(_) {}
+                }
                 var xhr = new XMLHttpRequest();
                 xhr.open('POST', _serverApi(), false);
                 xhr.setRequestHeader('Content-Type', 'application/json');
                 xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
                 xhr.setRequestHeader('Authorization', 'Bearer ' + token);
                 xhr.setRequestHeader('X-Session-Token', token);
-                xhr.send(JSON.stringify({ key: k, value: _offlineServerQueue[k] }));
+                xhr.send(JSON.stringify({ key: k, value: queuedVal }));
                 if (xhr.status === 200) {
                     delete _offlineServerQueue[k];
                     flushed++;
@@ -1261,7 +1287,7 @@
     }
 
     // إرسال متزامن للخادم (sync XHR — الخادم محلي فالحفظ فوري) مع طابور أوفلاين
-    function _pushToServer(key, value) {
+    function _pushToServer(key, value, opts) {
         // لا ترسل للخادم إذا لم يكن الـ token متاحاً (مثل صفحة login)
         var token = _getServerToken();
         if (!token) {
@@ -1273,7 +1299,11 @@
             return;
         }
 
-        var payloadStr = JSON.stringify({ key: key, value: value });
+        var payloadObj = { key: key, value: value };
+        if (opts && opts.allowShrink) {
+            payloadObj.allow_shrink = true;
+        }
+        var payloadStr = JSON.stringify(payloadObj);
 
         // If page is dismissing/unloading, modern browsers prohibit synchronous XHR.
         // Use fetch with keepalive: true (W3C standard for background delivery during page dismissal)
@@ -1497,8 +1527,9 @@
             }
             return _memStore.hasOwnProperty(sk) ? _memStore[sk] : null;
         },
-        setItem: function (key, value) {
+        setItem: function (key, value, opts) {
             var sk = _scopeKey(key);
+            var allowShrink = Boolean(opts && opts.allowShrink);
             // حماية: لا تمسح قائمة الشركات الموجودة بقائمة فارغة
             if (sk === 'zeralda-settings') {
                 try {
@@ -1513,8 +1544,61 @@
                         value = JSON.stringify(_newS);
                     }
                 } catch(e) {}
+            } else if (_isCriticalArrayKey(sk) && !allowShrink) {
+                // حماية جذرية للفواتير والبيانات الحرجة ضد الكتابة الفارغة أو الكتابة من ذاكرة غير محدثة
+                try {
+                    var _newArr = typeof value === 'string' ? JSON.parse(value) : value;
+                    var _oldArr = _memStore[sk] ? JSON.parse(_memStore[sk]) : null;
+                    if (Array.isArray(_oldArr) && _oldArr.length > 0 && Array.isArray(_newArr)) {
+                        if (_newArr.length === 0) {
+                            if (_oldArr.length === 1 && _memReady) {
+                                // حذف مقصود لآخر عنصر واحد في تبويب مهيأ
+                                allowShrink = true;
+                            } else {
+                                console.warn('[ZS] BLOCKED empty overwrite of ' + sk + ' (preserved ' + _oldArr.length + ' items)');
+                                value = JSON.stringify(_oldArr);
+                            }
+                        } else {
+                            var _oldById = {};
+                            var _newById = {};
+                            var _hasOldIds = false;
+                            _oldArr.forEach(function(it) { if (it && it.id !== undefined && it.id !== null) { _oldById[String(it.id)] = it; _hasOldIds = true; } });
+                            _newArr.forEach(function(it) { if (it && it.id !== undefined && it.id !== null) { _newById[String(it.id)] = it; } });
+                            if (_hasOldIds) {
+                                var _addedCount = 0;
+                                var _droppedCount = 0;
+                                Object.keys(_newById).forEach(function(id) { if (!_oldById[id]) _addedCount++; });
+                                Object.keys(_oldById).forEach(function(id) { if (!_newById[id]) _droppedCount++; });
+                                if ((_addedCount > 0 && _droppedCount > 0) || _droppedCount > 1) {
+                                    var _merged = [];
+                                    var _seen = {};
+                                    _oldArr.forEach(function(it) {
+                                        if (it && it.id !== undefined && it.id !== null) {
+                                            var id = String(it.id);
+                                            _seen[id] = true;
+                                            _merged.push(_newById[id] || it);
+                                        } else {
+                                            _merged.push(it);
+                                        }
+                                    });
+                                    _newArr.forEach(function(it) {
+                                        if (it && it.id !== undefined && it.id !== null) {
+                                            var id = String(it.id);
+                                            if (!_seen[id]) { _seen[id] = true; _merged.push(it); }
+                                        } else {
+                                            _merged.push(it);
+                                        }
+                                    });
+                                    console.warn('[ZS] Auto-merged stale write for ' + sk + ' (old=' + _oldArr.length + ', new=' + _newArr.length + ', merged=' + _merged.length + ')');
+                                    value = JSON.stringify(_merged);
+                                }
+                            }
+                        }
+                    }
+                } catch(e) {}
             }
             _memStore[sk] = value;
+            _cache[sk] = value; // إبقاء ZDB و DataGuard متزامنين مع ZS
             if (_memKeys.indexOf(sk) === -1) _memKeys.push(sk);
             // الـ token: احفظ في cookie و localStorage
             if (sk === 'zeralda-auth-token' || sk === 'zeralda-session-token') {
@@ -1528,7 +1612,7 @@
             }
             // المفاتيح المحلية فقط: لا ترسل للخادم
             if (_isLocalOnly(sk)) return;
-            _pushToServer(sk, value);  // إرسال فوري للخادم
+            _pushToServer(sk, value, { allowShrink: allowShrink });  // إرسال فوري للخادم
         },
         removeItem: function (key) {
             var sk = _scopeKey(key);

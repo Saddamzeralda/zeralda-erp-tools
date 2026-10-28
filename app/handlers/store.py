@@ -31,10 +31,92 @@ class StoreWriteRequest(BaseModel):
     key: str
     value: Any
     expected_version: Optional[int] = None
+    allow_shrink: Optional[bool] = False
 
 
 class StoreBulkWriteRequest(BaseModel):
     data: Dict[str, Any]
+    allow_shrink: Optional[bool] = False
+
+
+def _protect_critical_collection(
+    key: str,
+    old_val: Any,
+    new_val: Any,
+    allow_shrink: bool = False,
+) -> tuple[Any, bool, str]:
+    """Server-side Zero-Data-Loss guard for critical ERP arrays (especially invoices-data).
+
+    Prevents:
+    1. Accidental empty-array overwrites (e.g. uninitialized tab sending '[]' when server has records).
+    2. Stale-cache creates/updates (client adds a new invoice from an empty/stale local array,
+       which would otherwise wipe out existing invoices on the server).
+    3. Mass shrinkage (>1 record dropped in a single write without allow_shrink=True).
+
+    Returns (protected_value, was_protected, protection_reason).
+    """
+    if allow_shrink or not storage.is_critical_collection_key(key):
+        return new_val, False, ""
+
+    old_list = storage._parse_list_safe(old_val)
+    new_list = storage._parse_list_safe(new_val)
+    if not old_list or new_list is None:
+        return new_val, False, ""
+
+    is_str = isinstance(new_val, str)
+
+    # Case 1: Incoming array is completely empty [] while server has records
+    if len(old_list) >= 1 and len(new_list) == 0:
+        restored = json.dumps(old_list, ensure_ascii=False) if is_str else old_list
+        return restored, True, f"blocked_empty_wipe(preserved={len(old_list)})"
+
+    # Extract ID maps for ID-based reconciliation
+    old_by_id: Dict[str, Any] = {}
+    for item in old_list:
+        if isinstance(item, dict) and item.get("id") is not None:
+            old_by_id[str(item.get("id"))] = item
+
+    new_by_id: Dict[str, Any] = {}
+    for item in new_list:
+        if isinstance(item, dict) and item.get("id") is not None:
+            new_by_id[str(item.get("id"))] = item
+
+    if not old_by_id:
+        return new_val, False, ""
+
+    added_ids = set(new_by_id.keys()) - set(old_by_id.keys())
+    dropped_ids = set(old_by_id.keys()) - set(new_by_id.keys())
+
+    # Case 2: Client added new record(s) while missing existing server record(s) (stale cache create),
+    # OR client dropped > 1 existing records in a single write without allow_shrink
+    if (added_ids and dropped_ids) or len(dropped_ids) > 1:
+        # Merge: keep all existing items (updated with new_by_id if present) + append newly added items
+        merged: List[Any] = []
+        seen_ids: set[str] = set()
+        for item in old_list:
+            if isinstance(item, dict) and item.get("id") is not None:
+                iid = str(item.get("id"))
+                seen_ids.add(iid)
+                merged.append(new_by_id.get(iid, item))
+            else:
+                merged.append(item)
+        for item in new_list:
+            if isinstance(item, dict) and item.get("id") is not None:
+                iid = str(item.get("id"))
+                if iid not in seen_ids:
+                    seen_ids.add(iid)
+                    merged.append(item)
+            else:
+                merged.append(item)
+        reason = (
+            f"merged_stale_write(old={len(old_list)},new={len(new_list)},merged={len(merged)})"
+            if added_ids
+            else f"blocked_mass_shrink(old={len(old_list)},new={len(new_list)},merged={len(merged)})"
+        )
+        out_val = json.dumps(merged, ensure_ascii=False) if is_str else merged
+        return out_val, True, reason
+
+    return new_val, False, ""
 
 
 class StoreMgetRequest(BaseModel):
@@ -343,6 +425,26 @@ async def write_store(request: Request):
                 )
 
         old_value = store.get(req.key)
+
+        # حماية جذرية للفواتير والبيانات الحرجة ضد المسح الخاطئ أو الكتابة من ذاكرة قديمة
+        allow_shrink = bool(req.allow_shrink) or (
+            request.headers.get("X-Allow-Shrink", "").lower() in ("true", "1", "yes")
+        )
+        protected_val, was_protected, protect_reason = _protect_critical_collection(
+            req.key, old_value, req.value, allow_shrink=allow_shrink
+        )
+        if was_protected:
+            req.value = protected_val
+            log_structured(
+                "WARNING",
+                "Zero-Data-Loss guard protected critical collection write",
+                action="store_write_protected",
+                user=user.get("email"),
+                key=req.key,
+                reason=protect_reason,
+                status="protected",
+            )
+
         is_noop = storage._values_equal(old_value, req.value)
         # FIX P0-003: skip the write entirely when the value is unchanged.
         # Previously the store + backup were rewritten on every no-op call,
@@ -439,6 +541,29 @@ async def bulk_write_store(request: Request):
                         skipped_keys.append({"key": k, "reason": "value_too_large", "size_bytes": vb})
                     continue
                 old_val = store.get(k)
+                allow_bulk_shrink = bool(req.allow_shrink) or (
+                    request.headers.get("X-Allow-Shrink", "").lower() in ("true", "1", "yes")
+                )
+                v, was_prot, prot_reason = _protect_critical_collection(
+                    k, old_val, v, allow_shrink=allow_bulk_shrink
+                )
+                if was_prot:
+                    log_structured(
+                        "WARNING",
+                        "Zero-Data-Loss guard protected bulk collection write",
+                        action="store_bulk_write_protected",
+                        user=user.get("email"),
+                        key=k,
+                        reason=prot_reason,
+                        status="protected",
+                    )
+                if storage.is_critical_collection_key(k):
+                    old_lst = storage._parse_list_safe(old_val)
+                    new_lst = storage._parse_list_safe(v)
+                    if old_lst and (new_lst is None or len(new_lst) < len(old_lst)):
+                        storage.save_db_key_backup(k, old_val, reason="bulk-pre-shrink", force=True)
+                    elif new_lst:
+                        storage.save_db_key_backup(k, v, reason="bulk-write", force=False)
                 store[k] = v
                 hist, undo_stack = storage.record_change_locked(k, old_val, v, hist, undo_stack, flush=False)
                 written += 1
@@ -496,6 +621,8 @@ async def delete_store(request: Request, key: str = Query(...), expected_version
                                                  "expected_version": expected,
                                                  "current_version": current_version})
         old_value = store[key]
+        if storage.is_critical_collection_key(key):
+            storage.save_db_key_backup(key, old_value, reason="pre-delete", force=True)
         storage.delete_key(key)
         storage.record_change_locked(key, old_value, None)
     # Publish SSE delete event
@@ -508,6 +635,50 @@ async def delete_store(request: Request, key: str = Query(...), expected_version
     log_structured("INFO", "Storage delete", action="store_delete",
                    user=user.get("email"), role=user.get("role"), key=key, status="success")
     return {"ok": True}
+
+
+@router.get("/backups")
+async def get_key_backups(request: Request, key: str = Query("invoices-data"), limit: int = Query(30, ge=1, le=100)):
+    """List persistent PostgreSQL snapshots for a critical key (default: invoices-data)."""
+    user = _user_or_raise(request, "read")
+    active_cid = _extract_active_company(request, user)
+    if not is_key_permitted_for_user(key, user, action="read", active_company_id=active_cid):
+        raise HTTPException(403, detail={"ok": False, "error": "Access denied to requested key"})
+    backups = storage.list_key_backups(key, limit=limit)
+    return {"ok": True, "key": key, "backups": backups, "count": len(backups)}
+
+
+@router.post("/backups/restore")
+async def restore_key_backup(request: Request, backup_id: int = Query(...)):
+    """Restore a critical key from a PostgreSQL kv_backups snapshot by ID (merges safely with current items)."""
+    user = _user_or_raise(request, "write")
+    rec = storage.get_key_backup_value(backup_id)
+    if not rec:
+        raise HTTPException(404, detail={"ok": False, "error": "Backup snapshot not found"})
+    key, backup_val = rec
+    active_cid = _extract_active_company(request, user)
+    if not is_key_permitted_for_user(key, user, action="write", active_company_id=active_cid):
+        raise HTTPException(403, detail={"ok": False, "error": "Permission denied to restore key"})
+
+    with storage._lock:
+        store = storage.read_store()
+        hist = storage.read_history()
+        old_val = store.get(key)
+        # Merge backup_val with current old_val so no newer records are lost during restore
+        restored_val, _, _ = _protect_critical_collection(key, backup_val, old_val or backup_val, allow_shrink=False)
+        storage.write_key(key, restored_val)
+        storage.record_change_locked(key, old_val, restored_val, hist=hist)
+        new_version = storage.current_key_version(hist, key)
+
+    storage._sse_publish({
+        "type": "write-no-value",
+        "key": key,
+        "version": new_version,
+        "seq": storage._next_seq(),
+    })
+    log_structured("WARNING", "Restored key from PostgreSQL backup", action="store_backup_restore",
+                   user=user.get("email"), key=key, backup_id=backup_id, status="success")
+    return {"ok": True, "key": key, "backup_id": backup_id, "version": new_version}
 
 
 @router.get("/history")
