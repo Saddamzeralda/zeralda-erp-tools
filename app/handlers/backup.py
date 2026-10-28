@@ -19,7 +19,7 @@ from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel, Field
 
 from app.services import storage
-from app.services.pdf import generate_invoice_pdf
+from app.services.pdf import generate_full_erp_pdf_report, generate_invoice_pdf
 from app.services.security import log_structured, read_json_body, require_auth, validate_session
 
 router = APIRouter(prefix="/api/backup", tags=["backup"])
@@ -96,6 +96,48 @@ async def backup_download(request: Request):
         media_type="application/json; charset=utf-8",
         headers={"Content-Disposition": f'attachment; filename="{fname}"',
                  "Cache-Control": "no-store"},
+    )
+
+
+# ── /api/backup/pdf (organized multi-page PDF archive of all ERP data) ────
+@router.api_route("/pdf", methods=["GET", "POST"])
+async def backup_pdf_download(request: Request):
+    user = require_auth(request)
+    company_id = request.query_params.get("companyId") or request.headers.get("X-Company-Id") or None
+    client_store: Dict[str, Any] = {}
+    if request.method == "POST":
+        try:
+            body_json = await read_json_body(request)
+            if isinstance(body_json, dict):
+                company_id = body_json.get("companyId") or company_id
+                if isinstance(body_json.get("data"), dict):
+                    client_store = body_json["data"]
+        except Exception:
+            pass
+
+    with storage._lock:
+        store = storage.read_store()
+
+    # Merge any client-supplied keys that aren't in server store yet
+    if client_store:
+        for k, v in client_store.items():
+            if k not in store or not store[k]:
+                store[k] = v
+
+    pdf_bytes = generate_full_erp_pdf_report(store, company_id=company_id)
+    if not pdf_bytes:
+        raise HTTPException(500, detail={"ok": False, "error": "PDF engine (PyMuPDF) unavailable"})
+
+    fname = f'zeralda-erp-full-report-{datetime.datetime.now().strftime("%Y%m%d-%H%M%S")}.pdf'
+    log_structured("INFO", "Full PDF report generated", action="backup_pdf_create",
+                   initiator=user.get("email"), size_bytes=len(pdf_bytes), status="success")
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{fname}"',
+            "Cache-Control": "no-store",
+        },
     )
 
 

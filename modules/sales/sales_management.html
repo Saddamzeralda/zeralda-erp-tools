@@ -1005,6 +1005,7 @@
     <script src="shared/company_storage.js?v=20261017_v10"></script>
     <script src="shared/unified_i18n.js?v=20261020_hotfix5" defer></script>
   <script src="shared/app_sync.js?v=20261017_v10" defer></script>
+  <script src="shared/google_sync.js?v=20261028_v1" defer></script>
   <script src="shared/role_access_control.js" defer></script>
 <script src="shared/ocr.js?v=20261017_v10"></script>
 </head>
@@ -1542,6 +1543,8 @@
                 <div style="margin-bottom: 20px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
                   <h3 data-en="Recent Invoices" data-ar="الفواتير الأخيرة" data-fr="Factures Récentes">Recent Invoices</h3>
                   <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <button class="btn btn-danger" type="button" onclick="exportFullPdfReportToDevice()" title="تنزيل تقرير PDF شامل لجميع الفواتير والصفحات"><i class="fas fa-file-pdf"></i><span data-en="Full PDF Archive" data-ar="تنزيل PDF شامل" data-fr="Archive PDF Complète">Full PDF Archive</span></button>
+                    <button class="btn btn-info" type="button" onclick="saveFullPdfReportToDrive()" title="حفظ التقرير الشامل PDF مباشرة على Google Drive"><i class="fab fa-google-drive"></i><span data-en="Save PDF to Drive" data-ar="حفظ PDF على Drive" data-fr="PDF sur Google Drive">Save PDF to Drive</span></button>
                     <button class="btn btn-warning" onclick="openCityReportDrawerWithSource('invoices')"><i class="fas fa-map-marker-alt"></i><span data-en="City Report" data-ar="تقرير المدن" data-fr="Rapport par ville">City Report</span></button>
                   </div>
                 </div>
@@ -2310,6 +2313,57 @@ if (window.ZS && typeof window.ZS.ready === 'function') {
     try { if (typeof updateStats === 'function') updateStats(); } catch(e) {}
   }).catch(function() {});
 }
+
+window.exportFullPdfReportToDevice = function() {
+  if (window.ZeraldaGoogle && typeof window.ZeraldaGoogle.downloadPdfReport === 'function') {
+    window.ZeraldaGoogle.downloadPdfReport().catch(function(err) {
+      alert('تعذر تنزيل ملف PDF: ' + (err && err.message ? err.message : err));
+    });
+    return;
+  }
+  var token = (window.ZS && window.ZS.getItem('zeralda-auth-token')) || localStorage.getItem('zeralda-auth-token') || '';
+  fetch('/api/backup/pdf', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': token ? ('Bearer ' + token) : '',
+      'X-Session-Token': token
+    },
+    body: JSON.stringify({ data: { 'invoices-data': invoicesData, 'proformas-data': proformasData, 'customers-data': customersData } })
+  }).then(function(r) {
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.blob();
+  }).then(function(blob) {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'Zeralda_ERP_Report_' + new Date().toISOString().slice(0, 10) + '.pdf';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function() { URL.revokeObjectURL(url); }, 1500);
+  }).catch(function(err) {
+    alert('تعذر تنزيل ملف PDF: ' + (err && err.message ? err.message : err));
+  });
+};
+
+window.saveFullPdfReportToDrive = function() {
+  if (!window.ZeraldaGoogle || typeof window.ZeraldaGoogle.backupPdfToDrive !== 'function') {
+    alert('جاري تحميل خدمة Google Drive، يرجى المحاولة بعد ثوانٍ أو فتح صفحة الإعدادات > النسخ الاحتياطي.');
+    return;
+  }
+  if (!window.ZeraldaGoogle.isSignedIn()) {
+    if (confirm('لم يتم ربط حساب Google Drive بعد. هل تريد الانتقال إلى صفحة الإعدادات لربط حسابك؟')) {
+      window.location.href = 'settings.html#backups';
+    }
+    return;
+  }
+  window.ZeraldaGoogle.backupPdfToDrive().then(function() {
+    alert('✅ تم حفظ التقرير الشامل (PDF) لجميع الفواتير والصفحات على Google Drive بنجاح!');
+  }).catch(function(err) {
+    alert('تعذر رفع ملف PDF إلى Google Drive: ' + (err && err.message ? err.message : err));
+  });
+};
 let customerFormInitialState = null;
 let customerModalForceClose = false;
 

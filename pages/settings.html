@@ -1539,6 +1539,12 @@
                     <button class="btn btn-success" type="button" onclick="doGoogleBackup()" style="display:inline-flex; align-items:center; gap:8px; padding:10px 18px; font-weight:600;">
                         <i class="fas fa-cloud-upload-alt"></i> <span data-en="Create Drive Backup Now" data-ar="إنشاء نسخة احتياطية على Drive الآن" data-fr="Créer une sauvegarde sur Drive">إنشاء نسخة احتياطية على Drive الآن</span>
                     </button>
+                    <button class="btn btn-primary" type="button" onclick="doGooglePdfBackup()" style="display:inline-flex; align-items:center; gap:8px; padding:10px 18px; font-weight:600; background:linear-gradient(135deg,#dc2626,#b91c1c); border:none; color:#fff;">
+                        <i class="fas fa-file-pdf"></i> <span data-en="Save Organized PDF Report to Drive" data-ar="حفظ تقرير PDF شامل ومرتب على Drive" data-fr="Enregistrer le rapport PDF sur Drive">حفظ تقرير PDF شامل ومرتب على Drive</span>
+                    </button>
+                    <button class="btn btn-secondary" type="button" onclick="downloadFullErpPdf()" style="display:inline-flex; align-items:center; gap:8px; padding:10px 18px; font-weight:600; border:1px solid #dc2626; color:#dc2626; background:#fef2f2;">
+                        <i class="fas fa-download"></i> <span data-en="Download Full PDF Report" data-ar="تنزيل التقرير الشامل PDF للجهاز" data-fr="Télécharger le rapport PDF complet">تنزيل التقرير الشامل PDF للجهاز</span>
+                    </button>
                     <button class="btn btn-warning" type="button" onclick="doGoogleRestore()" style="display:inline-flex; align-items:center; gap:8px; padding:10px 18px; font-weight:600;">
                         <i class="fas fa-cloud-download-alt"></i> <span data-en="Restore Latest Backup" data-ar="استعادة أحدث نسخة من Drive" data-fr="Restaurer la dernière sauvegarde">استعادة أحدث نسخة من Drive</span>
                     </button>
@@ -5145,6 +5151,44 @@
             });
         };
 
+        window.doGooglePdfBackup = function () {
+            if (typeof ZeraldaGoogle === 'undefined' || !ZeraldaGoogle.backupPdfToDrive) {
+                showToast('وحدة Google Drive غير محملة حالياً.', 'info');
+                return;
+            }
+            if (!ZeraldaGoogle.isSignedIn()) {
+                showToast('يرجى ربط حساب Google أولاً لرفع ملف PDF إلى Google Drive.', 'info');
+                return;
+            }
+            setGoogleProgress('جاري تجميع كافة الصفحات والفواتير وتوليد ملف PDF منظم...', true);
+            ZeraldaGoogle.backupPdfToDrive(function (step) {
+                if (step === 'generating_pdf') setGoogleProgress('جاري تنسيق الجداول والفواتير في صفحات PDF...', true);
+                if (step === 'uploading_pdf') setGoogleProgress('جاري رفع ملف PDF الشامل إلى Google Drive...', true);
+            }).then(function (res) {
+                setGoogleProgress('تم حفظ ملف PDF الشامل على Google Drive بنجاح.', false);
+                showToast('✅ تم حفظ التقرير الشامل (PDF) لجميع الصفحات والفواتير على Google Drive بنجاح!', 'success');
+                loadGoogleDriveBackupsList();
+            }).catch(function (err) {
+                setGoogleProgress('فشل رفع ملف PDF.', false);
+                showToast('تعذر حفظ PDF على Drive: ' + (err && err.message ? err.message : err), 'info');
+            });
+        };
+
+        window.downloadFullErpPdf = function () {
+            if (typeof ZeraldaGoogle !== 'undefined' && ZeraldaGoogle.downloadPdfReport) {
+                setGoogleProgress('جاري إعداد وتنزيل التقرير الشامل PDF...', true);
+                ZeraldaGoogle.downloadPdfReport().then(function () {
+                    setGoogleProgress('تم تنزيل ملف PDF بنجاح.', false);
+                    showToast('✅ تم تنزيل ملف التقرير الشامل PDF بنجاح!', 'success');
+                }).catch(function (err) {
+                    setGoogleProgress('فشل تنزيل ملف PDF.', false);
+                    showToast('تعذر تنزيل PDF: ' + (err && err.message ? err.message : err), 'info');
+                });
+                return;
+            }
+            window.open('/api/backup/pdf', '_blank');
+        };
+
         window.doGoogleRestore = function () {
             if (typeof ZeraldaGoogle === 'undefined') {
                 showToast(tSettings('google_module_not_loaded'), 'info');
@@ -5267,17 +5311,24 @@
                     var escapedName = (file.name || '').replace(/'/g, "\'");
                     var escapedId = (file.id || '').replace(/'/g, "\'");
 
+                    var isPdf = /\.pdf$/i.test(file.name || '');
+                    var iconHtml = isPdf
+                        ? '<i class="fas fa-file-pdf" style="color:#dc2626; margin-left:6px; font-size:15px;"></i>'
+                        : '<i class="fab fa-google-drive" style="color:#4285f4; margin-left:6px;"></i>';
+                    var actionsHtml = isPdf
+                        ? '<a href="https://drive.google.com/file/d/' + escapedId + '/view" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" style="padding:4px 10px; font-size:12px; display:inline-flex; align-items:center; gap:4px; border:1px solid #dc2626; color:#dc2626; background:#fef2f2; text-decoration:none;">' +
+                          '<i class="fas fa-external-link-alt"></i> <span>فتح PDF في Drive</span></a>'
+                        : '<button class="btn btn-secondary" type="button" onclick="previewGoogleDriveBackup(\'' + escapedId + '\', \'' + escapedName + '\')" style="padding:4px 10px; font-size:12px; display:inline-flex; align-items:center; gap:4px; border:1px solid #0284c7; color:#0284c7; background:#f0f9ff;">' +
+                          '<i class="fas fa-eye"></i> <span>معاينة</span></button>' +
+                          '<button class="btn btn-warning" type="button" onclick="doGoogleRestoreFromFile(\'' + escapedId + '\', \'' + escapedName + '\')" style="padding:4px 10px; font-size:12px; display:inline-flex; align-items:center; gap:4px;">' +
+                          '<i class="fas fa-undo-alt"></i> <span>استعادة</span></button>';
+
                     html += '<tr style="border-bottom:1px solid #f1f5f9; transition:background 0.15s;" onmouseover="this.style.background=\'#f8fafc\'" onmouseout="this.style.background=\'transparent\'">' +
-                        '<td style="padding:10px 14px; font-weight:600; color:#1e293b;"><i class="fab fa-google-drive" style="color:#4285f4; margin-left:6px;"></i> ' + (file.name || 'backup.json') + '</td>' +
+                        '<td style="padding:10px 14px; font-weight:600; color:#1e293b;">' + iconHtml + ' ' + (file.name || 'backup.json') + '</td>' +
                         '<td style="padding:10px 14px; color:#64748b;">' + dateStr + '</td>' +
                         '<td style="padding:10px 14px; text-align:center; color:#64748b;">' + sizeStr + '</td>' +
                         '<td style="padding:10px 14px; text-align:center; display:flex; justify-content:center; gap:6px;">' +
-                        '<button class="btn btn-secondary" type="button" onclick="previewGoogleDriveBackup(\'' + escapedId + '\', \'' + escapedName + '\')" style="padding:4px 10px; font-size:12px; display:inline-flex; align-items:center; gap:4px; border:1px solid #0284c7; color:#0284c7; background:#f0f9ff;">' +
-                        '<i class="fas fa-eye"></i> <span>معاينة</span>' +
-                        '</button>' +
-                        '<button class="btn btn-warning" type="button" onclick="doGoogleRestoreFromFile(\'' + escapedId + '\', \'' + escapedName + '\')" style="padding:4px 10px; font-size:12px; display:inline-flex; align-items:center; gap:4px;">' +
-                        '<i class="fas fa-undo-alt"></i> <span>استعادة</span>' +
-                        '</button>' +
+                        actionsHtml +
                         '</td>' +
                         '</tr>';
                 });

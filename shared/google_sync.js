@@ -1956,7 +1956,106 @@
     }).then(function (result) {
       // إصلاح: تحرير القفل عند النجاح
       _releaseBackupLock();
+      // تحديث ملف التقرير الشامل PDF على Google Drive تلقائياً بالخلفية
+      try {
+        backupPdfToDrive().catch(function (e) {
+          console.warn('[google_sync] Companion PDF Drive upload skipped:', e && e.message);
+        });
+      } catch (_) {}
       return result;
+    });
+  }
+
+  function getDrivePdfFileNameForActiveCompany() {
+    var company = getActiveCompanyInfo();
+    if (!company.id) return 'Zeralda_ERP_Full_Report.pdf';
+    var safeId = String(company.id).replace(/[^a-zA-Z0-9_-]/g, '_');
+    return 'Zeralda_ERP_Full_Report__' + safeId + '.pdf';
+  }
+
+  function _fetchServerPdfBlob() {
+    var token = _getSessionToken();
+    var headers = { 'Content-Type': 'application/json' };
+    if (token) {
+      headers['Authorization'] = 'Bearer ' + token;
+      headers['X-Session-Token'] = token;
+    }
+    var payload = collectAllData();
+    return fetch('/api/backup/pdf', {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify({
+        companyId: payload.companyId || '',
+        data: payload.data || {}
+      })
+    }).then(function (res) {
+      if (!res.ok) {
+        throw new Error('Server PDF generation failed (' + res.status + ')');
+      }
+      return res.blob();
+    });
+  }
+
+  function downloadPdfReport() {
+    return _fetchServerPdfBlob().then(function (blob) {
+      var dateStr = new Date().toISOString().slice(0, 10);
+      var company = getActiveCompanyInfo();
+      var safeComp = company && company.name ? String(company.name).replace(/[^a-zA-Z0-9\u0600-\u06FF_-]/g, '_') : 'Zeralda_ERP';
+      var fname = 'Zeralda_ERP_Report_' + safeComp + '_' + dateStr + '.pdf';
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = fname;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 1500);
+      return { ok: true, filename: fname, size: blob.size };
+    });
+  }
+
+  function backupPdfToDrive(onProgress) {
+    if (!accessToken) return Promise.reject(new Error('Not signed in'));
+    if (onProgress) onProgress('generating_pdf');
+
+    return Promise.all([
+      findOrCreateFolder(),
+      _fetchServerPdfBlob()
+    ]).then(function (resArr) {
+      var folderId = resArr[0];
+      var pdfBlob = resArr[1];
+      if (onProgress) onProgress('uploading_pdf');
+
+      var pdfFileName = getDrivePdfFileNameForActiveCompany();
+      var q = "name='" + pdfFileName + "' and '" + folderId + "' in parents and trashed=false";
+
+      return gFetch('https://www.googleapis.com/drive/v3/files?q=' + encodeURIComponent(q) + '&fields=files(id,name)')
+        .then(function (r) { return r.json(); })
+        .then(function (searchRes) {
+          if (searchRes.files && searchRes.files.length > 0) {
+            var existingId = searchRes.files[0].id;
+            return gFetch('https://www.googleapis.com/upload/drive/v3/files/' + existingId + '?uploadType=media', {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/pdf' },
+              body: pdfBlob
+            }).then(function (r) { return r.json(); });
+          }
+
+          // Multipart upload for new PDF file on Google Drive
+          var metadata = {
+            name: pdfFileName,
+            mimeType: 'application/pdf',
+            parents: [folderId]
+          };
+          var form = new FormData();
+          form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+          form.append('file', pdfBlob, pdfFileName);
+
+          return gFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+            method: 'POST',
+            body: form
+          }).then(function (r) { return r.json(); });
+        });
     });
   }
 
@@ -2454,9 +2553,12 @@
     startManualOAuth: startManualOAuth,
 
     backupToDrive: backupToDrive,
+    backupPdfToDrive: backupPdfToDrive,
+    downloadPdfReport: downloadPdfReport,
     restoreFromDrive: restoreFromDrive,
     listDriveBackups: listDriveBackups,
     getDriveFileNameForActiveCompany: getDriveFileNameForActiveCompany,
+    getDrivePdfFileNameForActiveCompany: getDrivePdfFileNameForActiveCompany,
     getLastBackupStorageKeyForActiveCompany: getLastBackupStorageKeyForActiveCompany,
 
     syncCustomersToGoogle: syncCustomersToGoogle,

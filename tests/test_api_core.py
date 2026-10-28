@@ -97,6 +97,38 @@ class TestStorageEngine(unittest.TestCase):
         self.assertFalse(was_del_blocked)
         self.assertEqual(len(json.loads(del_val)), 1)
 
+    def test_full_erp_pdf_report_generation(self):
+        """Verify multi-page organized PDF archive generator produces valid PDF bytes."""
+        from app.services.pdf import generate_full_erp_pdf_report
+
+        sample_store = {
+            "zeralda-settings": {
+                "activeCompanyId": "comp_1",
+                "companies": [{"id": "comp_1", "name": "شركة زرالدة للتجارة", "rc": "16/00-123456", "nif": "00123456789"}],
+            },
+            "invoices-data::comp_1": [
+                {
+                    "id": "INV-100",
+                    "invoiceNumber": "001/2026",
+                    "date": "2026-10-28",
+                    "customer": {"name": "مؤسسة الأمل"},
+                    "subtotal": 10000,
+                    "tax": 1900,
+                    "total": 11900,
+                    "paid": 11900,
+                    "status": "Paid",
+                    "paymentMethod": "Bank Transfer",
+                    "items": [{"description": "تجهيزات مكتبية", "quantity": 2, "price": 5000, "total": 10000}],
+                }
+            ],
+            "customers-data::comp_1": [{"id": "C-1", "name": "مؤسسة الأمل", "phone": "0559666951"}],
+            "products-data::comp_1": [{"id": "P-1", "name": "تجهيزات مكتبية", "quantity": 10, "price": 5000}],
+        }
+        pdf_bytes = generate_full_erp_pdf_report(sample_store, company_id="comp_1")
+        self.assertIsNotNone(pdf_bytes)
+        self.assertTrue(pdf_bytes.startswith(b"%PDF-"))
+        self.assertGreater(len(pdf_bytes), 1000)
+
 
 class TestSyncEngine(unittest.TestCase):
     """Test Offline-to-Cloud Sync Engine functionality."""
