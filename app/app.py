@@ -361,6 +361,18 @@ def create_app() -> FastAPI:
         if method == "OPTIONS":
             return await call_next(request)
 
+        # Developer account never expires: bypass license enforcement for developer sessions
+        auth_hdr = request.headers.get("Authorization") or request.headers.get("X-Session-Token") or request.cookies.get("zeralda_session")
+        if auth_hdr:
+            token = auth_hdr.replace("Bearer ", "").strip()
+            try:
+                from app.services import auth as _auth_svc
+                sess_user = _auth_svc.validate_session(token)
+                if sess_user and _auth_svc.is_developer_account(sess_user):
+                    return await call_next(request)
+            except Exception:
+                pass
+
         # Check server-side license status
         try:
             status = _license_svc.get_server_license_status()

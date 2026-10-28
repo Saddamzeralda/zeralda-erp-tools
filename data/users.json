@@ -4,7 +4,7 @@
     "email": "saddamzeralda@gmail.com",
     "password": "021f49352efdfad968810c754b68d6a7445618b36100e7d795e2cfbf5c52a71c",
     "salt": "a1697ebe20506f5851217cb2b0fa7a2d600a6e40387e8979cd159a8c7ef0ab70",
-    "role": "admin",
+    "role": "developer",
     "created_at": "2026-07-31T17:47:39.055338",
     "active": true,
     "failed_attempts": 0,
@@ -15,7 +15,9 @@
       "system-currency": "DZD",
       "zeralda-remembered-login": "saddamzeralda@gmail.com|dl6un3",
       "zeralda-saved-accounts": "[{\"login\":\"saddamzeralda@gmail.com\",\"email\":\"saddamzeralda@gmail.com\",\"fullName\":\"Admin\",\"picture\":\"https://lh3.googleusercontent.com/a/ACg8ocInJRBqg17uc0Kc0b2NG-QoM40H7cuXYi6Bf0z3vJHT8aBhD1ut=s96-c\",\"savedAt\":1785952910086}]"
-    }
+    },
+    "is_developer": true,
+    "never_expires": true
   },
   "test@example.com": {
     "username": "+21396409083",
@@ -44,12 +46,14 @@
     "email": "admin@zeralda.dz",
     "password": "021f49352efdfad968810c754b68d6a7445618b36100e7d795e2cfbf5c52a71c",
     "salt": "a1697ebe20506f5851217cb2b0fa7a2d600a6e40387e8979cd159a8c7ef0ab70",
-    "role": "admin",
+    "role": "developer",
     "created_at": "2026-10-12T22:43:20.977224",
     "active": true,
     "failed_attempts": 0,
     "locked_until": null,
     "must_change_password": false,
-    "password_changed_at": "2026-10-16T12:53:18.543092"
+    "password_changed_at": "2026-10-16T12:53:18.543092",
+    "is_developer": true,
+    "never_expires": true
   }
 }

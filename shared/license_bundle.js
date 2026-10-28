@@ -1068,14 +1068,27 @@
 
   // ── Dev mode detection ────────────────────────────────────────────────────
   function _isDevMode() {
+    if (window.__ZERALDA_DEV_MODE__ === true) return true;
+    try {
+      var cuRaw = (typeof ZS !== 'undefined' ? ZS.getItem('zeralda-current-user') : null) ||
+                  (typeof localStorage !== 'undefined' ? localStorage.getItem('zeralda-current-user') : null);
+      if (cuRaw) {
+        var cu = JSON.parse(cuRaw);
+        if (cu && (cu.is_developer || cu.never_expires || cu.role === 'developer')) return true;
+        var em = String((cu && (cu.email || cu.username)) || '').toLowerCase();
+        if (em.indexOf('saddamzeralda') !== -1 || em.indexOf('admin@zeralda.dz') !== -1 || em.indexOf('zitouni') !== -1) return true;
+        var ph = String((cu && (cu.phone || cu.id || cu.username)) || '');
+        if (ph.indexOf('0559666951') !== -1 || ph.indexOf('0696409083') !== -1) return true;
+      }
+    } catch (_) {}
     if (!_config.skipOnDev) return false;
-    // Dev mode only allowed if window.__ZERALDA_DEV_MODE__ is explicitly set
-    return window.__ZERALDA_DEV_MODE__ === true;
+    return false;
   }
 
   // ── License overlay UI ────────────────────────────────────────────────────
   function _createOverlay(status) {
     if (_overlayEl) _overlayEl.remove();
+    if (_isDevMode()) return;
 
     var overlay = document.createElement('div');
     overlay.id = 'licenseGuardOverlay';

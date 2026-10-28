@@ -93,11 +93,20 @@
           <span class="header-fullscreen-shortcut" aria-hidden="true">F11</span>
           <i class="fas fa-expand" aria-hidden="true"></i>
         </button>
+        <!-- ── مدة الترخيص (License Duration Badge) ── -->
+        <div class="header-license-badge" id="headerLicenseBadge"
+             style="display:inline-flex; align-items:center; gap:6px; padding:3px 10px; border-radius:18px; font-size:11px; font-weight:600; background:rgba(16,185,129,0.12); color:#059669; border:1px solid rgba(16,185,129,0.28); white-space:nowrap; cursor:pointer; transition:all 0.2s ease;"
+             title="صلاحية ومدة ترخيص النظام"
+             onclick="window.location.href='license.html'">
+          <i class="fas fa-shield-alt" id="headerLicenseIcon" style="font-size:11px;"></i>
+          <span id="headerLicenseDurationText">مدة الترخيص: دائم</span>
+        </div>
         <div class="user-info" id="layoutUserInfo">
           <div class="user-avatar" id="layoutUserAvatar">US</div>
           <div>
             <div style="font-weight: 600;" class="user-name" id="layoutUserName"
                  data-en="User" data-ar="مستخدم" data-fr="Utilisateur">User</div>
+            <div id="layoutUserRole" style="font-size:10px; color:#6b7280; line-height:1.2; display:none;"></div>
           </div>
         </div>
       </div>

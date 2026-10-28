@@ -458,6 +458,148 @@
   }
   window.initHeaderFullscreenButton = initHeaderFullscreenButton;
 
+  /* ── Header License Duration & User Status Badge ─────────── */
+  var _lastLicenseStatus = null;
+
+  function initHeaderLicenseBadge() {
+    var badge = document.getElementById('headerLicenseBadge');
+    var textEl = document.getElementById('headerLicenseDurationText');
+    var iconEl = document.getElementById('headerLicenseIcon');
+    var userNameEl = document.getElementById('layoutUserName');
+    var userAvatarEl = document.getElementById('layoutUserAvatar');
+    var userRoleEl = document.getElementById('layoutUserRole');
+
+    // 1. Identify logged-in user
+    var currentUser = null;
+    try {
+      var cuRaw = (typeof ZS !== 'undefined' ? ZS.getItem('zeralda-current-user') : null) ||
+                  (typeof localStorage !== 'undefined' ? localStorage.getItem('zeralda-current-user') : null);
+      if (cuRaw) currentUser = JSON.parse(cuRaw);
+    } catch (_) {}
+
+    var isDev = false;
+    if (currentUser) {
+      if (currentUser.is_developer || currentUser.never_expires || currentUser.role === 'developer') {
+        isDev = true;
+      }
+      var email = String(currentUser.email || currentUser.username || '').toLowerCase();
+      if (email.indexOf('saddamzeralda') !== -1 || email.indexOf('admin@zeralda.dz') !== -1 || email.indexOf('zitouni') !== -1) {
+        isDev = true;
+      }
+      var phone = String(currentUser.phone || currentUser.id || currentUser.username || '');
+      if (phone.indexOf('0559666951') !== -1 || phone.indexOf('0696409083') !== -1) {
+        isDev = true;
+      }
+
+      // Populate user info in header
+      if (userNameEl) {
+        var displayName = currentUser.username || currentUser.fullName || currentUser.email || 'User';
+        userNameEl.textContent = displayName;
+        if (isDev && userRoleEl) {
+          userRoleEl.textContent = 'المطور (صلاحية دائمة)';
+          userRoleEl.style.display = 'block';
+          userRoleEl.style.color = '#059669';
+          userRoleEl.style.fontWeight = '700';
+        } else if (userRoleEl && currentUser.role) {
+          userRoleEl.textContent = currentUser.role;
+          userRoleEl.style.display = 'block';
+        }
+      }
+      if (userAvatarEl) {
+        var avText = (currentUser.username || currentUser.fullName || currentUser.email || 'US').trim().substring(0, 2).toUpperCase();
+        userAvatarEl.textContent = avText;
+        if (isDev) {
+          userAvatarEl.style.background = 'linear-gradient(135deg, #059669, #10b981)';
+          userAvatarEl.style.color = '#ffffff';
+        }
+      }
+    }
+
+    function renderBadge(statusData) {
+      if (!badge || !textEl) return;
+      var lang = (typeof ZS !== 'undefined' ? ZS.getItem('preferred-language') : null) || 
+                 (typeof localStorage !== 'undefined' ? localStorage.getItem('preferred-language') : null) || 'ar';
+      lang = String(lang).toLowerCase();
+
+      // Developer Account -> Permanent & never expires
+      if (isDev || (statusData && statusData.isDeveloper)) {
+        badge.style.background = 'rgba(16, 185, 129, 0.15)';
+        badge.style.color = '#059669';
+        badge.style.border = '1px solid rgba(16, 185, 129, 0.35)';
+        if (iconEl) iconEl.className = 'fas fa-infinity';
+        textEl.textContent = lang === 'fr'
+          ? 'Licence : Développeur (Illimitée)'
+          : (lang === 'en' ? 'License: Developer (Lifetime)' : 'مدة الترخيص: دائم (حساب المطور)');
+        badge.title = lang === 'fr'
+          ? 'Compte développeur — Validité permanente et illimitée'
+          : (lang === 'en' ? 'Developer Account — Lifetime validity, never expires' : 'حساب المطور — صلاحية دائمة وغير منتهية مدى الحياة');
+        return;
+      }
+
+      var st = (statusData && statusData.status) ? statusData.status : 'active';
+      var expAt = (statusData && statusData.expiresAt !== undefined) ? statusData.expiresAt : 0;
+      var daysLeft = (statusData && statusData.daysLeft !== undefined) ? statusData.daysLeft : 0;
+
+      if (st === 'active') {
+        if (!expAt || expAt === 0) {
+          badge.style.background = 'rgba(16, 185, 129, 0.12)';
+          badge.style.color = '#059669';
+          badge.style.border = '1px solid rgba(16, 185, 129, 0.28)';
+          if (iconEl) iconEl.className = 'fas fa-shield-alt';
+          textEl.textContent = lang === 'fr' ? 'Licence : Illimitée (Permanente)' : (lang === 'en' ? 'License: Lifetime' : 'مدة الترخيص: دائم (غير منتهي)');
+        } else {
+          var expDate = new Date(expAt * 1000);
+          var dateStr = expDate.toISOString().split('T')[0];
+          badge.style.background = 'rgba(2, 132, 199, 0.12)';
+          badge.style.color = '#0284c7';
+          badge.style.border = '1px solid rgba(2, 132, 199, 0.28)';
+          if (iconEl) iconEl.className = 'fas fa-calendar-check';
+          textEl.textContent = lang === 'fr' 
+            ? 'Licence : ' + daysLeft + 'j restants (' + dateStr + ')'
+            : (lang === 'en' ? 'License: ' + daysLeft + 'd left (' + dateStr + ')' : 'مدة الترخيص: متبقي ' + daysLeft + ' يوم (' + dateStr + ')');
+        }
+      } else if (st === 'trial') {
+        badge.style.background = 'rgba(217, 119, 6, 0.15)';
+        badge.style.color = '#d97706';
+        badge.style.border = '1px solid rgba(217, 119, 6, 0.35)';
+        if (iconEl) iconEl.className = 'fas fa-hourglass-half';
+        textEl.textContent = lang === 'fr'
+          ? 'Essai : ' + daysLeft + ' jours restants'
+          : (lang === 'en' ? 'Trial: ' + daysLeft + ' days left' : 'مدة الترخيص: تجريبي (متبقي ' + daysLeft + ' يوم)');
+      } else if (st === 'grace') {
+        badge.style.background = 'rgba(234, 88, 12, 0.15)';
+        badge.style.color = '#ea580c';
+        badge.style.border = '1px solid rgba(234, 88, 12, 0.35)';
+        if (iconEl) iconEl.className = 'fas fa-exclamation-triangle';
+        var hrs = (statusData && statusData.graceHoursLeft) || 0;
+        textEl.textContent = lang === 'fr' ? 'Grâce (' + hrs + 'h)' : (lang === 'en' ? 'Grace (' + hrs + 'h)' : 'فترة سماح (متبقي ' + hrs + ' ساعة)');
+      } else {
+        badge.style.background = 'rgba(220, 38, 38, 0.15)';
+        badge.style.color = '#dc2626';
+        badge.style.border = '1px solid rgba(220, 38, 38, 0.35)';
+        if (iconEl) iconEl.className = 'fas fa-ban';
+        textEl.textContent = lang === 'fr' ? 'Licence : Expirée' : (lang === 'en' ? 'License: Expired' : 'الترخيص: منتهي الصلاحية');
+      }
+    }
+
+    renderBadge(_lastLicenseStatus || (isDev ? { status: 'active', expiresAt: 0, isDeveloper: true } : null));
+
+    fetch('/api/license/server-status')
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        if (data && data.status) {
+          _lastLicenseStatus = data.status;
+          renderBadge(_lastLicenseStatus);
+        }
+      })
+      .catch(function () {});
+
+    document.addEventListener('layoutLanguageChanged', function () {
+      renderBadge(_lastLicenseStatus);
+    });
+  }
+  window.initHeaderLicenseBadge = initHeaderLicenseBadge;
+
   /* ── Enforce Header/Sidebar/Main Geometry ───────────── */
   function applyLayoutGeometry() {
     var header = document.querySelector('.header');
@@ -726,6 +868,7 @@
         initHeaderLanguageSelector();
         initHeaderZoomControls();
         initHeaderFullscreenButton();
+        initHeaderLicenseBadge();
         if (window.ZeraldaTheme && typeof window.ZeraldaTheme.updateIcons === 'function') {
           window.ZeraldaTheme.updateIcons();
         }

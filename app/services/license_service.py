@@ -1810,6 +1810,17 @@ def get_server_license_status() -> Dict[str, Any]:
 
                 days_left = max(0, (expires_at - now) // (24 * 60 * 60))
 
+            cust = str(payload.get("customer", "")).lower()
+            em = str(payload.get("email", "")).lower()
+            is_dev = (
+                "saddamzeralda" in em or "admin@zeralda.dz" in em or
+                "0559666951" in cust or "0696409083" in cust or
+                "0559666951" in em or "0696409083" in em or
+                "saddam" in cust or "zitouni" in cust
+            )
+            is_perpetual = expires_at == 0 or is_dev
+            dur_label = "دائم (حساب المطور)" if is_dev else ("دائم (غير منتهي)" if is_perpetual else f"متبقي {days_left} يوم")
+
             return {
 
                 "status": "active",
@@ -1822,7 +1833,7 @@ def get_server_license_status() -> Dict[str, Any]:
 
                 "licenseType": payload.get("type", "standard"),
 
-                "expiresAt": expires_at,
+                "expiresAt": 0 if is_dev else expires_at,
 
                 "customer": payload.get("customer", ""),
 
@@ -1831,6 +1842,12 @@ def get_server_license_status() -> Dict[str, Any]:
                 "serverHwId": server_hw_id,
 
                 "hwBound": bool(bound_id or bound_fp),
+
+                "isDeveloper": is_dev,
+
+                "perpetual": is_perpetual,
+
+                "durationLabel": dur_label,
 
             }
 
