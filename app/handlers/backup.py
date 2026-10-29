@@ -81,6 +81,78 @@ def _write_ai_settings(data: Dict[str, Any]) -> None:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 
+def _extract_request_lang(
+    request: Request,
+    body_json: Optional[Dict[str, Any]] = None,
+    store: Optional[Dict[str, Any]] = None,
+) -> str:
+    """Extract and normalize request language ('ar', 'fr', or 'en') from query param,
+    body JSON, custom header X-App-Language, or stored user settings."""
+    # 1. Query parameter
+    lang_param = request.query_params.get("lang") or request.query_params.get("language")
+    if lang_param:
+        l = str(lang_param).lower().strip()
+        if l.startswith("fr"):
+            return "fr"
+        if l.startswith("en"):
+            return "en"
+        if l.startswith("ar"):
+            return "ar"
+
+    # 2. Body JSON
+    if isinstance(body_json, dict):
+        body_lang = body_json.get("lang") or body_json.get("language")
+        if body_lang:
+            l = str(body_lang).lower().strip()
+            if l.startswith("fr"):
+                return "fr"
+            if l.startswith("en"):
+                return "en"
+            if l.startswith("ar"):
+                return "ar"
+
+    # 3. Custom Header
+    custom_hdr = request.headers.get("X-App-Language") or request.headers.get("X-Language")
+    if custom_hdr:
+        l = str(custom_hdr).lower().strip()
+        if l.startswith("fr"):
+            return "fr"
+        if l.startswith("en"):
+            return "en"
+        if l.startswith("ar"):
+            return "ar"
+
+    # 4. Store preferred language
+    if isinstance(store, dict):
+        stored_pref = store.get("preferred-language") or store.get("language")
+        if not stored_pref:
+            settings_raw = store.get("zeralda-settings")
+            if isinstance(settings_raw, str):
+                try:
+                    settings_raw = json.loads(settings_raw)
+                except Exception:
+                    settings_raw = {}
+            if isinstance(settings_raw, dict):
+                stored_pref = settings_raw.get("preferredLanguage") or settings_raw.get("language")
+        if stored_pref:
+            l = str(stored_pref).lower().strip()
+            if l.startswith("fr"):
+                return "fr"
+            if l.startswith("en"):
+                return "en"
+            if l.startswith("ar"):
+                return "ar"
+
+    # 5. Accept-Language header fallback
+    accept_lang = request.headers.get("Accept-Language", "").lower()
+    if accept_lang.startswith("fr"):
+        return "fr"
+    if accept_lang.startswith("en"):
+        return "en"
+
+    return "ar"
+
+
 # ── /api/backup (full JSON download, admin) ───────────────────────────────
 @router.get("")
 async def backup_download(request: Request):
@@ -113,6 +185,7 @@ async def backup_pdf_download(request: Request):
     user = require_auth(request)
     company_id = request.query_params.get("companyId") or request.headers.get("X-Company-Id") or None
     client_store: Dict[str, Any] = {}
+    body_json: Dict[str, Any] = {}
     if request.method == "POST":
         try:
             body_json = await read_json_body(request)
@@ -132,13 +205,14 @@ async def backup_pdf_download(request: Request):
             if k not in store or not store[k]:
                 store[k] = v
 
-    pdf_bytes = generate_full_erp_pdf_report(store, company_id=company_id)
+    lang = _extract_request_lang(request, body_json, store)
+    pdf_bytes = generate_full_erp_pdf_report(store, company_id=company_id, lang=lang)
     if not pdf_bytes:
         raise HTTPException(500, detail={"ok": False, "error": "PDF engine (PyMuPDF) unavailable"})
 
-    fname = f'zeralda-erp-full-report-{datetime.datetime.now().strftime("%Y%m%d-%H%M%S")}.pdf'
+    fname = f'zeralda-erp-full-report-{lang}-{datetime.datetime.now().strftime("%Y%m%d-%H%M%S")}.pdf'
     log_structured("INFO", "Full PDF report generated", action="backup_pdf_create",
-                   initiator=user.get("email"), size_bytes=len(pdf_bytes), status="success")
+                   initiator=user.get("email"), lang=lang, size_bytes=len(pdf_bytes), status="success")
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
@@ -155,6 +229,7 @@ async def backup_invoices_zip_download(request: Request):
     user = require_auth(request)
     company_id = request.query_params.get("companyId") or request.headers.get("X-Company-Id") or None
     client_store: Dict[str, Any] = {}
+    body_json: Dict[str, Any] = {}
     if request.method == "POST":
         try:
             body_json = await read_json_body(request)
@@ -173,13 +248,14 @@ async def backup_invoices_zip_download(request: Request):
             if k not in store or not store[k]:
                 store[k] = v
 
-    zip_res = generate_organized_invoices_zip(store, company_id=company_id)
+    lang = _extract_request_lang(request, body_json, store)
+    zip_res = generate_organized_invoices_zip(store, company_id=company_id, lang=lang)
     zip_bytes = zip_res.get("zip_bytes")
     if not zip_bytes:
         raise HTTPException(500, detail={"ok": False, "error": "Failed generating invoices ZIP archive"})
 
     log_structured("INFO", "Organized invoices ZIP generated", action="backup_invoices_zip",
-                   initiator=user.get("email"), files_count=zip_res.get("total_files"),
+                   initiator=user.get("email"), lang=lang, files_count=zip_res.get("total_files"),
                    size_bytes=len(zip_bytes), status="success")
 
     return Response(
@@ -198,6 +274,7 @@ async def backup_invoices_bundle(request: Request):
     user = require_auth(request)
     company_id = request.query_params.get("companyId") or request.headers.get("X-Company-Id") or None
     client_store: Dict[str, Any] = {}
+    body_json: Dict[str, Any] = {}
     try:
         body_json = await read_json_body(request)
         if isinstance(body_json, dict):
@@ -215,7 +292,8 @@ async def backup_invoices_bundle(request: Request):
             if k not in store or not store[k]:
                 store[k] = v
 
-    raw_files = get_organized_invoices_file_list(store, company_id=company_id)
+    lang = _extract_request_lang(request, body_json, store)
+    raw_files = get_organized_invoices_file_list(store, company_id=company_id, lang=lang)
 
     encoded_files = []
     for f in raw_files:
@@ -233,11 +311,12 @@ async def backup_invoices_bundle(request: Request):
         })
 
     log_structured("INFO", "Invoices bundle created for cloud sync", action="backup_invoices_bundle",
-                   initiator=user.get("email"), count=len(encoded_files), status="success")
+                   initiator=user.get("email"), lang=lang, count=len(encoded_files), status="success")
 
     return {
         "ok": True,
         "companyId": company_id or "default",
+        "lang": lang,
         "total_files": len(encoded_files),
         "files": encoded_files,
     }
@@ -501,6 +580,8 @@ async def folder_run(request: Request):
     pdf_errors = 0
     exported_modules = 0
     company_dirs: List[str] = []
+    folder_lang = _extract_request_lang(request, data, store)
+    folder_currency = (sys_settings.get("systemCurrency") if isinstance(sys_settings, dict) else None) or store.get("system-currency") or "DZD"
 
     for comp_id, modules in company_data.items():
         comp_name = companies_map.get(comp_id, "")
@@ -548,9 +629,9 @@ async def folder_run(request: Request):
                     if not isinstance(inv, dict):
                         continue
                     try:
-                        pdf_bytes = generate_single_document_pdf(inv, doc_type=doc_type, company_info=comp_info)
+                        pdf_bytes = generate_single_document_pdf(inv, doc_type=doc_type, company_info=comp_info, currency=folder_currency, lang=folder_lang)
                         if not pdf_bytes:
-                            pdf_bytes = generate_invoice_pdf(inv, doc_type=doc_type)
+                            pdf_bytes = generate_invoice_pdf(inv, doc_type=doc_type, company_info=comp_info, currency=folder_currency, lang=folder_lang)
                         if pdf_bytes:
                             if doc_type == "proforma":
                                 inv_num = str(inv.get("proformaNumber") or inv.get("number") or inv.get("id") or "unknown")

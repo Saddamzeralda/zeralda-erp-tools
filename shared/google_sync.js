@@ -2007,6 +2007,39 @@
     });
   }
 
+  function _getCurrentLanguage() {
+    var lang = '';
+    try {
+      if (typeof ZS !== 'undefined' && ZS.getItem) {
+        lang = ZS.getItem('preferred-language') || ZS.getItem('language');
+      }
+    } catch (_) {}
+    if (!lang) {
+      try {
+        if (typeof localStorage !== 'undefined') {
+          lang = localStorage.getItem('preferred-language') || localStorage.getItem('language');
+        }
+      } catch (_) {}
+    }
+    if (!lang) {
+      try {
+        var match = document.cookie.match(/(?:^|;\s*)preferred-language=([^;]+)/);
+        if (match) lang = decodeURIComponent(match[1]);
+      } catch (_) {}
+    }
+    if (!lang) {
+      try {
+        if (typeof document !== 'undefined' && document.documentElement && document.documentElement.lang) {
+          lang = document.documentElement.lang;
+        }
+      } catch (_) {}
+    }
+    lang = String(lang || 'ar').toLowerCase().trim();
+    if (lang.indexOf('fr') === 0) return 'fr';
+    if (lang.indexOf('en') === 0) return 'en';
+    return 'ar';
+  }
+
   function getActiveCompanyInfo() {
     return getActiveCompany();
   }
@@ -2020,17 +2053,22 @@
 
   function _fetchServerPdfBlob() {
     var token = _getSessionToken();
-    var headers = { 'Content-Type': 'application/json' };
+    var currentLang = _getCurrentLanguage();
+    var headers = {
+      'Content-Type': 'application/json',
+      'X-App-Language': currentLang
+    };
     if (token) {
       headers['Authorization'] = 'Bearer ' + token;
       headers['X-Session-Token'] = token;
     }
     var payload = collectAllData();
-    return fetch('/api/backup/pdf', {
+    return fetch('/api/backup/pdf?lang=' + encodeURIComponent(currentLang), {
       method: 'POST',
       headers: headers,
       body: JSON.stringify({
         companyId: payload.companyId || '',
+        lang: currentLang,
         data: payload.data || {}
       })
     }).then(function (res) {
@@ -2169,18 +2207,23 @@
 
   function downloadOrganizedInvoicesZip() {
     var token = _getSessionToken();
-    var headers = { 'Content-Type': 'application/json' };
+    var currentLang = _getCurrentLanguage();
+    var headers = {
+      'Content-Type': 'application/json',
+      'X-App-Language': currentLang
+    };
     if (token) {
       headers['Authorization'] = 'Bearer ' + token;
       headers['X-Session-Token'] = token;
     }
     var payload = collectAllData();
 
-    return fetch('/api/backup/invoices/zip', {
+    return fetch('/api/backup/invoices/zip?lang=' + encodeURIComponent(currentLang), {
       method: 'POST',
       headers: headers,
       body: JSON.stringify({
         companyId: payload.companyId || '',
+        lang: currentLang,
         data: payload.data || {}
       })
     }).then(function (res) {
@@ -2188,7 +2231,7 @@
         throw new Error('Server ZIP generation failed (' + res.status + ')');
       }
       var disp = res.headers.get('Content-Disposition') || '';
-      var fname = 'Zeralda_Invoices_Archive.zip';
+      var fname = currentLang === 'fr' ? 'Zeralda_Archive_Factures.zip' : 'Zeralda_Invoices_Archive.zip';
       var match = disp.match(/filename="([^"]+)"/);
       if (match && match[1]) {
         fname = match[1];
@@ -2209,10 +2252,19 @@
 
   function backupOrganizedInvoicesToDrive(onProgress) {
     if (!accessToken) return Promise.reject(new Error('Google Drive account not connected'));
-    if (onProgress) onProgress({ step: 'init', message: 'جاري الاتصال بـ Google Drive وتجهيز الفواتير...' });
+    var currentLang = _getCurrentLanguage();
+    var initMsg = currentLang === 'fr'
+      ? 'Connexion à Google Drive et préparation des factures...'
+      : (currentLang === 'en'
+        ? 'Connecting to Google Drive and preparing invoices...'
+        : 'جاري الاتصال بـ Google Drive وتجهيز الفواتير...');
+    if (onProgress) onProgress({ step: 'init', message: initMsg });
 
     var token = _getSessionToken();
-    var headers = { 'Content-Type': 'application/json' };
+    var headers = {
+      'Content-Type': 'application/json',
+      'X-App-Language': currentLang
+    };
     if (token) {
       headers['Authorization'] = 'Bearer ' + token;
       headers['X-Session-Token'] = token;
@@ -2220,14 +2272,20 @@
     var payload = collectAllData();
     var company = getActiveCompany() || {};
     var safeComp = (company && company.name) ? String(company.name).replace(/[/\\:*?"<>|]/g, '_') : 'Zeralda_ERP';
-    var companyArchiveFolderName = 'أرشيف الفواتير المنظمة - ' + safeComp;
 
-    // 1. Fetch file bundle from backend
-    return fetch('/api/backup/invoices/bundle', {
+    var companyArchiveFolderName = (currentLang === 'fr')
+      ? ('Archive Factures Organisées - ' + safeComp)
+      : ((currentLang === 'en')
+        ? ('Organized Invoices Archive - ' + safeComp)
+        : ('أرشيف الفواتير المنظمة - ' + safeComp));
+
+    // 1. Fetch file bundle from backend with lang
+    return fetch('/api/backup/invoices/bundle?lang=' + encodeURIComponent(currentLang), {
       method: 'POST',
       headers: headers,
       body: JSON.stringify({
         companyId: payload.companyId || '',
+        lang: currentLang,
         data: payload.data || {}
       })
     }).then(function (res) {
@@ -2236,10 +2294,20 @@
     }).then(function (bundle) {
       var files = (bundle && bundle.files) || [];
       if (!files.length) {
-        throw new Error('لا توجد فواتير أو وثائق متاحة للأرشفة');
+        var emptyMsg = currentLang === 'fr'
+          ? 'Aucune facture ou document disponible pour archivage'
+          : (currentLang === 'en'
+            ? 'No invoices or documents available for archive'
+            : 'لا توجد فواتير أو وثائق متاحة للأرشفة');
+        throw new Error(emptyMsg);
       }
 
-      if (onProgress) onProgress({ step: 'create_root', message: 'جاري إنشاء وتجهيز المجلدات على Google Drive...', total: files.length });
+      var rootMsg = currentLang === 'fr'
+        ? 'Création et préparation des dossiers sur Google Drive...'
+        : (currentLang === 'en'
+          ? 'Creating and organizing folders on Google Drive...'
+          : 'جاري إنشاء وتجهيز المجلدات على Google Drive...');
+      if (onProgress) onProgress({ step: 'create_root', message: rootMsg, total: files.length });
 
       // 2. Find/create root folder and company subfolder
       return findOrCreateFolder().then(function (rootId) {
@@ -2264,13 +2332,18 @@
         files.forEach(function (f, idx) {
           p = p.then(function () {
             if (onProgress) {
+              var fileMsg = currentLang === 'fr'
+                ? ('Téléversement: ' + f.filename + ' (' + (idx + 1) + '/' + files.length + ')...')
+                : (currentLang === 'en'
+                  ? ('Uploading: ' + f.filename + ' (' + (idx + 1) + '/' + files.length + ')...')
+                  : ('جاري رفع: ' + f.filename + ' (' + (idx + 1) + '/' + files.length + ')...'));
               onProgress({
                 step: 'uploading',
                 current: idx + 1,
                 total: files.length,
                 name: f.filename,
                 folder: f.drive_folder,
-                message: 'جاري رفع: ' + f.filename + ' (' + (idx + 1) + '/' + files.length + ')...'
+                message: fileMsg
               });
             }
 
@@ -2829,6 +2902,7 @@
     getLastBackupStorageKeyForActiveCompany: getLastBackupStorageKeyForActiveCompany,
     getActiveCompany: getActiveCompany,
     getActiveCompanyInfo: getActiveCompanyInfo,
+    getCurrentLanguage: _getCurrentLanguage,
 
     syncCustomersToGoogle: syncCustomersToGoogle,
     importGoogleContacts: importGoogleContacts,

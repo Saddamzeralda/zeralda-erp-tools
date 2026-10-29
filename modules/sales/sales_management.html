@@ -2324,14 +2324,16 @@ window.exportFullPdfReportToDevice = function() {
     return;
   }
   var token = (window.ZS && window.ZS.getItem('zeralda-auth-token')) || localStorage.getItem('zeralda-auth-token') || '';
-  fetch('/api/backup/pdf', {
+  var lang = (window.ZS && window.ZS.getItem('preferred-language')) || localStorage.getItem('preferred-language') || 'ar';
+  fetch('/api/backup/pdf?lang=' + encodeURIComponent(lang), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      'X-App-Language': lang,
       'Authorization': token ? ('Bearer ' + token) : '',
       'X-Session-Token': token
     },
-    body: JSON.stringify({ data: { 'invoices-data': invoicesData, 'proformas-data': proformasData, 'customers-data': customersData } })
+    body: JSON.stringify({ lang: lang, data: { 'invoices-data': invoicesData, 'proformas-data': proformasData, 'customers-data': customersData } })
   }).then(function(r) {
     if (!r.ok) throw new Error('HTTP ' + r.status);
     return r.blob();
@@ -2381,14 +2383,16 @@ window.exportOrganizedInvoicesZipToDevice = function() {
     return;
   }
   var token = (window.ZS && window.ZS.getItem('zeralda-auth-token')) || localStorage.getItem('zeralda-auth-token') || '';
-  fetch('/api/backup/invoices/zip', {
+  var lang = (window.ZS && window.ZS.getItem('preferred-language')) || localStorage.getItem('preferred-language') || 'ar';
+  fetch('/api/backup/invoices/zip?lang=' + encodeURIComponent(lang), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      'X-App-Language': lang,
       'Authorization': token ? ('Bearer ' + token) : '',
       'X-Session-Token': token
     },
-    body: JSON.stringify({ data: { 'invoices-data': invoicesData, 'proformas-data': proformasData, 'customers-data': customersData } })
+    body: JSON.stringify({ lang: lang, data: { 'invoices-data': invoicesData, 'proformas-data': proformasData, 'customers-data': customersData } })
   }).then(function(r) {
     if (!r.ok) throw new Error('HTTP ' + r.status);
     return r.blob();

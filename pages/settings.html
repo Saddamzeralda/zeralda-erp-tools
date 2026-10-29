@@ -5198,6 +5198,7 @@
         };
 
         window.downloadFullErpPdf = function () {
+            var currentLang = (typeof ZeraldaGoogle !== 'undefined' && ZeraldaGoogle.getCurrentLanguage) ? ZeraldaGoogle.getCurrentLanguage() : ((typeof ZS !== 'undefined' && ZS.getItem && ZS.getItem('preferred-language')) || 'ar');
             if (typeof ZeraldaGoogle !== 'undefined' && ZeraldaGoogle.downloadPdfReport) {
                 setGoogleProgress('جاري إعداد وتنزيل التقرير الشامل PDF...', true);
                 ZeraldaGoogle.downloadPdfReport().then(function () {
@@ -5209,7 +5210,7 @@
                 });
                 return;
             }
-            window.open('/api/backup/pdf', '_blank');
+            window.open('/api/backup/pdf?lang=' + encodeURIComponent(currentLang), '_blank');
         };
 
         window.doBackupOrganizedInvoicesToDrive = function () {
@@ -5235,6 +5236,7 @@
         };
 
         window.doDownloadOrganizedInvoicesZip = function () {
+            var currentLang = (typeof ZeraldaGoogle !== 'undefined' && ZeraldaGoogle.getCurrentLanguage) ? ZeraldaGoogle.getCurrentLanguage() : ((typeof ZS !== 'undefined' && ZS.getItem && ZS.getItem('preferred-language')) || 'ar');
             if (typeof ZeraldaGoogle !== 'undefined' && ZeraldaGoogle.downloadOrganizedInvoicesZip) {
                 setGoogleProgress('جاري تجهيز وتوليد ملفات PDF وضغطها في مجلدات منظمة...', true);
                 ZeraldaGoogle.downloadOrganizedInvoicesZip().then(function (res) {
@@ -5246,7 +5248,7 @@
                 });
                 return;
             }
-            window.open('/api/backup/invoices/zip', '_blank');
+            window.open('/api/backup/invoices/zip?lang=' + encodeURIComponent(currentLang), '_blank');
         };
 
         window.doGoogleRestore = function () {

@@ -129,6 +129,36 @@ class TestStorageEngine(unittest.TestCase):
         self.assertTrue(pdf_bytes.startswith(b"%PDF-"))
         self.assertGreater(len(pdf_bytes), 1000)
 
+        # Multilingual tests (FR and EN)
+        pdf_fr = generate_full_erp_pdf_report(sample_store, company_id="comp_1", lang="fr")
+        self.assertIsNotNone(pdf_fr)
+        self.assertTrue(pdf_fr.startswith(b"%PDF-"))
+
+        pdf_en = generate_full_erp_pdf_report(sample_store, company_id="comp_1", lang="en")
+        self.assertIsNotNone(pdf_en)
+        self.assertTrue(pdf_en.startswith(b"%PDF-"))
+
+    def test_multilingual_single_doc_and_zip(self):
+        """Verify single document PDF and organized ZIP generation in French and English."""
+        from app.services.pdf import generate_single_document_pdf, generate_organized_invoices_zip
+        inv = {
+            "number": "INV-TEST-01",
+            "date": "2026-10-29",
+            "customer": "Test Client",
+            "total": 5000,
+            "items": [{"description": "Service Test", "quantity": 1, "price": 5000, "total": 5000}],
+        }
+        # FR single document PDF
+        pdf_fr = generate_single_document_pdf(inv, doc_type="invoice", lang="fr")
+        self.assertIsNotNone(pdf_fr)
+        self.assertTrue(pdf_fr.startswith(b"%PDF-"))
+
+        # FR organized ZIP
+        store = {"invoices-data": [inv]}
+        zip_res_fr = generate_organized_invoices_zip(store, lang="fr")
+        self.assertIn("Archive_Factures", zip_res_fr["filename"])
+        self.assertGreater(zip_res_fr["size_bytes"], 1000)
+
 
 class TestSyncEngine(unittest.TestCase):
     """Test Offline-to-Cloud Sync Engine functionality."""
