@@ -919,6 +919,249 @@
     .toast-item.info { background: #0284c7; }
     @keyframes toastIn { from { transform: translateY(12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
   
+    /* ── CUSTOM MULTI-SELECT DROPDOWNS ── */
+    .custom-multiselect {
+      position: relative;
+      flex: 1;
+      min-width: 175px;
+    }
+    .ms-trigger-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      width: 100%;
+      background: white;
+      text-align: inherit;
+    }
+    .ms-trigger-btn span {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+    }
+    .ms-arrow {
+      font-size: 11px;
+      color: #94a3b8;
+      transition: transform 0.2s ease;
+    }
+    .custom-multiselect.open .ms-arrow {
+      transform: rotate(180deg);
+    }
+    .ms-dropdown-menu {
+      position: absolute;
+      top: calc(100% + 4px);
+      right: 0;
+      left: auto;
+      min-width: 290px;
+      max-width: 360px;
+      width: 100%;
+      background: white;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+      padding: 10px;
+      animation: msDropdownFade 0.15s ease-out;
+    }
+    html[dir="ltr"] .ms-dropdown-menu,
+    body:not(.rtl) .ms-dropdown-menu {
+      left: 0;
+      right: auto;
+    }
+    @keyframes msDropdownFade {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .ms-search-box {
+      position: relative;
+      margin-bottom: 8px;
+    }
+    .ms-search-box i {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      right: 10px;
+      color: #94a3b8;
+      font-size: 12px;
+    }
+    html[dir="ltr"] .ms-search-box i,
+    body:not(.rtl) .ms-search-box i {
+      left: 10px;
+      right: auto;
+    }
+    .ms-search-input {
+      width: 100%;
+      padding: 7px 30px 7px 10px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 12px;
+      outline: none;
+    }
+    html[dir="ltr"] .ms-search-input,
+    body:not(.rtl) .ms-search-input {
+      padding: 7px 10px 7px 30px;
+    }
+    .ms-search-input:focus {
+      border-color: var(--dz-primary, #2563eb);
+    }
+    .ms-actions-bar {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .btn-ms-action {
+      background: #f1f5f9;
+      border: none;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #475569;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-ms-action:hover {
+      background: #e2e8f0;
+      color: #1e293b;
+    }
+    .ms-options-list {
+      max-height: 220px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .ms-option-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12.5px;
+      color: #334155;
+      transition: background 0.15s;
+      user-select: none;
+    }
+    .ms-option-item:hover {
+      background: #f8fafc;
+    }
+    .ms-option-item input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+      accent-color: var(--dz-primary, #2563eb);
+    }
+    .ms-footer-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 8px;
+      margin-top: 6px;
+      border-top: 1px solid #f1f5f9;
+    }
+    .active-pills-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 8px 12px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      margin-top: 8px;
+      font-size: 12px;
+    }
+    .pills-bar-title {
+      font-weight: 700;
+      color: #475569;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .filter-tag-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 8px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1d4ed8;
+      border-radius: 6px;
+      font-size: 11.5px;
+      font-weight: 600;
+    }
+    .filter-tag-pill.tag-type {
+      background: #fef3c7;
+      border-color: #fde68a;
+      color: #92400e;
+    }
+    .filter-tag-pill .pill-close {
+      cursor: pointer;
+      opacity: 0.7;
+      margin-left: 2px;
+    }
+    .filter-tag-pill .pill-close:hover {
+      opacity: 1;
+    }
+    .btn-clear-all-pills {
+      background: none;
+      border: none;
+      color: #dc2626;
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 2px 6px;
+      margin-right: auto;
+    }
+    html[dir="ltr"] .btn-clear-all-pills,
+    body:not(.rtl) .btn-clear-all-pills {
+      margin-left: auto;
+      margin-right: 0;
+    }
+
+    /* Dark Mode for Multi-Select */
+    [data-theme="dark"] .ms-trigger-btn,
+    body.dark-mode .ms-trigger-btn {
+      background: #0f172a !important;
+      border-color: #334155 !important;
+      color: #f8fafc !important;
+    }
+    [data-theme="dark"] .ms-dropdown-menu,
+    body.dark-mode .ms-dropdown-menu {
+      background: #0f172a !important;
+      border-color: #334155 !important;
+      color: #f8fafc !important;
+    }
+    [data-theme="dark"] .ms-search-input,
+    body.dark-mode .ms-search-input {
+      background: #1e293b !important;
+      border-color: #334155 !important;
+      color: #f8fafc !important;
+    }
+    [data-theme="dark"] .btn-ms-action,
+    body.dark-mode .btn-ms-action {
+      background: #1e293b !important;
+      color: #cbd5e1 !important;
+    }
+    [data-theme="dark"] .ms-option-item:hover,
+    body.dark-mode .ms-option-item:hover {
+      background: #1e293b !important;
+    }
+    [data-theme="dark"] .ms-option-item,
+    body.dark-mode .ms-option-item {
+      color: #cbd5e1 !important;
+    }
+    [data-theme="dark"] .active-pills-bar,
+    body.dark-mode .active-pills-bar {
+      background: #1e293b !important;
+      border-color: #334155 !important;
+    }
+
     /* ── 12-HOUR AUTO-SYNC PULSE ANIMATION ── */
     @keyframes syncPulseDot {
       0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
@@ -1057,9 +1300,37 @@
           <i class="fas fa-search"></i>
           <input type="text" id="dzSearchText" class="search-input" data-en-placeholder="Search by authority, tender reference, keywords (supply, works, IT...)" data-ar-placeholder="ابحث باسم المصلحة المتعاقدة، رقم الصفقة، الكلمات المفتاحية (توريد، أشغال، صيانة، حراسة...)" data-fr-placeholder="Rechercher par organisme, réf, mots-clés (fourniture, travaux, informatique...)" placeholder="ابحث باسم المصلحة المتعاقدة، رقم الصفقة، الكلمات المفتاحية (توريد، أشغال، صيانة، حراسة...)" oninput="filterAndRenderTenders()">
         </div>
-        <select id="dzFilterWilaya" class="filter-select" onchange="filterAndRenderTenders()">
-          <option value="">جميع الولايات (58 ولاية)</option>
-        </select>
+        <!-- Multi-Select Wilayas Picker -->
+        <div class="custom-multiselect" id="msWilayasContainer">
+          <button type="button" class="filter-select ms-trigger-btn" id="btnWilayasTrigger" onclick="toggleMsDropdown('msWilayasDropdown')">
+            <i class="fas fa-map-marker-alt text-primary"></i>
+            <span id="lblSelectedWilayas">جميع الولايات (58 ولاية)</span>
+            <i class="fas fa-chevron-down ms-arrow"></i>
+          </button>
+          <div class="ms-dropdown-menu" id="msWilayasDropdown" style="display:none;">
+            <div class="ms-search-box">
+              <i class="fas fa-search"></i>
+              <input type="text" class="ms-search-input" id="msWilayaSearch" placeholder="ابحث بالاسم أو الرقم (16, وهران...)" oninput="filterMultiSelectWilayas(this.value)">
+            </div>
+            <div class="ms-actions-bar">
+              <button type="button" class="btn-ms-action" onclick="selectAllWilayas(true)">الكل</button>
+              <button type="button" class="btn-ms-action" onclick="selectAllWilayas(false)">مسح</button>
+              <button type="button" class="btn-ms-action" onclick="selectRegionWilayas('centre')">الوسط (8)</button>
+              <button type="button" class="btn-ms-action" onclick="selectRegionWilayas('est')">الشرق (14)</button>
+              <button type="button" class="btn-ms-action" onclick="selectRegionWilayas('ouest')">الغرب (11)</button>
+              <button type="button" class="btn-ms-action" onclick="selectRegionWilayas('sud')">الجنوب (25)</button>
+            </div>
+            <div class="ms-options-list" id="msWilayasOptionsList">
+              <!-- Rendered dynamically -->
+            </div>
+            <div class="ms-footer-bar">
+              <span id="msWilayasCountLabel" style="font-size:11.5px; color:#64748b;">جميع الولايات</span>
+              <button type="button" class="btn btn-primary btn-sm" onclick="closeAllMultiSelects()">تطبيق</button>
+            </div>
+          </div>
+          <!-- Hidden select for compatibility -->
+          <select id="dzFilterWilaya" style="display:none;" onchange="filterAndRenderTenders()"><option value=""></option></select>
+        </div>
         <select id="dzFilterSector" class="filter-select" onchange="filterAndRenderTenders()">
           <option value="">جميع القطاعات والأنشطة</option>
           <option value="BTPH">BTPH والمنشآت والأشغال العمومية</option>
@@ -1074,14 +1345,29 @@
           <option value="Food">تغذية وإطعام جماعي</option>
           <option value="Industry">صناعة، ميكانيك وقطع غيار</option>
         </select>
-        <select id="dzFilterNoticeType" class="filter-select" onchange="filterAndRenderTenders()">
-          <option value="">جميع أنواع الإعلانات</option>
-          <option value="appel_offres">طلب عروض (Appel d'offres)</option>
-          <option value="consultation">استشارة بسيطة (Consultation)</option>
-          <option value="attribution">منح مؤقت (Attribution)</option>
-          <option value="prorogation">تمديد الآجال (Prorogation)</option>
-          <option value="concours">مسابقة هندسة معمارية (Concours)</option>
-        </select>
+        <!-- Multi-Select Notice Types Picker -->
+        <div class="custom-multiselect" id="msTypesContainer">
+          <button type="button" class="filter-select ms-trigger-btn" id="btnTypesTrigger" onclick="toggleMsDropdown('msTypesDropdown')">
+            <i class="fas fa-tags text-amber"></i>
+            <span id="lblSelectedTypes">جميع أنواع الإعلانات</span>
+            <i class="fas fa-chevron-down ms-arrow"></i>
+          </button>
+          <div class="ms-dropdown-menu" id="msTypesDropdown" style="display:none;">
+            <div class="ms-actions-bar">
+              <button type="button" class="btn-ms-action" onclick="selectAllNoticeTypes(true)">تحديد الكل</button>
+              <button type="button" class="btn-ms-action" onclick="selectAllNoticeTypes(false)">مسح التحديد</button>
+            </div>
+            <div class="ms-options-list" id="msTypesOptionsList">
+              <!-- Rendered dynamically -->
+            </div>
+            <div class="ms-footer-bar">
+              <span id="msTypesCountLabel" style="font-size:11.5px; color:#64748b;">جميع الأنواع</span>
+              <button type="button" class="btn btn-primary btn-sm" onclick="closeAllMultiSelects()">تطبيق</button>
+            </div>
+          </div>
+          <!-- Hidden select for compatibility -->
+          <select id="dzFilterNoticeType" style="display:none;" onchange="filterAndRenderTenders()"><option value=""></option></select>
+        </div>
         <select id="dzFilterSource" class="filter-select" onchange="filterAndRenderTenders()">
           <option value="">جميع المصادر (BOMOP, BAOSEM, بوابات...)</option>
           <option value="BOMOP">BOMOP - النشرة الرسمية للصفقات</option>
@@ -1120,6 +1406,13 @@
         <span class="chip-item" data-chip="source-FinancialBanks" onclick="setQuickChip('source-FinancialBanks')"><i class="fas fa-university"></i> <span data-ar="البنوك (CPA/BNA)" data-fr="Banques (CPA/BNA)" data-en="Banks">البنوك (CPA/BNA)</span></span>
         <span class="chip-item" data-chip="source-HealthPharma" onclick="setQuickChip('source-HealthPharma')"><i class="fas fa-pills"></i> <span data-ar="صيدال والصحة" data-fr="Saidal & Santé" data-en="Health & Pharma">صيدال والصحة</span></span>
         <span class="chip-item" data-chip="source-MaritimePorts" onclick="setQuickChip('source-MaritimePorts')"><i class="fas fa-anchor"></i> <span data-ar="الموانئ (EPAL)" data-fr="Ports (EPAL)" data-en="Ports">الموانئ (EPAL)</span></span>
+      </div>
+
+      <!-- Active Multi-Select Filter Pills Bar -->
+      <div id="activeFilterPillsBar" class="active-pills-bar" style="display:none;">
+        <span class="pills-bar-title"><i class="fas fa-filter text-primary"></i> <span data-ar="الفلاتر النشطة:" data-fr="Filtres actifs :">الفلاتر النشطة:</span></span>
+        <div id="activePillsContainer" style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;"></div>
+        <button type="button" class="btn-clear-all-pills" onclick="clearAllMultiFilters()"><i class="fas fa-times-circle"></i> <span data-ar="مسح التحديد" data-fr="Effacer">مسح التحديد</span></button>
       </div>
     </div>
 
@@ -5500,18 +5793,27 @@
       if(chipId.startsWith('sector-')){
         document.getElementById('dzFilterSector').value = chipId.replace('sector-', '');
       } else if(chipId.startsWith('wilaya-')){
-        document.getElementById('dzFilterWilaya').value = chipId.replace('wilaya-', '');
+        const wCode = chipId.replace('wilaya-', '');
+        selectedWilayas = [wCode];
+        if(typeof renderMultiSelectWilayasOptions === 'function') renderMultiSelectWilayasOptions();
+        if(typeof updateMultiSelectLabels === 'function') updateMultiSelectLabels();
+        if(typeof updateActiveFilterPills === 'function') updateActiveFilterPills();
       } else if(chipId.startsWith('source-')){
         const srcVal = chipId.replace('source-', '');
         const selSrc = document.getElementById('dzFilterSource');
         if(selSrc) selSrc.value = srcVal;
       } else if(chipId === 'all'){
+        selectedWilayas = [];
+        selectedNoticeTypes = [];
+        if(typeof renderMultiSelectWilayasOptions === 'function') renderMultiSelectWilayasOptions();
+        if(typeof renderMultiSelectTypesOptions === 'function') renderMultiSelectTypesOptions();
+        if(typeof updateMultiSelectLabels === 'function') updateMultiSelectLabels();
+        if(typeof updateActiveFilterPills === 'function') updateActiveFilterPills();
         document.getElementById('dzFilterSector').value = '';
-        document.getElementById('dzFilterWilaya').value = '';
-        document.getElementById('dzFilterNoticeType').value = '';
         const selSrc = document.getElementById('dzFilterSource');
         if(selSrc) selSrc.value = '';
       }
+      
 
       filterAndRenderTenders();
     }
@@ -5546,10 +5848,21 @@
         });
       }
 
-      // Dropdown filters
-      if(wilaya) list = list.filter(t => t.wilaya === wilaya);
+      // Multi-Select Wilayas filter
+      if(typeof selectedWilayas !== 'undefined' && selectedWilayas.length > 0 && selectedWilayas.length < ALGERIAN_WILAYAS.length){
+        list = list.filter(t => selectedWilayas.includes(t.wilaya));
+      } else if(wilaya) {
+        list = list.filter(t => t.wilaya === wilaya);
+      }
+
+      // Multi-Select Notice Types filter
+      if(typeof selectedNoticeTypes !== 'undefined' && selectedNoticeTypes.length > 0 && selectedNoticeTypes.length < NOTICE_TYPE_OPTIONS.length){
+        list = list.filter(t => selectedNoticeTypes.includes(t.type));
+      } else if(noticeType) {
+        list = list.filter(t => t.type === noticeType);
+      }
+
       if(sector) list = list.filter(t => t.sector === sector);
-      if(noticeType) list = list.filter(t => t.type === noticeType);
       if(source){
         list = list.filter(t => {
           if(t.sourceKey && t.sourceKey === source) return true;
@@ -6467,8 +6780,288 @@
     }
     window.calculateLegalAppeals = calculateLegalAppeals;
 
+    
+    // ═════════════════════════════════════════════════════════════════
+    // ── MULTI-SELECT FILTERING ENGINE (WILAYAS & TYPES) ──
+    // ═════════════════════════════════════════════════════════════════
+    let selectedWilayas = []; // Array of wilaya codes ['16', '31']
+    let selectedNoticeTypes = []; // Array of types ['appel_offres', 'consultation']
+
+    const REGION_WILAYAS = {
+      centre: ['09', '10', '15', '16', '26', '35', '42', '44'],
+      est: ['04', '05', '06', '12', '18', '19', '21', '23', '24', '25', '34', '36', '40', '41', '43'],
+      ouest: ['02', '13', '14', '20', '22', '27', '29', '31', '38', '45', '46', '48'],
+      sud: ['01', '03', '07', '08', '11', '17', '28', '30', '32', '33', '37', '39', '47', '49', '50', '51', '52', '53', '54', '55', '56', '57', '58']
+    };
+
+    const NOTICE_TYPE_OPTIONS = [
+      { key: 'appel_offres', ar: 'طلب عروض (Appel d\'offres)', fr: 'Appel d\'offres', icon: 'fa-file-signature' },
+      { key: 'consultation', ar: 'استشارة بسيطة (Consultation)', fr: 'Consultation', icon: 'fa-comment-dots' },
+      { key: 'attribution', ar: 'إعلان منح مؤقت (Attribution)', fr: 'Attribution provisoire', icon: 'fa-trophy' },
+      { key: 'prorogation', ar: 'تمديد الآجال (Prorogation)', fr: 'Prorogation de délais', icon: 'fa-clock' },
+      { key: 'concours', ar: 'مسابقة هندسة معمارية (Concours)', fr: 'Concours d\'architecture', icon: 'fa-pencil-ruler' },
+      { key: 'infructueux', ar: 'إعلان عدم جدوى (Infructuosité)', fr: 'Avis d\'infructuosité', icon: 'fa-ban' },
+      { key: 'annulation', ar: 'إلغاء الصفقة (Annulation)', fr: 'Annulation de marché', icon: 'fa-times-circle' }
+    ];
+
+    function initMultiSelectControls(){
+      renderMultiSelectWilayasOptions();
+      renderMultiSelectTypesOptions();
+      updateMultiSelectLabels();
+      updateActiveFilterPills();
+    }
+
+    function toggleMsDropdown(dropdownId){
+      const el = document.getElementById(dropdownId);
+      if(!el) return;
+      const isOpen = el.style.display === 'block';
+      closeAllMultiSelects();
+      if(!isOpen){
+        el.style.display = 'block';
+        el.parentElement.classList.add('open');
+      }
+    }
+    window.toggleMsDropdown = toggleMsDropdown;
+
+    function closeAllMultiSelects(){
+      document.querySelectorAll('.ms-dropdown-menu').forEach(menu => {
+        menu.style.display = 'none';
+        if(menu.parentElement) menu.parentElement.classList.remove('open');
+      });
+    }
+    window.closeAllMultiSelects = closeAllMultiSelects;
+
+    // Close on outside click
+    document.addEventListener('click', function(e){
+      if(!e.target.closest('.custom-multiselect')){
+        closeAllMultiSelects();
+      }
+    });
+
+    function renderMultiSelectWilayasOptions(searchKeyword = ''){
+      const container = document.getElementById('msWilayasOptionsList');
+      if(!container) return;
+      container.innerHTML = '';
+      const lang = getLang();
+      const isAr = lang === 'ar';
+      const q = searchKeyword.trim().toLowerCase();
+
+      let list = ALGERIAN_WILAYAS.slice();
+      if(q){
+        list = list.filter(w => {
+          return w.code.includes(q) || w.name.toLowerCase().includes(q);
+        });
+      }
+
+      if(!list.length){
+        container.innerHTML = '<div style="padding:10px; text-align:center; color:#94a3b8; font-size:12px;">لا توجد نتائج تطابق بحثك</div>';
+        return;
+      }
+
+      list.forEach(w => {
+        const isChecked = selectedWilayas.includes(w.code);
+        const item = document.createElement('label');
+        item.className = 'ms-option-item';
+        item.innerHTML = `
+          <input type="checkbox" value="${w.code}" ${isChecked ? 'checked' : ''} onchange="toggleWilayaSelection('${w.code}', this.checked)">
+          <span>${escapeHtml(w.code + ' - ' + w.name)}</span>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function filterMultiSelectWilayas(q){
+      renderMultiSelectWilayasOptions(q);
+    }
+    window.filterMultiSelectWilayas = filterMultiSelectWilayas;
+
+    function toggleWilayaSelection(code, checked){
+      if(checked){
+        if(!selectedWilayas.includes(code)) selectedWilayas.push(code);
+      } else {
+        selectedWilayas = selectedWilayas.filter(c => c !== code);
+      }
+      updateMultiSelectLabels();
+      updateActiveFilterPills();
+      filterAndRenderTenders();
+    }
+    window.toggleWilayaSelection = toggleWilayaSelection;
+
+    function selectAllWilayas(select){
+      if(select){
+        selectedWilayas = ALGERIAN_WILAYAS.map(w => w.code);
+      } else {
+        selectedWilayas = [];
+      }
+      renderMultiSelectWilayasOptions(document.getElementById('msWilayaSearch')?.value || '');
+      updateMultiSelectLabels();
+      updateActiveFilterPills();
+      filterAndRenderTenders();
+    }
+    window.selectAllWilayas = selectAllWilayas;
+
+    function selectRegionWilayas(regionKey){
+      const codes = REGION_WILAYAS[regionKey] || [];
+      selectedWilayas = codes.slice();
+      renderMultiSelectWilayasOptions();
+      updateMultiSelectLabels();
+      updateActiveFilterPills();
+      filterAndRenderTenders();
+    }
+    window.selectRegionWilayas = selectRegionWilayas;
+
+    function renderMultiSelectTypesOptions(){
+      const container = document.getElementById('msTypesOptionsList');
+      if(!container) return;
+      container.innerHTML = '';
+      const lang = getLang();
+      const isAr = lang === 'ar';
+
+      NOTICE_TYPE_OPTIONS.forEach(opt => {
+        const isChecked = selectedNoticeTypes.includes(opt.key);
+        const item = document.createElement('label');
+        item.className = 'ms-option-item';
+        const label = isAr ? opt.ar : (opt.fr || opt.ar);
+        item.innerHTML = `
+          <input type="checkbox" value="${opt.key}" ${isChecked ? 'checked' : ''} onchange="toggleNoticeTypeSelection('${opt.key}', this.checked)">
+          <span><i class="fas ${opt.icon}" style="width:16px; opacity:0.7;"></i> ${escapeHtml(label)}</span>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function toggleNoticeTypeSelection(typeKey, checked){
+      if(checked){
+        if(!selectedNoticeTypes.includes(typeKey)) selectedNoticeTypes.push(typeKey);
+      } else {
+        selectedNoticeTypes = selectedNoticeTypes.filter(k => k !== typeKey);
+      }
+      updateMultiSelectLabels();
+      updateActiveFilterPills();
+      filterAndRenderTenders();
+    }
+    window.toggleNoticeTypeSelection = toggleNoticeTypeSelection;
+
+    function selectAllNoticeTypes(select){
+      if(select){
+        selectedNoticeTypes = NOTICE_TYPE_OPTIONS.map(o => o.key);
+      } else {
+        selectedNoticeTypes = [];
+      }
+      renderMultiSelectTypesOptions();
+      updateMultiSelectLabels();
+      updateActiveFilterPills();
+      filterAndRenderTenders();
+    }
+    window.selectAllNoticeTypes = selectAllNoticeTypes;
+
+    function updateMultiSelectLabels(){
+      const lang = getLang();
+      const isAr = lang === 'ar';
+      const isFr = lang === 'fr';
+
+      // Wilayas Label
+      const lblW = document.getElementById('lblSelectedWilayas');
+      const countW = document.getElementById('msWilayasCountLabel');
+      if(lblW){
+        if(!selectedWilayas.length || selectedWilayas.length === ALGERIAN_WILAYAS.length){
+          lblW.textContent = isAr ? 'جميع الولايات (58 ولاية)' : (isFr ? 'Toutes les wilayas (58)' : 'All Wilayas (58)');
+        } else if(selectedWilayas.length === 1){
+          const wObj = ALGERIAN_WILAYAS.find(w => w.code === selectedWilayas[0]);
+          lblW.textContent = wObj ? wObj.code + ' - ' + wObj.name.split(' - ')[0] : selectedWilayas[0];
+        } else {
+          lblW.textContent = isAr 
+            ? 'الولايات (' + selectedWilayas.length + ' مختارة)' 
+            : (isFr ? 'Wilayas (' + selectedWilayas.length + ' sélectionnées)' : 'Wilayas (' + selectedWilayas.length + ' selected)');
+        }
+      }
+      if(countW){
+        countW.textContent = !selectedWilayas.length 
+          ? (isAr ? 'جميع الولايات' : 'Toutes') 
+          : (selectedWilayas.length + ' ' + (isAr ? 'ولاية محددة' : 'sélectionnées'));
+      }
+
+      // Types Label
+      const lblT = document.getElementById('lblSelectedTypes');
+      const countT = document.getElementById('msTypesCountLabel');
+      if(lblT){
+        if(!selectedNoticeTypes.length || selectedNoticeTypes.length === NOTICE_TYPE_OPTIONS.length){
+          lblT.textContent = isAr ? 'جميع أنواع الإعلانات' : (isFr ? 'Tous les types d\'avis' : 'All Notice Types');
+        } else if(selectedNoticeTypes.length === 1){
+          const opt = NOTICE_TYPE_OPTIONS.find(o => o.key === selectedNoticeTypes[0]);
+          lblT.textContent = opt ? (isAr ? opt.ar.split(' (')[0] : opt.fr) : selectedNoticeTypes[0];
+        } else {
+          lblT.textContent = isAr 
+            ? 'الأنواع (' + selectedNoticeTypes.length + ' مختارة)' 
+            : (isFr ? 'Types (' + selectedNoticeTypes.length + ' sélectionnés)' : 'Types (' + selectedNoticeTypes.length + ' selected)');
+        }
+      }
+      if(countT){
+        countT.textContent = !selectedNoticeTypes.length 
+          ? (isAr ? 'جميع الأنواع' : 'Tous') 
+          : (selectedNoticeTypes.length + ' ' + (isAr ? 'أنواع محددة' : 'sélectionnés'));
+      }
+    }
+
+    function updateActiveFilterPills(){
+      const bar = document.getElementById('activeFilterPillsBar');
+      const container = document.getElementById('activePillsContainer');
+      if(!bar || !container) return;
+
+      const lang = getLang();
+      const isAr = lang === 'ar';
+
+      const hasWilayaFilter = selectedWilayas.length > 0 && selectedWilayas.length < ALGERIAN_WILAYAS.length;
+      const hasTypeFilter = selectedNoticeTypes.length > 0 && selectedNoticeTypes.length < NOTICE_TYPE_OPTIONS.length;
+
+      if(!hasWilayaFilter && !hasTypeFilter){
+        bar.style.display = 'none';
+        container.innerHTML = '';
+        return;
+      }
+
+      bar.style.display = 'flex';
+      container.innerHTML = '';
+
+      // Wilayas pills
+      if(hasWilayaFilter){
+        selectedWilayas.forEach(code => {
+          const wObj = ALGERIAN_WILAYAS.find(w => w.code === code);
+          const name = wObj ? wObj.code + ' ' + wObj.name.split(' - ')[0] : code;
+          const pill = document.createElement('span');
+          pill.className = 'filter-tag-pill';
+          pill.innerHTML = `<i class="fas fa-map-marker-alt"></i> ${escapeHtml(name)} <i class="fas fa-times pill-close" onclick="toggleWilayaSelection('${code}', false)" title="إزالة"></i>`;
+          container.appendChild(pill);
+        });
+      }
+
+      // Types pills
+      if(hasTypeFilter){
+        selectedNoticeTypes.forEach(tKey => {
+          const opt = NOTICE_TYPE_OPTIONS.find(o => o.key === tKey);
+          const name = opt ? (isAr ? opt.ar.split(' (')[0] : opt.fr) : tKey;
+          const pill = document.createElement('span');
+          pill.className = 'filter-tag-pill tag-type';
+          pill.innerHTML = `<i class="fas ${opt ? opt.icon : 'fa-tag'}"></i> ${escapeHtml(name)} <i class="fas fa-times pill-close" onclick="toggleNoticeTypeSelection('${tKey}', false)" title="إزالة"></i>`;
+          container.appendChild(pill);
+        });
+      }
+    }
+
+    function clearAllMultiFilters(){
+      selectedWilayas = [];
+      selectedNoticeTypes = [];
+      renderMultiSelectWilayasOptions();
+      renderMultiSelectTypesOptions();
+      updateMultiSelectLabels();
+      updateActiveFilterPills();
+      filterAndRenderTenders();
+    }
+    window.clearAllMultiFilters = clearAllMultiFilters;
+
     window.addEventListener('DOMContentLoaded', function() {
       initPortal();
+      if(typeof initMultiSelectControls === 'function') initMultiSelectControls();
       if(typeof initAutoSyncScheduler === 'function') initAutoSyncScheduler();
       if(typeof loadLanguage === 'function') loadLanguage();
     });
