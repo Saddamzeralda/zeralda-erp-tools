@@ -1808,12 +1808,18 @@
     const current = getActiveModal();
     if (current && current !== modal) {
       modal.dataset.prevModalId = current.id;
-      if (document.activeElement && current.contains(document.activeElement)) document.activeElement.blur();
+      if (document.activeElement && current.contains(document.activeElement)) {
+        try { document.activeElement.blur(); } catch(e){}
+      }
       current.classList.remove('active');
-      current.setAttribute('aria-hidden', 'true');
+      if ('inert' in HTMLElement.prototype) current.inert = true;
+      current.setAttribute('inert', '');
+      current.removeAttribute('aria-hidden');
     }
 
     modal._previouslyFocusedElement = document.activeElement;
+    if ('inert' in HTMLElement.prototype) modal.inert = false;
+    modal.removeAttribute('inert');
     modal.classList.add('active');
     modal.setAttribute('aria-hidden', 'false');
 
@@ -1856,18 +1862,31 @@
 
     // Move focus out of the modal BEFORE hiding it to avoid aria-hidden focus warning
     try {
+      if (document.activeElement && modal.contains(document.activeElement)) {
+        document.activeElement.blur();
+      }
       const prev = modal._previouslyFocusedElement;
-      if (prev && typeof prev.focus === 'function') prev.focus();
-      else if (document.activeElement && modal.contains(document.activeElement)) document.activeElement.blur();
+      if (prev && document.contains(prev) && typeof prev.focus === 'function') {
+        prev.focus();
+      } else if (document.body) {
+        if (!document.body.hasAttribute('tabindex')) {
+          document.body.setAttribute('tabindex', '-1');
+        }
+        document.body.focus();
+      }
     } catch (err) {}
 
     modal.classList.remove('active');
-    modal.setAttribute('aria-hidden', 'true');
+    if ('inert' in HTMLElement.prototype) modal.inert = true;
+    modal.setAttribute('inert', '');
+    modal.removeAttribute('aria-hidden');
 
     if (prevId) {
       delete modal.dataset.prevModalId;
       const prevModal = document.getElementById(prevId);
       if (prevModal) {
+        if ('inert' in HTMLElement.prototype) prevModal.inert = false;
+        prevModal.removeAttribute('inert');
         prevModal.classList.add('active');
         prevModal.setAttribute('aria-hidden', 'false');
         document.body.style.overflow = 'hidden';

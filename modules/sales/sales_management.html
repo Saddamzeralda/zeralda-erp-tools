@@ -1853,8 +1853,15 @@ function showDrawer(id){
 function hideDrawer(id){
   const drawer = document.getElementById(id);
   if(!drawer) return;
+  if(drawer.contains(document.activeElement)){
+    try {
+      if(document.activeElement && typeof document.activeElement.blur === 'function') document.activeElement.blur();
+      if(document.body && typeof document.body.focus === 'function') document.body.focus();
+    } catch(e){}
+  }
   drawer.classList.remove('open');
-  drawer.setAttribute('aria-hidden','true');
+  drawer.setAttribute('inert', '');
+  drawer.removeAttribute('aria-hidden');
   // after transition
   setTimeout(()=>{
     if(!drawer.classList.contains('open')) drawer.style.display = 'none';
@@ -3355,49 +3362,49 @@ function openModal(id){
   var lastFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   _modalFocusState.set(id, lastFocused);
   m.inert = false;
+  try { m.removeAttribute('inert'); } catch(e){}
   m.classList.add('active');
   m.setAttribute('aria-hidden','false');
   // focus first focusable control in modal
   setTimeout(function(){
-    var focusable = m.querySelector('input, select, textarea, button, [href], [tabindex]:not([tabindex="-1"])');
+    var focusable = m.querySelector('input:not([type="hidden"]), select, textarea, button:not([disabled]), [href], [tabindex]:not([tabindex="-1"])');
     if(focusable) focusable.focus();
   }, 100);
 }
 function closeModal(id){
   var m = document.getElementById(id);
   if(!m) return;
-  m.inert = true;
-  m.classList.remove('active');
 
-  // Immediately restore focus to the trigger element that opened the modal
+  // Immediately remove focus from any element inside this modal before hiding
+  if(m.contains(document.activeElement)){
+    try {
+      if(document.activeElement && typeof document.activeElement.blur === 'function'){
+        document.activeElement.blur();
+      }
+    } catch(e){}
+  }
+
+  // Restore focus to opening trigger element or document.body
   var lastFocused = _modalFocusState.get(id);
   _modalFocusState.delete(id);
 
   if(lastFocused && document.contains(lastFocused) && typeof lastFocused.focus === 'function'){
     try { lastFocused.focus(); } catch(e){}
-  } else if(m.contains(document.activeElement)){
+  } else {
     try {
-      if(document.activeElement && typeof document.activeElement.blur === 'function'){
-        document.activeElement.blur();
-      }
-      if(document.body && typeof document.body.focus === 'function'){
+      if(document.body){
+        if(!document.body.hasAttribute('tabindex')){
+          document.body.setAttribute('tabindex', '-1');
+        }
         document.body.focus();
       }
     } catch(e){}
   }
 
-  // Defer aria-hidden to next tick so click event has finished and focus is settled outside
-  setTimeout(function(){
-    if(m.contains(document.activeElement)){
-      try {
-        if(document.activeElement) document.activeElement.blur();
-        if(document.body) document.body.focus();
-      } catch(e){}
-    }
-    if(!m.contains(document.activeElement)){
-      m.setAttribute('aria-hidden','true');
-    }
-  }, 0);
+  m.classList.remove('active');
+  m.inert = true;
+  try { m.setAttribute('inert', ''); } catch(e){}
+  m.removeAttribute('aria-hidden');
 }
 
 function openAddCustomerModal(){
