@@ -4361,7 +4361,7 @@
     })();
         </script>
 
-        <script src="shared/google_sync.js?v=20261028_pdf_v2" defer></script>
+        <script src="shared/google_sync.js?v=20261030_v3" defer></script>
 <script>
         // Global toast helper used throughout settings page
         function showToast(msg, type, duration) {
@@ -6026,7 +6026,8 @@
     });
     </script>
 
-        <script src="shared/license_bundle.js?v=20261021_b1?v=20261017_v10" defer>
+    <script src="shared/license_bundle.js?v=20261021_b1" defer></script>
+    <script>
 // ============================================================
 // MOBILE & SMARTPHONE PUSH NOTIFICATIONS HELPERS
 // ============================================================
@@ -6241,6 +6242,15 @@ async function testTelegramBotAlert() {
         alert('تعذر الاتصال بالخادم لاختبار تيليغرام.');
     }
 }
+
+// Explicit window bindings for HTML onclick handlers
+window.handleSubscribePhoneClick = handleSubscribePhoneClick;
+window.handleTestPhonePushClick = handleTestPhonePushClick;
+window.loadRegisteredMobileDevices = loadRegisteredMobileDevices;
+window.loadNotificationServerSettings = loadNotificationServerSettings;
+window.toggleTgSettingsView = toggleTgSettingsView;
+window.testTelegramBotAlert = testTelegramBotAlert;
+window.initMobileNotificationsSettings = initMobileNotificationsSettings;
 
 // Hook into showSection for notifications tab
 var _prevShowSectionNotif = typeof showSection === 'function' ? showSection : null;

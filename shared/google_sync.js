@@ -2615,6 +2615,10 @@
     return !!(profile && profile.email);
   }
 
+  function isConnected() {
+    return isSignedIn();
+  }
+
   var _googleSyncInitDone = false;
   var _googleSyncInitInProgress = false;
   var _googleSyncInitQueue = [];
@@ -2633,7 +2637,7 @@
     }
 
     if (_googleSyncInitDone) {
-      _flushInitQueue(isConnected());
+      _flushInitQueue(isSignedIn());
       return;
     }
 
@@ -2878,6 +2882,7 @@
     tryAutoReconnect: tryAutoReconnect,
     signOut: signOut,
     isSignedIn: isSignedIn,
+    isConnected: isSignedIn,
     getProfile: getGoogleProfile,
 
     // Per-user session management
