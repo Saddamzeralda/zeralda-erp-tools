@@ -1,10 +1,7 @@
 """Mobile and Web Push Notification Endpoints for Zeralda ERP."""
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
 from fastapi import APIRouter, Request, HTTPException
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field
 
 from app.services import notifications
 from app.services.security import read_json_body, require_auth, validate_session

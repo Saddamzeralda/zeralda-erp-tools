@@ -20,7 +20,7 @@ import logging
 import os
 import secrets
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 try:
     from cryptography.hazmat.primitives import hashes

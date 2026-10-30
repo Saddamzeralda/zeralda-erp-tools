@@ -27,7 +27,7 @@ from app.services.pdf import (
     get_organized_invoices_file_list,
     generate_organized_invoices_zip,
 )
-from app.services.security import log_structured, read_json_body, require_auth, validate_session
+from app.services.security import log_structured, read_json_body, require_auth
 
 router = APIRouter(prefix="/api/backup", tags=["backup"])
 

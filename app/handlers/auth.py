@@ -20,7 +20,7 @@ import certifi
 
 from fastapi import APIRouter, Request, Response, HTTPException, status
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from app.services.security import (
     auth_rate_limited,
@@ -30,7 +30,6 @@ from app.services.security import (
     read_json_body,
     require_auth,
     validate_session,
-    AUTH_RATE_MAX_ATTEMPTS,
     MAX_AUTH_BODY_BYTES,
 )
 

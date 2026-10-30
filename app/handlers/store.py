@@ -19,7 +19,6 @@ from app.services import storage
 from app.services.security import (
     log_structured,
     read_json_body,
-    require_auth,
     require_store_permission,
     validate_session,
 )
@@ -993,11 +992,3 @@ async def store_events(request: Request):
         },
     )
 
-
-def _queue_get_timeout(q, timeout):
-    """Blocking get with timeout (runs in executor thread)."""
-    import queue as _queue
-    try:
-        return q.get(timeout=timeout)
-    except _queue.Empty:
-        return None

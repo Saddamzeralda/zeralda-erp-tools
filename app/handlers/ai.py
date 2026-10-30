@@ -30,7 +30,6 @@ from app.services.security import (
 from app.services.ai_routes import (
     MODULE_MAP,
     ai_chat as _ai_chat,
-    normalize_line_items as _normalize_line_items,
     sanitize_record as _sanitize_ai_record,
     is_protected_store_key as _is_protected_store_key,
     RESERVED_FIELDS as _RESERVED_FIELDS,
@@ -89,21 +88,6 @@ def _sanitize_for_prompt(text: str, max_len: int = 200) -> str:
     # Remove newlines that could break prompt structure
     s = s.replace("\n", " ").replace("\r", " ")
     return s
-
-
-def _build_store_counts_insert(store: Dict[str, Any]) -> str:
-    """Build the '--- Server data counts ---' block with sanitized key names."""
-    counts = []
-    for k, v in list(store.items()):
-        try:
-            if isinstance(v, list) and v:
-                safe_k = _sanitize_for_prompt(k, max_len=80)
-                counts.append(f"{safe_k}: {len(v)}")
-        except Exception:
-            pass
-    if not counts:
-        return ""
-    return f'\n\n--- Server data counts ---\n{", ".join(counts)}\n--- End counts ---\n'
 
 
 def _build_store_counts_insert_from_counts(counts: Dict[str, int]) -> str:

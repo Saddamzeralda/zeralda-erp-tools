@@ -5,13 +5,13 @@ pulling remote updates, and two-way reconciliation.
 """
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
-from fastapi import APIRouter, Request, HTTPException
+from typing import List, Optional
+from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from app.services import sync_service
-from app.services.security import get_session_token, require_auth
+from app.services.security import get_session_token
 
 router = APIRouter(prefix="/api/sync", tags=["sync"])
 

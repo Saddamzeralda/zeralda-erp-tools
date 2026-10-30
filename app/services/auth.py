@@ -17,14 +17,12 @@ from datetime import datetime, timedelta
 from typing import Optional, Dict, List, Tuple, Any
 
 # Data directories
-from pathlib import Path
 from app.services import storage
 
 _BASE_DATA_DIR = str(storage.DATA_DIR)
 DATA_DIR = os.getenv("DATA_DIR", _BASE_DATA_DIR)
 USERS_FILE = os.path.join(DATA_DIR, 'users.json')
 SESSIONS_FILE = os.path.join(DATA_DIR, 'sessions.json')
-LOGIN_ATTEMPTS_FILE = os.path.join(DATA_DIR, 'login_attempts.json')
 
 os.makedirs(DATA_DIR, exist_ok=True)
 _SEED_AUTH_DIR = str(storage._SEED_DIR) if hasattr(storage, '_SEED_DIR') else os.path.join(str(storage._BASE_DIR), 'data_defaults')
@@ -45,7 +43,6 @@ if os.path.abspath(DATA_DIR) != os.path.abspath(_SEED_AUTH_DIR):
 # ── Threading locks to prevent race conditions under concurrent requests ──────
 _sessions_lock = threading.RLock()
 _users_lock = threading.RLock()
-_login_attempts_lock = threading.RLock()
 
 
 def _load_or_create_secret_key() -> str:
@@ -333,18 +330,6 @@ def initialize_default_users():
 # ══════════════════════════════════════════════════════════
 #  Login Attempts & Account Lockout
 # ══════════════════════════════════════════════════════════
-
-def save_login_attempts(attempts: Dict):
-    """Save login attempts (atomic write)"""
-    with _login_attempts_lock:
-        try:
-            tmp = LOGIN_ATTEMPTS_FILE + '.tmp'
-            with open(tmp, 'w', encoding='utf-8') as f:
-                json.dump(attempts, f, ensure_ascii=False, indent=2)
-            os.replace(tmp, LOGIN_ATTEMPTS_FILE)
-        except Exception as e:
-            print(f"[ERROR] Failed to save login attempts: {e}")
-
 
 def is_account_locked(email: str) -> bool:
     """Check if account is locked (developer accounts are never locked)."""
@@ -740,14 +725,6 @@ def _resolve_user_candidates(identifier: str) -> List[Tuple[str, Dict]]:
             seen.add(resolved_key)
 
     return candidates
-
-
-def _resolve_user_identifier(identifier: str) -> Tuple[Optional[str], Optional[Dict]]:
-    """Resolve login identifier as email OR username OR phone (case-insensitive)."""
-    candidates = _resolve_user_candidates(identifier)
-    if candidates:
-        return candidates[0]
-    return None, None
 
 
 def authenticate(identifier: str, password: str, ip_address: str = '', user_agent: str = '') -> Dict:

@@ -17,7 +17,7 @@ import threading
 from typing import Any, Dict
 
 from fastapi import APIRouter, Request, HTTPException
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import Response
 from pydantic import BaseModel
 
 from app.services import storage
@@ -26,7 +26,6 @@ from app.services.security import (
     log_structured,
     read_json_body,
     require_auth,
-    validate_session,
 )
 
 router = APIRouter(prefix="/api", tags=["misc"])

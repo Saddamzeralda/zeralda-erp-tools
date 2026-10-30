@@ -10,7 +10,7 @@ import json
 import time
 import urllib.request
 import urllib.error
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from app.services import storage, license_service
 from app.services.security import log_structured
