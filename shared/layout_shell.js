@@ -1280,7 +1280,8 @@
     if (!state.companies.length) {
       const opt = document.createElement('option');
       opt.value = '';
-      opt.textContent = '...جاري التحميل / Loading';
+      var currentLang = (typeof getLanguage === 'function') ? getLanguage() : 'ar';
+      opt.textContent = currentLang === 'fr' ? 'Chargement en cours...' : (currentLang === 'en' ? 'Loading...' : 'جاري التحميل...');
       switcher.appendChild(opt);
       switcher.disabled = true;
       // Do NOT hide the wrap on mobile! Keep it visible so layout remains stable

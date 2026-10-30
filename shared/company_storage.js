@@ -118,6 +118,107 @@
     return key + '::' + getActiveCompanyId();
   }
 
+  function escapeHtml(str) {
+    return String(str || '').replace(/[&<>"']/g, function (m) {
+      return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[m];
+    });
+  }
+
+  function getCompanyDisplayName(companyId) {
+    if (!companyId) return '';
+    try {
+      if (typeof window.CompanyStorage !== 'undefined' && typeof window.CompanyStorage.getCompanies === 'function') {
+        var list = window.CompanyStorage.getCompanies();
+        if (Array.isArray(list)) {
+          var found = list.find(function (c) { return c && String(c.id) === String(companyId); });
+          if (found && found.name) return String(found.name).trim();
+        }
+      }
+    } catch (_) {}
+    try {
+      var raw = (typeof window.ZS !== 'undefined' && typeof window.ZS.getItem === 'function')
+        ? window.ZS.getItem('zeralda-settings')
+        : (typeof localStorage !== 'undefined' ? localStorage.getItem('zeralda-settings') : null);
+      if (raw) {
+        var parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+        if (parsed && Array.isArray(parsed.companies)) {
+          var found = parsed.companies.find(function (c) { return c && String(c.id) === String(companyId); });
+          if (found && found.name) return String(found.name).trim();
+        }
+      }
+    } catch (_) {}
+    try {
+      var rawComp = (typeof window.ZS !== 'undefined' && typeof window.ZS.getItem === 'function')
+        ? window.ZS.getItem('zeralda-companies')
+        : (typeof localStorage !== 'undefined' ? localStorage.getItem('zeralda-companies') : null);
+      if (rawComp) {
+        var parsedComp = typeof rawComp === 'string' ? JSON.parse(rawComp) : rawComp;
+        if (Array.isArray(parsedComp)) {
+          var found = parsedComp.find(function (c) { return c && String(c.id) === String(companyId); });
+          if (found && found.name) return String(found.name).trim();
+        }
+      }
+    } catch (_) {}
+    return '';
+  }
+
+  function getAppLanguage() {
+    try {
+      if (typeof window.UnifiedI18N !== 'undefined' && typeof window.UnifiedI18N.getCurrentLang === 'function') {
+        var l = String(window.UnifiedI18N.getCurrentLang() || '').toLowerCase();
+        if (l === 'ar' || l === 'fr' || l === 'en') return l;
+      }
+    } catch (_) {}
+
+    try {
+      var headerSelect = document.getElementById('headerLanguageSelect') || document.getElementById('headerLanguageSwitcher');
+      if (headerSelect && headerSelect.value) {
+        var hl = String(headerSelect.value).toLowerCase();
+        if (hl === 'ar' || hl === 'fr' || hl === 'en') return hl;
+      }
+    } catch (_) {}
+
+    try {
+      if (typeof window.ZS !== 'undefined' && typeof window.ZS.getItem === 'function') {
+        var pl = String(window.ZS.getItem('preferred-language') || window.ZS.getItem('language') || '').toLowerCase();
+        if (pl === 'ar' || pl === 'fr' || pl === 'en') return pl;
+      }
+    } catch (_) {}
+
+    try {
+      if (typeof localStorage !== 'undefined') {
+        var pl = String(localStorage.getItem('preferred-language') || localStorage.getItem('language') || '').toLowerCase();
+        if (pl === 'ar' || pl === 'fr' || pl === 'en') return pl;
+      }
+    } catch (_) {}
+
+    try {
+      var raw = (typeof window.ZS !== 'undefined' && typeof window.ZS.getItem === 'function')
+        ? window.ZS.getItem('zeralda-settings')
+        : (typeof localStorage !== 'undefined' ? localStorage.getItem('zeralda-settings') : null);
+      if (raw) {
+        var parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+        var sl = String((parsed && (parsed.preferredLanguage || parsed.language)) || '').toLowerCase();
+        if (sl === 'ar' || sl === 'fr' || sl === 'en') return sl;
+      }
+    } catch (_) {}
+
+    try {
+      var match = document.cookie.match(/(?:^|;\s*)preferred-language=([^;]+)/);
+      if (match && match[1]) {
+        var cl = decodeURIComponent(match[1]).toLowerCase();
+        if (cl === 'ar' || cl === 'fr' || cl === 'en') return cl;
+      }
+    } catch (_) {}
+
+    try {
+      var dl = String(document.documentElement.lang || '').toLowerCase().substring(0, 2);
+      if (dl === 'ar' || dl === 'fr' || dl === 'en') return dl;
+    } catch (_) {}
+
+    return 'ar';
+  }
+
   /* ── Company change: fast transition & reload ──────────────────── */
   window.addEventListener('activeCompanyChanged', function (e) {
     var newCompanyId = (e && e.detail && e.detail.companyId) || getActiveCompanyId();
@@ -127,12 +228,39 @@
 
     console.log('[company_storage] Company changed to:', newCompanyId);
 
-    // عرض مؤشر تحميل سريع ومريح للعين
-    var overlay = document.createElement('div');
-    overlay.id = 'company-switch-overlay';
-    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,0.65);backdrop-filter:blur(4px);z-index:99999;display:flex;align-items:center;justify-content:center;color:#fff;font-family:sans-serif;';
-    overlay.innerHTML = '<div style="text-align:center;background:rgba(30,41,59,0.95);padding:20px 32px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.1);"><div style="font-size:17px;margin-bottom:8px;font-weight:600;">⏳ جاري تبديل الشركة...</div><div style="font-size:13px;opacity:0.8;">تحديث البيانات وسياق العمل</div></div>';
-    document.body.appendChild(overlay);
+    // عرض مؤشر تحميل سريع ومريح للعين مع احترام اللغة المختارة
+    var existingOverlay = document.getElementById('company-switch-overlay');
+    if (!existingOverlay) {
+      var lang = getAppLanguage();
+      var compName = getCompanyDisplayName(newCompanyId);
+
+      var messages = {
+        ar: {
+          title: compName ? ('⏳ جاري تبديل الشركة: ' + compName) : '⏳ جاري تبديل الشركة...',
+          subtitle: 'تحديث البيانات وسياق العمل',
+          dir: 'rtl'
+        },
+        fr: {
+          title: compName ? ('⏳ Changement d\'entreprise : ' + compName) : '⏳ Changement d\'entreprise en cours...',
+          subtitle: 'Actualisation des données et du contexte de travail',
+          dir: 'ltr'
+        },
+        en: {
+          title: compName ? ('⏳ Switching company: ' + compName) : '⏳ Switching company...',
+          subtitle: 'Updating data and workspace context',
+          dir: 'ltr'
+        }
+      };
+
+      var msg = messages[lang] || messages.ar;
+
+      var overlay = document.createElement('div');
+      overlay.id = 'company-switch-overlay';
+      overlay.setAttribute('dir', msg.dir);
+      overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,0.65);backdrop-filter:blur(4px);z-index:99999;display:flex;align-items:center;justify-content:center;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;direction:' + msg.dir + ';';
+      overlay.innerHTML = '<div style="text-align:center;background:rgba(30,41,59,0.95);padding:22px 34px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.1);max-width:90%;"><div style="font-size:17px;margin-bottom:8px;font-weight:600;letter-spacing:0.2px;">' + escapeHtml(msg.title) + '</div><div style="font-size:13px;opacity:0.85;">' + escapeHtml(msg.subtitle) + '</div></div>';
+      document.body.appendChild(overlay);
+    }
 
     var reloaded = false;
     function doReload() {
@@ -184,6 +312,7 @@
   window.CompanyStorage = {
     scopedKeys: SCOPED_KEYS,
     getActiveCompanyId: getActiveCompanyId,
+    getCompanyDisplayName: getCompanyDisplayName,
     scopedKey: scopedKey,
     isScoped: isScoped,
     clearCompanyIdCache: clearCompanyIdCache
