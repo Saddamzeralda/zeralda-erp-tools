@@ -126,7 +126,6 @@ Compression=lzma2/ultra64
 
 SolidCompression=yes
 
-LZMAUseSeparateProcess=yes
 
 LZMANumBlockThreads=4
 
