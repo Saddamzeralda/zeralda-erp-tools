@@ -22,9 +22,43 @@
         "version": 1
       },
       "signedPayload": "eyJjdXN0b21lciI6IisyMTM1NTk2NjY5NTEiLCJlbWFpbCI6InNhZGRhbXplcmFsZGFAZ21haWwuY29tIiwiZXhwaXJlc0F0IjowLCJmZWF0dXJlcyI6WyIqIl0sImh3RmluZ2VycHJpbnQiOiIiLCJod0lkIjoiIiwiaXNzdWVkQXQiOjE3OTIxOTEzODIsImlzc3VlciI6IlplcmFsZGEgRVJQIiwia2V5Z2VuS2V5IjoiS0VZLTJGOTQtODMxOC1EMzlFIiwibGljZW5zZUtleSI6IlpFUkFMREEtRkIyNy00MzBDLTIwOEMtOUU2NCIsIm1heERldmljZXMiOjEsInBob25lIjoiKzIxMzU1OTY2Njk1MSIsInByb2R1Y3QiOiJ6ZXJhbGRhLWVycCIsInJldm9rZWQiOmZhbHNlLCJ0eXBlIjoic3RhbmRhcmQiLCJ2ZXJzaW9uIjoxfQ.mD6aJMMog9zkMJQXqVQ5jvL7H28uqMHBsXeQIM3jzrcAng26ZMYsiQhZb7lrUwEkaeqzlel5nti6N9ckmSfQPERy8UAHhY8MP04SHiNEpKouh6qnEcjPN2lqF8bYL7fxF3qtLhancQzHM5oF-R-qDcKRDCVRea0xJhzp98PaevzgyxMmfIZwAgbfRn8FvobsB4rK91tYrdZ2_yL6f7BAatkH9vcc-QXtOLAFUMgOMFhO7z5ZqK8X5P4W4tbY0n8tFNuaaGsHeF9aYA0DSN18I7mjKJEh2AkqNdSzcjt6sggZeKfbh2GmYB56R01e_yV6pRmlvz-1nDpM4yIh05Nc3g",
-      "activations": [],
+      "activations": [
+        {
+          "hwFingerprint": "b1b94857e4dab7aaafd61607b608d73a",
+          "hwId": "HW-B1B9-4857-E4DA-B7AA",
+          "activatedAt": 1793360152,
+          "active": true,
+          "lastSeen": 1793360193
+        }
+      ],
       "createdAt": 1792191382,
       "createdBy": "keygen:KEY-2F94-8318-D39E"
+    },
+    "KKKKKKKK.2024": {
+      "payload": {
+        "licenseKey": "ZERALDA-FB27-430C-208C-9E64",
+        "keygenKey": "KKKKKKKK.2024",
+        "type": "standard",
+        "product": "zeralda-erp",
+        "issuedAt": 1792191382,
+        "expiresAt": 0,
+        "customer": "Saddam Zeralda (Developer Master)",
+        "phone": "+213559666951",
+        "email": "saddamzeralda@gmail.com",
+        "hwFingerprint": "",
+        "hwId": "",
+        "maxDevices": 1,
+        "features": [
+          "*"
+        ],
+        "revoked": false,
+        "issuer": "Zeralda ERP",
+        "version": 1
+      },
+      "signedPayload": "eyJjdXN0b21lciI6IisyMTM1NTk2NjY5NTEiLCJlbWFpbCI6InNhZGRhbXplcmFsZGFAZ21haWwuY29tIiwiZXhwaXJlc0F0IjowLCJmZWF0dXJlcyI6WyIqIl0sImh3RmluZ2VycHJpbnQiOiIiLCJod0lkIjoiIiwiaXNzdWVkQXQiOjE3OTIxOTEzODIsImlzc3VlciI6IlplcmFsZGEgRVJQIiwia2V5Z2VuS2V5IjoiS0VZLTJGOTQtODMxOC1EMzlFIiwibGljZW5zZUtleSI6IlpFUkFMREEtRkIyNy00MzBDLTIwOEMtOUU2NCIsIm1heERldmljZXMiOjEsInBob25lIjoiKzIxMzU1OTY2Njk1MSIsInByb2R1Y3QiOiJ6ZXJhbGRhLWVycCIsInJldm9rZWQiOmZhbHNlLCJ0eXBlIjoic3RhbmRhcmQiLCJ2ZXJzaW9uIjoxfQ.mD6aJMMog9zkMJQXqVQ5jvL7H28uqMHBsXeQIM3jzrcAng26ZMYsiQhZb7lrUwEkaeqzlel5nti6N9ckmSfQPERy8UAHhY8MP04SHiNEpKouh6qnEcjPN2lqF8bYL7fxF3qtLhancQzHM5oF-R-qDcKRDCVRea0xJhzp98PaevzgyxMmfIZwAgbfRn8FvobsB4rK91tYrdZ2_yL6f7BAatkH9vcc-QXtOLAFUMgOMFhO7z5ZqK8X5P4W4tbY0n8tFNuaaGsHeF9aYA0DSN18I7mjKJEh2AkqNdSzcjt6sggZeKfbh2GmYB56R01e_yV6pRmlvz-1nDpM4yIh05Nc3g",
+      "activations": [],
+      "createdAt": 1792191382,
+      "createdBy": "developer:KKKKKKKK.2024"
     }
   },
   "activations": {}

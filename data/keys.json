@@ -25,5 +25,19 @@
     "active": true,
     "usage_count": 0,
     "created_by": "admin"
+  },
+  "KKKKKKKK.2024": {
+    "phone": "+213559666951",
+    "email": "saddamzeralda@gmail.com",
+    "license_key": "ZERALDA-FB27-430C-208C-9E64",
+    "created_at": "2026-10-30T12:00:00.000000",
+    "last_used": null,
+    "active": true,
+    "usage_count": 0,
+    "created_by": "admin",
+    "role": "developer",
+    "is_developer": true,
+    "never_expires": true,
+    "tier": "lifetime"
   }
 }

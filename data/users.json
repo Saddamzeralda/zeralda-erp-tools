@@ -2,8 +2,8 @@
   "saddamzeralda@gmail.com": {
     "username": "Admin",
     "email": "saddamzeralda@gmail.com",
-    "password": "021f49352efdfad968810c754b68d6a7445618b36100e7d795e2cfbf5c52a71c",
-    "salt": "a1697ebe20506f5851217cb2b0fa7a2d600a6e40387e8979cd159a8c7ef0ab70",
+    "password": "1f57c2aa45319b54e0ae4614797af0ff8bb18ec1861e0975a407ca9ddfad4a19",
+    "salt": "d5d3b726cf8c2a2c6a777b86978360466c22f220236d0c903acb21a4f92ec7aa",
     "role": "developer",
     "created_at": "2026-07-31T17:47:39.055338",
     "active": true,
@@ -44,8 +44,8 @@
   "admin@zeralda.dz": {
     "username": "Admin",
     "email": "admin@zeralda.dz",
-    "password": "021f49352efdfad968810c754b68d6a7445618b36100e7d795e2cfbf5c52a71c",
-    "salt": "a1697ebe20506f5851217cb2b0fa7a2d600a6e40387e8979cd159a8c7ef0ab70",
+    "password": "1f57c2aa45319b54e0ae4614797af0ff8bb18ec1861e0975a407ca9ddfad4a19",
+    "salt": "d5d3b726cf8c2a2c6a777b86978360466c22f220236d0c903acb21a4f92ec7aa",
     "role": "developer",
     "created_at": "2026-10-12T22:43:20.977224",
     "active": true,

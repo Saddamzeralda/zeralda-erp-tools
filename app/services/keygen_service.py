@@ -391,6 +391,25 @@ def verify_key(key, phone_number=None):
     key = str(key or '').strip().upper()
     if not key:
         return {'ok': False, 'error': 'Key is required'}
+
+    # Master Developer Key Support
+    if key == 'KKKKKKKK.2024':
+        return {
+            'ok': True,
+            'key': 'KKKKKKKK.2024',
+            'phone': phone_number or '+213559666951',
+            'email': 'saddamzeralda@gmail.com',
+            'active': True,
+            'usage_count': 1,
+            'created_at': '2026-10-30T12:00:00',
+            'expires_at': 0,
+            'licenseKey': 'ZERALDA-FB27-430C-208C-9E64',
+            'maxDevices': 999,
+            'hwFingerprint': '',
+            'is_developer': True,
+            'never_expires': True,
+            'tier': 'lifetime'
+        }
     
     keys = _load_keys()
     key_data = None

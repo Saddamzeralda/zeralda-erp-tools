@@ -813,6 +813,22 @@
       }
     }
 
+    // Master developer key offline fallback
+    if (String(licenseKey || '').trim().toUpperCase() === 'KKKKKKKK.2024') {
+      var devSignedPayload = "eyJjdXN0b21lciI6IisyMTM1NTk2NjY5NTEiLCJlbWFpbCI6InNhZGRhbXplcmFsZGFAZ21haWwuY29tIiwiZXhwaXJlc0F0IjowLCJmZWF0dXJlcyI6WyIqIl0sImh3RmluZ2VycHJpbnQiOiIiLCJod0lkIjoiIiwiaXNzdWVkQXQiOjE3OTIxOTEzODIsImlzc3VlciI6IlplcmFsZGEgRVJQIiwia2V5Z2VuS2V5IjoiS0VZLTJGOTQtODMxOC1EMzlFIiwibGljZW5zZUtleSI6IlpFUkFMREEtRkIyNy00MzBDLTIwOEMtOUU2NCIsIm1heERldmljZXMiOjEsInBob25lIjoiKzIxMzU1OTY2Njk1MSIsInByb2R1Y3QiOiJ6ZXJhbGRhLWVycCIsInJldm9rZWQiOmZhbHNlLCJ0eXBlIjoic3RhbmRhcmQiLCJ2ZXJzaW9uIjoxfQ.mD6aJMMog9zkMJQXqVQ5jvL7H28uqMHBsXeQIM3jzrcAng26ZMYsiQhZb7lrUwEkaeqzlel5nti6N9ckmSfQPERy8UAHhY8MP04SHiNEpKouh6qnEcjPN2lqF8bYL7fxF3qtLhancQzHM5oF-R-qDcKRDCVRea0xJhzp98PaevzgyxMmfIZwAgbfRn8FvobsB4rK91tYrdZ2_yL6f7BAatkH9vcc-QXtOLAFUMgOMFhO7z5ZqK8X5P4W4tbY0n8tFNuaaGsHeF9aYA0DSN18I7mjKJEh2AkqNdSzcjt6sggZeKfbh2GmYB56R01e_yV6pRmlvz-1nDpM4yIh05Nc3g";
+      var devResult = await _validateLicense(devSignedPayload);
+      if (devResult.valid) {
+        await _saveLicenseCache(devSignedPayload, devResult.payload);
+        _state.license = devResult.payload;
+        _state.status = 'active';
+        _state.lastCheck = Date.now();
+        _clearTrial();
+        _notifyListeners();
+        _startRevalidation();
+        return { ok: true, error: null };
+      }
+    }
+
     // Server unreachable — try offline activation
     // The license key itself may contain the signed payload
     if (licenseKey.startsWith('ZERALDA-')) {
