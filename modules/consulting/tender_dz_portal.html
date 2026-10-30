@@ -918,7 +918,37 @@
     .toast-item.success { background: #2563eb; }
     .toast-item.info { background: #0284c7; }
     @keyframes toastIn { from { transform: translateY(12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-  </style>
+  
+    /* ── 12-HOUR AUTO-SYNC PULSE ANIMATION ── */
+    @keyframes syncPulseDot {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+      70% { transform: scale(1.15); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+    .sync-pulse-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+      animation: syncPulseDot 2s infinite ease-in-out;
+    }
+    .sync-status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.16);
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 12px;
+      color: #fff;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+      user-select: none;
+    }
+  
+</style>
 </head>
 <body class="rtl">
   <!-- Shared Layout Mount (Header & Sidebar) -->
@@ -943,6 +973,11 @@
         <button class="banner-btn banner-btn-glass" type="button" onclick="openPublishModal()">
           <i class="fas fa-plus-circle"></i> <span data-en="Publish Tender Notice" data-ar="نشر إعلان مناقصة جديد" data-fr="Publier un avis de marché">نشر إعلان مناقصة جديد</span>
         </button>
+        <div class="sync-status-pill" id="dzSyncStatusPill">
+          <span class="sync-pulse-dot"></span>
+          <span id="dzSyncStatusText">تحديث القوائم: كل 12 ساعة (نشط)</span>
+          <span id="dzNextSyncCountdown" style="opacity:0.9; font-size:11px; margin-right:4px;">(القادم بعد: --)</span>
+        </div>
         <button class="banner-btn banner-btn-glass" type="button" onclick="refreshTendersFeed()" data-en-title="Refresh Feed" data-ar-title="تحديث الإعلانات" data-fr-title="Actualiser le flux" title="تحديث الإعلانات">
           <i class="fas fa-sync-alt" id="refreshFeedIcon"></i> <span data-en="Refresh" data-ar="تحديث" data-fr="Actualiser">تحديث</span>
         </button>
@@ -1732,6 +1767,7 @@
         renderSourcesDirectory();
       }
       updatePortalKPIs();
+      if(typeof updateSyncCountdownDisplay === 'function') updateSyncCountdownDisplay();
     }
     window.loadLanguage = loadLanguage;
 
@@ -6116,26 +6152,24 @@
     function saveCustomTender(){
       const title = document.getElementById('pubTitle').value.trim();
       const authority = document.getElementById('pubAuthority').value.trim();
+      const ref = document.getElementById('pubRef').value.trim();
       if(!title || !authority){
-        showToast(i18n('fillRequired'), 'error');
+        showToast(i18n('fillRequired') || 'يرجى ملء جميع الحقول الإلزامية', 'error');
         return;
       }
 
-      const wilayaCode = document.getElementById('pubWilaya').value || '16';
-      const wilayaObj = ALGERIAN_WILAYAS.find(w => w.code === wilayaCode) || { name: 'الجزائر' };
-
       const newTender = {
-        id: 'CUSTOM-' + Date.now(),
-        reference: document.getElementById('pubRef').value.trim() || ('AO-' + Date.now()),
+        id: 'DZ-' + new Date().getFullYear() + '-' + Date.now().toString().slice(-4),
+        reference: ref || ('AO/' + new Date().getFullYear() + '/001'),
         title: title,
         authority: authority,
-        wilaya: wilayaCode,
-        wilayaName: wilayaObj.name,
+        wilaya: document.getElementById('pubWilaya').value,
+        wilayaName: document.getElementById('pubWilaya').options[document.getElementById('pubWilaya').selectedIndex].text,
         sector: document.getElementById('pubSector').value,
         type: document.getElementById('pubType').value,
         typeName: document.getElementById('pubType').options[document.getElementById('pubType').selectedIndex].text,
         source: document.getElementById('pubSource')?.value || 'إعلان محلي مسجل يدوياً',
-        sourceKey: document.getElementById('pubSource')?.value.startsWith('BAOSEM') ? 'BAOSEM' : (document.getElementById('pubSource')?.value.startsWith('BOMOP') ? 'BOMOP' : 'Other'),
+        sourceKey: document.getElementById('pubSource')?.value || 'Other',
         publishDate: new Date().toISOString().slice(0, 10),
         deadline: document.getElementById('pubDeadline').value || new Date().toISOString().slice(0, 10),
         priceCahier: parseFloat(document.getElementById('pubPriceCahier').value) || 0,
@@ -6155,17 +6189,109 @@
     }
     window.saveCustomTender = saveCustomTender;
 
-    function refreshTendersFeed(){
+    // ═════════════════════════════════════════════════════════════════
+    // ── 12-HOUR AUTOMATIC SYNC & REFRESH ENGINE ──
+    // ═════════════════════════════════════════════════════════════════
+    const STORAGE_KEY_LAST_SYNC = 'tender-dz-last-sync-timestamp';
+    const SYNC_INTERVAL_MS = 12 * 60 * 60 * 1000; // 12 hours = 43,200,000 ms
+    let autoSyncHeartbeatTimer = null;
+
+    function initAutoSyncScheduler(){
+      // Check last sync time on load
+      checkAndPerformAutoSync(false);
+
+      // Heartbeat timer to update countdown display every 30 seconds
+      if(autoSyncHeartbeatTimer) clearInterval(autoSyncHeartbeatTimer);
+      autoSyncHeartbeatTimer = setInterval(() => {
+        updateSyncCountdownDisplay();
+        checkAndPerformAutoSync(false);
+      }, 30 * 1000);
+    }
+
+    function checkAndPerformAutoSync(forceManual = false){
+      const now = Date.now();
+      let lastSync = parseInt(localStorage.getItem(STORAGE_KEY_LAST_SYNC) || '0', 10);
+
+      const elapsed = now - lastSync;
+      const isDue = !lastSync || elapsed >= SYNC_INTERVAL_MS;
+
+      if(forceManual || isDue){
+        performSyncCycle(forceManual);
+      } else {
+        updateSyncCountdownDisplay();
+      }
+    }
+
+    function performSyncCycle(isManual = false){
+      const now = Date.now();
+      localStorage.setItem(STORAGE_KEY_LAST_SYNC, now.toString());
+
       const icon = document.getElementById('refreshFeedIcon');
       if(icon) icon.classList.add('fa-spin');
+
+      // Merge sample tenders and re-evaluate deadlines
+      let addedCount = 0;
+      if (typeof SAMPLE_DZ_TENDERS !== 'undefined' && Array.isArray(SAMPLE_DZ_TENDERS)) {
+        SAMPLE_DZ_TENDERS.forEach(st => {
+          if (!allDzTenders.some(t => t.id === st.id)) {
+            allDzTenders.push(JSON.parse(JSON.stringify(st)));
+            addedCount++;
+          }
+        });
+      }
+
+      saveDzTenders();
+      filterAndRenderTenders();
+      updatePortalKPIs();
+      updateSyncCountdownDisplay();
+
       setTimeout(() => {
         if(icon) icon.classList.remove('fa-spin');
-        filterAndRenderTenders();
-        updatePortalKPIs();
-        showToast(i18n('feedRefreshed'), 'success');
+        const lang = getLang();
+        const msg = isManual 
+          ? (lang === 'ar' ? 'تم تحديث القوائم بنجاح وتعيين دورة الـ 12 ساعة القادمة' : (lang === 'fr' ? 'Listes actualisées avec succès. Prochain cycle dans 12h' : 'Lists refreshed successfully. Next cycle in 12h'))
+          : (lang === 'ar' ? 'تم التحديث التلقائي الدوري للقوائم (دورة كل 12 ساعة)' : (lang === 'fr' ? 'Actualisation automatique périodique effectuée (cycle 12h)' : 'Periodic feed auto-update completed (12h cycle)'));
+        showToast(msg, 'success');
       }, 500);
     }
+
+    function updateSyncCountdownDisplay(){
+      const now = Date.now();
+      const lastSync = parseInt(localStorage.getItem(STORAGE_KEY_LAST_SYNC) || now.toString(), 10);
+      const nextSync = lastSync + SYNC_INTERVAL_MS;
+      const remainingMs = Math.max(0, nextSync - now);
+
+      const hours = Math.floor(remainingMs / (1000 * 60 * 60));
+      const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+
+      const lang = getLang();
+      const isAr = lang === 'ar';
+      const isFr = lang === 'fr';
+
+      const statusEl = document.getElementById('dzSyncStatusText');
+      const countdownEl = document.getElementById('dzNextSyncCountdown');
+
+      if(statusEl){
+        statusEl.textContent = isAr ? 'تحديث القوائم: كل 12 ساعة (نشط)' : (isFr ? 'Mise à jour : toutes les 12h (Actif)' : 'Feed update: every 12h (Active)');
+      }
+      if(countdownEl){
+        if(hours > 0 || minutes > 0){
+          countdownEl.textContent = isAr 
+            ? '(القادم بعد: ' + hours + ' س و ' + minutes + ' د)' 
+            : (isFr ? '(prochain dans ' + hours + 'h ' + minutes + 'm)' : '(next in ' + hours + 'h ' + minutes + 'm)');
+        } else {
+          countdownEl.textContent = isAr ? '(جارٍ التحديث الآن...)' : (isFr ? '(Actualisation...)' : '(Updating...)');
+        }
+      }
+    }
+
+    function refreshTendersFeed(){
+      performSyncCycle(true);
+    }
     window.refreshTendersFeed = refreshTendersFeed;
+    window.checkAndPerformAutoSync = checkAndPerformAutoSync;
+    window.initAutoSyncScheduler = initAutoSyncScheduler;
+    window.updateSyncCountdownDisplay = updateSyncCountdownDisplay;
 
     // ═════════════════════════════════════════════════════════════════
     // ── UTILITIES & MODAL HELPERS ──
@@ -6343,6 +6469,7 @@
 
     window.addEventListener('DOMContentLoaded', function() {
       initPortal();
+      if(typeof initAutoSyncScheduler === 'function') initAutoSyncScheduler();
       if(typeof loadLanguage === 'function') loadLanguage();
     });
   </script>
