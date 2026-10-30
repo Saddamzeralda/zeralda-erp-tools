@@ -482,6 +482,7 @@
   // ── تصدير واجهة برمجة التطبيقات API ──
   window.UnifiedI18N = {
     getCurrentLang: getCurrentLang,
+    getCurrentLanguage: getCurrentLang,
     setCurrentLang: setCurrentLang,
     applyTranslations: applyUnifiedTranslations,
     tr: tr,
@@ -495,6 +496,8 @@
   window.trUnified = tr;
   window.applyUnifiedTranslations = applyUnifiedTranslations;
   window.createRuntimeTranslator = createRuntimeTranslator;
+  window.getCurrentLang = getCurrentLang;
+  window.getCurrentLanguage = getCurrentLang;
 
   init();
 })();
