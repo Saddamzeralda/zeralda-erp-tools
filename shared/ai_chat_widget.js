@@ -3161,16 +3161,6 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
         scrollToBottom();
     }
 
-    function _formatWebSources(results) {
-        if (!Array.isArray(results) || !results.length) return '';
-        var lines = [t('sourcesLabel')];
-        results.slice(0, 3).forEach(function (item) {
-            var title = String(item && item.title || '').trim();
-            var url = String(item && item.url || '').trim();
-            if (title || url) lines.push('- ' + (title || url) + (url ? ' - ' + url : ''));
-        });
-        return lines.length > 1 ? '\n\n' + lines.join('\n') : '';
-    }
 
     var _autoFollowupPending = false;
     var _autoFollowupCount = 0;

@@ -368,9 +368,6 @@ Document text:
         return list;
     }
 
-    function getDefaultChecklist(lang) {
-        return getDetectedChecklist('', lang);
-    }
 
     function extractReferenceHeuristic(text) {
         var str = String(text || '');

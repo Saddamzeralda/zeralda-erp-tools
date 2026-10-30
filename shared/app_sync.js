@@ -113,10 +113,6 @@
  		});
  	}
  
- 	function clearSessionData() {
- 		ZS.removeItem(TOKEN_KEY);
- 		clearSessionMeta();
- 	}
 
 	function redirectToLogin() {
 		const path = String(window.location.pathname || "").toLowerCase();
@@ -324,23 +320,6 @@
 	function _getPendingWritesKey() {
 		var tabId = (window.ZDB && window.ZDB.getTabId) ? window.ZDB.getTabId() : 'default';
 		return 'zeralda-pending-writes::' + tabId;
-	}
-	function _persistPendingWrites() {
-		if (_persistTimer) clearTimeout(_persistTimer);
-		_persistTimer = setTimeout(function () {
-			try {
-				// إصلاح: تجاهل مفاتيح __flushing (لا تُخزّن في IndexedDB)
-				var keys = Object.keys(_pendingWrites).filter(function(k) { return k.indexOf('__flushing') === -1; });
-				var storageKey = _getPendingWritesKey();
-				if (keys.length === 0) {
-					window.ZDB && window.ZDB.removeItem(storageKey);
-					return;
-				}
-				var snapshot = {};
-				keys.forEach(function (k) { snapshot[k] = _pendingWrites[k]; });
-				window.ZDB && window.ZDB.setItem(storageKey, JSON.stringify(snapshot));
-			} catch (_) {}
-		}, 500);
 	}
 
 	// إصلاح: استرجاع pending writes عند بدء التشغيل
@@ -1499,11 +1478,6 @@
 		return '{' + parts.join(',') + '}';
 	}
 
-	function showLocalNotice() {
-		// Non-blocking notice that sync is unavailable — app continues in local-only mode
-		ready = true;
-		console.info('[app_sync] Running in local-only mode (server sync unavailable)');
-	}
 
 	async function cleanupServerClonedData() {
 		var token = getToken();

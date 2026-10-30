@@ -400,22 +400,6 @@
     }
   }
 
-  // إصلاح: fallback safety — إذا فشل ZDB، استخدم localStorage مباشرة
-  function _safeGetActiveCompanyId() {
-    try {
-      var cid = getActiveCompanyId();
-      if (cid) return cid;
-    } catch (_) {}
-    // Fallback: اقرأ من cookie مباشرة
-    try {
-      var match = document.cookie.match(/zeralda-active-company=([^;]+)/);
-      if (match) {
-        var val = decodeURIComponent(match[1]);
-        try { return String(JSON.parse(val).id || ''); } catch (_) { return String(val); }
-      }
-    } catch (_) {}
-    return 'default-company';
-  }
 
   if (window.ZDB && window.ZDB.ready) {
     window.ZDB.ready().then(function () {

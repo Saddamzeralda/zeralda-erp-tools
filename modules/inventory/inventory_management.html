@@ -2427,13 +2427,6 @@
             }
         }
 
-        function getBackups() {
-            try {
-                return JSON.parse(ZS.getItem(BACKUP_STORAGE_KEY)) || [];
-            } catch (e) {
-                return [];
-            }
-        }
 
         
 
@@ -2484,20 +2477,6 @@
             }
         }
 
-        function getAuditLog(filterAction = null, filterUser = null, days = 7) {
-            const cutoffTime = Date.now() - (days * 24 * 60 * 60 * 1000);
-            let filtered = auditLog.filter(entry => entry.timestamp > cutoffTime);
-
-            if (filterAction) {
-                filtered = filtered.filter(entry => entry.action.includes(filterAction));
-            }
-
-            if (filterUser) {
-                filtered = filtered.filter(entry => entry.user === filterUser);
-            }
-
-            return filtered.sort((a, b) => b.timestamp - a.timestamp);
-        }
 
         // ===== VALIDATION SYSTEM =====
         const ValidationRules = {
@@ -2574,9 +2553,6 @@
             return currentUserRole === USER_ROLES.ADMIN;
         }
 
-        function canViewAudit() {
-            return currentUserRole === USER_ROLES.ADMIN;
-        }
 
         
 
@@ -2610,95 +2586,9 @@
 
         
 
-        function getCompanyId() {
-            try {
-                const settings = JSON.parse(ZS.getItem('zeralda-settings'));
-                return settings && settings.activeCompanyId ? settings.activeCompanyId : 'default';
-            } catch (err) {
-                return 'default';
-            }
-        }
-        function recordSyncAction(action, status, details = '') {
-            try {
-                const entry = {
-                    id: Date.now() + Math.random(),
-                    timestamp: Date.now(),
-                    companyId: getCompanyId(),
-                    action: action,
-                    status: status, // success, failed, partial
-                    details: details,
-                    productsCount: inventoryProducts.length,
-                    movementsCount: inventoryMovements.length
-                };
 
-                syncHistory.push(entry);
 
-                // Limit history size
-                if (syncHistory.length > 1000) {
-                    syncHistory = syncHistory.slice(-1000);
-                }
 
-                saveSyncHistory();
-                lastSyncTime = Date.now();
-
-                return entry;
-            } catch (err) {
-                console.warn('Failed to record sync action:', err);
-                return null;
-            }
-        }
-
-        function saveSyncHistory() {
-            try {
-                ZS.setItem(SYNC_HISTORY_KEY, JSON.stringify(syncHistory));
-            } catch (err) {
-                console.warn('Failed to save sync history:', err);
-            }
-        }
-
-        function getSyncHistory(companyId = null, limit = 50) {
-            const id = companyId || getCompanyId();
-            return syncHistory
-                .filter(entry => entry.companyId === id)
-                .slice(-limit)
-                .reverse();
-        }
-
-        function exportToGoogleSheets() {
-            try {
-                const data = {
-                    timestamp: new Date().toISOString(),
-                    companyId: getCompanyId(),
-                    products: inventoryProducts,
-                    movements: inventoryMovements,
-                    summary: {
-                        totalProducts: inventoryProducts.length,
-                        totalMovements: inventoryMovements.length,
-                        totalValue: inventoryProducts.reduce((sum, p) => sum + (p.quantity * p.price), 0)
-                    }
-                };
-
-                if (window.ZeraldaShareHub && typeof window.ZeraldaShareHub.sharePayload === 'function') {
-                    window.ZeraldaShareHub.sharePayload({
-                        title: 'Inventory Data Share',
-                        payload: data
-                    });
-                } else {
-                    alert(tRuntime('share_system_not_loaded'));
-                    return false;
-                }
-
-                recordSyncAction('EXPORT_TO_GOOGLE', 'success', `Exported ${data.totalProducts} products`);
-                logAudit('GOOGLE_EXPORT', `Exported to Google (${data.totalProducts} products)`, getActiveUserName());
-
-                return true;
-            } catch (err) {
-                console.error('Export to Google failed:', err);
-                recordSyncAction('EXPORT_TO_GOOGLE', 'failed', err.message);
-                logAudit('GOOGLE_EXPORT_FAILED', err.message, getActiveUserName());
-                return false;
-            }
-        }
 
         function setupAutoSync() {
             if (syncScheduleActive) return;
@@ -3763,63 +3653,8 @@
             el.style.color = tone === 'error' ? '#991b1b' : tone === 'success' ? '#065f46' : '#1e40af';
         }
 
-        function toggleAllInventoryOcrProducts(checked) {
-            latestInventoryOcrProducts.forEach(function(product, idx) {
-                product.selected = checked;
-                const checkbox = document.getElementById('invOcrCheck' + idx);
-                if (checkbox) checkbox.checked = checked;
-            });
-        }
 
-        function updateInventoryOcrProductSelection(checkbox) {
-            const idx = parseInt(checkbox.id.replace('invOcrCheck', ''));
-            if (idx >= 0 && idx < latestInventoryOcrProducts.length) {
-                latestInventoryOcrProducts[idx].selected = checkbox.checked;
-            }
-        }
 
-        function addAllSelectedInventoryOcrProducts() {
-            const selectedProducts = latestInventoryOcrProducts.filter(function(p) { return p.selected; });
-            if (!selectedProducts.length) {
-                updateInventoryOcrStatus('No products selected. Check at least one product.', 'error');
-                return;
-            }
-
-            let addedCount = 0;
-            selectedProducts.forEach(function(draft) {
-                const product = normalizeProduct({
-                    id: getNextProductId(),
-                    name: draft.name,
-                    code: draft.code || ('PRD-' + String(getNextProductId()).padStart(3, '0')),
-                    category: draft.category || 'General',
-                    brand: draft.brand || '',
-                    unit: 'piece',
-                    quantity: draft.quantity || 0,
-                    minStock: draft.minStock || 0,
-                    maxStock: draft.maxStock || 0,
-                    purchasePrice: draft.purchasePrice || 0,
-                    price: draft.price || draft.purchasePrice || 0,
-                    taxRate: draft.taxRate || 0,
-                    barcode: draft.barcode || '',
-                    description: draft.description || ''
-                }, getNextProductId());
-
-                inventoryProducts.push(product);
-                ensureCategoryExists(product.category);
-                addedCount++;
-            });
-
-            saveInventoryCategories();
-            saveInventoryProducts();
-            renderProductsTable('');
-            populateStockSelectors();
-            latestInventoryOcrProducts = [];
-            document.getElementById('inventoryOcrApplyBtn').style.display = 'none';
-            document.getElementById('inventoryOcrAddAllBtn').style.display = 'none';
-            document.getElementById('inventoryOcrPreview').style.display = 'none';
-            resetInventoryOcrUi();
-            updateInventoryOcrStatus('✓ Added ' + addedCount + ' products to inventory.', 'success');
-        }
 
         function resetInventoryOcrUi() {
             latestInventoryOcrProducts = [];
@@ -3835,77 +3670,10 @@
             updateInventoryOcrStatus('', 'info');
         }
 
-        function itemQuantityValue(value) {
-            const parsed = parseFloat(String(value == null ? '' : value).replace(',', '.').replace(/[^0-9.\-]/g, ''));
-            return Number.isFinite(parsed) ? parsed : 0;
-        }
 
-        function itemPriceValue(value) {
-            const parsed = parseFloat(String(value == null ? '' : value).replace(',', '.').replace(/[^0-9.\-]/g, ''));
-            return Number.isFinite(parsed) ? parsed : 0;
-        }
 
-        async function inventoryFileToDataUrl(file) {
-            return await new Promise(function(resolve, reject) {
-                const reader = new FileReader();
-                reader.onload = function() { resolve(String(reader.result || '')); };
-                reader.onerror = function() { reject(new Error('Failed to read file')); };
-                reader.readAsDataURL(file);
-            });
-        }
 
-        async function optimizeInventoryImageFile(file, maxWidth) {
-            const dataUrl = await inventoryFileToDataUrl(file);
-            const img = await new Promise(function(resolve, reject) {
-                const image = new Image();
-                image.onload = function() { resolve(image); };
-                image.onerror = function() { reject(new Error('Failed to load image')); };
-                image.src = dataUrl;
-            });
-            const width = Number(img.width || 0);
-            const height = Number(img.height || 0);
-            if (!width || !height || width <= maxWidth) return dataUrl;
-            const ratio = maxWidth / width;
-            const canvas = document.createElement('canvas');
-            canvas.width = Math.round(width * ratio);
-            canvas.height = Math.round(height * ratio);
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            return canvas.toDataURL('image/jpeg', 0.9);
-        }
 
-        function buildInventoryProductDraftFromOcr(payload, text) {
-            const lineItems = Array.isArray(payload && payload.lineItems) ? payload.lineItems : [];
-            const validItems = lineItems.filter(function(item) {
-                return String(item && item.description || '').trim();
-            });
-            const baseBarcode = String(payload && (payload.barcode || payload.productBarcode) || '').trim();
-            const seqStart = getNextProductId();
-
-            return validItems.map(function(item, idx) {
-                const quantity = Number(itemQuantityValue(item.quantity)) || 0;
-                const price = Number(itemPriceValue(item.unit_price || item.unitPrice || item.total)) || 0;
-                const nameStr = String(item.description || '').trim();
-                // Always generate a unified sequential code (PRD-001, PRD-002, ...)
-                // ignoring any code from the invoice/OCR to ensure standardized product codes.
-                const productCode = 'PRD-' + String(seqStart + idx).padStart(3, '0');
-                return {
-                    name: nameStr,
-                    code: productCode,
-                    category: 'General',
-                    brand: String(payload && (payload.supplier || payload.brand) || '').trim(),
-                    quantity: quantity > 0 ? quantity : 0,
-                    minStock: 0,
-                    maxStock: 0,
-                    purchasePrice: price > 0 ? price : 0,
-                    price: price > 0 ? price : 0,
-                    taxRate: Number(payload && (payload.vatRate || payload.taxRate) || 0) || 0,
-                    barcode: baseBarcode,
-                    description: text ? String(text).slice(0, 5000) : '',
-                    selected: true
-                };
-            });
-        }
 
         function openInventoryOcrModal() {
             if (!window.ZeraldaOCR) {
@@ -4602,45 +4370,12 @@
 
         
 
-        function normalizeHeaderText(text) {
-            return String(text || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-        }
 
-        function splitCsvLine(line) {
-            const result = [];
-            let current = '';
-            let inQuotes = false;
-            for (let i = 0; i < line.length; i += 1) {
-                const char = line[i];
-                if (char === '"') {
-                    if (inQuotes && line[i + 1] === '"') {
-                        current += '"';
-                        i += 1;
-                    } else {
-                        inQuotes = !inQuotes;
-                    }
-                } else if (char === ',' && !inQuotes) {
-                    result.push(current.trim());
-                    current = '';
-                } else {
-                    current += char;
-                }
-            }
-            result.push(current.trim());
-            return result;
-        }
 
         
 
         
 
-        function mapRowsWithLookup(headers, rows) {
-            const lookup = {};
-            headers.forEach((h) => {
-                lookup[normalizeHeaderText(h)] = h;
-            });
-            return rows.map((row) => ({ row, lookup }));
-        }
 
         
 
@@ -4671,66 +4406,6 @@
         }
 
         // ===== ADVANCED REPORTS =====
-        function generateInventoryReport() {
-            try {
-                const report = {
-                    generatedAt: new Date().toISOString(),
-                    generatedBy: getActiveUserName(),
-                    summary: {
-                        totalProducts: inventoryProducts.length,
-                        inStock: 0,
-                        lowStock: 0,
-                        outOfStock: 0,
-                        totalValue: 0,
-                        categories: new Set()
-                    },
-                    products: [],
-                    movements: {
-                        total: inventoryMovements.length,
-                        inbound: 0,
-                        outbound: 0,
-                        adjustments: 0
-                    }
-                };
-
-                inventoryProducts.forEach(p => {
-                    const qty = Number(p.quantity || 0);
-                    const min = Number(p.minStock || 0);
-                    const value = qty * Number(p.price || 0);
-
-                    if (qty <= 0) report.summary.outOfStock++;
-                    else if (qty <= min) report.summary.lowStock++;
-                    else report.summary.inStock++;
-
-                    report.summary.totalValue += value;
-                    report.summary.categories.add(p.category);
-
-                    report.products.push({
-                        id: p.id,
-                        code: p.code,
-                        name: p.name,
-                        category: p.category,
-                        quantity: qty,
-                        minStock: min,
-                        price: Number(p.price || 0),
-                        value: value,
-                        status: qty <= 0 ? 'OUT' : qty <= min ? 'LOW' : 'OK'
-                    });
-                });
-
-                inventoryMovements.forEach(m => {
-                    if (m.type === 'IN') report.movements.inbound++;
-                    else if (m.type === 'OUT') report.movements.outbound++;
-                    else report.movements.adjustments++;
-                });
-
-                report.summary.categories = Array.from(report.summary.categories);
-                return report;
-            } catch (err) {
-                console.error('Report generation failed:', err);
-                return null;
-            }
-        }
 
         
 

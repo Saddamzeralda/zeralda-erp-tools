@@ -41,29 +41,6 @@
         };
     };
 
-    // 2. Automated Reorder Link
-    // إنشاء مسودة أمر شراء تلقائياً عند وصول المخزون للحد الأدنى
-    window.triggerAutoReorder = function(productId) {
-        const prediction = window.predictStockDepletion(productId);
-        if (prediction && (prediction.status === t('critical') || prediction.status === t('warning'))) {
-            const products = safeJSONParse(ZS.getItem('inventory-products'), [] === '{}' ? {} : []);
-            const p = products.find(prod => prod.id == productId);
-
-            // إضافة الطلب إلى قائمة "المشتريات المقترحة"
-            const suggestions = safeJSONParse(ZS.getItem('purchasing-suggestions'), [] === '{}' ? {} : []);
-            if (!suggestions.find(s => s.productId == productId)) {
-                suggestions.push({
-                    productId: productId,
-                    name: p.name,
-                    quantity: prediction.suggestedOrder,
-                    reason: t('reorderReason', { days: prediction.daysLeft }),
-                    date: new Date().toISOString()
-                });
-                ZS.setItem('purchasing-suggestions', JSON.stringify(suggestions));
-                console.log(`[Inventory] Auto-Reorder triggered for ${p.name}`);
-            }
-        }
-    };
 
     // 3. UI Injections for Inventory
     window.injectInventoryIntelUI = function() {

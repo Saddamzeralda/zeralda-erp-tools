@@ -2728,18 +2728,6 @@ function applyStockLimitToQuantityInput(inputEl, quantity){
   else inputEl.removeAttribute('max');
 }
 
-function isOutOfStockSaleAllowed(){
-  try {
-    const raw = ZS.getItem('zeralda-settings');
-    if(!raw) return true;
-    const parsed = JSON.parse(raw);
-    const notifications = parsed && parsed.notifications ? parsed.notifications : {};
-    if(typeof notifications.allowOutOfStockSales === 'boolean') return notifications.allowOutOfStockSales;
-  } catch(err){
-    console.warn('Failed to read out-of-stock sales setting', err);
-  }
-  return true;
-}
 
 function getInvoiceItemUnit(item){
   if(item && item.unit) return String(item.unit).trim().toLowerCase() || "unit";
@@ -3101,22 +3089,6 @@ function refreshProductSelects(){
   });
 }
 
-function setCustomItemSelection(rowId, itemName, itemPrice){
-  const row = document.getElementById(rowId);
-  if(!row) return;
-  // FIX: skip the F/P dropdown (data-role="fp") — the product select is the
-  // one WITHOUT data-role="fp"
-  const sel = row.querySelector('select:not([data-role="fp"])');
-  if(!sel) return;
-  let customOpt = sel.querySelector('option[value="__custom__"]');
-  if(!customOpt){
-    customOpt = document.createElement('option');
-    customOpt.value = '__custom__';
-    sel.appendChild(customOpt);
-  }
-  customOpt.textContent = `${itemName} - ${getCurrencySymbol()}${Number(itemPrice || 0).toFixed(2)} (${tr('custom_item','Custom Item')})`;
-  sel.value = '__custom__';
-}
 
 
 
@@ -6358,37 +6330,6 @@ async function generateInvoicePdfBlob(invoiceId) {
   }
 }
 
-// Download invoice as PDF
-async function downloadInvoicePdf(invoiceId) {
-  const inv = invoicesData.find(i => i.id === invoiceId);
-  if (!inv) return;
-  const number = getInvoiceDisplayNumber(inv);
-  const fileName = 'Facture_' + String(number || 'invoice').replace(/[^a-zA-Z0-9_-]+/g, '_') + '.pdf';
-
-  const previewEl = document.getElementById('invoicePreview');
-  const sourceEl = previewEl ? (previewEl.querySelector('.facture-container') || previewEl.firstElementChild) : null;
-  if (sourceEl && currentInvoice && currentInvoice.id === invoiceId) {
-    await exportElementToPdf(sourceEl, fileName, function() {
-      printInvoice();
-    });
-    return;
-  }
-
-  const blob = await generateInvoicePdfBlob(invoiceId);
-  if (blob) {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
-  } else {
-    viewInvoice(invoiceId);
-    setTimeout(function(){ printInvoice(); }, 300);
-  }
-}
 
 var _currentPreviewInvoiceId = null;
 
@@ -6640,19 +6581,6 @@ function sendInvoiceWhatsAppFromPreview() {
 }
 window.sendInvoiceWhatsAppFromPreview = sendInvoiceWhatsAppFromPreview;
 
-function sendInvoiceWhatsAppFromPreview() {
-  if (!currentInvoice) {
-    alert(tr('no_invoice_selected', 'No invoice selected'));
-    return;
-  }
-  if (typeof shareInvoiceViaWhatsApp === 'function') {
-    shareInvoiceViaWhatsApp(currentInvoice.id);
-  } else if (window.ZeraldaShareHub && typeof window.ZeraldaShareHub.shareViaWhatsApp === 'function') {
-    window.ZeraldaShareHub.shareViaWhatsApp(currentInvoice);
-  } else {
-    alert('WhatsApp share function not available');
-  }
-}
 window.sendInvoiceWhatsAppFromPreview = sendInvoiceWhatsAppFromPreview;
 
 function sendInvoiceEmail(id) {
@@ -8574,12 +8502,6 @@ window.openQuotationAnalyzerModal = openQuotationAnalyzerModal;
 // ============================================================
 var _currentDeliveryInvoice = null;
 
-function generateDeliveryNoteFromCurrentInvoice() {
-  if (!currentInvoice) return;
-  _currentDeliveryInvoice = currentInvoice;
-  renderDeliveryNoteHtml(false);
-  openModal('deliveryNoteModal');
-}
 
 function refreshDeliveryNotePreview(showPrices) {
   renderDeliveryNoteHtml(showPrices);
@@ -8764,54 +8686,6 @@ function printCustomerStatement() {
 // ------------------------------------------------------------
 // INSTANT JOURNAL POSTING TO SCF ACCOUNTING
 // ------------------------------------------------------------
-async function comptabiliserCurrentInvoiceToFinance() {
-  if (!currentInvoice) return;
-  const inv = currentInvoice;
-  const invRef = inv.invoiceNumber || inv.id || ('INV-' + inv.date);
-
-  let journalEntries = [];
-  try {
-    const raw = ZS.getItem('finance_journal_entries');
-    if (raw) journalEntries = JSON.parse(raw);
-  } catch(e) {}
-
-  const exists = journalEntries.some(function(e){ return e.reference === invRef; });
-  if (exists) {
-    alert('هذه الفاتورة مٌرحّلة بالفعل إلى دفتر اليومية المحاسبي (المرجع: ' + invRef + ').');
-    return;
-  }
-
-  const totalTTC = parseFloat(inv.totalTtc || inv.total || inv.grandTotal || inv.amount) || 0;
-  const totalHT = parseFloat(inv.totalHt || inv.subtotal) || (totalTTC / 1.19);
-  const tvaAmt = totalTTC - totalHT;
-
-  if (totalTTC <= 0) {
-    alert('لا يمكن ترحيل فاتورة بمبلغ صفر.');
-    return;
-  }
-
-  const year = inv.date ? new Date(inv.date).getFullYear() : 2026;
-  const eId = 'ECR-' + year + '-' + (journalEntries.length + 1).toString().padStart(4, '0');
-
-  const newEntry = {
-    id: eId,
-    date: inv.date || new Date().toISOString().slice(0, 10),
-    reference: invRef,
-    description: 'فاتورة مبيعات رقم ' + invRef + ' - ' + (inv.customerName || (inv.customer && inv.customer.name) || 'زبون'),
-    sourceType: 'invoices',
-    status: 'posted',
-    createdAt: new Date().toISOString(),
-    lines: [
-      { accountCode: '411000', accountName: 'الزبائن (Clients)', description: 'استحقاق الزبون TTC', debit: totalTTC, credit: 0 },
-      { accountCode: '700000', accountName: 'مبيعات البضائع والمنتجات (Ventes)', description: 'إيراد المبيعات HT', debit: 0, credit: totalHT },
-      { accountCode: '445700', accountName: 'الدولة - TVA محصلة (TVA collectée)', description: 'رسم القيمة المضافة المحصل', debit: 0, credit: tvaAmt }
-    ]
-  };
-
-  journalEntries.unshift(newEntry);
-  ZS.setItem('finance_journal_entries', JSON.stringify(journalEntries));
-  alert('تم ترحيل الفاتورة بنجاح إلى دفتر اليومية المحاسبي!\nرقم القيد: ' + eId + '\nالمدين (411): ' + totalTTC.toFixed(2) + ' DZD\nالدائن (700): ' + totalHT.toFixed(2) + ' DZD\nالدائن (4457): ' + tvaAmt.toFixed(2) + ' DZD');
-}
 
 </script>
 

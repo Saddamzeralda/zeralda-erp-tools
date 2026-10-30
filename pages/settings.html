@@ -2176,37 +2176,6 @@
         const COMPANY_DOC_MAX_BYTES_IMAGE = 1024 * 1024;
         const COMPANY_DOC_MAX_BYTES_PDF = 3 * 1024 * 1024;
 
-        function getMaxBytesForFile(file){
-            const mime = String((file && file.type) || '').toLowerCase();
-            const name = String((file && file.name) || '').toLowerCase();
-            const isPdf = mime === 'application/pdf' || name.endsWith('.pdf');
-            return isPdf ? COMPANY_DOC_MAX_BYTES_PDF : COMPANY_DOC_MAX_BYTES_IMAGE;
-        }
-
-        function formatMb(bytes){
-            return (Number(bytes || 0) / (1024 * 1024)).toFixed(0);
-        }
-
-        function getDocSizeErrorMessage(fileName){
-            const lang = (getSettings().preferredLanguage || 'en').toLowerCase();
-            const targetName = String(fileName || '').toLowerCase();
-            const limitBytes = targetName.endsWith('.pdf') ? COMPANY_DOC_MAX_BYTES_PDF : COMPANY_DOC_MAX_BYTES_IMAGE;
-            const limitMb = formatMb(limitBytes);
-            return ({
-                en: `File "${fileName}" is too large. Maximum allowed size is ${limitMb} MB.`,
-                ar: `الملف "${fileName}" كبير جدًا. الحد الأقصى المسموح هو ${limitMb} ميغابايت.`,
-                fr: `Le fichier "${fileName}" est trop volumineux. La taille maximale autorisée est de ${limitMb} Mo.`
-            }[lang] || `File "${fileName}" is too large. Maximum allowed size is ${limitMb} MB.`);
-        }
-
-        function fileToDataURL(file){
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result || '');
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-            });
-        }
 
         function downloadModel(modelFile) {
             showToast(tSettings('preparing_download', {file: modelFile}), 'info', 2000);
@@ -2690,9 +2659,6 @@
             showToast(tSettings('notifications_test_sent'), 'success', 1500);
         }
 
-        function seedDemoDataFromSettings(){
-            showToast('Demo data seeding has been permanently disabled.', 'info', 2200);
-        }
 
         function updateDemoSnapshotInfo(){
             const el = document.getElementById('demoSnapshotInfo');
@@ -2729,114 +2695,6 @@
             }
         }
 
-        function clearDemoDataFromSettings(){
-            const ok = window.confirm(tSettings('demo_clear_confirm'));
-            if(!ok) return;
-
-            const fixedKeys = [
-                'customers-data',
-                'products-data',
-                'invoices-data',
-                'proformas-data',
-                'employees-data',
-                'accounts-data',
-                'transactions-data',
-                'journal-entries-data',
-                'expenses-data',
-                'suppliers-data',
-                'purchase-orders-data',
-                'stock-movements',
-                'services-data',
-                'appointments-data',
-                'tickets-data',
-                'services-tasks',
-                'leads-data',
-                'opportunities-data',
-                'contacts-data',
-                'tenders-data',
-                'projects-data',
-                'proposals-data',
-                'consultations-data',
-                'reports-data',
-                'analytics-data',
-                'zeralda-companies',
-                'zeralda-users',
-                'zeralda-current-user'
-            ];
-
-            const snapshotKey = 'zeralda-demo-data-snapshot';
-
-            try {
-                // Prevent demo_seed_data.js from re-populating on next page load.
-                ZS.setItem('zeralda-demo-seeding', 'disabled');
-
-                const snapshot = {
-                    createdAt: new Date().toISOString(),
-                    items: {}
-                };
-
-                fixedKeys.forEach(function (k) {
-                    const raw = ZS.getItem(k);
-                    if (raw !== null) snapshot.items[k] = raw;
-                });
-
-                const scopedPrefixes = [
-                    'zeralda-purchasing-data::',
-                    'zeralda-services::',
-                    'zeralda-services-master::',
-                    'consultations-data::',
-                    'tenders-data::'
-                ];
-
-                const toRemove = [];
-                for (let i = 0; i < ZS.length; i++) {
-                    const key = ZS.key(i) || '';
-                    if (scopedPrefixes.some(function (p) { return key.indexOf(p) === 0; })) {
-                        toRemove.push(key);
-                        const raw = ZS.getItem(key);
-                        if (raw !== null) snapshot.items[key] = raw;
-                    }
-                }
-
-                ZS.setItem(snapshotKey, JSON.stringify(snapshot));
-
-                fixedKeys.forEach(function (k) { ZS.removeItem(k); });
-                toRemove.forEach(function (k) { ZS.removeItem(k); });
-
-                updateDemoSnapshotInfo();
-                showToast(tSettings('demo_cleared_snapshot_saved'), 'success', 1800);
-            } catch (e) {
-                showToast(tSettings('demo_clear_failed', {msg: (e && e.message ? e.message : 'Unknown error')}), 'info', 2600);
-            }
-        }
-
-        function restoreDemoDataSnapshotFromSettings(){
-            const snapshotKey = 'zeralda-demo-data-snapshot';
-            try {
-                const raw = ZS.getItem(snapshotKey);
-                if (!raw) {
-                    showToast(tSettings('no_demo_snapshot'), 'info', 2000);
-                    return;
-                }
-                const parsed = JSON.parse(raw);
-                const items = parsed && parsed.items ? parsed.items : {};
-                const keys = Object.keys(items);
-                if (!keys.length) {
-                    showToast(tSettings('snapshot_empty'), 'info', 2000);
-                    return;
-                }
-
-                keys.forEach(function (k) {
-                    ZS.setItem(k, items[k]);
-                });
-                // Re-enable auto-seeding since we just restored demo data.
-                ZS.removeItem('zeralda-demo-seeding');
-                updateDemoSnapshotInfo();
-                showToast(tSettings('demo_snapshot_restored'), 'success', 1800);
-            } catch (e) {
-                showToast(tSettings('snapshot_restore_failed', {msg: (e && e.message ? e.message : 'Unknown error')}), 'info', 2600);
-            }
-        }
 
         setTimeout(updateDemoSnapshotInfo, 0);
 
@@ -4950,14 +4808,6 @@
             refreshGoogleUI();
         };
 
-        function isPopupBlocked() {
-            try {
-                var t = window.open('about:blank', '_blank', 'width=1,height=1,left=-9999,top=-9999');
-                if (!t || t.closed || typeof t.closed === 'undefined') return true;
-                t.close();
-                return false;
-            } catch (e) { return true; }
-        }
 
         function showPopupBlockedHelp() {
             var box = document.getElementById('googlePopupBlockedHelp');
@@ -5594,95 +5444,7 @@
         });
 
         /* ===== LOCAL BACKUP FUNCTIONS ===== */
-        window.doLocalBackupExport = function () {
-            try {
-                var payload = { exportedAt: new Date().toISOString(), origin: location.origin, data: {} };
-                for (var i = 0; i < ZS.length; i++) {
-                    var key = ZS.key(i);
-                    if (!key) continue;
-                    if (key.indexOf('google-token') !== -1 || key.indexOf('session-') === 0) continue;
-                    payload.data[key] = ZS.getItem(key);
-                }
-                var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-                var url = URL.createObjectURL(blob);
-                var a = document.createElement('a');
-                a.href = url;
-                a.download = 'zeralda-erp-backup-' + new Date().toISOString().slice(0, 10) + '.json';
-                document.body.appendChild(a);
-                a.click();
-                setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(url); }, 200);
-                ZS.setItem('zeralda-last-local-backup', new Date().toISOString());
-                var statusEl = document.getElementById('localBackupStatus');
-                if (statusEl) statusEl.textContent = tSettings('last_export_label', {date: new Date().toLocaleString()});
-                _settingsToast(tSettings('backup_exported_ok'), 'success');
-            } catch (err) {
-                _settingsToast(tSettings('export_failed', {msg: (err.message || err)}), 'info');
-            }
-        };
 
-        window.doLocalBackupImport = function () {
-            var fileInput = document.getElementById('localBackupFileInput');
-            if (fileInput) fileInput.click();
-        };
-
-        window.handleLocalBackupFile = function (input) {
-            if (!input || !input.files || !input.files[0]) return;
-            var file = input.files[0];
-            var reader = new FileReader();
-            reader.onload = function (e) {
-                try {
-                    var payload = JSON.parse(e.target.result);
-                    if (!payload) {
-                        _settingsToast(tSettings('invalid_backup_format'), 'info');
-                        return;
-                    }
-                    // Support three formats:
-                    // 1. Local backup: { exportedAt, data: {...} }
-                    // 2. Folder backup: { schema, created_at, store: {...}, ai_settings }
-                    // 3. Raw store (shared_store.json): { key: value, ... } (flat object, no wrapper)
-                    var dataObj = payload.data;
-                    var isFolderBackup = false;
-                    if (!dataObj && payload.store && typeof payload.store === 'object') {
-                        dataObj = payload.store;
-                        isFolderBackup = true;
-                    }
-                    // Raw store format: no 'data', 'store', 'schema', or 'exportedAt' keys,
-                    // but has ERP-style keys like 'zeralda-*' or '*-data::*'
-                    if (!dataObj && typeof payload === 'object') {
-                        var payloadKeys = Object.keys(payload);
-                        var hasWrapper = payloadKeys.indexOf('data') !== -1 || payloadKeys.indexOf('store') !== -1
-                            || payloadKeys.indexOf('schema') !== -1 || payloadKeys.indexOf('exportedAt') !== -1;
-                        var hasErpKeys = payloadKeys.some(function (k) {
-                            return k.indexOf('zeralda-') === 0 || k.indexOf('-data::') !== -1 || k.indexOf('-data') !== -1;
-                        });
-                        if (!hasWrapper && hasErpKeys) {
-                            dataObj = payload;
-                        }
-                    }
-                    if (!dataObj || typeof dataObj !== 'object') {
-                        _settingsToast(tSettings('invalid_backup_format'), 'info');
-                        return;
-                    }
-                    var backupDate = payload.exportedAt || payload.created_at || 'unknown date';
-                    if (!confirm(tSettings('backup_overwrite_confirm', {date: backupDate}))) return;
-
-                    var count = 0;
-                    Object.keys(dataObj).forEach(function (key) {
-                        if (key.indexOf('google-token') !== -1) return;
-                        var val = dataObj[key];
-                        // Folder backup stores values as parsed objects, local backup as strings
-                        ZS.setItem(key, typeof val === 'string' ? val : JSON.stringify(val));
-                        count++;
-                    });
-                    _settingsToast(tSettings('backup_restored_ok', {count: count}), 'success');
-                    setTimeout(function () { location.reload(); }, 1500);
-                } catch (err) {
-                    _settingsToast(tSettings('import_failed', {msg: (err.message || err)}), 'info');
-                }
-            };
-            reader.readAsText(file);
-            input.value = '';
-        };
 
         /* ===== FOLDER BACKUP FUNCTIONS ===== */
         function _getAuthHeaders() {
@@ -5694,179 +5456,7 @@
             };
         }
 
-        window.browseBackupFolder = function () {
-            var pathEl = document.getElementById('backupFolderPath');
-            var statusEl = document.getElementById('folderBackupStatus');
-            if (statusEl) {
-                statusEl.innerHTML = '<i class="fas fa-sync fa-spin"></i> Opening folder picker...';
-                statusEl.style.color = '#0891b2';
-            }
-            fetch('/api/backup/folder/pick', { headers: _getAuthHeaders() })
-                .then(function (r) { return r.json(); })
-                .then(function (data) {
-                    if (data.ok && data.path) {
-                        if (pathEl) pathEl.value = data.path;
-                        if (statusEl) {
-                            statusEl.innerHTML = '<i class="fas fa-check-circle" style="color:#10b981;"></i> ' + data.path;
-                            statusEl.style.color = '#10b981';
-                        }
-                    } else {
-                        if (statusEl) {
-                            statusEl.textContent = data.message || 'No folder selected';
-                            statusEl.style.color = '#6b7280';
-                        }
-                    }
-                })
-                .catch(function (err) {
-                    if (statusEl) {
-                        statusEl.textContent = 'Error: ' + (err.message || err);
-                        statusEl.style.color = '#ef4444';
-                    }
-                });
-        };
 
-        window.loadBackupFolderSettings = function () {
-            fetch('/api/backup/folder/settings', { headers: _getAuthHeaders() })
-                .then(function (r) { return r.json(); })
-                .then(function (data) {
-                    if (data.ok && data.config) {
-                        var pathEl = document.getElementById('backupFolderPath');
-                        var pdfEl = document.getElementById('backupFolderExportPdf');
-                        var autoEl = document.getElementById('backupFolderAuto');
-                        if (pathEl) pathEl.value = data.config.folder_path || '';
-                        if (pdfEl) pdfEl.checked = data.config.export_pdf !== false;
-                        if (autoEl) autoEl.checked = !!data.config.auto_backup;
-                        var statusEl = document.getElementById('folderBackupStatus');
-                        if (statusEl && data.config.folder_path) {
-                            statusEl.textContent = data.config.folder_path;
-                        }
-                    }
-                })
-                .catch(function () {});
-        };
-
-        window.saveBackupFolderSettings = function () {
-            var pathEl = document.getElementById('backupFolderPath');
-            var pdfEl = document.getElementById('backupFolderExportPdf');
-            var autoEl = document.getElementById('backupFolderAuto');
-            var body = {
-                folder_path: (pathEl ? pathEl.value : '').trim(),
-                export_pdf: pdfEl ? pdfEl.checked : true,
-                auto_backup: autoEl ? autoEl.checked : false
-            };
-            fetch('/api/backup/folder/settings', {
-                method: 'POST',
-                headers: _getAuthHeaders(),
-                body: JSON.stringify(body)
-            })
-                .then(function (r) { return r.json(); })
-                .then(function (data) {
-                    if (data.ok) {
-                        _settingsToast('Settings saved', 'success');
-                        var statusEl = document.getElementById('folderBackupStatus');
-                        if (statusEl) statusEl.textContent = body.folder_path || 'No folder set';
-                    } else {
-                        _settingsToast(data.error || 'Save failed', 'info');
-                    }
-                })
-                .catch(function (err) { _settingsToast('Error: ' + (err.message || err), 'info'); });
-        };
-
-        window.runFolderBackup = function () {
-            var pathEl = document.getElementById('backupFolderPath');
-            var pdfEl = document.getElementById('backupFolderExportPdf');
-            var folderPath = (pathEl ? pathEl.value : '').trim();
-            if (!folderPath) {
-                _settingsToast('Please set a backup folder path first', 'info');
-                return;
-            }
-            var statusEl = document.getElementById('folderBackupStatus');
-            if (statusEl) {
-                statusEl.innerHTML = '<i class="fas fa-sync fa-spin"></i> Running backup...';
-                statusEl.style.color = '#0891b2';
-            }
-            // Send company names from localStorage so folders are named properly
-            var companies = [];
-            try {
-                var rawSettings = ZS.getItem('zeralda-settings');
-                if (rawSettings) {
-                    var parsed = JSON.parse(rawSettings);
-                    if (parsed && Array.isArray(parsed.companies)) {
-                        companies = parsed.companies.map(function (c) {
-                            return { id: c.id, name: c.name || c.id };
-                        });
-                    }
-                }
-            } catch (e) {}
-            var body = {
-                folder_path: folderPath,
-                export_pdf: pdfEl ? pdfEl.checked : true,
-                companies: companies
-            };
-            fetch('/api/backup/folder/run', {
-                method: 'POST',
-                headers: _getAuthHeaders(),
-                body: JSON.stringify(body)
-            })
-                .then(function (r) { return r.json(); })
-                .then(function (data) {
-                    if (data.ok) {
-                        var msg = data.message || 'Backup completed';
-                        if (statusEl) {
-                            statusEl.innerHTML = '<i class="fas fa-check-circle" style="color:#10b981;"></i> ' + msg;
-                            statusEl.style.color = '#10b981';
-                        }
-                        _settingsToast(msg, 'success');
-                        loadFolderBackupsList();
-                    } else {
-                        if (statusEl) {
-                            statusEl.innerHTML = '<i class="fas fa-exclamation-circle" style="color:#ef4444;"></i> ' + (data.error || 'Backup failed');
-                            statusEl.style.color = '#ef4444';
-                        }
-                        _settingsToast(data.error || 'Backup failed', 'info');
-                    }
-                })
-                .catch(function (err) {
-                    if (statusEl) {
-                        statusEl.innerHTML = '<i class="fas fa-exclamation-circle" style="color:#ef4444;"></i> Error: ' + (err.message || err);
-                        statusEl.style.color = '#ef4444';
-                    }
-                    _settingsToast('Error: ' + (err.message || err), 'info');
-                });
-        };
-
-        window.loadFolderBackupsList = function () {
-            fetch('/api/backup/folder/list', { headers: _getAuthHeaders() })
-                .then(function (r) { return r.json(); })
-                .then(function (data) {
-                    if (!data.ok) return;
-                    var listEl = document.getElementById('folderBackupsList');
-                    var tableEl = document.getElementById('folderBackupsTable');
-                    if (!listEl || !tableEl) return;
-                    if (!data.backups || data.backups.length === 0) {
-                        listEl.style.display = 'none';
-                        return;
-                    }
-                    listEl.style.display = 'block';
-                    tableEl.innerHTML = '';
-                    data.backups.forEach(function (bk) {
-                        var row = document.createElement('div');
-                        row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:8px 12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px;';
-                        var dateStr = bk.date ? new Date(bk.date).toLocaleString() : '';
-                        var infoHtml = '<div style="display:flex; flex-direction:column; gap:2px;">' +
-                            '<strong style="font-size:13px; color:#1e293b;">' + (bk.name || 'Backup') + '</strong>' +
-                            '<span style="font-size:11px; color:#6b7280;">' + dateStr + ' | Companies: ' + (bk.company_count || 0) + ' | PDFs: ' + (bk.pdf_count || 0) + ' | ' + (bk.size_mb || 0) + ' MB</span>' +
-                            '<span style="font-size:10px; color:#94a3b8; max-width:400px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + (bk.path || '') + '</span>' +
-                            '</div>';
-                        var badgeHtml = bk.has_json
-                            ? '<span style="font-size:10px; padding:2px 8px; background:#dcfce7; color:#166534; border-radius:10px;">JSON</span>'
-                            : '<span style="font-size:10px; padding:2px 8px; background:#fef2f2; color:#991b1b; border-radius:10px;">Partial</span>';
-                        row.innerHTML = infoHtml + badgeHtml;
-                        tableEl.appendChild(row);
-                    });
-                })
-                .catch(function () {});
-        };
         (function () {
             var lastLocal = ZS.getItem('zeralda-last-local-backup');
             if (lastLocal) {
@@ -5887,17 +5477,6 @@
         })();
 
         /* ===== AUTOMATED CLOUD BACKUP & TELEGRAM / SERVER SNAPSHOTS ===== */
-        window.togglePassVisibility = function (inputId, btn) {
-            var inp = document.getElementById(inputId);
-            if (!inp) return;
-            if (inp.type === 'password') {
-                inp.type = 'text';
-                if (btn) btn.innerHTML = '<i class="fas fa-eye-slash"></i>';
-            } else {
-                inp.type = 'password';
-                if (btn) btn.innerHTML = '<i class="fas fa-eye"></i>';
-            }
-        };
 
         window.loadCloudBackupStatusUI = function () {
             fetch('/api/backup/automated/status', { headers: _getAuthHeaders() })
@@ -5942,121 +5521,6 @@
                 });
         };
 
-        window.saveCloudBackupConfigUI = function () {
-            var tokEl = document.getElementById('cloudBackupTgToken');
-            var cidEl = document.getElementById('cloudBackupTgChatId');
-            var tgenEl = document.getElementById('cloudBackupTgEnabled');
-            var whuEl = document.getElementById('cloudBackupWhUrl');
-            var whenEl = document.getElementById('cloudBackupWhEnabled');
-            var intEl = document.getElementById('cloudBackupInterval');
-            var retEl = document.getElementById('cloudBackupRetention');
-            var resEl = document.getElementById('cloudBackupActionResult');
-
-            var payload = {
-                telegram: {
-                    bot_token: tokEl ? tokEl.value.trim() : '',
-                    chat_id: cidEl ? cidEl.value.trim() : '',
-                    enabled: tgenEl ? tgenEl.checked : true
-                },
-                webhook: {
-                    url: whuEl ? whuEl.value.trim() : '',
-                    enabled: whenEl ? whenEl.checked : false
-                },
-                interval_hours: intEl ? parseInt(intEl.value, 10) : 6,
-                max_snapshots: retEl ? parseInt(retEl.value, 10) : 20
-            };
-
-            if (resEl) {
-                resEl.innerHTML = '<span style="color:#0284c7;"><i class="fas fa-spinner fa-spin"></i> جاري حفظ إعدادات النسخ السحابي...</span>';
-            }
-
-            fetch('/api/backup/automated/config', {
-                method: 'POST',
-                headers: _getAuthHeaders(),
-                body: JSON.stringify(payload)
-            })
-                .then(function (r) { return r.json(); })
-                .then(function (data) {
-                    if (data && data.ok) {
-                        if (resEl) resEl.innerHTML = '<span style="color:#10b981;"><i class="fas fa-check-circle"></i> تم حفظ إعدادات السحابة بنجاح!</span>';
-                        _settingsToast('تم حفظ إعدادات السحابة بنجاح', 'success');
-                        loadCloudBackupStatusUI();
-                    } else {
-                        if (resEl) resEl.innerHTML = '<span style="color:#ef4444;"><i class="fas fa-times-circle"></i> فشل الحفظ: ' + ((data && data.error) || 'خطأ غير معروف') + '</span>';
-                    }
-                })
-                .catch(function (err) {
-                    if (resEl) resEl.innerHTML = '<span style="color:#ef4444;">خطأ في الاتصال: ' + (err.message || err) + '</span>';
-                });
-        };
-
-        window.testTelegramConnectionUI = function () {
-            var tokEl = document.getElementById('cloudBackupTgToken');
-            var cidEl = document.getElementById('cloudBackupTgChatId');
-            var resEl = document.getElementById('cloudBackupActionResult');
-
-            var token = tokEl ? tokEl.value.trim() : '';
-            var chatId = cidEl ? cidEl.value.trim() : '';
-
-            if (!token || !chatId) {
-                _settingsToast('يرجى إدخال Bot Token و Chat ID أولاً لاختبار الاتصال', 'info');
-                return;
-            }
-
-            if (resEl) {
-                resEl.innerHTML = '<span style="color:#0284c7;"><i class="fas fa-spinner fa-spin"></i> جاري إرسال إشعار تجريبي إلى Telegram...</span>';
-            }
-
-            fetch('/api/backup/automated/test-telegram', {
-                method: 'POST',
-                headers: _getAuthHeaders(),
-                body: JSON.stringify({ bot_token: token, chat_id: chatId })
-            })
-                .then(function (r) { return r.json(); })
-                .then(function (data) {
-                    if (data && data.ok) {
-                        if (resEl) resEl.innerHTML = '<span style="color:#10b981;"><i class="fas fa-check-circle"></i> تم إرسال رسالة الاختبار بنجاح إلى محادثتك على Telegram!</span>';
-                        _settingsToast('تم التحقق بنجاح من اتصال Telegram!', 'success');
-                        loadCloudBackupStatusUI();
-                    } else {
-                        var err = (data && data.result && data.result.error) || (data && data.error) || 'فشل الاتصال';
-                        if (resEl) resEl.innerHTML = '<span style="color:#ef4444;"><i class="fas fa-times-circle"></i> فشل إرسال الاختبار: ' + err + '</span>';
-                        _settingsToast('فشل اختبار Telegram: ' + err, 'info');
-                    }
-                })
-                .catch(function (err) {
-                    if (resEl) resEl.innerHTML = '<span style="color:#ef4444;">خطأ اتصال: ' + (err.message || err) + '</span>';
-                });
-        };
-
-        window.runImmediateCloudBackupUI = function () {
-            var resEl = document.getElementById('cloudBackupActionResult');
-            if (resEl) {
-                resEl.innerHTML = '<span style="color:#0284c7;"><i class="fas fa-spinner fa-spin"></i> جاري توليد النسخة الاحتياطية وتشفيرها ورفعها للسحابة...</span>';
-            }
-
-            fetch('/api/backup/automated/run', {
-                method: 'POST',
-                headers: _getAuthHeaders()
-            })
-                .then(function (r) { return r.json(); })
-                .then(function (data) {
-                    if (data && data.ok) {
-                        var snapName = data.snapshot_file || 'تم الحفظ';
-                        var tgStatus = data.telegram && data.telegram.ok ? '✓ تيليجرام' : '';
-                        if (resEl) resEl.innerHTML = '<span style="color:#10b981;"><i class="fas fa-check-circle"></i> اكتمل النسخ السحابي: ' + snapName + ' ' + tgStatus + '</span>';
-                        _settingsToast('اكتمل النسخ السحابي بنجاح! (' + snapName + ')', 'success');
-                        loadServerSnapshotsUI();
-                    } else {
-                        var err = (data && data.error) || 'فشل النسخ السحابي';
-                        if (resEl) resEl.innerHTML = '<span style="color:#ef4444;"><i class="fas fa-times-circle"></i> ' + err + '</span>';
-                        _settingsToast(err, 'info');
-                    }
-                })
-                .catch(function (err) {
-                    if (resEl) resEl.innerHTML = '<span style="color:#ef4444;">خطأ: ' + (err.message || err) + '</span>';
-                });
-        };
 
         window.loadServerSnapshotsUI = function () {
             var listEl = document.getElementById('settingsSnapshotsList');
@@ -6168,76 +5632,12 @@
             }
         }
 
-        function validatePasswordStrength(input) {
-            if (!input.value) return;
-            let strength = 0;
-            const value = input.value;
-            if (value.length >= 6) strength++;
-            if (value.length >= 12) strength++;
-            if (/[A-Z]/.test(value)) strength++;
-            if (/[0-9]/.test(value)) strength++;
-            if (/[^A-Za-z0-9]/.test(value)) strength++;
-
-            const level = Math.min(Math.floor(strength / 1.5), 3);
-            const colors = ['#ef4444', '#f59e0b', '#eab308', '#10b981'];
-            const labels = [{en:'Weak',ar:'?????',fr:'Faible'},{en:'Fair',ar:'??????',fr:'Moyen'},{en:'Good',ar:'????',fr:'Bon'},{en:'Strong',ar:'????',fr:'Fort'}];
-
-            input.classList.toggle('is-valid', level >= 2);
-            input.classList.toggle('is-error', level < 2 && value.length > 0);
-        }
 
         /* Email Validation */
-        function validateEmail(input) {
-            const email = input.value.trim();
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!email) {
-                input.classList.remove('is-valid', 'is-error');
-                return;
-            }
-            if (emailRegex.test(email)) {
-                input.classList.remove('is-error');
-                input.classList.add('is-valid');
-            } else {
-                input.classList.remove('is-valid');
-                input.classList.add('is-error');
-            }
-        }
 
         /* Full Name Validation */
-        function validateFullName(input) {
-            const name = input.value.trim();
-            if (!name) {
-                input.classList.remove('is-valid', 'is-error');
-                return;
-            }
-            if (name.length >= 3) {
-                input.classList.remove('is-error');
-                input.classList.add('is-valid');
-            } else {
-                input.classList.remove('is-valid');
-                input.classList.add('is-error');
-            }
-        }
 
         /* Form Validation Before Save */
-        function validateFormBeforeSave(formId) {
-            const form = document.getElementById(formId);
-            if (!form) return false;
-            const inputs = form.querySelectorAll('input[required], input[type="email"]');
-            let isValid = true;
-            inputs.forEach(input => {
-                if (input.type === 'email') {
-                    validateEmail(input);
-                } else if (input.id && input.id.includes('FullName')) {
-                    validateFullName(input);
-                } else if (input.value.trim() === '' && input.hasAttribute('required')) {
-                    input.classList.add('is-error');
-                    isValid = false;
-                }
-                if (input.classList.contains('is-error')) isValid = false;
-            });
-            return isValid;
-        }
 
         /* Enhanced CSS for Validation */
         const styles = document.createElement('style');
@@ -6411,12 +5811,6 @@
             function getSessionToken() {
                 try { return ZS.getItem('zeralda-session-token') || ''; } catch { return ''; }
             }
-            function getCurrentRole() {
-                try {
-                    const u = JSON.parse(ZS.getItem('zeralda-current-user') || '{}');
-                    return (u.role || '').toLowerCase();
-                } catch { return ''; }
-            }
             const card = document.getElementById('forceShutdownCard');
             if (card) card.style.display = 'block';
         })();
@@ -6470,12 +5864,6 @@
         };
 
         /* Enhanced form feedback */
-        function markFieldAsTouched(input) {
-            input.dataset.touched = 'true';
-            if (input.type === 'email') validateEmail(input);
-            else if (input.id.includes('FullName')) validateFullName(input);
-            else if (input.type === 'password') validatePasswordStrength(input);
-        }
 
         /* Open AI section when loaded from AI chat settings (top-bar settings button) */
         if (window.location.hash === '#ai' || window.location.hash === '#AI') {
@@ -6800,29 +6188,6 @@ async function deleteRegisteredDevice(endpoint) {
 }
 window.deleteRegisteredDevice = deleteRegisteredDevice;
 
-async function deleteRegisteredDevice(endpoint) {
-    if (!endpoint) return;
-    if (!confirm('هل أنت متأكد من حذف هذا الجهاز من قائمة الإشعارات؟')) return;
-    try {
-        var res = await fetch('/api/notifications/subscriptions', {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify({ endpoint: endpoint })
-        });
-        var data = await res.json();
-        if (data.ok) {
-            alert('تم حذف الجهاز بنجاح');
-            loadPushSubscriptionsList();
-        } else {
-            alert('تعذر حذف الجهاز: ' + (data.error || 'خطأ غير معروف'));
-        }
-    } catch (e) {
-        alert('حدث خطأ أثناء محاولة حذف الجهاز');
-    }
-}
 window.deleteRegisteredDevice = deleteRegisteredDevice;
 
 async function loadNotificationServerSettings() {

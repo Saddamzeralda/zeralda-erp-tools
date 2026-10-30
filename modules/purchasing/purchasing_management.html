@@ -2774,14 +2774,6 @@
             }
         }
 
-        function getSystemSettingsSnapshot() {
-            try {
-                const raw = ZS.getItem('zeralda-settings');
-                return raw ? JSON.parse(raw) : {};
-            } catch (_) {
-                return {};
-            }
-        }
 
         
 
