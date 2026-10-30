@@ -1938,7 +1938,7 @@
 </main>
 
   <!-- ── Modal: Tender Detailed Dossier ── -->
-  <div id="tenderDetailModal" class="modal-overlay" aria-hidden="true">
+  <div id="tenderDetailModal" class="modal-overlay" aria-hidden="true" inert>
     <div class="modal-card">
       <div class="modal-header" style="background: linear-gradient(135deg, #1e3a8a, #2563eb); color: white;">
         <h3 style="color:white;"><i class="fas fa-file-contract"></i> <span id="detailModalTitle">تفاصيل الإعلان ودفتر الشروط</span></h3>
@@ -1958,7 +1958,7 @@
   </div>
 
   <!-- ── Modal: Publish / Add Custom Tender ── -->
-  <div id="publishTenderModal" class="modal-overlay" aria-hidden="true">
+  <div id="publishTenderModal" class="modal-overlay" aria-hidden="true" inert>
     <div class="modal-card" style="width:min(720px, 95vw);">
       <div class="modal-header" style="background: linear-gradient(135deg, #1e3a8a, #2563eb); color: white;">
         <h3 style="color:white;"><i class="fas fa-plus-circle"></i> <span data-en="Publish New Tender Notice" data-ar="نشر وإضافة إعلان مناقصة جديد" data-fr="Publier un nouvel avis d'appel d'offres">نشر وإضافة إعلان مناقصة جديد</span></h3>
@@ -9522,14 +9522,41 @@
     // ═════════════════════════════════════════════════════════════════
     // ── UTILITIES & MODAL HELPERS ──
     // ═════════════════════════════════════════════════════════════════
+    let lastActiveModalTrigger = null;
+
     function openModal(id){
       const el = document.getElementById(id);
-      if(el){ el.classList.add('active'); el.setAttribute('aria-hidden', 'false'); }
+      if(!el) return;
+      lastActiveModalTrigger = document.activeElement;
+      el.removeAttribute('inert');
+      el.classList.add('active');
+      el.setAttribute('aria-hidden', 'false');
+      requestAnimationFrame(() => {
+        const focusable = el.querySelector('button.close-modal, button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        if(focusable && typeof focusable.focus === 'function'){
+          focusable.focus();
+        }
+      });
     }
 
     function closeModal(id){
       const el = document.getElementById(id);
-      if(el){ el.classList.remove('active'); el.setAttribute('aria-hidden', 'true'); }
+      if(!el) return;
+      // Remove focus from any descendant BEFORE setting aria-hidden to prevent WAI-ARIA focus trap warning
+      if(el.contains(document.activeElement)){
+        if(document.activeElement && typeof document.activeElement.blur === 'function'){
+          document.activeElement.blur();
+        }
+      }
+      // Return focus to opening trigger
+      if(lastActiveModalTrigger && typeof lastActiveModalTrigger.focus === 'function' && document.body.contains(lastActiveModalTrigger)){
+        lastActiveModalTrigger.focus();
+      } else if(document.body && typeof document.body.focus === 'function'){
+        document.body.focus();
+      }
+      el.classList.remove('active');
+      el.setAttribute('aria-hidden', 'true');
+      el.setAttribute('inert', '');
     }
 
     function formatMoney(amount){
