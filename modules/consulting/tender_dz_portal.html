@@ -1214,12 +1214,15 @@
       validBadgeText: { ar: '10 أيام (ساري)', fr: '10 jours (valide)', en: '10 days (active)' }
     };
 
-    function t(key, fallback) {
+    function i18n(key, fallback) {
       var lang = getLang();
       var entry = TENDER_DZ_DICT[key];
       if (!entry) return fallback || key;
       return entry[lang] || entry.ar || fallback || key;
     }
+    const t = i18n;
+    window.i18n = i18n;
+    window.t = i18n;
 
     function getSectorLabel(sector) {
       var lang = getLang();
@@ -1279,7 +1282,7 @@
       var wilayaSelect = document.getElementById('dzFilterWilaya');
       if (wilayaSelect) {
         var currentWilayaVal = wilayaSelect.value;
-        wilayaSelect.innerHTML = '<option value="">' + escapeHtml(t('allWilayas')) + '</option>';
+        wilayaSelect.innerHTML = '<option value="">' + escapeHtml(i18n('allWilayas')) + '</option>';
         ALGERIAN_WILAYAS.forEach(function(w) {
           var opt = document.createElement('option');
           opt.value = w.code;
@@ -1294,7 +1297,7 @@
       var sectorSelect = document.getElementById('dzFilterSector');
       if (sectorSelect) {
         var currentSectorVal = sectorSelect.value;
-        sectorSelect.innerHTML = '<option value="">' + escapeHtml(t('allSectors')) + '</option>';
+        sectorSelect.innerHTML = '<option value="">' + escapeHtml(i18n('allSectors')) + '</option>';
         Object.keys(SECTOR_LABELS).forEach(function(secKey) {
           var opt = document.createElement('option');
           opt.value = secKey;
@@ -1308,7 +1311,7 @@
       var noticeSelect = document.getElementById('dzFilterNoticeType');
       if (noticeSelect) {
         var currentNoticeVal = noticeSelect.value;
-        noticeSelect.innerHTML = '<option value="">' + escapeHtml(t('allNoticeTypes')) + '</option>';
+        noticeSelect.innerHTML = '<option value="">' + escapeHtml(i18n('allNoticeTypes')) + '</option>';
         Object.keys(NOTICE_TYPE_LABELS).forEach(function(typeKey) {
           var opt = document.createElement('option');
           opt.value = typeKey;
@@ -1738,41 +1741,41 @@
 
       const now = new Date();
 
-      list.forEach(t => {
-        const isFav = favoriteIds.includes(t.id);
+      list.forEach(tender => {
+        const isFav = favoriteIds.includes(tender.id);
         const card = document.createElement('div');
         card.className = 'tender-card';
 
         // Urgency countdown localized
         let countdownBadge = '';
-        if(t.deadline){
-          const d = new Date(t.deadline);
+        if(tender.deadline){
+          const d = new Date(tender.deadline);
           const diff = Math.ceil((d - now) / (1000*60*60*24));
           if(diff < 0){
-            countdownBadge = `<span class="countdown-pill countdown-expired"><i class="fas fa-lock"></i> ${escapeHtml(t('expired'))}</span>`;
+            countdownBadge = `<span class="countdown-pill countdown-expired"><i class="fas fa-lock"></i> ${escapeHtml(i18n('expired'))}</span>`;
           } else if(diff === 0){
-            countdownBadge = `<span class="countdown-pill countdown-urgent"><i class="fas fa-fire fa-shake"></i> ${escapeHtml(t('todayLastDay'))}</span>`;
+            countdownBadge = `<span class="countdown-pill countdown-urgent"><i class="fas fa-fire fa-shake"></i> ${escapeHtml(i18n('todayLastDay'))}</span>`;
           } else if(diff === 1){
-            countdownBadge = `<span class="countdown-pill countdown-urgent"><i class="fas fa-fire fa-shake"></i> ${escapeHtml(t('oneDayLeft'))}</span>`;
+            countdownBadge = `<span class="countdown-pill countdown-urgent"><i class="fas fa-fire fa-shake"></i> ${escapeHtml(i18n('oneDayLeft'))}</span>`;
           } else if(diff === 2){
-            countdownBadge = `<span class="countdown-pill countdown-urgent"><i class="fas fa-fire fa-shake"></i> ${escapeHtml(t('twoDaysLeft'))}</span>`;
+            countdownBadge = `<span class="countdown-pill countdown-urgent"><i class="fas fa-fire fa-shake"></i> ${escapeHtml(i18n('twoDaysLeft'))}</span>`;
           } else if(diff <= 5){
-            countdownBadge = `<span class="countdown-pill countdown-warning"><i class="fas fa-clock"></i> ${diff} ${escapeHtml(t('daysLeft'))}</span>`;
+            countdownBadge = `<span class="countdown-pill countdown-warning"><i class="fas fa-clock"></i> ${diff} ${escapeHtml(i18n('daysLeft'))}</span>`;
           } else {
-            countdownBadge = `<span class="countdown-pill countdown-safe"><i class="fas fa-calendar-check"></i> ${diff} ${escapeHtml(t('daysLeft'))}</span>`;
+            countdownBadge = `<span class="countdown-pill countdown-safe"><i class="fas fa-calendar-check"></i> ${diff} ${escapeHtml(i18n('daysLeft'))}</span>`;
           }
         }
 
         // Icon for authority
         let authIcon = 'fa-building';
-        if(t.sector === 'IT') authIcon = 'fa-network-wired';
-        else if(t.sector === 'Medical') authIcon = 'fa-hospital-user';
-        else if(t.sector === 'Energy') authIcon = 'fa-gas-pump';
-        else if(t.sector === 'BTPH') authIcon = 'fa-hard-hat';
+        if(tender.sector === 'IT') authIcon = 'fa-network-wired';
+        else if(tender.sector === 'Medical') authIcon = 'fa-hospital-user';
+        else if(tender.sector === 'Energy') authIcon = 'fa-gas-pump';
+        else if(tender.sector === 'BTPH') authIcon = 'fa-hard-hat';
 
-        const localizedSector = getSectorLabel(t.sector);
-        const localizedWilaya = getWilayaLabel(t.wilaya, t.wilayaName);
-        const imported = isImportedToErp(t);
+        const localizedSector = getSectorLabel(tender.sector);
+        const localizedWilaya = getWilayaLabel(tender.wilaya, tender.wilayaName);
+        const imported = isImportedToErp(tender);
 
         card.innerHTML = `
           <div>
@@ -1780,11 +1783,11 @@
               <div class="card-authority">
                 <div class="auth-logo-badge"><i class="fas ${authIcon}"></i></div>
                 <div>
-                  <div class="auth-name" title="${escapeHtml(t.authority)}">${escapeHtml(t.authority)}</div>
-                  <div class="auth-source"><i class="fas fa-newspaper"></i> ${escapeHtml(t.source || 'BOMOP')}</div>
+                  <div class="auth-name" title="${escapeHtml(tender.authority)}">${escapeHtml(tender.authority)}</div>
+                  <div class="auth-source"><i class="fas fa-newspaper"></i> ${escapeHtml(tender.source || 'BOMOP')}</div>
                 </div>
               </div>
-              <button class="card-star-btn ${isFav ? 'starred' : ''}" type="button" onclick="toggleFavorite('${t.id}')" title="Favoris">
+              <button class="card-star-btn ${isFav ? 'starred' : ''}" type="button" onclick="toggleFavorite('${tender.id}')" title="Favoris">
                 <i class="${isFav ? 'fas' : 'far'} fa-star"></i>
               </button>
             </div>
@@ -1795,37 +1798,37 @@
               ${countdownBadge}
             </div>
 
-            <div class="tender-card-title" onclick="openDetailModal('${t.id}')" title="${escapeHtml(t.title)}">
-              ${escapeHtml(t.title)}
+            <div class="tender-card-title" onclick="openDetailModal('${tender.id}')" title="${escapeHtml(tender.title)}">
+              ${escapeHtml(tender.title)}
             </div>
 
             <div class="tender-card-specs">
               <div class="spec-item">
-                <span class="spec-label">${escapeHtml(t('ref'))}</span>
-                <span class="spec-val">${escapeHtml(t.reference || 'AO')}</span>
+                <span class="spec-label">${escapeHtml(i18n('ref'))}</span>
+                <span class="spec-val">${escapeHtml(tender.reference || 'AO')}</span>
               </div>
               <div class="spec-item">
-                <span class="spec-label">${escapeHtml(t('specs'))}</span>
-                <span class="spec-val" style="color:var(--dz-primary); font-weight:700;">${t.priceCahier > 0 ? (formatMoney(t.priceCahier)) : escapeHtml(t('free'))}</span>
+                <span class="spec-label">${escapeHtml(i18n('specs'))}</span>
+                <span class="spec-val" style="color:var(--dz-primary); font-weight:700;">${tender.priceCahier > 0 ? (formatMoney(tender.priceCahier)) : escapeHtml(i18n('free'))}</span>
               </div>
               <div class="spec-item">
-                <span class="spec-label">${escapeHtml(t('caution'))}</span>
-                <span class="spec-val">${escapeHtml(t.caution || '1%')}</span>
+                <span class="spec-label">${escapeHtml(i18n('caution'))}</span>
+                <span class="spec-val">${escapeHtml(tender.caution || '1%')}</span>
               </div>
               <div class="spec-item">
-                <span class="spec-label">${escapeHtml(t('deadline'))}</span>
-                <span class="spec-val" style="color:#ef4444; font-weight:700;">${escapeHtml(t.deadline || '-')}</span>
+                <span class="spec-label">${escapeHtml(i18n('deadline'))}</span>
+                <span class="spec-val" style="color:#ef4444; font-weight:700;">${escapeHtml(tender.deadline || '-')}</span>
               </div>
             </div>
           </div>
 
           <div class="tender-card-footer">
-            <button class="btn-view-dossier" type="button" onclick="openDetailModal('${t.id}')">
-              <i class="fas fa-eye"></i> <span>${escapeHtml(t('viewNotice'))}</span>
+            <button class="btn-view-dossier" type="button" onclick="openDetailModal('${tender.id}')">
+              <i class="fas fa-eye"></i> <span>${escapeHtml(i18n('viewNotice'))}</span>
             </button>
-            <button class="btn-import-pipeline ${imported ? 'imported' : ''}" type="button" onclick="importTenderToERP('${t.id}')">
+            <button class="btn-import-pipeline ${imported ? 'imported' : ''}" type="button" onclick="importTenderToERP('${tender.id}')">
               <i class="fas ${imported ? 'fa-check-circle' : 'fa-plus-circle'}"></i>
-              <span>${escapeHtml(imported ? t('importedBtn') : t('importBtn'))}</span>
+              <span>${escapeHtml(imported ? i18n('importedBtn') : i18n('importBtn'))}</span>
             </button>
           </div>
         `;
@@ -1841,25 +1844,25 @@
 
       const attributions = allDzTenders.filter(t => t.type === 'attribution');
       if(!attributions.length){
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color:#64748b;">' + escapeHtml(t('noAttributions')) + '</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color:#64748b;">' + escapeHtml(i18n('noAttributions')) + '</td></tr>';
         return;
       }
 
-      const activeBadge = t('validBadgeText');
-      const viewTitle = t('viewNotice');
+      const activeBadge = i18n('validBadgeText');
+      const viewTitle = i18n('viewNotice');
 
-      attributions.forEach(t => {
+      attributions.forEach(tender => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td><strong style="color:var(--dz-primary);">${escapeHtml(t.reference||'ATTRIB')}</strong></td>
-          <td style="font-weight:600;">${escapeHtml(t.authority||'-')}</td>
-          <td>${escapeHtml(t.title||'-')}</td>
-          <td style="font-weight:700; color:#1e40af;">${escapeHtml(t.winnerCompany||'-')}</td>
-          <td style="text-align:right; font-weight:800; color:var(--dz-primary);">${formatMoney(t.winnerAmount||0)}</td>
-          <td style="text-align:center;"><span class="badge badge-open" style="font-size:11px;">${escapeHtml(t.techScore||'-')}</span></td>
+          <td><strong style="color:var(--dz-primary);">${escapeHtml(tender.reference||'ATTRIB')}</strong></td>
+          <td style="font-weight:600;">${escapeHtml(tender.authority||'-')}</td>
+          <td>${escapeHtml(tender.title||'-')}</td>
+          <td style="font-weight:700; color:#1e40af;">${escapeHtml(tender.winnerCompany||'-')}</td>
+          <td style="text-align:right; font-weight:800; color:var(--dz-primary);">${formatMoney(tender.winnerAmount||0)}</td>
+          <td style="text-align:center;"><span class="badge badge-open" style="font-size:11px;">${escapeHtml(tender.techScore||'-')}</span></td>
           <td style="text-align:center;"><span class="badge badge-submitted" style="font-size:11px;">${escapeHtml(activeBadge)}</span></td>
           <td style="text-align:center;">
-            <button class="btn btn-secondary btn-sm" style="padding:3px 8px;" onclick="openDetailModal('${t.id}')" title="${escapeHtml(viewTitle)}"><i class="fas fa-eye"></i></button>
+            <button class="btn btn-secondary btn-sm" style="padding:3px 8px;" onclick="openDetailModal('${tender.id}')" title="${escapeHtml(viewTitle)}"><i class="fas fa-eye"></i></button>
           </td>
         `;
         tbody.appendChild(tr);
@@ -1887,8 +1890,8 @@
     }
 
     function importTenderToERP(tenderId){
-      const t = allDzTenders.find(x => x.id === tenderId);
-      if(!t) return;
+      const tender = allDzTenders.find(x => x.id === tenderId);
+      if(!tender) return;
 
       const storageKey = getErpStorageKey();
       let erpTenders = [];
@@ -1899,22 +1902,22 @@
       if(!Array.isArray(erpTenders)) erpTenders = [];
 
       // Check if already in ERP
-      const exists = erpTenders.some(item => String(item.reference || '').trim() === String(t.reference || '').trim());
+      const exists = erpTenders.some(item => String(item.reference || '').trim() === String(tender.reference || '').trim());
       if(exists){
-        showToast(t('alreadyImported'), 'info');
+        showToast(i18n('alreadyImported'), 'info');
         return;
       }
 
       // Build ERP Tender Object adhering to Decree 15-247
       const newErpTender = {
         id: Date.now(),
-        reference: t.reference || ('AO/' + new Date().getFullYear() + '/' + Date.now().toString().slice(-3)),
-        title: t.title || 'صفقة عمومية',
-        authority: t.authority || 'الجهة المتعاقدة',
-        deadline: t.deadline || new Date(Date.now() + 15 * 86400000).toISOString().slice(0, 10),
-        amount: Number(t.estimatedAmount || 0),
+        reference: tender.reference || ('AO/' + new Date().getFullYear() + '/' + Date.now().toString().slice(-3)),
+        title: tender.title || 'صفقة عمومية',
+        authority: tender.authority || 'الجهة المتعاقدة',
+        deadline: tender.deadline || new Date(Date.now() + 15 * 86400000).toISOString().slice(0, 10),
+        amount: Number(tender.estimatedAmount || 0),
         status: 'Open', // 'Draft'
-        notes: `[مستوردة من تندر الجزائر - Tender DZ]\nالمصدر: ${t.source || 'BOMOP'}\nالولاية: ${t.wilayaName}\nالقطاع: ${t.sector}\nثمن دفتر الشروط: ${t.priceCahier || 0} دج\nكفالة التعهد: ${t.caution || '1%'}\nشروط التأهيل: ${t.qualification || 'حسب دفتر الشروط'}\nمكان الإيداع: ${t.depositPlace || ''}`,
+        notes: `[مستوردة من تندر الجزائر - Tender DZ]\nالمصدر: ${tender.source || 'BOMOP'}\nالولاية: ${tender.wilayaName}\nالقطاع: ${tender.sector}\nثمن دفتر الشروط: ${tender.priceCahier || 0} دج\nكفالة التعهد: ${tender.caution || '1%'}\nشروط التأهيل: ${tender.qualification || 'حسب دفتر الشروط'}\nمكان الإيداع: ${tender.depositPlace || ''}`,
         checklist: [
           { text: 'Déclaration de candidature (تصريح بالترشح)', done: false, category: 'ملف الترشح' },
           { text: 'Déclaration de probité (تصريح بالنزاهة)', done: false, category: 'ملف الترشح' },
@@ -1932,20 +1935,20 @@
             id: 'CAUT-' + Date.now(),
             type: 'soumission',
             bank: 'BNA',
-            amount: t.estimatedAmount ? Math.round(t.estimatedAmount * 0.01) : 150000,
+            amount: tender.estimatedAmount ? Math.round(tender.estimatedAmount * 0.01) : 150000,
             percent: 1.0,
-            expiryDate: t.deadline,
+            expiryDate: tender.deadline,
             status: 'Active',
             notes: 'كفالة تعهد بالعرض مستخرجة آلياً من إعلان المناقصة'
           }
         ],
-        bpuItems: (t.lots && t.lots.length) ? t.lots.map((lot, idx) => ({
+        bpuItems: (tender.lots && tender.lots.length) ? tender.lots.map((lot, idx) => ({
           designation: lot,
           unit: 'forfait',
           qty: 1,
-          costHT: t.estimatedAmount ? Math.round((t.estimatedAmount / 1.18) / t.lots.length) : 500000,
+          costHT: tender.estimatedAmount ? Math.round((tender.estimatedAmount / 1.18) / tender.lots.length) : 500000,
           margin: 18,
-          unitPriceHT: t.estimatedAmount ? Math.round(t.estimatedAmount / t.lots.length) : 590000
+          unitPriceHT: tender.estimatedAmount ? Math.round(tender.estimatedAmount / tender.lots.length) : 590000
         })) : [],
         createdAt: new Date().toISOString()
       };
@@ -1962,10 +1965,10 @@
       }
 
       const importMsg = (getLang() === 'ar')
-        ? `تم بنجاح استيراد المناقصة (${t.reference}) إلى مسار صفقات الـ ERP!`
+        ? `تم بنجاح استيراد المناقصة (${tender.reference}) إلى مسار صفقات الـ ERP!`
         : (getLang() === 'fr'
-            ? `Marché (${t.reference}) importé avec succès dans le pipeline ERP !`
-            : `Tender (${t.reference}) successfully imported into ERP Pipeline!`);
+            ? `Marché (${tender.reference}) importé avec succès dans le pipeline ERP !`
+            : `Tender (${tender.reference}) successfully imported into ERP Pipeline!`);
       showToast(importMsg, 'success');
       filterAndRenderTenders();
       updatePortalKPIs();
@@ -1979,10 +1982,10 @@
       const idx = favoriteIds.indexOf(tenderId);
       if(idx === -1){
         favoriteIds.push(tenderId);
-        showToast(t('favAdded'), 'success');
+        showToast(i18n('favAdded'), 'success');
       } else {
         favoriteIds.splice(idx, 1);
-        showToast(t('favRemoved'), 'info');
+        showToast(i18n('favRemoved'), 'info');
       }
       saveFavorites();
       updatePortalKPIs();
@@ -2017,29 +2020,29 @@
     // ── TENDER DETAIL MODAL ──
     // ═════════════════════════════════════════════════════════════════
     function openDetailModal(tenderId){
-      const t = allDzTenders.find(x => x.id === tenderId);
-      if(!t) return;
-      currentModalTender = t;
+      const tender = allDzTenders.find(x => x.id === tenderId);
+      if(!tender) return;
+      currentModalTender = tender;
       const lang = getLang();
       const isAr = lang === 'ar';
       const isFr = lang === 'fr';
 
-      document.getElementById('detailModalTitle').textContent = (t.reference || 'AO') + ' — ' + (t.title || t('detailModalDefaultTitle'));
+      document.getElementById('detailModalTitle').textContent = (tender.reference || 'AO') + ' — ' + (tender.title || i18n('detailModalDefaultTitle'));
 
       const body = document.getElementById('detailModalBody');
       const now = new Date();
       let diffDays = '-';
-      if(t.deadline){
-        const d = new Date(t.deadline);
+      if(tender.deadline){
+        const d = new Date(tender.deadline);
         const diff = Math.ceil((d - now) / (1000*60*60*24));
         if(diff < 0) {
-          diffDays = t('expired');
+          diffDays = i18n('expired');
         } else if(diff === 0) {
-          diffDays = t('todayLastDay');
+          diffDays = i18n('todayLastDay');
         } else if(diff === 1) {
-          diffDays = t('oneDayLeft');
+          diffDays = i18n('oneDayLeft');
         } else {
-          diffDays = diff + ' ' + t('daysLeft');
+          diffDays = diff + ' ' + i18n('daysLeft');
         }
       }
 
@@ -2055,69 +2058,69 @@
             ? "Le cahier des charges est retiré et les offres déposées au siège de l'organisme contractant mentionné ci-dessus avant l'expiration du délai à 12h00."
             : 'Tender specs collection and bid submission take place at the above contracting authority address before deadline at 12:00 PM.');
 
-      const noticeTypeName = getNoticeTypeLabel(t.type) || t.typeName || (isAr ? 'إعلان عن طلب عروض' : "Avis d'appel d'offres");
+      const noticeTypeName = getNoticeTypeLabel(tender.type) || tender.typeName || (isAr ? 'إعلان عن طلب عروض' : "Avis d'appel d'offres");
 
       body.innerHTML = `
         <div class="official-notice-sheet">
           <div class="notice-header-official">
-            <h3>${escapeHtml(t('officialRepublic'))}</h3>
-            <div style="font-size:13px; font-weight:700; margin-top:4px;">${escapeHtml(t.authority)}</div>
+            <h3>${escapeHtml(i18n('officialRepublic'))}</h3>
+            <div style="font-size:13px; font-weight:700; margin-top:4px;">${escapeHtml(tender.authority)}</div>
             <h2>${escapeHtml(noticeTypeName)}</h2>
-            <div style="font-size:13px; font-weight:800; color:var(--dz-primary); margin-top:6px;">${escapeHtml(t('noticeRefLabel'))}: ${escapeHtml(t.reference || 'AO')}</div>
+            <div style="font-size:13px; font-weight:800; color:var(--dz-primary); margin-top:6px;">${escapeHtml(i18n('noticeRefLabel'))}: ${escapeHtml(tender.reference || 'AO')}</div>
           </div>
 
           <p style="margin-bottom:14px; text-align:justify;">
             ${isAr 
-              ? `تعلن <strong>${escapeHtml(t.authority)}</strong> عن إطلاق <strong>${escapeHtml(noticeTypeName)}</strong> المتعلق بـ:`
+              ? `تعلن <strong>${escapeHtml(tender.authority)}</strong> عن إطلاق <strong>${escapeHtml(noticeTypeName)}</strong> المتعلق بـ:`
               : (isFr 
-                  ? `<strong>${escapeHtml(t.authority)}</strong> lance un avis de <strong>${escapeHtml(noticeTypeName)}</strong> portant sur :`
-                  : `<strong>${escapeHtml(t.authority)}</strong> announces the launch of a <strong>${escapeHtml(noticeTypeName)}</strong> regarding:`)
+                  ? `<strong>${escapeHtml(tender.authority)}</strong> lance un avis de <strong>${escapeHtml(noticeTypeName)}</strong> portant sur :`
+                  : `<strong>${escapeHtml(tender.authority)}</strong> announces the launch of a <strong>${escapeHtml(noticeTypeName)}</strong> regarding:`)
             }
           </p>
 
           <div class="notice-title-box">
-            ${escapeHtml(t.title)}
+            ${escapeHtml(tender.title)}
           </div>
 
-          ${(t.lots && t.lots.length) ? `
+          ${(tender.lots && tender.lots.length) ? `
             <div style="margin-bottom:14px;">
-              <strong>${escapeHtml(t('lotsDetailLabel'))}</strong>
+              <strong>${escapeHtml(i18n('lotsDetailLabel'))}</strong>
               <ul style="margin-top:6px; padding-${isAr ? 'right' : 'left'}:24px; line-height:1.8;">
-                ${t.lots.map(lot => `<li>${escapeHtml(lot)}</li>`).join('')}
+                ${tender.lots.map(lot => `<li>${escapeHtml(lot)}</li>`).join('')}
               </ul>
             </div>
           ` : ''}
 
           <div class="notice-specs-grid">
-            <div>• <strong>${escapeHtml(t('wilayaLabel'))}</strong> ${escapeHtml(getWilayaLabel(t.wilaya, t.wilayaName))}</div>
-            <div>• <strong>${escapeHtml(t('sectorLabel'))}</strong> ${escapeHtml(getSectorLabel(t.sector))}</div>
-            <div>• <strong>${escapeHtml(t('specs'))}</strong> <span style="font-weight:800; color:var(--dz-primary);">${t.priceCahier > 0 ? formatMoney(t.priceCahier) : escapeHtml(t('free'))}</span></div>
-            <div>• <strong>${escapeHtml(t('caution'))}</strong> <strong>${escapeHtml(t.caution || '1%')}</strong></div>
-            <div>• <strong>${escapeHtml(t('deadline'))}</strong> <span style="font-weight:800; color:#ef4444;">${escapeHtml(t.deadline || '-')} (${escapeHtml(diffDays)})</span></div>
-            <div>• <strong>${escapeHtml(t('sourceLabel'))}</strong> ${escapeHtml(t.source || 'BOMOP')}</div>
+            <div>• <strong>${escapeHtml(i18n('wilayaLabel'))}</strong> ${escapeHtml(getWilayaLabel(tender.wilaya, tender.wilayaName))}</div>
+            <div>• <strong>${escapeHtml(i18n('sectorLabel'))}</strong> ${escapeHtml(getSectorLabel(tender.sector))}</div>
+            <div>• <strong>${escapeHtml(i18n('specs'))}</strong> <span style="font-weight:800; color:var(--dz-primary);">${tender.priceCahier > 0 ? formatMoney(tender.priceCahier) : escapeHtml(i18n('free'))}</span></div>
+            <div>• <strong>${escapeHtml(i18n('caution'))}</strong> <strong>${escapeHtml(tender.caution || '1%')}</strong></div>
+            <div>• <strong>${escapeHtml(i18n('deadline'))}</strong> <span style="font-weight:800; color:#ef4444;">${escapeHtml(tender.deadline || '-')} (${escapeHtml(diffDays)})</span></div>
+            <div>• <strong>${escapeHtml(i18n('sourceLabel'))}</strong> ${escapeHtml(tender.source || 'BOMOP')}</div>
           </div>
 
           <div style="margin-bottom:14px;">
-            <strong>${escapeHtml(t('qualificationLabel'))}</strong>
-            <p style="margin-top:4px; opacity:0.9;">${escapeHtml(t.qualification || defaultQual)}</p>
+            <strong>${escapeHtml(i18n('qualificationLabel'))}</strong>
+            <p style="margin-top:4px; opacity:0.9;">${escapeHtml(tender.qualification || defaultQual)}</p>
           </div>
 
           <div style="margin-bottom:14px;">
-            <strong>${escapeHtml(t('depositPlaceLabel'))}</strong>
-            <p style="margin-top:4px; opacity:0.9;">${escapeHtml(t.depositPlace || defaultDeposit)}</p>
+            <strong>${escapeHtml(i18n('depositPlaceLabel'))}</strong>
+            <p style="margin-top:4px; opacity:0.9;">${escapeHtml(tender.depositPlace || defaultDeposit)}</p>
           </div>
 
           <div style="border-top:1px dashed var(--dz-border, #cbd5e1); padding-top:10px; font-size:12px; color:#64748b; display:flex; justify-content:space-between;">
-            <span>${escapeHtml(t('publishedOnLabel'))} ${escapeHtml(t.publishDate || '2026-10-25')}</span>
-            <span>${escapeHtml(t('portalBrand'))}</span>
+            <span>${escapeHtml(i18n('publishedOnLabel'))} ${escapeHtml(tender.publishDate || '2026-10-25')}</span>
+            <span>${escapeHtml(i18n('portalBrand'))}</span>
           </div>
         </div>
       `;
 
       const btnImport = document.getElementById('btnDetailImport');
       if(btnImport){
-        const isImp = isImportedToErp(t);
-        btnImport.innerHTML = `<i class="fas ${isImp ? 'fa-check' : 'fa-tasks'}"></i> <span>${escapeHtml(isImp ? t('importedBtn') : t('importBtn'))}</span>`;
+        const isImp = isImportedToErp(tender);
+        btnImport.innerHTML = `<i class="fas ${isImp ? 'fa-check' : 'fa-tasks'}"></i> <span>${escapeHtml(isImp ? i18n('importedBtn') : i18n('importBtn'))}</span>`;
       }
 
       openModal('tenderDetailModal');
@@ -2192,7 +2195,7 @@
       const title = document.getElementById('pubTitle').value.trim();
       const authority = document.getElementById('pubAuthority').value.trim();
       if(!title || !authority){
-        showToast(t('fillRequired'), 'error');
+        showToast(i18n('fillRequired'), 'error');
         return;
       }
 
@@ -2225,7 +2228,7 @@
       updatePortalKPIs();
       filterAndRenderTenders();
       closePublishModal();
-      showToast(t('publishSuccess'), 'success');
+      showToast(i18n('publishSuccess'), 'success');
     }
     window.saveCustomTender = saveCustomTender;
 
@@ -2236,7 +2239,7 @@
         if(icon) icon.classList.remove('fa-spin');
         filterAndRenderTenders();
         updatePortalKPIs();
-        showToast(t('feedRefreshed'), 'success');
+        showToast(i18n('feedRefreshed'), 'success');
       }, 500);
     }
     window.refreshTendersFeed = refreshTendersFeed;
