@@ -340,6 +340,282 @@
       border-color: #e11d48;
     }
 
+    /* Feed Toolbar & Pagination Controls */
+    .dz-feed-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 18px;
+      padding: 12px 18px;
+      background: white;
+      border: 1px solid var(--dz-card-border);
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+    .feed-stats-badge {
+      font-size: 13px;
+      font-weight: 700;
+      color: #334155;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .feed-stats-badge .badge-count {
+      background: #e0f2fe;
+      color: #0369a1;
+      padding: 2px 8px;
+      border-radius: 8px;
+      font-weight: 800;
+    }
+    .feed-toolbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .btn-toolbar-fold {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      color: #475569;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .btn-toolbar-fold:hover {
+      background: #f1f5f9;
+      color: var(--dz-primary);
+      border-color: var(--dz-primary);
+    }
+    .page-size-selector {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: #64748b;
+      font-weight: 600;
+    }
+    .page-size-select {
+      padding: 5px 10px;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+      font-size: 12px;
+      font-weight: 700;
+      color: #1e293b;
+      background: white;
+      outline: none;
+      cursor: pointer;
+    }
+
+    /* Collapsible / Accordion Cards */
+    .tender-card {
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .tender-card.is-collapsed {
+      padding: 14px 18px;
+      gap: 0;
+    }
+    .tender-card.is-collapsed .card-collapsible-body {
+      display: none;
+    }
+    .card-compact-summary {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 10px;
+      margin-top: 8px;
+      border-top: 1px dashed #e2e8f0;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .summary-metrics {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 12px;
+      color: #64748b;
+      flex-wrap: wrap;
+    }
+    .summary-metric-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .summary-metric-item strong {
+      color: #1e293b;
+      font-weight: 700;
+    }
+    .btn-toggle-fold {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      color: #15803d;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s;
+    }
+    .btn-toggle-fold:hover {
+      background: #dcfce7;
+      transform: translateY(-1px);
+    }
+    .tender-card:not(.is-collapsed) .btn-toggle-fold {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+      color: #475569;
+    }
+
+    .card-collapsible-body {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid #f1f5f9;
+    }
+
+    /* Lots & Deposit Location */
+    .card-lots-box {
+      margin: 10px 0;
+      padding: 8px 12px;
+      background: #f8fafc;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+    }
+    .card-lots-title {
+      font-size: 11px;
+      font-weight: 800;
+      color: #475569;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .card-lots-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      font-size: 11px;
+      color: #334155;
+    }
+    .card-lots-list li {
+      padding: 2px 0;
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+    }
+    .card-lots-list li i {
+      color: var(--dz-primary);
+      margin-top: 3px;
+      font-size: 9px;
+    }
+    .card-deposit-box {
+      margin: 8px 0 12px 0;
+      font-size: 11px;
+      color: #64748b;
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      line-height: 1.4;
+    }
+    .card-deposit-box i {
+      color: #0284c7;
+      margin-top: 2px;
+    }
+
+    /* Feed Pagination Bar */
+    .dz-pagination-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 24px;
+      padding: 14px 18px;
+      background: white;
+      border: 1px solid var(--dz-card-border);
+      border-radius: 14px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+    }
+    .pagination-info {
+      font-size: 13px;
+      color: #64748b;
+      font-weight: 600;
+    }
+    .pagination-pages {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+    .page-btn {
+      min-width: 36px;
+      height: 36px;
+      padding: 0 10px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      background: white;
+      color: #334155;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .page-btn:hover:not(:disabled) {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+      color: var(--dz-primary);
+    }
+    .page-btn.active {
+      background: var(--dz-primary);
+      border-color: var(--dz-primary);
+      color: white;
+      box-shadow: 0 2px 6px rgba(6, 95, 70, 0.25);
+    }
+    .page-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .page-ellipsis {
+      padding: 0 4px;
+      color: #94a3b8;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    /* Dark Mode Overrides */
+    [data-theme="dark"] .dz-feed-toolbar,
+    [data-theme="dark"] .dz-pagination-bar,
+    [data-theme="dark"] .page-size-select,
+    [data-theme="dark"] .page-btn:not(.active),
+    [data-theme="dark"] .btn-toolbar-fold {
+      background-color: var(--dz-card-bg) !important;
+      color: var(--dz-text) !important;
+      border-color: var(--dz-card-border) !important;
+    }
+    [data-theme="dark"] .card-lots-box {
+      background-color: #0f172a !important;
+      border-color: #334155 !important;
+    }
+    [data-theme="dark"] .card-lots-title,
+    [data-theme="dark"] .card-lots-list li {
+      color: #cbd5e1 !important;
+    }
+    [data-theme="dark"] .summary-metric-item strong {
+      color: #f1f5f9 !important;
+    }
+
     /* Tender Cards Grid */
     .tender-cards-grid {
       display: grid;
@@ -1418,7 +1694,34 @@
 
     <!-- Active Tab: All Tenders Feed -->
     <div id="tabContentFeed">
+      <!-- Feed Controls Toolbar -->
+      <div id="dzFeedToolbar" class="dz-feed-toolbar">
+        <div class="feed-stats-badge" id="dzFeedStats">
+          <i class="fas fa-th-list text-primary"></i>
+          <span><span data-ar="عرض الصفقات من" data-fr="Affichage">عرض الصفقات من</span> <strong id="feedStartNum">1</strong> <span data-ar="إلى" data-fr="à">إلى</span> <strong id="feedEndNum">12</strong> <span data-ar="من إجمالي" data-fr="sur un total de">من إجمالي</span> <strong id="feedTotalNum" class="badge-count">151</strong></span>
+        </div>
+        <div class="feed-toolbar-actions">
+          <button type="button" class="btn-toolbar-fold" onclick="collapseAllCards()"><i class="fas fa-compress-arrows-alt"></i> <span data-ar="طي الكل" data-fr="Tout replier">طي الكل</span></button>
+          <button type="button" class="btn-toolbar-fold" onclick="expandAllCards()"><i class="fas fa-expand-arrows-alt"></i> <span data-ar="توسيع الكل" data-fr="Tout déplier">توسيع الكل</span></button>
+          <div class="page-size-selector">
+            <span data-ar="في الصفحة:" data-fr="Par page :">في الصفحة:</span>
+            <select id="feedPageSizeSelect" class="page-size-select" onchange="changeFeedPageSize(this.value)">
+              <option value="12" selected>12</option>
+              <option value="24">24</option>
+              <option value="36">36</option>
+              <option value="48">48</option>
+              <option value="all">الكل</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
       <div id="dzTendersGrid" class="tender-cards-grid">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <!-- Feed Pagination Bar -->
+      <div id="dzPaginationContainer" class="dz-pagination-bar" style="display:none;">
         <!-- Rendered dynamically -->
       </div>
     </div>
@@ -8152,7 +8455,7 @@
     }
     window.setQuickChip = setQuickChip;
 
-    function filterAndRenderTenders(){
+    function filterAndRenderTenders(resetPage = true){
       const searchTxt = String(document.getElementById('dzSearchText')?.value || '').toLowerCase().trim();
       const wilaya = document.getElementById('dzFilterWilaya')?.value;
       const sector = document.getElementById('dzFilterSector')?.value;
@@ -8213,9 +8516,211 @@
         });
       }
 
-      renderTenderCards(list);
+      lastFilteredList = list;
+      if(resetPage) currentFeedPage = 1;
+      paginateAndRender();
     }
     window.filterAndRenderTenders = filterAndRenderTenders;
+
+    // ═════════════════════════════════════════════════════════════════
+    // ── FEED PAGINATION & ACCORDION (FOLDING) ENGINE ──
+    // ═════════════════════════════════════════════════════════════════
+    let currentFeedPage = 1;
+    let feedPageSize = 12;
+    let lastFilteredList = [];
+    let expandedCardIds = new Set();
+    let defaultCardsCollapsed = true; // Folded by default as requested
+
+    function toggleCardFold(tenderId){
+      const card = document.getElementById('tender-card-' + tenderId);
+      if(!card) return;
+      const isCurrentlyCollapsed = card.classList.contains('is-collapsed');
+      if(isCurrentlyCollapsed){
+        card.classList.remove('is-collapsed');
+        expandedCardIds.add(tenderId);
+        updateCardFoldButton(tenderId, false);
+      } else {
+        card.classList.add('is-collapsed');
+        expandedCardIds.delete(tenderId);
+        updateCardFoldButton(tenderId, true);
+      }
+    }
+    window.toggleCardFold = toggleCardFold;
+
+    function updateCardFoldButton(tenderId, isCollapsed){
+      const btn = document.getElementById('btn-fold-' + tenderId);
+      if(!btn) return;
+      const isAr = getLang() === 'ar';
+      if(isCollapsed){
+        btn.innerHTML = `<i class="fas fa-chevron-down"></i> <span>${isAr ? 'عرض التفاصيل' : 'Détails'}</span>`;
+        btn.title = isAr ? 'عرض تفاصيل الصفقة' : 'Afficher les détails';
+      } else {
+        btn.innerHTML = `<i class="fas fa-chevron-up"></i> <span>${isAr ? 'طي' : 'Replier'}</span>`;
+        btn.title = isAr ? 'طي بطاقة الصفقة' : 'Replier la fiche';
+      }
+    }
+
+    function collapseAllCards(){
+      expandedCardIds.clear();
+      defaultCardsCollapsed = true;
+      document.querySelectorAll('.tender-card').forEach(card => {
+        card.classList.add('is-collapsed');
+        const tenderId = card.getAttribute('data-tender-id');
+        if(tenderId) updateCardFoldButton(tenderId, true);
+      });
+      showToast(getLang() === 'ar' ? 'تم طي كل بطاقات الصفقات' : 'Toutes les fiches sont repliées', 'info');
+    }
+    window.collapseAllCards = collapseAllCards;
+
+    function expandAllCards(){
+      defaultCardsCollapsed = false;
+      document.querySelectorAll('.tender-card').forEach(card => {
+        card.classList.remove('is-collapsed');
+        const tenderId = card.getAttribute('data-tender-id');
+        if(tenderId) {
+          expandedCardIds.add(tenderId);
+          updateCardFoldButton(tenderId, false);
+        }
+      });
+      showToast(getLang() === 'ar' ? 'تم فتح وتوسيع كل بطاقات الصفقات' : 'Toutes les fiches sont dépliées', 'info');
+    }
+    window.expandAllCards = expandAllCards;
+
+    function changeFeedPageSize(val){
+      feedPageSize = val === 'all' ? 'all' : parseInt(val, 10);
+      currentFeedPage = 1;
+      paginateAndRender();
+    }
+    window.changeFeedPageSize = changeFeedPageSize;
+
+    function goToFeedPage(pageNum){
+      const total = lastFilteredList.length;
+      const totalPages = feedPageSize === 'all' ? 1 : Math.ceil(total / feedPageSize);
+      if(pageNum < 1 || pageNum > totalPages) return;
+      currentFeedPage = pageNum;
+      paginateAndRender();
+
+      // Smooth scroll back to feed toolbar
+      const targetEl = document.getElementById('dzFeedToolbar') || document.getElementById('dzTendersGrid');
+      if(targetEl){
+        targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+    window.goToFeedPage = goToFeedPage;
+
+    function paginateAndRender(){
+      const total = lastFilteredList.length;
+      const totalPages = feedPageSize === 'all' ? 1 : Math.max(1, Math.ceil(total / feedPageSize));
+
+      if(currentFeedPage > totalPages && totalPages > 0) currentFeedPage = 1;
+
+      let pageItems = [];
+      let startIdx = 0;
+      let endIdx = total;
+
+      if(feedPageSize === 'all'){
+        pageItems = lastFilteredList;
+        startIdx = total > 0 ? 1 : 0;
+        endIdx = total;
+      } else {
+        const from = (currentFeedPage - 1) * feedPageSize;
+        const to = Math.min(from + feedPageSize, total);
+        pageItems = lastFilteredList.slice(from, to);
+        startIdx = total > 0 ? from + 1 : 0;
+        endIdx = to;
+      }
+
+      // Update toolbar stats
+      updateFeedToolbarStats(startIdx, endIdx, total);
+
+      // Render cards for current page
+      renderTenderCards(pageItems);
+
+      // Render pagination bar
+      renderPaginationControls(totalPages, total);
+    }
+    window.paginateAndRender = paginateAndRender;
+
+    function updateFeedToolbarStats(startIdx, endIdx, total){
+      const isAr = getLang() === 'ar';
+      const statsEl = document.getElementById('dzFeedStats');
+      if(!statsEl) return;
+      if(total === 0){
+        statsEl.innerHTML = `<i class="fas fa-search-minus text-muted"></i> <span>${isAr ? 'لم يتم العثور على أي صفقات تطابق معايير البحث' : 'Aucune annonce trouvée'}</span>`;
+        return;
+      }
+      statsEl.innerHTML = `
+        <i class="fas fa-th-list text-primary"></i>
+        <span>${isAr 
+          ? `عرض الصفقات من <strong style="color:var(--dz-primary);">${startIdx}</strong> إلى <strong style="color:var(--dz-primary);">${endIdx}</strong> من إجمالي <strong class="badge-count">${total}</strong> صفقة مطابقة` 
+          : `Affichage ${startIdx}-${endIdx} sur un total de <strong class="badge-count">${total}</strong> avis`}</span>
+      `;
+    }
+
+    function renderPaginationControls(totalPages, total){
+      const container = document.getElementById('dzPaginationContainer');
+      if(!container) return;
+      if(totalPages <= 1 || total === 0){
+        container.style.display = 'none';
+        return;
+      }
+      container.style.display = 'flex';
+
+      const isAr = getLang() === 'ar';
+      const prevLabel = isAr ? '<i class="fas fa-chevron-right"></i> السابق' : '<i class="fas fa-chevron-left"></i> Précédent';
+      const nextLabel = isAr ? 'التالي <i class="fas fa-chevron-left"></i>' : 'Suivant <i class="fas fa-chevron-right"></i>';
+
+      let pagesHtml = `
+        <div class="pagination-info">
+          <span>${isAr ? `الصفحة ${currentFeedPage} من ${totalPages}` : `Page ${currentFeedPage} sur ${totalPages}`}</span>
+        </div>
+        <div class="pagination-pages">
+          <button type="button" class="page-btn" onclick="goToFeedPage(${currentFeedPage - 1})" ${currentFeedPage <= 1 ? 'disabled' : ''}>
+            ${prevLabel}
+          </button>
+      `;
+
+      // Smart page window (max 7 numbers)
+      const maxButtons = 7;
+      let startP = 1;
+      let endP = totalPages;
+
+      if(totalPages > maxButtons){
+        if(currentFeedPage <= 4){
+          startP = 1;
+          endP = 5;
+        } else if(currentFeedPage >= totalPages - 3){
+          startP = totalPages - 4;
+          endP = totalPages;
+        } else {
+          startP = currentFeedPage - 2;
+          endP = currentFeedPage + 2;
+        }
+      }
+
+      if(startP > 1){
+        pagesHtml += `<button type="button" class="page-btn ${currentFeedPage === 1 ? 'active' : ''}" onclick="goToFeedPage(1)">1</button>`;
+        if(startP > 2) pagesHtml += `<span class="page-ellipsis">...</span>`;
+      }
+
+      for(let p = startP; p <= endP; p++){
+        pagesHtml += `<button type="button" class="page-btn ${p === currentFeedPage ? 'active' : ''}" onclick="goToFeedPage(${p})">${p}</button>`;
+      }
+
+      if(endP < totalPages){
+        if(endP < totalPages - 1) pagesHtml += `<span class="page-ellipsis">...</span>`;
+        pagesHtml += `<button type="button" class="page-btn ${currentFeedPage === totalPages ? 'active' : ''}" onclick="goToFeedPage(${totalPages})">${totalPages}</button>`;
+      }
+
+      pagesHtml += `
+          <button type="button" class="page-btn" onclick="goToFeedPage(${currentFeedPage + 1})" ${currentFeedPage >= totalPages ? 'disabled' : ''}>
+            ${nextLabel}
+          </button>
+        </div>
+      `;
+
+      container.innerHTML = pagesHtml;
+    }
 
     function renderTenderCards(list){
       const container = document.getElementById('dzTendersGrid');
@@ -8224,21 +8729,27 @@
 
       if(!list.length){
         container.innerHTML = `
-          <div class="empty-state">
-            <i class="fas fa-search-minus"></i>
+          <div class="empty-state" style="grid-column: 1 / -1; padding: 40px 20px; text-align: center; background: white; border-radius: 14px; border: 1px dashed #cbd5e1;">
+            <i class="fas fa-search-minus" style="font-size: 38px; color: #94a3b8; margin-bottom: 12px;"></i>
             <h3 style="font-size:16px; font-weight:800; color:#334155; margin-bottom:6px;">لم يتم العثور على مناقصات مطابقة</h3>
-            <p style="font-size:13px; color:#64748b;">جرب تغيير خيارات التصفية أو البحث عن قطاع أو ولاية أخرى.</p>
+            <p style="font-size:13px; color:#64748b;">جرب تغيير خيارات التصفية أو اختيار ولايات أو قطاعات أخرى.</p>
           </div>
         `;
         return;
       }
 
       const now = new Date();
+      const isAr = getLang() === 'ar';
 
       list.forEach(tender => {
         const isFav = favoriteIds.includes(tender.id);
+        const isExpanded = expandedCardIds.has(tender.id) || !defaultCardsCollapsed;
+        const isCollapsed = !isExpanded;
+
         const card = document.createElement('div');
-        card.className = 'tender-card';
+        card.className = 'tender-card' + (isCollapsed ? ' is-collapsed' : '');
+        card.id = 'tender-card-' + tender.id;
+        card.setAttribute('data-tender-id', tender.id);
 
         // Urgency countdown localized
         let countdownBadge = '';
@@ -8263,16 +8774,57 @@
         // Icon for authority
         let authIcon = 'fa-building';
         if(tender.sector === 'IT') authIcon = 'fa-network-wired';
-        else if(tender.sector === 'Medical') authIcon = 'fa-hospital-user';
-        else if(tender.sector === 'Energy') authIcon = 'fa-gas-pump';
+        else if(tender.sector === 'MEDICAL' || tender.sector === 'Medical') authIcon = 'fa-hospital-user';
+        else if(tender.sector === 'SERVICES') authIcon = 'fa-concierge-bell';
+        else if(tender.sector === 'TRANSPORT') authIcon = 'fa-bus';
+        else if(tender.sector === 'CONSULTING') authIcon = 'fa-drafting-compass';
+        else if(tender.sector === 'SUPPLIES') authIcon = 'fa-boxes';
         else if(tender.sector === 'BTPH') authIcon = 'fa-hard-hat';
 
         const localizedSector = getSectorLabel(tender.sector);
         const localizedWilaya = getWilayaLabel(tender.wilaya, tender.wilayaName);
         const imported = isImportedToErp(tender);
 
+        // Budget format
+        const budgetFormatted = tender.estimatedAmount ? formatMoney(tender.estimatedAmount) : (isAr ? 'غير مصرح' : 'Non précisé');
+
+        // Lots HTML
+        let lotsHtml = '';
+        if(tender.lots && Array.isArray(tender.lots) && tender.lots.length > 0){
+          lotsHtml = `
+            <div class="card-lots-box">
+              <div class="card-lots-title"><i class="fas fa-layer-group"></i> <span>${isAr ? 'الحصص والمقاطع:' : 'Lots et tranches :'}</span></div>
+              <ul class="card-lots-list">
+                ${tender.lots.map(lot => `<li><i class="fas fa-check-circle"></i> <span>${escapeHtml(lot)}</span></li>`).join('')}
+              </ul>
+            </div>
+          `;
+        }
+
+        // Qualification HTML
+        let qualHtml = '';
+        if(tender.qualification){
+          qualHtml = `
+            <div class="spec-qualification" style="margin-top:6px; font-size:11px; color:#475569; background:#fffbeb; border:1px solid #fef3c7; border-radius:6px; padding:6px 8px;">
+              <i class="fas fa-certificate text-warning"></i> <strong>${escapeHtml(i18n('qualification') || 'التأهيل')}:</strong> ${escapeHtml(tender.qualification)}
+            </div>
+          `;
+        }
+
+        // Deposit location HTML
+        let depositHtml = '';
+        if(tender.depositPlace){
+          depositHtml = `
+            <div class="card-deposit-box">
+              <i class="fas fa-map-marked-alt"></i>
+              <span><strong>${isAr ? 'مكان إيداع العروض:' : 'Lieu de dépôt :'}</strong> ${escapeHtml(tender.depositPlace)}</span>
+            </div>
+          `;
+        }
+
         card.innerHTML = `
-          <div>
+          <!-- CARD HEADER & META (Always visible) -->
+          <div class="card-header-section">
             <div class="card-top-meta">
               <div class="card-authority">
                 <div class="auth-logo-badge"><i class="fas ${authIcon}"></i></div>
@@ -8289,13 +8841,30 @@
             <div class="card-badges">
               <span class="dz-tag dz-tag-wilaya"><i class="fas fa-map-marker-alt"></i> ${escapeHtml(localizedWilaya)}</span>
               <span class="dz-tag dz-tag-sector">${escapeHtml(localizedSector)}</span>
+              ${tender.typeName ? `<span class="dz-tag dz-tag-type">${escapeHtml(tender.typeName)}</span>` : ''}
               ${countdownBadge}
             </div>
 
-            <div class="tender-card-title" onclick="openDetailModal('${tender.id}')" title="${escapeHtml(tender.title)}">
+            <div class="tender-card-title" onclick="toggleCardFold('${tender.id}')" title="${escapeHtml(tender.title)}">
               ${escapeHtml(tender.title)}
             </div>
 
+            <!-- COMPACT SUMMARY BAR (Fold/Unfold trigger) -->
+            <div class="card-compact-summary">
+              <div class="summary-metrics">
+                <span class="summary-metric-item"><i class="fas fa-hashtag text-muted"></i> <strong>${escapeHtml(tender.reference || 'AO')}</strong></span>
+                <span class="summary-metric-item"><i class="fas fa-coins text-warning"></i> <strong>${budgetFormatted}</strong></span>
+                <span class="summary-metric-item" style="color:#ef4444;"><i class="fas fa-calendar-alt"></i> <strong>${escapeHtml(tender.deadline || '-')}</strong></span>
+              </div>
+              <button id="btn-fold-${tender.id}" class="btn-toggle-fold" type="button" onclick="toggleCardFold('${tender.id}')">
+                <i class="fas ${isCollapsed ? 'fa-chevron-down' : 'fa-chevron-up'}"></i>
+                <span>${isCollapsed ? (isAr ? 'عرض التفاصيل' : 'Détails') : (isAr ? 'طي' : 'Replier')}</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- COLLAPSIBLE BODY (Accordion details) -->
+          <div class="card-collapsible-body" id="card-body-${tender.id}">
             <div class="tender-card-specs">
               <div class="spec-item">
                 <span class="spec-label">${escapeHtml(i18n('ref'))}</span>
@@ -8314,18 +8883,23 @@
                 <span class="spec-val" style="color:#ef4444; font-weight:700;">${escapeHtml(tender.deadline || '-')}</span>
               </div>
             </div>
-          </div>
 
-          <div class="tender-card-footer">
-            <button class="btn-view-dossier" type="button" onclick="openDetailModal('${tender.id}')">
-              <i class="fas fa-eye"></i> <span>${escapeHtml(i18n('viewNotice'))}</span>
-            </button>
-            <button class="btn-import-pipeline ${imported ? 'imported' : ''}" type="button" onclick="importTenderToERP('${tender.id}')">
-              <i class="fas ${imported ? 'fa-check-circle' : 'fa-plus-circle'}"></i>
-              <span>${escapeHtml(imported ? i18n('importedBtn') : i18n('importBtn'))}</span>
-            </button>
+            ${qualHtml}
+            ${lotsHtml}
+            ${depositHtml}
+
+            <div class="tender-card-footer">
+              <button class="btn-view-dossier" type="button" onclick="openDetailModal('${tender.id}')">
+                <i class="fas fa-folder-open"></i> <span>${escapeHtml(i18n('viewNotice'))}</span>
+              </button>
+              <button class="btn-import-pipeline ${imported ? 'imported' : ''}" type="button" onclick="importTenderToERP('${tender.id}')">
+                <i class="fas ${imported ? 'fa-check-circle' : 'fa-plus-circle'}"></i>
+                <span>${escapeHtml(imported ? i18n('importedBtn') : i18n('importBtn'))}</span>
+              </button>
+            </div>
           </div>
         `;
+
         container.appendChild(card);
       });
     }
