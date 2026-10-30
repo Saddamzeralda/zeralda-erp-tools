@@ -15,8 +15,15 @@
         <img src="logo.png" alt="Company Logo" class="logo-image" id="mainLogo"
              onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
         <i class="fas fa-building" style="display:none;"></i>
-        <div class="logo-brand">
+        <div class="logo-brand" style="display:flex; flex-direction:column; justify-content:center; line-height:1.2;">
           <span id="app-title">Zeralda ERP Tool</span>
+          <div class="header-license-badge" id="headerLicenseBadge"
+               style="display:inline-flex; align-items:center; gap:4px; margin-top:2px; font-size:10px; font-weight:600; color:#10b981; white-space:nowrap; cursor:pointer; opacity:0.95; transition:opacity 0.2s;"
+               title="صلاحية ومدة ترخيص النظام"
+               onclick="window.location.href='license.html'">
+            <i class="fas fa-infinity" id="headerLicenseIcon" style="font-size:9px;"></i>
+            <span id="headerLicenseDurationText">Licence : Développeur (Illimitée)</span>
+          </div>
         </div>
       </div>
     </div>
@@ -83,24 +90,6 @@
                 style="color:#38bdf8;">
           <i class="fas fa-network-wired" aria-hidden="true"></i>
         </button>
-        <button id="headerFullscreenBtn" class="header-fullscreen-btn" type="button"
-                onclick="toggleHeaderFullscreen()"
-                data-en-title="Fullscreen (F11)"
-                data-ar-title="ملء الشاشة (F11)"
-                data-fr-title="Plein ecran (F11)"
-                title="Fullscreen (F11)"
-                aria-label="Fullscreen (F11)">
-          <span class="header-fullscreen-shortcut" aria-hidden="true">F11</span>
-          <i class="fas fa-expand" aria-hidden="true"></i>
-        </button>
-        <!-- ── مدة الترخيص (License Duration Badge) ── -->
-        <div class="header-license-badge" id="headerLicenseBadge"
-             style="display:inline-flex; align-items:center; gap:6px; padding:3px 10px; border-radius:18px; font-size:11px; font-weight:600; background:rgba(16,185,129,0.12); color:#059669; border:1px solid rgba(16,185,129,0.28); white-space:nowrap; cursor:pointer; transition:all 0.2s ease;"
-             title="صلاحية ومدة ترخيص النظام"
-             onclick="window.location.href='license.html'">
-          <i class="fas fa-shield-alt" id="headerLicenseIcon" style="font-size:11px;"></i>
-          <span id="headerLicenseDurationText">مدة الترخيص: دائم</span>
-        </div>
         <div class="user-info" id="layoutUserInfo">
           <div class="user-avatar" id="layoutUserAvatar">US</div>
           <div>

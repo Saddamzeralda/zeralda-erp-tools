@@ -143,6 +143,26 @@ body {
     white-space: normal;
 }
 
+.logo-brand .header-license-badge {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px !important;
+    font-weight: 600;
+    color: #10b981;
+    line-height: 1.2;
+    margin-top: 2px;
+    cursor: pointer;
+    text-decoration: none;
+    opacity: 0.95;
+    transition: opacity 0.2s ease;
+}
+
+.logo-brand .header-license-badge:hover {
+    opacity: 1;
+    text-decoration: underline;
+}
+
 .shell-developer-credit-link {
     color: inherit;
     text-decoration: none;

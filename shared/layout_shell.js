@@ -438,23 +438,7 @@
 
   function initHeaderFullscreenButton() {
     var btn = document.getElementById('headerFullscreenBtn');
-    if (!btn) return;
-
-    updateFullscreenButtonState();
-    btn.style.display = 'inline-flex';
-
-    document.addEventListener('fullscreenchange', updateFullscreenButtonState);
-    document.addEventListener('webkitfullscreenchange', updateFullscreenButtonState);
-    document.addEventListener('msfullscreenchange', updateFullscreenButtonState);
-
-    // Intercept F11 keypress: use our Fullscreen API toggle instead of browser native,
-    // so the button and F11 key behave identically.
-    window.addEventListener('keydown', function (ev) {
-      if (ev && ev.key === 'F11') {
-        ev.preventDefault();
-        toggleHeaderFullscreen();
-      }
-    });
+    if (btn) btn.remove();
   }
   window.initHeaderFullscreenButton = initHeaderFullscreenButton;
 
@@ -521,18 +505,18 @@
                  (typeof localStorage !== 'undefined' ? localStorage.getItem('preferred-language') : null) || 'ar';
       lang = String(lang).toLowerCase();
 
+      badge.style.background = 'transparent';
+      badge.style.border = 'none';
+      badge.style.padding = '0';
+      badge.style.fontSize = '10px';
+      badge.style.fontWeight = '600';
+
       // Developer Account -> Permanent & never expires
       if (isDev || (statusData && statusData.isDeveloper)) {
-        badge.style.background = 'rgba(16, 185, 129, 0.15)';
-        badge.style.color = '#059669';
-        badge.style.border = '1px solid rgba(16, 185, 129, 0.35)';
+        badge.style.color = '#10b981';
         if (iconEl) iconEl.className = 'fas fa-infinity';
-        textEl.textContent = lang === 'fr'
-          ? 'Licence : Développeur (Illimitée)'
-          : (lang === 'en' ? 'License: Developer (Lifetime)' : 'مدة الترخيص: دائم (حساب المطور)');
-        badge.title = lang === 'fr'
-          ? 'Compte développeur — Validité permanente et illimitée'
-          : (lang === 'en' ? 'Developer Account — Lifetime validity, never expires' : 'حساب المطور — صلاحية دائمة وغير منتهية مدى الحياة');
+        textEl.textContent = 'Licence : Développeur (Illimitée)';
+        badge.title = 'Compte développeur — Validité permanente et illimitée';
         return;
       }
 
@@ -542,41 +526,31 @@
 
       if (st === 'active') {
         if (!expAt || expAt === 0) {
-          badge.style.background = 'rgba(16, 185, 129, 0.12)';
-          badge.style.color = '#059669';
-          badge.style.border = '1px solid rgba(16, 185, 129, 0.28)';
+          badge.style.color = '#10b981';
           if (iconEl) iconEl.className = 'fas fa-shield-alt';
-          textEl.textContent = lang === 'fr' ? 'Licence : Illimitée (Permanente)' : (lang === 'en' ? 'License: Lifetime' : 'مدة الترخيص: دائم (غير منتهي)');
+          textEl.textContent = lang === 'fr' ? 'Licence : Illimitée (Permanente)' : (lang === 'en' ? 'License: Lifetime' : 'Licence : Développeur (Illimitée)');
         } else {
           var expDate = new Date(expAt * 1000);
           var dateStr = expDate.toISOString().split('T')[0];
-          badge.style.background = 'rgba(2, 132, 199, 0.12)';
           badge.style.color = '#0284c7';
-          badge.style.border = '1px solid rgba(2, 132, 199, 0.28)';
           if (iconEl) iconEl.className = 'fas fa-calendar-check';
           textEl.textContent = lang === 'fr' 
             ? 'Licence : ' + daysLeft + 'j restants (' + dateStr + ')'
             : (lang === 'en' ? 'License: ' + daysLeft + 'd left (' + dateStr + ')' : 'مدة الترخيص: متبقي ' + daysLeft + ' يوم (' + dateStr + ')');
         }
       } else if (st === 'trial') {
-        badge.style.background = 'rgba(217, 119, 6, 0.15)';
         badge.style.color = '#d97706';
-        badge.style.border = '1px solid rgba(217, 119, 6, 0.35)';
         if (iconEl) iconEl.className = 'fas fa-hourglass-half';
         textEl.textContent = lang === 'fr'
           ? 'Essai : ' + daysLeft + ' jours restants'
           : (lang === 'en' ? 'Trial: ' + daysLeft + ' days left' : 'مدة الترخيص: تجريبي (متبقي ' + daysLeft + ' يوم)');
       } else if (st === 'grace') {
-        badge.style.background = 'rgba(234, 88, 12, 0.15)';
         badge.style.color = '#ea580c';
-        badge.style.border = '1px solid rgba(234, 88, 12, 0.35)';
         if (iconEl) iconEl.className = 'fas fa-exclamation-triangle';
         var hrs = (statusData && statusData.graceHoursLeft) || 0;
         textEl.textContent = lang === 'fr' ? 'Grâce (' + hrs + 'h)' : (lang === 'en' ? 'Grace (' + hrs + 'h)' : 'فترة سماح (متبقي ' + hrs + ' ساعة)');
       } else {
-        badge.style.background = 'rgba(220, 38, 38, 0.15)';
         badge.style.color = '#dc2626';
-        badge.style.border = '1px solid rgba(220, 38, 38, 0.35)';
         if (iconEl) iconEl.className = 'fas fa-ban';
         textEl.textContent = lang === 'fr' ? 'Licence : Expirée' : (lang === 'en' ? 'License: Expired' : 'الترخيص: منتهي الصلاحية');
       }
@@ -793,7 +767,7 @@
     }
 
     var fsBtn = document.getElementById('headerFullscreenBtn');
-    if (fsBtn) fsBtn.style.display = 'inline-flex';
+    if (fsBtn) fsBtn.remove();
 
     // Direction change affects geometry.
     applyLayoutGeometry();
@@ -810,7 +784,7 @@
 
   /* ── Load Shared Layout via fetch ────────────────────── */
   // Cache the layout HTML in sessionStorage (tab-local only; never pollute server kv_store).
-  var _layoutCacheVersion = '20261027_v3';
+  var _layoutCacheVersion = '20261030_v4';
   var _cachedLayoutHTML = null;
   try {
     // Purge legacy server-synced layout shell key from ZS so stale menu links never return
