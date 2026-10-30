@@ -147,14 +147,28 @@
   }
 
   /* ── Toggle Sidebar (Mobile: slide in/out) ────────────── */
-  function toggleSidebar() {
+  function toggleSidebar(e) {
+    if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
     var sb = document.getElementById('sidebar');
+    var bd = document.getElementById('sidebarBackdrop');
     if (!sb) return;
     var isNowOpen = !sb.classList.contains('active');
-    sb.classList.toggle('active');
+    sb.classList.toggle('active', isNowOpen);
     document.body.classList.toggle('sidebar-open', isNowOpen);
+    if (bd) {
+      bd.classList.toggle('active', isNowOpen);
+    }
   }
   window.toggleSidebar = toggleSidebar;
+
+  window.handleSidebarToggle = function (e) {
+    if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+    if (window.innerWidth <= 768) {
+      toggleSidebar(e);
+    } else {
+      toggleSidebarCollapse();
+    }
+  };
 
   /* Close sidebar when user taps the overlay backdrop on mobile */
   document.addEventListener('click', function (e) {
@@ -673,6 +687,20 @@
   window.updateDateTime = updateDateTime;
 
   /* ── Set Active Menu Item ────────────────────────────── */
+  function applyActiveMobileNav(pageFile) {
+    if (!pageFile) return;
+    var items = document.querySelectorAll('.mobile-bottom-nav .mobile-nav-item');
+    for (var i = 0; i < items.length; i++) {
+      var p = items[i].getAttribute('data-page') || '';
+      var href = items[i].getAttribute('href') || '';
+      if ((p && pageFile.indexOf(p) !== -1) || (href && href.indexOf(pageFile) !== -1)) {
+        items[i].classList.add('active');
+      } else {
+        items[i].classList.remove('active');
+      }
+    }
+  }
+
   function applyActiveMenu(pageFile) {
     if (!pageFile) return;
     var items = document.querySelectorAll('.sidebar .menu-item');
@@ -684,6 +712,7 @@
         items[i].classList.remove('active');
       }
     }
+    applyActiveMobileNav(pageFile);
   }
 
   /* ── Force Western digits on number inputs ───────────────
@@ -852,6 +881,22 @@
         applyLayoutGeometry();
         updateDateTime();
         setInterval(updateDateTime, 1000);
+
+        // Auto-close mobile drawer on link click
+        try {
+          var menuLinks = document.querySelectorAll('.sidebar .menu-item');
+          menuLinks.forEach(function(link) {
+            link.addEventListener('click', function() {
+              if (window.innerWidth <= 768) {
+                var sb = document.getElementById('sidebar');
+                var bd = document.getElementById('sidebarBackdrop');
+                if (sb) sb.classList.remove('active');
+                if (bd) bd.classList.remove('active');
+                document.body.classList.remove('sidebar-open');
+              }
+            });
+          });
+        } catch (_) {}
 
         // Notify other scripts that the shared layout is ready
         document.dispatchEvent(new CustomEvent('sharedLayoutLoaded'));

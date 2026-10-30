@@ -3,14 +3,14 @@
   <!-- ROW 1: logo / controls -->
   <div class="header-top">
     <div class="header-left">
-      <button class="sidebar-toggle-btn" onclick="toggleSidebarCollapse()"
+      <button class="sidebar-toggle-btn mobile-menu-btn" id="headerSidebarToggleBtn" type="button"
+              onclick="window.handleSidebarToggle && window.handleSidebarToggle(event)"
               data-en-title="Toggle Sidebar"
               data-ar-title="تبديل القائمة الجانبية"
               data-fr-title="Basculer le menu latéral"
-              title="Toggle Sidebar" aria-label="Toggle sidebar visibility">
+              title="القائمة" aria-label="Toggle sidebar visibility">
         <i class="fas fa-bars" id="sidebarToggleIcon"></i>
       </button>
-      <i class="fas fa-bars mobile-menu-btn" onclick="toggleSidebar()" style="display:none;"></i>
       <div class="logo">
         <img src="logo.png" alt="Company Logo" class="logo-image" id="mainLogo"
              onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
@@ -121,6 +121,15 @@
 
 
 <div class="sidebar" id="sidebar">
+  <div class="sidebar-mobile-header" id="sidebarMobileHeader">
+    <div class="sidebar-mobile-title">
+      <i class="fas fa-cubes"></i>
+      <span data-en="ERP Menu" data-ar="قائمة النظام" data-fr="Menu ERP">قائمة النظام</span>
+    </div>
+    <button class="sidebar-mobile-close-btn" type="button" onclick="window.toggleSidebar && window.toggleSidebar(event)" aria-label="إغلاق القائمة">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
   <div class="menu">
     <a class="menu-item" href="zeralda_erp_dashboard.html">
       <i class="fas fa-home" aria-hidden="true"></i>
@@ -186,3 +195,33 @@
     </div>
   </div>
 </div>
+
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="window.toggleSidebar && window.toggleSidebar(event)"></div>
+
+<!-- Zeralda ERP — Mobile Bottom Navigation Bar (شريط التنقل السريع للهاتف) -->
+<nav class="mobile-bottom-nav" id="mobileBottomNav" aria-label="التنقل السريع للهاتف">
+  <a class="mobile-nav-item" id="mobNavDashboard" href="zeralda_erp_dashboard.html" data-page="zeralda_erp_dashboard.html">
+    <div class="mob-icon-wrap"><i class="fas fa-home"></i></div>
+    <span class="mob-nav-label" data-en="Home" data-ar="الرئيسية" data-fr="Accueil">الرئيسية</span>
+  </a>
+  <a class="mobile-nav-item" id="mobNavSales" href="modules/sales/sales_management.html" data-page="sales_management.html">
+    <div class="mob-icon-wrap"><i class="fas fa-shopping-cart"></i></div>
+    <span class="mob-nav-label" data-en="Sales" data-ar="المبيعات" data-fr="Ventes">المبيعات</span>
+  </a>
+  <a class="mobile-nav-item" id="mobNavInventory" href="modules/inventory/inventory_management.html" data-page="inventory_management.html">
+    <div class="mob-icon-wrap"><i class="fas fa-boxes"></i></div>
+    <span class="mob-nav-label" data-en="Stock" data-ar="المخزون" data-fr="Stock">المخزون</span>
+  </a>
+  <a class="mobile-nav-item" id="mobNavTenders" href="modules/consulting/consulting_tenders_management.html" data-page="consulting_tenders_management.html">
+    <div class="mob-icon-wrap"><i class="fas fa-file-signature"></i></div>
+    <span class="mob-nav-label" data-en="Tenders" data-ar="المناقصات" data-fr="Marchés">المناقصات</span>
+  </a>
+  <a class="mobile-nav-item" id="mobNavPortal" href="modules/consulting/tender_dz_portal.html" data-page="tender_dz_portal.html">
+    <div class="mob-icon-wrap"><i class="fas fa-bullhorn"></i></div>
+    <span class="mob-nav-label" data-en="Tender DZ" data-ar="تندر الجزائر" data-fr="Tender DZ">تندر الجزائر</span>
+  </a>
+  <button class="mobile-nav-item mobile-nav-btn" id="mobNavMenuBtn" type="button" onclick="window.toggleSidebar && window.toggleSidebar(event)">
+    <div class="mob-icon-wrap"><i class="fas fa-th-large"></i></div>
+    <span class="mob-nav-label" data-en="Menu" data-ar="القائمة" data-fr="Menu">القائمة</span>
+  </button>
+</nav>

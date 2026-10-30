@@ -5106,3 +5106,336 @@ body.rtl .ai-archive-item:hover { transform: translateX(-3px); }
 .ai-archive-item-title { color: #1e293b !important; }
 .ai-archive-item-meta { color: #94a3b8 !important; }
 
+
+/* ==============================================================================
+ * Zeralda ERP — Mobile Responsive & Dynamic Experience v2026-10-30
+ * ============================================================================== */
+
+/* Mobile Bottom Navigation Bar */
+.mobile-bottom-nav {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(226, 232, 240, 0.9);
+    z-index: 99999;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+    justify-content: space-around;
+    align-items: center;
+    padding: 3px 6px calc(3px + env(safe-area-inset-bottom, 0px)) 6px;
+    direction: rtl;
+    user-select: none;
+}
+
+[data-theme="dark"] .mobile-bottom-nav,
+body.dark-mode .mobile-bottom-nav {
+    background: rgba(15, 23, 42, 0.95);
+    border-top-color: #334155;
+    box-shadow: 0 -4px 25px rgba(0, 0, 0, 0.4);
+}
+
+.mobile-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    color: #64748b;
+    text-decoration: none;
+    font-size: 10px;
+    font-weight: 700;
+    flex: 1;
+    height: 100%;
+    border: none;
+    background: none;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    border-radius: 10px;
+    padding: 4px 2px;
+}
+
+.mobile-nav-item:active {
+    transform: scale(0.92);
+}
+
+.mobile-nav-item .mob-icon-wrap {
+    width: 28px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: all 0.2s;
+    border-radius: 12px;
+}
+
+.mobile-nav-item .mob-nav-label {
+    line-height: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 58px;
+}
+
+.mobile-nav-item.active {
+    color: #2563eb;
+}
+
+.mobile-nav-item.active .mob-icon-wrap {
+    background: #eff6ff;
+    color: #2563eb;
+    transform: translateY(-2px);
+}
+
+[data-theme="dark"] .mobile-nav-item {
+    color: #94a3b8;
+}
+
+[data-theme="dark"] .mobile-nav-item.active {
+    color: #38bdf8;
+}
+
+[data-theme="dark"] .mobile-nav-item.active .mob-icon-wrap {
+    background: rgba(56, 189, 248, 0.18);
+    color: #38bdf8;
+}
+
+/* Sidebar Backdrop on Mobile */
+.sidebar-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 9998;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+}
+
+body.sidebar-open .sidebar-backdrop,
+.sidebar-backdrop.active {
+    display: block;
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Mobile Sidebar Header with Close Button */
+.sidebar-mobile-header {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid #e2e8f0;
+    background: #f8fafc;
+}
+
+[data-theme="dark"] .sidebar-mobile-header,
+body.dark-mode .sidebar-mobile-header {
+    background: #0f172a;
+    border-bottom-color: #334155;
+}
+
+.sidebar-mobile-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 800;
+    font-size: 14px;
+    color: #0f172a;
+}
+
+[data-theme="dark"] .sidebar-mobile-title {
+    color: #f8fafc;
+}
+
+.sidebar-mobile-close-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: none;
+    background: #e2e8f0;
+    color: #475569;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+[data-theme="dark"] .sidebar-mobile-close-btn {
+    background: #334155;
+    color: #cbd5e1;
+}
+
+@media (max-width: 768px) {
+    .mobile-bottom-nav {
+        display: flex !important;
+    }
+    .sidebar-mobile-header {
+        display: flex !important;
+    }
+    body {
+        padding-bottom: calc(65px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+    body > .main-content {
+        padding-bottom: calc(75px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+    
+    /* Header optimization on mobile */
+    body > .header {
+        height: auto !important;
+        min-height: 52px !important;
+    }
+    body > .header .header-top {
+        padding: 6px 10px !important;
+        gap: 6px !important;
+    }
+    body > .header .sidebar-toggle-btn,
+    body > .header .mobile-menu-btn {
+        display: inline-flex !important;
+        width: 34px !important;
+        height: 34px !important;
+        border-radius: 8px !important;
+        background: rgba(255, 255, 255, 0.2) !important;
+        color: #ffffff !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 16px !important;
+        border: none !important;
+    }
+    body > .header #headerNotificationsBtn,
+    body > .header #headerThemeToggleBtn {
+        display: inline-flex !important;
+        width: 34px !important;
+        height: 34px !important;
+        border-radius: 8px !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 14px !important;
+    }
+    body > .header .logo-brand #app-title {
+        font-size: 15px !important;
+    }
+    body > .header #headerAnalogClock,
+    body > .header .datetime-display {
+        display: none !important;
+    }
+    body > .header .header-middle {
+        display: none !important;
+    }
+
+    /* Notification dropdown centered on mobile screen */
+    .header-notif-dropdown {
+        position: fixed !important;
+        top: 56px !important;
+        left: 10px !important;
+        right: 10px !important;
+        width: calc(100vw - 20px) !important;
+        max-width: calc(100vw - 20px) !important;
+        max-height: calc(100vh - 120px) !important;
+    }
+
+    /* Sidebar as clean full-height off-canvas drawer */
+    .sidebar {
+        position: fixed !important;
+        top: 0 !important;
+        bottom: 0 !important;
+        height: 100vh !important;
+        width: 290px !important;
+        max-width: 85vw !important;
+        z-index: 99999 !important;
+        box-shadow: 0 0 40px rgba(0, 0, 0, 0.35) !important;
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+    .sidebar .menu {
+        flex: 1 !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    /* Universal Data Tables responsive horizontal scroll */
+    table,
+    .table-container,
+    .data-table,
+    .erp-table {
+        max-width: 100% !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+    
+    /* Input touch optimization — prevents iOS 16px zoom */
+    input[type="text"],
+    input[type="number"],
+    input[type="search"],
+    input[type="email"],
+    input[type="password"],
+    input[type="date"],
+    select,
+    textarea {
+        font-size: 16px !important;
+        min-height: 40px !important;
+    }
+
+    /* Action bar buttons wrapping cleanly */
+    .action-bar,
+    .page-actions,
+    .btn-group {
+        flex-wrap: wrap !important;
+        gap: 6px !important;
+    }
+    .action-bar .btn,
+    .page-actions .btn {
+        flex: 1 1 auto !important;
+        min-width: 110px !important;
+        justify-content: center !important;
+    }
+
+    /* Modals become responsive bottom sheets or centered full cards */
+    .modal-content,
+    .modal-dialog,
+    .swal2-popup {
+        width: calc(100vw - 20px) !important;
+        max-width: calc(100vw - 20px) !important;
+        margin: 10px auto !important;
+        border-radius: 16px !important;
+        max-height: calc(100vh - 40px) !important;
+        overflow-y: auto !important;
+    }
+
+    /* Form grids to single column */
+    .form-grid,
+    .form-grid-2,
+    .form-grid-3,
+    .form-grid-4,
+    .modal-form-grid {
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
+    }
+
+    /* Stats grids on mobile */
+    .stats-grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+    }
+}
+
+@media (max-width: 380px) {
+    .stats-grid {
+        grid-template-columns: 1fr !important;
+    }
+    .mobile-nav-item .mob-nav-label {
+        font-size: 9px !important;
+        max-width: 48px !important;
+    }
+}
