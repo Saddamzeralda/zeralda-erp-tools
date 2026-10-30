@@ -645,6 +645,106 @@
       font-size: 13px;
     }
 
+        /* Sources Directory Grid */
+    .sources-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 16px;
+      margin-top: 18px;
+    }
+    .source-card {
+      background: white;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+      transition: all 0.25s ease;
+    }
+    .source-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 22px rgba(37,99,235,0.09);
+      border-color: var(--dz-primary);
+    }
+    .source-card-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .source-icon-box {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+      background: #eff6ff;
+      color: #2563eb;
+      border: 1px solid #bfdbfe;
+    }
+    .source-info h4 {
+      font-size: 14.5px;
+      font-weight: 800;
+      color: #0f172a;
+      line-height: 1.35;
+      margin-bottom: 4px;
+    }
+    .source-badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: #e2e8f0;
+      color: #334155;
+    }
+    .source-badge.primary { background: #dbeafe; color: #1e40af; }
+    .source-badge.amber { background: #fef3c7; color: #b45309; }
+    .source-badge.emerald { background: #d1fae5; color: #047857; }
+    .source-badge.purple { background: #f3e8ff; color: #6b21a8; }
+    .source-badge.sky { background: #e0f2fe; color: #0369a1; }
+    .source-meta-row {
+      font-size: 12px;
+      color: #64748b;
+      margin-bottom: 6px;
+      line-height: 1.5;
+    }
+    .source-meta-row strong {
+      color: #334155;
+    }
+    .source-card-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px dashed #e2e8f0;
+      flex-wrap: wrap;
+    }
+
+    [data-theme="dark"] .source-card,
+    body.dark-mode .source-card {
+      background: #1e293b !important;
+      border-color: #334155 !important;
+      color: #f8fafc !important;
+    }
+    [data-theme="dark"] .source-info h4,
+    body.dark-mode .source-info h4 {
+      color: #f8fafc !important;
+    }
+    [data-theme="dark"] .source-card-actions,
+    body.dark-mode .source-card-actions {
+      border-top-color: #334155 !important;
+    }
+    [data-theme="dark"] .source-meta-row strong,
+    body.dark-mode .source-meta-row strong {
+      color: #cbd5e1 !important;
+    }
+
     /* Attribution Table */
     .attribution-table {
       width: 100%;
@@ -906,6 +1006,10 @@
         <i class="fas fa-star" style="color:#f59e0b;"></i> <span data-en="My Favorites" data-ar="مفضلاتي" data-fr="Mes Favoris">مفضلاتي</span>
         <span class="portal-tab-badge" id="tabBadgeFav">0</span>
       </button>
+      <button class="portal-tab-btn" type="button" data-tab="sources" onclick="switchPortalTab('sources')">
+        <i class="fas fa-satellite-dish" style="color:#38bdf8;"></i> <span data-en="Procurement Sources & Portals" data-ar="مصادر وبوابات الصفقات الرسمية" data-fr="Sources & Portails Officiels">مصادر وبوابات الصفقات الرسمية</span>
+        <span class="portal-tab-badge" id="tabBadgeSources" style="background:#0284c7; color:#fff;">11</span>
+      </button>
     </div>
 
     <!-- Search & Multi-Filter Console -->
@@ -940,6 +1044,20 @@
           <option value="prorogation">تمديد الآجال (Prorogation)</option>
           <option value="concours">مسابقة هندسة معمارية (Concours)</option>
         </select>
+        <select id="dzFilterSource" class="filter-select" onchange="filterAndRenderTenders()">
+          <option value="">جميع المصادر (BOMOP, BAOSEM, بوابات...)</option>
+          <option value="BOMOP">BOMOP - النشرة الرسمية للصفقات</option>
+          <option value="BAOSEM">BAOSEM - قطاع الطاقة والمناجم</option>
+          <option value="GovPortal">بوابة الصفقات العمومية (marches-publics.gov.dz)</option>
+          <option value="TelecomPost">اتصالات الجزائر وموبيليس</option>
+          <option value="Sonelgaz">مجمع سونلغاز للطاقة</option>
+          <option value="Press">الصحافة الوطنية المعتمدة</option>
+          <option value="Cosider">مجمع كوسيدار للبناء والأشغال</option>
+          <option value="AirAlgerie">الخطوط الجوية الجزائرية</option>
+          <option value="AlgeriePoste">بريد الجزائر</option>
+          <option value="LocalAPC">إعلانات البلديات والولايات</option>
+          <option value="International">هيئات التمويل الدولية (BAD / PNUD)</option>
+        </select>
       </div>
 
       <!-- Quick Filter Chips -->
@@ -953,6 +1071,12 @@
         <span class="chip-item" data-chip="wilaya-16" onclick="setQuickChip('wilaya-16')"><i class="fas fa-map-pin"></i> <span data-ar="16 - الجزائر العاصمة" data-fr="16 - Alger" data-en="16 - Algiers">16 - الجزائر العاصمة</span></span>
         <span class="chip-item" data-chip="wilaya-31" onclick="setQuickChip('wilaya-31')"><i class="fas fa-map-pin"></i> <span data-ar="31 - وهران" data-fr="31 - Oran" data-en="31 - Oran">31 - وهران</span></span>
         <span class="chip-item" data-chip="wilaya-25" onclick="setQuickChip('wilaya-25')"><i class="fas fa-map-pin"></i> <span data-ar="25 - قسنطينة" data-fr="25 - Constantine" data-en="25 - Constantine">25 - قسنطينة</span></span>
+        <span class="chip-item" data-chip="source-BOMOP" onclick="setQuickChip('source-BOMOP')"><i class="fas fa-book-open"></i> <span data-ar="BOMOP" data-fr="BOMOP" data-en="BOMOP">BOMOP</span></span>
+        <span class="chip-item" data-chip="source-BAOSEM" onclick="setQuickChip('source-BAOSEM')"><i class="fas fa-fire"></i> <span data-ar="BAOSEM (طاقة)" data-fr="BAOSEM (Énergie)" data-en="BAOSEM (Energy)">BAOSEM (طاقة)</span></span>
+        <span class="chip-item" data-chip="source-GovPortal" onclick="setQuickChip('source-GovPortal')"><i class="fas fa-landmark"></i> <span data-ar="البوابة الرسمية" data-fr="Portail Officiel" data-en="Gov Portal">البوابة الرسمية</span></span>
+        <span class="chip-item" data-chip="source-Press" onclick="setQuickChip('source-Press')"><i class="fas fa-newspaper"></i> <span data-ar="الصحف الوطنية" data-fr="Presse Nationale" data-en="National Press">الصحف الوطنية</span></span>
+        <span class="chip-item" data-chip="source-TelecomPost" onclick="setQuickChip('source-TelecomPost')"><i class="fas fa-network-wired"></i> <span data-ar="اتصالات الجزائر" data-fr="Algérie Télécom" data-en="Telecom">اتصالات الجزائر</span></span>
+        <span class="chip-item" data-chip="source-Sonelgaz" onclick="setQuickChip('source-Sonelgaz')"><i class="fas fa-bolt"></i> <span data-ar="سونلغاز" data-fr="Sonelgaz" data-en="Sonelgaz">سونلغاز</span></span>
       </div>
     </div>
 
@@ -988,6 +1112,32 @@
             </thead>
             <tbody id="attributionsTableBody"></tbody>
           </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Tab: Procurement Sources Directory -->
+    <div id="tabContentSources" style="display:none;">
+      <div style="background:var(--card-bg, #fff); border-radius:14px; border:1px solid var(--dz-border, #e2e8f0); padding:24px; box-shadow:0 2px 8px rgba(0,0,0,0.03);">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
+          <div>
+            <h3 style="font-size:18px; font-weight:800; color:var(--dz-text, #0f172a); display:flex; align-items:center; gap:8px;">
+              <i class="fas fa-satellite-dish" style="color:#2563eb;"></i>
+              <span data-ar="دليل مصادر وبوابات الصفقات العمومية في الجزائر" data-fr="Annuaire des Sources & Portails de Marchés en Algérie" data-en="Directory of Algerian Public Procurement Portals & Sources">دليل مصادر وبوابات الصفقات العمومية في الجزائر</span>
+            </h3>
+            <p style="font-size:13px; color:#64748b; margin-top:4px;" data-ar="كافة القنوات الرسمية، الجرائد الوطنية المعتمدة، والبوابات الرقمية لنشر الإعلانات والمناقصات ودفاتر الشروط عبر الـ 58 ولاية." data-fr="Tous les canaux officiels, presse agréée et portails numériques diffusant les avis et cahiers des charges." data-en="All official channels, approved national press, and digital portals publishing tenders and procurement notices.">
+              كافة القنوات الرسمية، الجرائد الوطنية المعتمدة، والبوابات الرقمية لنشر الإعلانات والمناقصات ودفاتر الشروط عبر الـ 58 ولاية.
+            </p>
+          </div>
+          <div>
+            <button class="btn btn-outline-primary" type="button" onclick="switchPortalTab('all')">
+              <i class="fas fa-th-list"></i> <span data-ar="العودة لشريط المناقصات" data-fr="Retour au flux des marchés" data-en="Back to Tenders Feed">العودة لشريط المناقصات</span>
+            </button>
+          </div>
+        </div>
+
+        <div id="sourcesDirectoryGrid" class="sources-grid">
+          <!-- Rendered dynamically by renderSourcesDirectory() -->
         </div>
       </div>
     </div>
@@ -1057,6 +1207,23 @@
           <div>
             <label style="font-size:12px; font-weight:700; color:#475569;" data-ar="كفالة التعهد (Caution)" data-fr="Caution de soumission" data-en="Bid Bond Guarantee">كفالة التعهد (Caution)</label>
             <input type="text" id="pubCaution" class="search-input" style="padding:8px 12px;" placeholder="1% أو مبلغ محدد" data-ar-placeholder="1% أو مبلغ محدد" data-fr-placeholder="1% ou montant fixe" data-en-placeholder="1% or fixed amount">
+          </div>
+          <div>
+            <label style="font-size:12px; font-weight:700; color:#475569;" data-ar="مصدر النشر والإعلان" data-fr="Source de publication" data-en="Publication Source">مصدر النشر والإعلان</label>
+            <select id="pubSource" class="filter-select" style="width:100%;">
+              <option value="BOMOP">BOMOP (النشرة الرسمية لصفقات المتعامل العمومي)</option>
+              <option value="BAOSEM">BAOSEM (قطاع الطاقة والمناجم)</option>
+              <option value="marches-publics.gov.dz">بوابة الصفقات العمومية (marches-publics.gov.dz)</option>
+              <option value="الصحافة الوطنية (El Moudjahid / الشعب)">الصحافة الوطنية (El Moudjahid / الشعب)</option>
+              <option value="اتصالات الجزائر (E-Achats)">اتصالات الجزائر وموبيليس</option>
+              <option value="مجمع سونلغاز للطاقة">مجمع سونلغاز للطاقة</option>
+              <option value="مجمع كوسيدار (Cosider)">مجمع كوسيدار للبناء</option>
+              <option value="الخطوط الجوية الجزائرية">الخطوط الجوية الجزائرية</option>
+              <option value="بريد الجزائر (Algérie Poste)">بريد الجزائر</option>
+              <option value="لوحة إعلانات البلدية / الولاية">لوحة إعلانات البلدية / الولاية</option>
+              <option value="هيئات دولية (BAD / PNUD)">هيئات دولية (BAD / PNUD)</option>
+              <option value="إعلان محلي مسجل">إعلان محلي مسجل</option>
+            </select>
           </div>
           <div style="grid-column: span 2;">
             <label style="font-size:12px; font-weight:700; color:#475569;" data-ar="تفاصيل وشروط دفتر الشروط والحصص" data-fr="Détails, conditions et allotissement" data-en="Specifications Details & Lots">تفاصيل وشروط دفتر الشروط والحصص</label>
@@ -1367,6 +1534,9 @@
       // Re-render Attributions table
       renderAttributionsTable();
       filterAndRenderTenders();
+      if (typeof activePortalTab !== 'undefined' && activePortalTab === 'sources' && typeof renderSourcesDirectory === 'function') {
+        renderSourcesDirectory();
+      }
       updatePortalKPIs();
     }
     window.loadLanguage = loadLanguage;
@@ -1374,6 +1544,166 @@
     // ═════════════════════════════════════════════════════════════════
     // ── SAMPLE AUTHENTIC ALGERIAN PROCUREMENT NOTICES ──
     // ═════════════════════════════════════════════════════════════════
+        // ═════════════════════════════════════════════════════════════════
+    // ── 11 AUTHENTIC ALGERIAN PROCUREMENT SOURCES & CHANNELS ──
+    // ═════════════════════════════════════════════════════════════════
+    const ALGERIAN_PROCUREMENT_SOURCES = [
+      {
+        key: 'BOMOP',
+        nameAr: 'النشرة الرسمية لصفقات المتعامل العمومي (BOMOP)',
+        nameFr: "Bulletin Officiel des Marchés de l'Opérateur Public (BOMOP)",
+        category: 'الجريدة الرسمية للصفقات',
+        categoryBadge: 'primary',
+        publisher: 'الوكالة الوطنية للنشر والإشهار (ANEP)',
+        periodicity: 'أسبوعية (كل يوم أحد)',
+        coverage: 'كافة الوزارات، الولايات، الإدارات والمؤسسات العمومية ذات الطابع الإداري (EPA)',
+        icon: 'fa-book-open',
+        url: 'https://www.anep.com.dz',
+        portalUrlName: 'anep.com.dz/bomop',
+        tags: ['BTPH', 'دراسات', 'تجهيزات', 'استشارات']
+      },
+      {
+        key: 'BAOSEM',
+        nameAr: 'نشرة صفقات قطاع الطاقة والمناجم (BAOSEM)',
+        nameFr: "Bulletin des Appels d'Offres du Secteur de l'Énergie et des Mines",
+        category: 'المحروقات والطاقة',
+        categoryBadge: 'amber',
+        publisher: 'مجمع سوناطراك ومجمع سونلغاز',
+        periodicity: 'نصف أسبوعية (الأحد والأربعاء)',
+        coverage: 'سوناطراك، سونلغاز، نفطال، والمؤسسات الفرعية للتنقيب، التوزيع والنقل',
+        icon: 'fa-fire',
+        url: 'https://www.baosem.com',
+        portalUrlName: 'baosem.com',
+        tags: ['طاقة', 'محروقات', 'حفر', 'أمن صناعي']
+      },
+      {
+        key: 'GovPortal',
+        nameAr: 'بوابة الصفقات العمومية - وزارة المالية',
+        nameFr: 'Portail des Marchés Publics - Ministère des Finances',
+        category: 'البوابة الرقمية الحكومية',
+        categoryBadge: 'emerald',
+        publisher: 'المديرية العامة للميزانية - وزارة المالية',
+        periodicity: 'يومية / مباشرة (Online)',
+        coverage: 'المنصة الرقمية الوطنية الموحدة لكافة الصفقات، الإعلانات، ودفاتر الشروط الإلكترونية',
+        icon: 'fa-landmark',
+        url: 'https://marches-publics.gov.dz',
+        portalUrlName: 'marches-publics.gov.dz',
+        tags: ['صفقات الدولة', 'مناقصات وطنية', 'منح مؤقت', 'دفاتر الشروط']
+      },
+      {
+        key: 'TelecomPost',
+        nameAr: 'منصة مشتريات اتصالات الجزائر وموبيليس',
+        nameFr: 'Portail Achats Algérie Télécom & Mobilis',
+        category: 'تكنولوجيا واتصالات',
+        categoryBadge: 'sky',
+        publisher: 'اتصالات الجزائر (AT) & موبيليس (ATM)',
+        periodicity: 'نشر دوري مستمر',
+        coverage: 'الألياف البصرية، مراكز البيانات، تجهيزات الشبكات، الهواتف وحلول الـ IT',
+        icon: 'fa-network-wired',
+        url: 'https://www.algerietelecom.dz/fr/achats',
+        portalUrlName: 'algerietelecom.dz/achats',
+        tags: ['إعلام آلي', 'ألياف بصرية', 'اتصالات', 'خوادم']
+      },
+      {
+        key: 'Sonelgaz',
+        nameAr: 'منظومة صفقات مجمع سونلغاز (Sonelgaz E-Procurement)',
+        nameFr: 'E-Procurement Groupe Sonelgaz',
+        category: 'الكهرباء والطاقات المتجددة',
+        categoryBadge: 'amber',
+        publisher: 'الشركة الجزائرية للكهرباء والغاز (سونلغاز)',
+        periodicity: 'أسبوعية',
+        coverage: 'محطات توليد الطاقة، مشاريع 2000 ميغاواط للطاقات المتجددة، شبكات الغاز وتجهيزات التوزيع',
+        icon: 'fa-bolt',
+        url: 'https://www.sonelgaz.dz',
+        portalUrlName: 'sonelgaz.dz/appels-offres',
+        tags: ['طاقة شمسية', 'كابلات', 'محولات', 'شبكات الغاز']
+      },
+      {
+        key: 'Press',
+        nameAr: 'الصحافة الوطنية اليومية المعتمدة',
+        nameFr: 'Presse Nationale Quotidienne Agréée',
+        category: 'الجرائد اليومية',
+        categoryBadge: 'purple',
+        publisher: 'جريدة الشعب، المساء، النصر، الجمهورية، El Moudjahid، الشروق، الوطن',
+        periodicity: 'يومية صباحية',
+        coverage: 'إعلانات طلب العروض الوطنية والدولية، الاستشارات، إعلانات الإلغاء والمنح المنشورة في الجرائد',
+        icon: 'fa-newspaper',
+        url: 'https://www.elmoudjahid.dz',
+        portalUrlName: 'elmoudjahid.dz / elchaab.dz',
+        tags: ['الصحافة المكتوبة', 'استشارات', 'مشاريع ولائية', 'منح مؤقت']
+      },
+      {
+        key: 'Cosider',
+        nameAr: 'مجمع كوسيدار - بوابة الشراء والتموين',
+        nameFr: 'Groupe Cosider - Portail Achats & Partenariat',
+        category: 'بناء وأشغال كبرى',
+        categoryBadge: 'primary',
+        publisher: 'مجمع كوسيدار (Cosider BTPH / Ouvrages d Art / Canalisations)',
+        periodicity: 'دورية',
+        coverage: 'المشاريع الكبرى للسكن، السدود، الأنفاق، المترو، والمنشآت الفنية الاستراتيجية',
+        icon: 'fa-hard-hat',
+        url: 'https://www.cosider-groupe.dz',
+        portalUrlName: 'cosider-groupe.dz',
+        tags: ['BTPH', 'خرسانة', 'منشآت كبرى', 'عتاد ثقيل']
+      },
+      {
+        key: 'AirAlgerie',
+        nameAr: 'الخطوط الجوية الجزائرية - مصلحة الصفقات والمشتريات',
+        nameFr: 'Air Algérie - Direction des Approvisionnements',
+        category: 'طيران ولوجستيك',
+        categoryBadge: 'sky',
+        publisher: 'شركة الخطوط الجوية الجزائرية (AH)',
+        periodicity: 'دورية',
+        coverage: 'الإطعام الجوي (Catering)، قطع غيار الطائرات، صيانة الأساطيل، والخدمات الأرضية',
+        icon: 'fa-plane',
+        url: 'https://airalgerie.dz',
+        portalUrlName: 'airalgerie.dz/achats',
+        tags: ['طيران', 'قطع غيار', 'خدمات تموين', 'تجهيزات مطارات']
+      },
+      {
+        key: 'AlgeriePoste',
+        nameAr: 'بريد الجزائر - المناقصات والمشتريات العامة',
+        nameFr: 'Algérie Poste - Marchés Publics',
+        category: 'بريد وخدمات مالية',
+        categoryBadge: 'amber',
+        publisher: 'المؤسسة الوطنية لبريد الجزائر',
+        periodicity: 'نصف شهرية',
+        coverage: 'الموزعات الآلية للنقود (GAB)، أجهزة الدفع الإلكتروني (TPE)، وأمن المكاتب البريدية',
+        icon: 'fa-mail-bulk',
+        url: 'https://www.poste.dz',
+        portalUrlName: 'poste.dz/appels-offres',
+        tags: ['موزعات نقدية', 'أمن بريدي', 'قرطاسية', 'أنظمة مالية']
+      },
+      {
+        key: 'LocalAPC',
+        nameAr: 'إعلانات البلديات والولايات (لوحات الإشهار الإداري)',
+        nameFr: 'Affichage Administratif APC & Wilayas',
+        category: 'صفقات واستشارات محلية',
+        categoryBadge: 'emerald',
+        publisher: 'البلديات (1541 بلدية) والدوائر والولايات (58 ولاية)',
+        periodicity: 'يومية مستمرة',
+        coverage: 'الإطعام المدرسي، النقل المدرسي، صيانة المدارس والإنارة العمومية، وتهيئة الأحياء الحضرية والريفية',
+        icon: 'fa-city',
+        url: '#',
+        portalUrlName: 'مقرات البلديات والولايات المحلية',
+        tags: ['استشارات بسيطة', 'نقل مدرسي', 'إطعام', 'إنارة عمومية']
+      },
+      {
+        key: 'International',
+        nameAr: 'المناقصات الدولية وبرامج التنمية (BAD / PNUD / Banque Mondiale)',
+        nameFr: 'Bailleurs de Fonds Internationaux & Agences ONU',
+        category: 'تمويل دولي',
+        categoryBadge: 'purple',
+        publisher: 'البنك الإفريقي للتنمية، برنامج الأمم المتحدة الإنمائي، البنك الدولي',
+        periodicity: 'شهرية',
+        coverage: 'مشاريع التنمية المستدامة، محطات تحلية مياه البحر الكبرى، دراسات الانتقال الطاقوي وتطوير الرقمنة',
+        icon: 'fa-globe',
+        url: 'https://www.undp.org/algeria/procurement',
+        portalUrlName: 'undp.org/algeria/procurement',
+        tags: ['تمويل دولي', 'تحلية مياه البحر', 'دراسات عليا', 'بيئة']
+      }
+    ];
+
     const SAMPLE_DZ_TENDERS = [
       {
         id: 'DZ-2026-001',
@@ -1549,6 +1879,153 @@
         notes: 'نظراً لطلبات المتعهدين لتمديد مهلة تحضير العينات الفنية، تقرر تمديد الأجل بـ 15 يوماً إضافية.'
       },
       {
+        id: 'DZ-2026-011',
+        reference: 'MF-DGDN-03/2026',
+        title: 'Acquisition, déploiement et infogérance d\'une infrastructure Cloud Hybride et Datacenter Sécurisé',
+        authority: 'وزارة المالية - المديرية العامة للأملاك الوطنية',
+        wilaya: '16',
+        wilayaName: 'الجزائر',
+        sector: 'IT',
+        type: 'appel_offres',
+        typeName: 'طلب عروض وطني مفتوح',
+        source: 'marches-publics.gov.dz (بوابة الصفقات العمومية لوزارة المالية)',
+        sourceKey: 'GovPortal',
+        publishDate: '2026-10-30',
+        deadline: new Date(Date.now() + 16 * 86400000).toISOString().slice(0, 10),
+        priceCahier: 12000,
+        caution: '2% من العرض المالي',
+        qualification: 'Entreprises certifiées ISO 27001 et partenaires Gold Cloud Providers',
+        estimatedAmount: 128000000,
+        lots: ['Lot 1: Serveurs lames et baies SAN haute disponibilité', 'Lot 2: Logiciels de virtualisation et orchestrateur cloud'],
+        depositPlace: 'وزارة المالية - مبنى المديريات العامة - بن عكنون - الجزائر'
+      },
+      {
+        id: 'DZ-2026-012',
+        reference: 'AH-CAT-09/2026',
+        title: 'Prestation de services de commissariat de bord (Catering aérien) et approvisionnement des vols internationaux',
+        authority: 'شركة الخطوط الجوية الجزائرية - مديرية الخدمات الجوية',
+        wilaya: '16',
+        wilayaName: 'الجزائر',
+        sector: 'Food',
+        type: 'appel_offres',
+        typeName: 'Appel d\'Offres National et International',
+        source: 'الخطوط الجوية الجزائرية (Air Algérie Achats) / El Moudjahid',
+        sourceKey: 'AirAlgerie',
+        publishDate: '2026-10-27',
+        deadline: new Date(Date.now() + 19 * 86400000).toISOString().slice(0, 10),
+        priceCahier: 15000,
+        caution: '1,500,000 DZD',
+        qualification: 'Certification HACCP et agrément vétérinaire sanitaire international',
+        estimatedAmount: 95000000,
+        lots: ['Lot 1: Repas chauds et collations vols long-courriers', 'Lot 2: Boissons et prestations Première Classe'],
+        depositPlace: 'Direction des Approvisionnements Air Algérie, Aéroport Houari Boumediene'
+      },
+      {
+        id: 'DZ-2026-013',
+        reference: 'AP-DMI-14/2026',
+        title: 'اقتناء وتركيب 250 موزعاً آلياً للنقود (GAB) وأنظمة تأمين بيومترية للمكاتب البريدية',
+        authority: 'المؤسسة الوطنية لبريد الجزائر - المديرية العامة',
+        wilaya: '16',
+        wilayaName: 'الجزائر',
+        sector: 'Security',
+        type: 'appel_offres',
+        typeName: 'طلب عروض وطني ودولي مفتوح',
+        source: 'بريد الجزائر (Algérie Poste) / BOMOP',
+        sourceKey: 'AlgeriePoste',
+        publishDate: '2026-10-29',
+        deadline: new Date(Date.now() + 23 * 86400000).toISOString().slice(0, 10),
+        priceCahier: 20000,
+        caution: '3,000,000 دج',
+        qualification: 'مصنعون أو موزعون معتمدون مع خدمة صيانة عبر كامل التراب الوطني',
+        estimatedAmount: 210000000,
+        lots: ['الحصة 1: أجهزة الصرف الآلي GAB متوافقة مع بطاقة الذهبية', 'الحصة 2: أنظمة المراقبة بالكاميرات الرقمية وغرف التحكم'],
+        depositPlace: 'بريد الجزائر - مديرية الوسائل العامة - شارع العقيد بوقرة - باب الزوار'
+      },
+      {
+        id: 'DZ-2026-014',
+        reference: 'SONELGAZ-RE-01/2026',
+        title: 'Réalisation de centrales solaires photovoltaïques (Projet 2000 MW) et raccordement au réseau de transport électrique',
+        authority: 'سونلغاز - الطاقات المتجددة (Sonelgaz Renouvelables)',
+        wilaya: '47',
+        wilayaName: 'غرداية',
+        sector: 'Energy',
+        type: 'appel_offres',
+        typeName: 'Appel d\'Offres National et International Restreint',
+        source: 'BAOSEM N° 2191 / marches-publics.gov.dz',
+        sourceKey: 'Sonelgaz',
+        publishDate: '2026-10-25',
+        deadline: new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10),
+        priceCahier: 30000,
+        caution: '5,000,000 DZD',
+        qualification: 'Constructeurs EPC spécialisés dans le solaire PV de grande puissance',
+        estimatedAmount: 480000000,
+        lots: ['Lot 1: Centrale Solaire 80 MWc Ghardaïa', 'Lot 2: Poste d\'évacuation haute tension 60/30 kV'],
+        depositPlace: 'Sonelgaz Renouvelables, Immeuble des 700 Bureaux, Gué de Constantine, Alger'
+      },
+      {
+        id: 'DZ-2026-015',
+        reference: 'AADL-DIR-29/2026',
+        title: 'أشغال استكمال التهيئة الحضرية والإنارة العمومية بالطاقة الشمسية لموقع 3000 مسكن عدل',
+        authority: 'الوكالة الوطنية لتحسين السكن وتطويره - AADL وهران',
+        wilaya: '31',
+        wilayaName: 'وهران',
+        sector: 'BTPH',
+        type: 'appel_offres',
+        typeName: 'طلب عروض وطني مفتوح',
+        source: 'جريدة الجمهورية / BOMOP',
+        sourceKey: 'Press',
+        publishDate: '2026-10-28',
+        deadline: new Date(Date.now() + 15 * 86400000).toISOString().slice(0, 10),
+        priceCahier: 5000,
+        caution: '1% من مبلغ العرض',
+        qualification: 'شهادة تأهيل مهني درجة 4 فما فوق في البناء والري',
+        estimatedAmount: 112000000,
+        lots: ['حصة فريدة: الأرصفة، المساحات الخضراء وأعمدة الإنارة الليد بالطاقة الشمسية'],
+        depositPlace: 'المديرية الجهوية لوكالة عدل - حي جمال الدين - وهران'
+      },
+      {
+        id: 'DZ-2026-016',
+        reference: 'APC-AC-CONS-04/2026',
+        title: 'استشارة لاقتناء وتوريد وجبات الإطعام المدرسي ولوازم النظافة للمدارس الابتدائية التابعة للبلدية',
+        authority: 'المجلس الشعبي البلدي لبلدية الجزائر الوسطى',
+        wilaya: '16',
+        wilayaName: 'الجزائر',
+        sector: 'Food',
+        type: 'consultation',
+        typeName: 'استشارة بسيطة',
+        source: 'لوحة إعلانات بلدية الجزائر الوسطى (Affichage APC)',
+        sourceKey: 'LocalAPC',
+        publishDate: '2026-10-30',
+        deadline: new Date(Date.now() + 5 * 86400000).toISOString().slice(0, 10),
+        priceCahier: 0,
+        caution: 'معفى',
+        qualification: 'تجار جملة أو ممونون معتمدون في المواد الغذائية العامة',
+        estimatedAmount: 18500000,
+        lots: ['الحصة 1: تموين المواد الغذائية الجافة والمشروبات', 'الحصة 2: اللحوم الطازجة والفواكه والخضر'],
+        depositPlace: 'مكتب الصفقات - بلدية الجزائر الوسطى - شارع العقيد عميروش'
+      },
+      {
+        id: 'DZ-2026-017',
+        reference: 'UNDP-DZA-RFP-02/2026',
+        title: 'Étude stratégique et assistance technique pour la transition énergétique et l\'économie circulaire des zones industrielles',
+        authority: 'برنامج الأمم المتحدة الإنمائي (PNUD Algérie) بالتعاون مع وزارة البيئة',
+        wilaya: '16',
+        wilayaName: 'الجزائر',
+        sector: 'Studies',
+        type: 'consultation',
+        typeName: 'Demande de Propositions Internationale (RFP)',
+        source: 'بوابة PNUD للمناقصات الدولية / BAD',
+        sourceKey: 'International',
+        publishDate: '2026-10-24',
+        deadline: new Date(Date.now() + 11 * 86400000).toISOString().slice(0, 10),
+        priceCahier: 0,
+        caution: 'Garantie de soumission 5,000 USD',
+        qualification: 'Cabinets d\'études et bureaux d\'ingénierie conseil accrédités par les bailleurs multilatéraux',
+        estimatedAmount: 32000000,
+        lots: ['Lot Unique: Diagnostic énergétique et plan directeur de décarbonation'],
+        depositPlace: 'Soumission électronique via le portail Quantum UNDP Algérie'
+      },
+      {
         id: 'DZ-2026-010',
         reference: 'DRE-11/OUARGLA/2026',
         title: 'مشروع حفر وتجهيز آبار ألبينية عميقة وتوصيل قنوات الري الفلاحي بمحيطات الاستصلاح',
@@ -1610,6 +2087,17 @@
       if(!allDzTenders || !allDzTenders.length){
         allDzTenders = JSON.parse(JSON.stringify(SAMPLE_DZ_TENDERS));
         saveDzTenders();
+      } else {
+        let addedNew = false;
+        SAMPLE_DZ_TENDERS.forEach(st => {
+          if (!allDzTenders.some(t => t.id === st.id)) {
+            allDzTenders.push(JSON.parse(JSON.stringify(st)));
+            addedNew = true;
+          }
+        });
+        if (addedNew) {
+          saveDzTenders();
+        }
       }
 
       // Load favorites
@@ -1644,14 +2132,22 @@
 
       const feedDiv = document.getElementById('tabContentFeed');
       const attrDiv = document.getElementById('tabContentAttributions');
+      const sourcesDiv = document.getElementById('tabContentSources');
 
       if(tab === 'attributions'){
         feedDiv.style.display = 'none';
+        if(sourcesDiv) sourcesDiv.style.display = 'none';
         attrDiv.style.display = 'block';
         renderAttributionsTable();
+      } else if(tab === 'sources'){
+        feedDiv.style.display = 'none';
+        attrDiv.style.display = 'none';
+        if(sourcesDiv) sourcesDiv.style.display = 'block';
+        renderSourcesDirectory();
       } else {
         feedDiv.style.display = 'block';
         attrDiv.style.display = 'none';
+        if(sourcesDiv) sourcesDiv.style.display = 'none';
         filterAndRenderTenders();
       }
     }
@@ -1668,10 +2164,16 @@
         document.getElementById('dzFilterSector').value = chipId.replace('sector-', '');
       } else if(chipId.startsWith('wilaya-')){
         document.getElementById('dzFilterWilaya').value = chipId.replace('wilaya-', '');
+      } else if(chipId.startsWith('source-')){
+        const srcVal = chipId.replace('source-', '');
+        const selSrc = document.getElementById('dzFilterSource');
+        if(selSrc) selSrc.value = srcVal;
       } else if(chipId === 'all'){
         document.getElementById('dzFilterSector').value = '';
         document.getElementById('dzFilterWilaya').value = '';
         document.getElementById('dzFilterNoticeType').value = '';
+        const selSrc = document.getElementById('dzFilterSource');
+        if(selSrc) selSrc.value = '';
       }
 
       filterAndRenderTenders();
@@ -1683,6 +2185,7 @@
       const wilaya = document.getElementById('dzFilterWilaya')?.value;
       const sector = document.getElementById('dzFilterSector')?.value;
       const noticeType = document.getElementById('dzFilterNoticeType')?.value;
+      const source = document.getElementById('dzFilterSource')?.value;
       const now = new Date();
 
       let list = allDzTenders.slice();
@@ -1710,6 +2213,13 @@
       if(wilaya) list = list.filter(t => t.wilaya === wilaya);
       if(sector) list = list.filter(t => t.sector === sector);
       if(noticeType) list = list.filter(t => t.type === noticeType);
+      if(source){
+        list = list.filter(t => {
+          if(t.sourceKey && t.sourceKey === source) return true;
+          const s = String(t.source || '').toLowerCase();
+          return s.includes(source.toLowerCase());
+        });
+      }
 
       // Search keyword
       if(searchTxt){
@@ -1835,6 +2345,80 @@
         container.appendChild(card);
       });
     }
+
+        // ═════════════════════════════════════════════════════════════════
+    // ── SOURCES DIRECTORY RENDERER ──
+    // ═════════════════════════════════════════════════════════════════
+    function renderSourcesDirectory(){
+      const container = document.getElementById('sourcesDirectoryGrid');
+      if(!container) return;
+      container.innerHTML = '';
+      const lang = getLang();
+      const isAr = lang === 'ar';
+      const isFr = lang === 'fr';
+
+      ALGERIAN_PROCUREMENT_SOURCES.forEach(s => {
+        const card = document.createElement('div');
+        card.className = 'source-card';
+        const displayName = isAr ? s.nameAr : (s.nameFr || s.nameAr);
+
+        card.innerHTML = `
+          <div>
+            <div class="source-card-header">
+              <div class="source-icon-box">
+                <i class="fas ${s.icon}"></i>
+              </div>
+              <div class="source-info">
+                <h4>${escapeHtml(displayName)}</h4>
+                <span class="source-badge ${s.categoryBadge}">${escapeHtml(s.category)}</span>
+              </div>
+            </div>
+
+            <div class="source-meta-row">
+              <strong>${isAr ? 'الهيئة الناشرة:' : (isFr ? 'Organisme :' : 'Publisher:')}</strong> ${escapeHtml(s.publisher)}
+            </div>
+            <div class="source-meta-row">
+              <strong>${isAr ? 'دورية النشر:' : (isFr ? 'Périodicité :' : 'Frequency:')}</strong> ${escapeHtml(s.periodicity)}
+            </div>
+            <div class="source-meta-row">
+              <strong>${isAr ? 'مجال التغطية:' : (isFr ? 'Couverture :' : 'Coverage:')}</strong> ${escapeHtml(s.coverage)}
+            </div>
+
+            <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;">
+              ${s.tags.map(tag => `<span style="font-size:11px; padding:2px 6px; border-radius:4px; background:#f1f5f9; color:#475569;">#${escapeHtml(tag)}</span>`).join('')}
+            </div>
+          </div>
+
+          <div class="source-card-actions">
+            <button class="btn btn-primary btn-sm" type="button" onclick="filterBySource('${s.key}')">
+              <i class="fas fa-filter"></i> ${isAr ? 'تصفية صفقات هذا المصدر' : (isFr ? 'Filtrer ces marchés' : 'Filter These Tenders')}
+            </button>
+            ${s.url && s.url !== '#' ? `
+              <a href="${s.url}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-external-link-alt"></i> ${isAr ? 'زيارة البوابة' : (isFr ? 'Visiter le site' : 'Visit Portal')}
+              </a>
+            ` : ''}
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+    window.renderSourcesDirectory = renderSourcesDirectory;
+
+    function filterBySource(sourceKey){
+      switchPortalTab('all');
+      const sel = document.getElementById('dzFilterSource');
+      if(sel){
+        sel.value = sourceKey;
+      }
+      filterAndRenderTenders();
+      const badge = document.querySelector(`.chip-item[data-chip="source-${sourceKey}"]`);
+      if(badge){
+        document.querySelectorAll('.chip-item').forEach(c => c.classList.remove('active'));
+        badge.classList.add('active');
+      }
+    }
+    window.filterBySource = filterBySource;
 
     function renderAttributionsTable(){
       const tbody = document.getElementById('attributionsTableBody');
@@ -2014,6 +2598,7 @@
       if(el('tabBadgeAttr')) el('tabBadgeAttr').textContent = attributions.length;
       if(el('tabBadgeProrog')) el('tabBadgeProrog').textContent = prorogations.length;
       if(el('tabBadgeFav')) el('tabBadgeFav').textContent = favoriteIds.length;
+      if(el('tabBadgeSources')) el('tabBadgeSources').textContent = (typeof ALGERIAN_PROCUREMENT_SOURCES !== 'undefined') ? ALGERIAN_PROCUREMENT_SOURCES.length : 11;
     }
 
     // ═════════════════════════════════════════════════════════════════
@@ -2212,7 +2797,8 @@
         sector: document.getElementById('pubSector').value,
         type: document.getElementById('pubType').value,
         typeName: document.getElementById('pubType').options[document.getElementById('pubType').selectedIndex].text,
-        source: 'إعلان محلي مسجل يدوياً',
+        source: document.getElementById('pubSource')?.value || 'إعلان محلي مسجل يدوياً',
+        sourceKey: document.getElementById('pubSource')?.value.startsWith('BAOSEM') ? 'BAOSEM' : (document.getElementById('pubSource')?.value.startsWith('BOMOP') ? 'BOMOP' : 'Other'),
         publishDate: new Date().toISOString().slice(0, 10),
         deadline: document.getElementById('pubDeadline').value || new Date().toISOString().slice(0, 10),
         priceCahier: parseFloat(document.getElementById('pubPriceCahier').value) || 0,
