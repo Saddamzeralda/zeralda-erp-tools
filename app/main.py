@@ -444,6 +444,39 @@ def _start_browser_auto_opener() -> None:
     threading.Thread(target=_worker, daemon=True, name="browser-auto-opener").start()
 
 
+def _start_cloud_auto_sync() -> None:
+    """When running on a local desktop installation, auto-pull shared data from cloud on startup
+    and keep periodic bidirectional sync active so local and cloud share identical accounts and records."""
+    if _IS_CLOUD_CONTAINER:
+        return
+
+    def _sync_worker():
+        time.sleep(3.0)  # Wait for uvicorn and local network to bind
+        try:
+            from app.services import sync_service
+            print("  [CLOUD-SYNC] [INFO] Contacting cloud to sync shared account data...")
+            res = sync_service.reconcile_sync()
+            if res.get("ok"):
+                pulled = (res.get("pull") or {}).get("pulled_keys_count", 0)
+                users_cnt = (res.get("pull") or {}).get("pulled_users_count", 0)
+                print(f"  [CLOUD-SYNC] [OK] Successfully synchronized from cloud ({pulled} keys, {users_cnt} users)!")
+            else:
+                print(f"  [CLOUD-SYNC] [NOTICE] Initial cloud sync state: {res.get('pull', {}).get('error', 'connecting...')}")
+        except Exception as e:
+            print(f"  [CLOUD-SYNC] [WARN] Cloud sync error: {e}")
+
+        # Periodic background sync every 60 seconds
+        while True:
+            time.sleep(60)
+            try:
+                from app.services import sync_service
+                sync_service.reconcile_sync()
+            except Exception:
+                pass
+
+    threading.Thread(target=_sync_worker, daemon=True, name="cloud-auto-sync").start()
+
+
 def main() -> None:
     _free_port_if_held(PORT)
     _write_pid_file()
@@ -477,6 +510,7 @@ def main() -> None:
     _start_port_80_forwarder()
     _start_dns_responder()
     _start_browser_auto_opener()
+    _start_cloud_auto_sync()
 
     # Start automated backup scheduler
     try:

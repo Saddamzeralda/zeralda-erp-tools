@@ -5,15 +5,35 @@ pulling remote updates, and two-way reconciliation.
 """
 from __future__ import annotations
 
-from typing import List, Optional
-from fastapi import APIRouter, Request
+from typing import Any, Dict, List, Optional
+from fastapi import APIRouter, Request, HTTPException, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from app.services import sync_service
-from app.services.security import get_session_token
+from app.services.security import get_session_token, validate_session
 
 router = APIRouter(prefix="/api/sync", tags=["sync"])
+
+
+def _is_authorized_sync(request: Request) -> bool:
+    """Validate either a valid sync token or an authenticated admin session."""
+    token = request.headers.get("X-Sync-Token") or request.headers.get("X-Sync-Key")
+    expected = sync_service.get_sync_token()
+    if token and token.strip() == expected:
+        return True
+
+    user = validate_session(request)
+    if user and user.get("role") in ("admin", "developer"):
+        return True
+
+    return False
+
+
+class CloudImportRequest(BaseModel):
+    data: Dict[str, Any]
+    users: Optional[Dict[str, Any]] = None
+    allow_shrink: Optional[bool] = False
 
 
 class SyncPushRequest(BaseModel):
@@ -24,6 +44,28 @@ class SyncPushRequest(BaseModel):
 async def sync_status_endpoint():
     """Return local synchronization status, last sync timestamp, and cloud connectivity."""
     return sync_service.get_sync_status()
+
+
+@router.get("/cloud-export")
+async def cloud_export_endpoint(request: Request):
+    """Export authoritative store and accounts for cross-device/cloud synchronization."""
+    if not _is_authorized_sync(request):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"ok": False, "error": "Unauthorized sync export"},
+        )
+    return sync_service.export_for_cloud()
+
+
+@router.post("/cloud-import")
+async def cloud_import_endpoint(request: Request, body: CloudImportRequest):
+    """Import and merge business data and accounts from peer server."""
+    if not _is_authorized_sync(request):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"ok": False, "error": "Unauthorized sync import"},
+        )
+    return sync_service.import_from_peer(body.data, body.users)
 
 
 @router.post("/push")
@@ -55,4 +97,3 @@ async def sync_reconcile_endpoint(request: Request):
     if not result.get("ok"):
         return JSONResponse(status_code=502, content=result)
     return result
-
