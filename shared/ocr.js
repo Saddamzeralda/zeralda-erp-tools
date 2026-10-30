@@ -524,27 +524,30 @@
       throw new Error(tooLargeMsg);
     }
 
+    var requestTimeoutMs = (endpoint === '/api/ai/invoice-extract') ? 35000 : 180000;
     var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
-    var timeoutId  = controller ? setTimeout(function () { controller.abort(); }, 180000) : null;
+    var timeoutId  = controller ? setTimeout(function () { controller.abort(); }, requestTimeoutMs) : null;
     var fetchOpts  = { method: 'POST', headers, body: JSON.stringify(payloadBody) };
     if (controller) fetchOpts.signal = controller.signal;
 
-    var response = await fetch(endpoint, fetchOpts).catch(function (err) {
+    var response = null;
+    var fetchErr = null;
+    try {
+      response = await fetch(endpoint, fetchOpts);
+    } catch (err) {
+      fetchErr = err;
+    } finally {
       if (timeoutId) clearTimeout(timeoutId);
-      if (err && err.name === 'AbortError') throw new Error(isAr ? 'انتهت مهلة الطلب (180 ثانية). الملف كبير جداً أو الاتصال بطيء.' : (isFr ? 'Délai d\'attente dépassé (180 s). Fichier trop lourd ou connexion lente.' : 'Request timeout (180 seconds). File is too large or network is too slow.'));
-      throw err;
-    });
-    if (timeoutId) clearTimeout(timeoutId);
+    }
 
-    var payload = await response.json().catch(() => ({}));
-    if (response.status === 413) throw new Error(tooLargeMsg);
-    if (response.status === 408) throw new Error(isAr ? 'انتهت مهلة الخادم. الملف كبير أو الاتصال بطيء.' : 'Request timeout. File is too large or network is slow.');
+    var isAbort = fetchErr && (fetchErr.name === 'AbortError' || String(fetchErr).indexOf('AbortError') !== -1);
+    var isFailed = Boolean(fetchErr) || !response || !response.ok;
 
-    // Automatic fallback to Tesseract if Copilot IA fails
-    if (!response.ok || !payload.ok) {
-      if (endpoint === '/api/ai/invoice-extract') {
-        console.warn('[UnifiedOCR] Copilot IA failed (' + (payload.error || response.status) + '). Automatically falling back to Tesseract (/api/ocr/extract)...');
-        try {
+    // Automatic fallback to Tesseract if Copilot IA fails, times out, or encounters a network error
+    if (endpoint === '/api/ai/invoice-extract' && isFailed) {
+      var failReason = fetchErr ? (fetchErr.message || fetchErr.name) : (response ? ('HTTP ' + response.status) : 'unknown error');
+      console.warn('[UnifiedOCR] Copilot IA unavailable or failed (' + failReason + '). Automatically falling back to Tesseract (/api/ocr/extract)...');
+      try {
           var tessEndpoint = typeof opts.buildApiUrl === 'function' ? opts.buildApiUrl('/api/ocr/extract') : '/api/ocr/extract';
           var tessResp = await fetch(tessEndpoint, {
             method: 'POST',
@@ -592,7 +595,18 @@
         } catch (tessErr) {
           console.warn('[UnifiedOCR] Tesseract fallback failed:', tessErr);
         }
-      }
+    }
+
+    if (fetchErr) {
+      if (isAbort) throw new Error(isAr ? 'انتهت مهلة الطلب (35 ثانية). تعذر الاتصال بـ Copilot IA أو الملف كبير جداً.' : (isFr ? 'Délai d\'attente dépassé (35 s). Copilot IA indisponible ou fichier lourd.' : 'Request timeout (35 seconds). Copilot IA unavailable or file is too large.'));
+      throw fetchErr;
+    }
+
+    var payload = await response.json().catch(() => ({}));
+    if (response.status === 413) throw new Error(tooLargeMsg);
+    if (response.status === 408) throw new Error(isAr ? 'انتهت مهلة الخادم. الملف كبير أو الاتصال بطيء.' : 'Request timeout. File is too large or network is slow.');
+
+    if (!response.ok || !payload.ok) {
       throw new Error(payload.error || ('HTTP ' + response.status));
     }
 

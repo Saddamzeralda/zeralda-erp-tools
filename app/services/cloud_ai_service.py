@@ -732,7 +732,9 @@ def _openai_compatible_chat(base_url: str, api_key: str, model: str, messages: L
     # But cap at 45s for chat — if a vision model is used for text-only chat, it often hangs
     _is_vision_model = any(kw in model.lower() for kw in ['vl', 'vision', 'vlm', 'multimodal'])
     if 'openrouter' in base_url.lower():
-        _request_timeout = 45 if not _is_vision_model else 30
+        _request_timeout = 30 if not _is_vision_model else 20
+    elif json_mode:
+        _request_timeout = 20
     else:
         _request_timeout = 30
     for attempt in range(max_retries):
@@ -1148,7 +1150,7 @@ def _openai_vision(base_url: str, api_key: str, model: str, image_b64: str, mime
         method='POST'
     )
     print(f'[VISION] Sending to {model}: mime={mime_type}, json_mode={json_mode}, payload={len(payload)//1024}KB')
-    _vision_timeout = 60
+    _vision_timeout = 18
     try:
         with _ai_urlopen(req, timeout=_vision_timeout) as resp:
             data = json.loads(resp.read().decode('utf-8', errors='replace'))
@@ -1178,7 +1180,7 @@ def _openai_vision(base_url: str, api_key: str, model: str, image_b64: str, mime
                 method='POST'
             )
             try:
-                with _ai_urlopen(req2, timeout=30) as resp2:
+                with _ai_urlopen(req2, timeout=12) as resp2:
                     data2 = json.loads(resp2.read().decode('utf-8', errors='replace'))
                     reply2 = data2.get('choices', [{}])[0].get('message', {}).get('content', '').strip()
                     return {'ok': True, 'reply': reply2, 'text': reply2, 'model': model}
@@ -1221,7 +1223,7 @@ def _gemini_vision(api_key: str, model: str, image_b64: str, mime_type: str, pro
     max_retries = 2
     for attempt in range(max_retries):
         try:
-            with _ai_urlopen(req, timeout=60) as resp:
+            with _ai_urlopen(req, timeout=18) as resp:
                 data = json.loads(resp.read().decode('utf-8', errors='replace'))
                 candidates = data.get('candidates') or [{}]
                 parts = (candidates[0].get('content') or {}).get('parts') or []

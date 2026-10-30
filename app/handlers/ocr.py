@@ -221,14 +221,25 @@ async def invoice_extract(request: Request):
                     ocr_engine = "ai"
             except Exception:
                 pass
-            # Run CPU-bound file processing in a thread pool
+            # Run CPU-bound file processing in a thread pool with a strict 22s deadline
             loop = asyncio.get_event_loop()
-            proc_result = await loop.run_in_executor(
-                None, lambda: ai_file_processor.process_file_for_analysis(
-                    file_b64, mime_type or "application/octet-stream", file_name,
-                    analysis_type="invoice", language="ara+fra+eng", ocr_engine=ocr_engine,
+            try:
+                proc_result = await asyncio.wait_for(
+                    loop.run_in_executor(
+                        None, lambda: ai_file_processor.process_file_for_analysis(
+                            file_b64, mime_type or "application/octet-stream", file_name,
+                            analysis_type="invoice", language="ara+fra+eng", ocr_engine=ocr_engine,
+                        )
+                    ),
+                    timeout=22.0
                 )
-            )
+            except asyncio.TimeoutError:
+                print("[INVOICE-EXTRACT] AI file analysis timed out after 22s; falling back to fast local Tesseract OCR")
+                proc_result = {"ok": False, "error": "timeout", "text": "", "analysis": {}}
+            except Exception as proc_e:
+                print(f"[INVOICE-EXTRACT] AI file analysis exception: {proc_e}")
+                proc_result = {"ok": False, "error": str(proc_e), "text": "", "analysis": {}}
+
             source_text = str(proc_result.get("text") or "").strip()
             # FIX: In vision-first mode, process_file_for_analysis returns ok=True
             # with the extracted data in `analysis` but `text` may be empty (the
@@ -236,20 +247,24 @@ async def invoice_extract(request: Request):
             # returned a 400 "OCR returned no text" error even though extraction
             # succeeded. Only fail on empty text if there's also no analysis data.
             analysis = proc_result.get("analysis") or {}
-            if not source_text:
-                if proc_result.get("ok") and analysis and (
-                    analysis.get("fields") or analysis.get("line_items") or analysis.get("records")
-                ):
+            has_valid_analysis = bool(
+                analysis.get("fields") or analysis.get("line_items") or analysis.get("records")
+            )
+            if not source_text or not has_valid_analysis:
+                if proc_result.get("ok") and has_valid_analysis:
                     # Vision-first mode: text is empty but analysis has the data
                     source_text = str(analysis.get("raw_text") or "")
                 else:
-                    # Automatic fallback to Tesseract if Copilot returned no text/failed
+                    # Automatic fallback to Tesseract if Copilot returned no text/failed/timed out
                     try:
                         from app.services.ocr_service import extract_text_from_payload
-                        tess_res = await loop.run_in_executor(
-                            None, lambda: extract_text_from_payload(
-                                file_b64, mime_type, "ara+fra+eng", file_name=file_name
-                            )
+                        tess_res = await asyncio.wait_for(
+                            loop.run_in_executor(
+                                None, lambda: extract_text_from_payload(
+                                    file_b64, mime_type, "ara+fra+eng", file_name=file_name
+                                )
+                            ),
+                            timeout=8.0
                         )
                         if tess_res.get("ok") and str(tess_res.get("text", "")).strip():
                             source_text = str(tess_res.get("text")).strip()
@@ -276,8 +291,8 @@ async def invoice_extract(request: Request):
             from app.services.ai_routes import normalize_line_items as _normalize_line_items
             from app.services.ai_routes import ai_chat as _ai_chat
 
-            # Fallback AI extraction if no line items
-            if not line_items and source_text:
+            # Fallback AI extraction if no line items AND not already in tesseract-fallback
+            if not line_items and source_text and proc_result.get("ocr_engine_used") != "tesseract-fallback":
                 try:
                     fallback_prompt = (
                         "Vous êtes un extracteur de factures expert. Extrayez TOUS les articles du texte.\n"
@@ -285,9 +300,14 @@ async def invoice_extract(request: Request):
                         '"quantity": 1, "unit_price": 0.00, "total": 0.00}]}\n\n'
                         f"Texte de la facture:\n{source_text[:12000]}"
                     )
-                    fb_result = _ai_chat([{"role": "user", "content": fallback_prompt}],
-                                         system_prompt="Retournez uniquement le JSON.",
-                                         max_tokens=8192, temperature=0.3)
+                    fb_result = await asyncio.wait_for(
+                        loop.run_in_executor(
+                            None, lambda: _ai_chat([{"role": "user", "content": fallback_prompt}],
+                                                 system_prompt="Retournez uniquement le JSON.",
+                                                 max_tokens=2048, temperature=0.2)
+                        ),
+                        timeout=8.0
+                    )
                     if fb_result.get("ok"):
                         fb_parsed = _extract_first_json_object(str(fb_result.get("reply", "")))
                         if fb_parsed:

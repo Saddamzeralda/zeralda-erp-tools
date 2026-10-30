@@ -193,12 +193,18 @@ def _ai_based_ocr(file_base64: str, mime_type: str, file_name: str, language: st
 # Fallback order for vision providers (try these when primary fails with 429)
 _VISION_FALLBACK_ORDER = ['gemini', 'groq']
 
-def _try_fallback_vision(file_base64: str, mime_type: str, prompt: str, system_prompt: str = '', json_mode: bool = False, exclude_provider: str = '') -> Optional[Dict[str, Any]]:
+def _try_fallback_vision(file_base64: str, mime_type: str, prompt: str, system_prompt: str = '', json_mode: bool = False, exclude_provider: str = '', deadline: float = 0.0) -> Optional[Dict[str, Any]]:
     """Try fallback vision providers when the primary provider fails with quota/error."""
     from app.services.cloud_ai_service import _read_ai_settings, chat_with_vision, VISION_MODELS, PROVIDER_CONFIGS
     project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     ai_cfg = _read_ai_settings(project_root)
+    attempts = 0
     for fb_provider in _VISION_FALLBACK_ORDER:
+        if deadline and time.time() >= deadline:
+            print(f'[AI ANALYSIS] Fallback vision aborted — deadline reached')
+            break
+        if attempts >= 1:
+            break
         if fb_provider == exclude_provider:
             continue
         fb_cfg = PROVIDER_CONFIGS.get(fb_provider)
@@ -211,6 +217,7 @@ def _try_fallback_vision(file_base64: str, mime_type: str, prompt: str, system_p
         fb_api_key = ai_cfg.get(api_key_field) or os.getenv(api_key_field.upper(), '')
         if not fb_api_key:
             continue
+        attempts += 1
         print(f'[AI ANALYSIS] Trying fallback vision provider: {fb_provider}')
         try:
             # Override provider for this call
@@ -567,7 +574,7 @@ def process_file_for_analysis(
 
         # Check if AI vision returned a quota/error or failed — Auto fallback to Tesseract!
         _ai_failed = (
-            (isinstance(analysis, dict) and analysis.get('error') in ('quota_exceeded', 'vision_failed', 'api_error'))
+            (isinstance(analysis, dict) and analysis.get('error') in ('quota_exceeded', 'vision_failed', 'api_error', 'timeout'))
             or (ocr_engine_used == 'ai-vision-first' and (not analysis or (isinstance(analysis, dict) and not analysis.get('fields') and not analysis.get('line_items') and not analysis.get('records'))))
         )
         if _ai_failed and (is_image or is_pdf):
@@ -655,13 +662,17 @@ def _analyze_with_ai(
     analysis_type: str,
     file_name: str,
     mime_type: str,
-    file_base64: str = ''
+    file_base64: str = '',
+    timeout_budget: float = 20.0
 ) -> Dict[str, Any]:
     """
     Use AI to analyze extracted text based on analysis type.
     If file_base64 is provided and provider supports vision, tries vision-first
     (sends PDF/image pages directly to AI) before falling back to text analysis.
+    Guaranteed deadline/timeout_budget prevents slow cascades.
     """
+    _start_time = time.time()
+    _deadline = _start_time + timeout_budget
     
     prompts = {
         'invoice': _get_invoice_prompt(),
@@ -733,27 +744,23 @@ def _analyze_with_ai(
 
                 if is_pdf_v and not page_results:
                     _doc_v = _fitz_v.open(stream=_decoded_v, filetype='pdf')
-                    max_p = min(len(_doc_v), 5)
-                    # Render pages at high resolution then stitch or send individually
+                    # Cap at 2 pages for invoice/receipt processing for optimal speed and memory
+                    max_p = min(len(_doc_v), 2)
                     try:
                         from PIL import Image as _PILImg
                         page_images = []
                         for _pi in range(max_p):
                             _pg = _doc_v.load_page(_pi)
-                            # 3x scale for crisp text — higher quality for vision AI
-                            _pix = _pg.get_pixmap(matrix=_fitz_v.Matrix(3.0, 3.0))
+                            # 1.5x matrix (150 DPI) yields sharp text with 4x faster rendering and smaller payloads
+                            _pix = _pg.get_pixmap(matrix=_fitz_v.Matrix(1.5, 1.5))
                             page_images.append(_PILImg.open(io.BytesIO(_pix.tobytes(output='png'))))
 
                         if len(page_images) == 1:
-                            # Single page: send at full resolution
                             buf = io.BytesIO()
-                            page_images[0].save(buf, format='JPEG', quality=92)
+                            page_images[0].save(buf, format='JPEG', quality=85)
                             _img_bytes = buf.getvalue()
-                            # Only shrink if excessively large (>4000px)
-                            if page_images[0].width > 2000 or page_images[0].height > 2000:
-                                _img_bytes = _resize_image_bytes_for_vision(_img_bytes, max_side=2000, output_format='JPEG')
+                            _img_bytes = _resize_image_bytes_for_vision(_img_bytes, max_side=1500, output_format='JPEG')
                         else:
-                            # Multi-page: stitch, keep per-page quality
                             total_h = sum(im.height for im in page_images)
                             max_w = max(im.width for im in page_images)
                             stitched = _PILImg.new('RGB', (max_w, total_h), (255, 255, 255))
@@ -762,10 +769,9 @@ def _analyze_with_ai(
                                 stitched.paste(im, (0, y_off))
                                 y_off += im.height
                             buf = io.BytesIO()
-                            stitched.save(buf, format='JPEG', quality=85)
+                            stitched.save(buf, format='JPEG', quality=82)
                             _img_bytes = buf.getvalue()
-                            # Limit stitched to 2500px to stay within API payload limits
-                            _img_bytes = _resize_image_bytes_for_vision(_img_bytes, max_side=2500, output_format='JPEG')
+                            _img_bytes = _resize_image_bytes_for_vision(_img_bytes, max_side=1600, output_format='JPEG')
 
                         _img_b64 = base64.b64encode(_img_bytes).decode('ascii')
                         print(f'[AI ANALYSIS] Vision image: {len(_img_bytes)//1024}KB, pages={len(page_images)}, json_mode={_use_json_mode}')
@@ -775,10 +781,10 @@ def _analyze_with_ai(
                         else:
                             print(f'[AI ANALYSIS] Vision call failed: {_vres.get("error","")[:200]}')
                     except Exception as _stitch_exc:
-                        print(f'[AI ANALYSIS] Vision stitch failed ({_stitch_exc}), trying page by page')
-                        for _pi in range(max_p):
+                        print(f'[AI ANALYSIS] Vision stitch failed ({_stitch_exc}), trying page 1')
+                        for _pi in range(min(max_p, 1)):
                             _pg = _doc_v.load_page(_pi)
-                            _pix = _pg.get_pixmap(matrix=_fitz_v.Matrix(2.0, 2.0))
+                            _pix = _pg.get_pixmap(matrix=_fitz_v.Matrix(1.5, 1.5))
                             _img_bytes = _resize_image_bytes_for_vision(_pix.tobytes(output='png'), max_side=1500, output_format='JPEG')
                             _img_b64 = base64.b64encode(_img_bytes).decode('ascii')
                             _vres = chat_with_vision(_img_b64, 'image/jpeg', vision_prompt, system_prompt=_get_file_analysis_system_prompt(), json_mode=_use_json_mode)
@@ -787,7 +793,7 @@ def _analyze_with_ai(
                                 break
                     _doc_v.close()
                 elif is_img_v:
-                    # Reduce image resolution for faster API response (1500px is enough for text reading)
+                    # Reduce image resolution for fast API response (1500px is optimal for OCR/vision)
                     _img_bytes = _resize_image_bytes_for_vision(_decoded_v, max_side=1500, output_format='JPEG')
                     _img_b64 = base64.b64encode(_img_bytes).decode('ascii')
                     print(f'[AI ANALYSIS] Sending image to vision AI: {len(_img_b64)} chars b64, provider={_vision_provider}, size={len(_img_bytes)//1024}KB')
@@ -888,22 +894,23 @@ def _analyze_with_ai(
                               f'fields={list(_f.keys())[:8]} | '
                               f'items={len(vision_analysis.get("line_items") or [])}')
                         return vision_analysis
-                    # Vision returned non-JSON or empty — try fallback vision providers
-                    print(f'[AI ANALYSIS] Vision-first returned non-JSON — trying fallback vision providers...')
-                    _fb_vision_result = _try_fallback_vision(file_base64, mime_type, vision_prompt, system_prompt=_get_file_analysis_system_prompt(), json_mode=_use_json_mode, exclude_provider=_vision_provider)
-                    if _fb_vision_result:
-                        print(f'[AI ANALYSIS] Fallback vision succeeded (non-JSON recovery)')
-                        return _fb_vision_result
-                    print(f'[AI ANALYSIS] All fallback vision providers failed — falling back to text analysis')
+                    # Vision returned non-JSON or empty — try fallback vision providers if deadline permits
+                    if time.time() < _deadline:
+                        print(f'[AI ANALYSIS] Vision-first returned non-JSON — trying fallback vision providers...')
+                        _fb_vision_result = _try_fallback_vision(file_base64, mime_type, vision_prompt, system_prompt=_get_file_analysis_system_prompt(), json_mode=_use_json_mode, exclude_provider=_vision_provider, deadline=_deadline)
+                        if _fb_vision_result:
+                            print(f'[AI ANALYSIS] Fallback vision succeeded (non-JSON recovery)')
+                            return _fb_vision_result
+                    print(f'[AI ANALYSIS] Vision failed — falling back')
             except Exception as _ve:
                 _vision_error = str(_ve)
-                print(f'[AI ANALYSIS] Vision-first failed ({_ve}) — falling back to text analysis')
+                print(f'[AI ANALYSIS] Vision-first failed ({_ve})')
 
         # If vision failed with quota error, try fallback providers before giving up
-        if _vision_error and '429' in _vision_error:
-            # Try fallback vision providers (Gemini, Groq, etc.)
+        if _vision_error and '429' in _vision_error and time.time() < _deadline:
+            # Try fallback vision providers
             print(f'[AI ANALYSIS] Vision quota error from {_vision_provider}, trying fallback providers...')
-            _fb_vision_result = _try_fallback_vision(file_base64, mime_type, vision_prompt, system_prompt=_get_file_analysis_system_prompt(), json_mode=_use_json_mode, exclude_provider=_vision_provider)
+            _fb_vision_result = _try_fallback_vision(file_base64, mime_type, vision_prompt, system_prompt=_get_file_analysis_system_prompt(), json_mode=_use_json_mode, exclude_provider=_vision_provider, deadline=_deadline)
             if _fb_vision_result:
                 print(f'[AI ANALYSIS] Fallback vision succeeded')
                 return _fb_vision_result
@@ -928,8 +935,21 @@ def _analyze_with_ai(
                 'error_message': _vision_error[:200]
             }
 
-    # If no text was extracted (vision-first mode failed), try AI OCR with fallback providers
-    if not text and file_base64:
+    # Time budget check before slow OCR or text analysis
+    if time.time() >= _deadline:
+        print(f'[AI ANALYSIS] Timeout budget exhausted ({time.time() - _start_time:.1f}s), delegating to fast local Tesseract')
+        return {
+            'document_type': analysis_type,
+            'fields': {},
+            'line_items': [],
+            'records': [],
+            'raw_text': text or '',
+            'error': 'timeout',
+            'error_message': 'Timeout exceeded during AI analysis'
+        }
+
+    # If no text was extracted (vision-first mode failed), try AI OCR with fallback providers only if deadline permits
+    if not text and file_base64 and time.time() < _deadline - 5.0:
         try:
             _supports_fb, _provider_fb, _ = _provider_supports_vision()
             if _supports_fb:
@@ -1005,8 +1025,8 @@ def _analyze_with_ai(
             response = {'ok': False, 'error': str(chat_exc)}
             _safe_print(f'[AI ANALYSIS] Gemini exception: {chat_exc}')
 
-        # If Gemini failed, try DeepSeek (also fast for structured extraction)
-        if not response.get('ok'):
+        # If Gemini failed, try DeepSeek if time permits
+        if not response.get('ok') and time.time() < _deadline - 3.0:
             err = str(response.get('error', '')).lower()
             _safe_print(f'[AI ANALYSIS] Gemini failed ({err[:100]}), trying DeepSeek')
             try:
@@ -1017,14 +1037,14 @@ def _analyze_with_ai(
                     response = _openai_compatible_chat(
                         'https://api.deepseek.com/v1', _ds_api_key, 'deepseek-chat',
                         messages, _get_file_analysis_system_prompt(),
-                        max_tokens=8192, temperature=0.3, json_mode=True
+                        max_tokens=4096, temperature=0.3, json_mode=True
                     )
                     _safe_print(f'[AI ANALYSIS] DeepSeek done: ok={response.get("ok")}')
             except Exception as ds_exc:
                 _safe_print(f'[AI ANALYSIS] DeepSeek exception: {ds_exc}')
 
-        # If Gemini and DeepSeek failed, try Groq (fast, free tier)
-        if not response.get('ok'):
+        # If Gemini and DeepSeek failed, try Groq only if time permits
+        if not response.get('ok') and time.time() < _deadline - 3.0:
             err = str(response.get('error', '')).lower()
             _safe_print(f'[AI ANALYSIS] DeepSeek failed ({err[:100]}), trying Groq')
             try:

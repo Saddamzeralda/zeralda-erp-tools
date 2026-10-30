@@ -235,6 +235,20 @@ class TestOcrEnhancements(unittest.TestCase):
         self.assertEqual(_extract_arabic_textual_date("الجزائر في 14 أوت 2026"), "2026-08-14")
         self.assertEqual(_extract_arabic_textual_date("بتاريخ 3 فيفري 2026"), "2026-02-03")
 
+    def test_analyze_with_ai_timeout_budget(self):
+        from app.services.ai_file_processor import _analyze_with_ai
+        # Test that _analyze_with_ai with an expired timeout budget returns timeout immediately without hanging
+        result = _analyze_with_ai("Sample text", "invoice", "test.pdf", "application/pdf", timeout_budget=0.0)
+        self.assertIsInstance(result, dict)
+        self.assertEqual(result.get("error"), "timeout")
+
+    def test_try_fallback_vision_deadline(self):
+        from app.services.ai_file_processor import _try_fallback_vision
+        import time
+        # Test that _try_fallback_vision with an expired deadline immediately returns None
+        fb = _try_fallback_vision("dummyb64", "image/jpeg", "prompt", deadline=time.time() - 1.0)
+        self.assertIsNone(fb)
+
 
 if __name__ == "__main__":
     unittest.main()
