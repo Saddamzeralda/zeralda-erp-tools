@@ -1,0 +1,1887 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <base href="../../" />
+  <script src="shared/theme_manager.js"></script>
+  <title>تندر الجزائر — بوابة المناقصات والصفقات العمومية | Tender DZ</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="styles/zeralda_core.bundle.css?v=20261021_b1">
+  <script src="shared/zeralda_db.js?v=20261017_v10"></script>
+  <script src="shared/layout_shell.js?v=20261020_hotfix5" defer></script>
+  <script src="shared/ai_chat_widget.js?v=20261017_v10" defer></script>
+  <script src="shared/session_timeout.js" defer></script>
+  <script src="shared/company_storage.js?v=20261017_v10"></script>
+  <script src="shared/unified_i18n.js?v=20261020_hotfix5" defer></script>
+  <script src="shared/app_sync.js?v=20261017_v10" defer></script>
+  <script src="shared/role_access_control.js" defer></script>
+  <script src="shared/print_engine.js" defer></script>
+  <script src="shared/unified_document_printer.js" defer></script>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --dz-primary: #059669; /* Algerian Emerald */
+      --dz-primary-dark: #047857;
+      --dz-secondary: #0f172a; /* Slate / Navy */
+      --dz-accent: #e11d48; /* Algerian Red */
+      --dz-warning: #f59e0b;
+      --dz-info: #0284c7;
+      --dz-card-bg: #ffffff;
+      --dz-card-border: #e2e8f0;
+      --dz-text: #1e293b;
+      --dz-muted: #64748b;
+      --header-height: 143px;
+    }
+
+    body {
+      font-family: var(--font-family-base, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif);
+      font-size: 14px;
+      line-height: 1.5;
+      background-color: #f1f5f9;
+      color: var(--dz-text);
+    }
+    body.rtl { direction: rtl; }
+
+    .main-content {
+      padding: 24px;
+      margin-top: var(--header-height);
+      min-height: calc(100vh - var(--header-height));
+      max-width: 1600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* Portal Banner */
+    .portal-banner {
+      background: linear-gradient(135deg, #064e3b 0%, #065f46 50%, #047857 100%);
+      border-radius: 16px;
+      padding: 26px 32px;
+      color: white;
+      margin-bottom: 24px;
+      box-shadow: 0 10px 25px -5px rgba(6, 78, 59, 0.3);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .portal-banner::after {
+      content: '';
+      position: absolute;
+      top: -60px;
+      left: -60px;
+      width: 220px;
+      height: 220px;
+      background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0) 70%);
+      border-radius: 50%;
+    }
+    .banner-title {
+      font-size: 24px;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 6px;
+      letter-spacing: -0.5px;
+    }
+    .banner-subtitle {
+      font-size: 13.5px;
+      color: #d1fae5;
+      max-width: 680px;
+      line-height: 1.6;
+    }
+    .banner-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      position: relative;
+      z-index: 2;
+    }
+    .banner-btn {
+      padding: 9px 18px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 13px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+    .banner-btn-primary {
+      background: #ffffff;
+      color: #065f46;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .banner-btn-primary:hover {
+      background: #f0fdf4;
+      transform: translateY(-1px);
+    }
+    .banner-btn-glass {
+      background: rgba(255,255,255,0.18);
+      color: #ffffff;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.25);
+    }
+    .banner-btn-glass:hover {
+      background: rgba(255,255,255,0.28);
+    }
+
+    /* Live KPIs Grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .kpi-card {
+      background: white;
+      border: 1px solid var(--dz-card-border);
+      border-radius: 14px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .kpi-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+    }
+    .kpi-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .kpi-icon.emerald { background: #d1fae5; color: #059669; }
+    .kpi-icon.blue { background: #e0f2fe; color: #0284c7; }
+    .kpi-icon.amber { background: #fef3c7; color: #d97706; }
+    .kpi-icon.rose { background: #ffe4e6; color: #e11d48; }
+    .kpi-icon.purple { background: #ede9fe; color: #7c3aed; }
+    .kpi-value {
+      font-size: 22px;
+      font-weight: 900;
+      color: #0f172a;
+      line-height: 1.1;
+    }
+    .kpi-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--dz-muted);
+      margin-top: 3px;
+    }
+
+    /* Portal Tabs */
+    .portal-tabs-nav {
+      display: flex;
+      gap: 8px;
+      border-bottom: 2px solid #e2e8f0;
+      margin-bottom: 20px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+    .portal-tab-btn {
+      padding: 10px 18px;
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #64748b;
+      border: none;
+      background: transparent;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .portal-tab-btn:hover {
+      color: var(--dz-primary);
+    }
+    .portal-tab-btn.active {
+      color: var(--dz-primary);
+      border-bottom-color: var(--dz-primary);
+      background: #f0fdf4;
+      border-radius: 8px 8px 0 0;
+    }
+    .portal-tab-badge {
+      background: #e2e8f0;
+      color: #475569;
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 10px;
+      font-weight: 800;
+    }
+    .portal-tab-btn.active .portal-tab-badge {
+      background: #bbf7d0;
+      color: #065f46;
+    }
+
+    /* Search & Multi-Filter Console */
+    .filter-console {
+      background: white;
+      border: 1px solid var(--dz-card-border);
+      border-radius: 14px;
+      padding: 18px 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    }
+    .filter-row-top {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+    .search-input-box {
+      flex: 2;
+      min-width: 280px;
+      position: relative;
+    }
+    .search-input-box i {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      right: 14px;
+      color: #94a3b8;
+    }
+    body.rtl .search-input-box i { right: 14px; left: auto; }
+    body:not(.rtl) .search-input-box i { left: 14px; right: auto; }
+    .search-input {
+      width: 100%;
+      padding: 11px 40px;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 10px;
+      font-size: 13.5px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-input:focus {
+      border-color: var(--dz-primary);
+      box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.12);
+    }
+    .filter-select {
+      flex: 1;
+      min-width: 170px;
+      padding: 11px 14px;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 10px;
+      font-size: 13px;
+      outline: none;
+      background-color: white;
+      cursor: pointer;
+    }
+    .filter-select:focus {
+      border-color: var(--dz-primary);
+    }
+
+    /* Quick Filter Chips */
+    .chips-row {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      align-items: center;
+    }
+    .chip-item {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #475569;
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .chip-item:hover {
+      background: #e2e8f0;
+    }
+    .chip-item.active {
+      background: #059669;
+      color: white;
+      border-color: #059669;
+      box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25);
+    }
+    .chip-item.urgent.active {
+      background: #e11d48;
+      border-color: #e11d48;
+    }
+
+    /* Tender Cards Grid */
+    .tender-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 18px;
+    }
+    @media (max-width: 768px) {
+      .tender-cards-grid { grid-template-columns: 1fr; }
+    }
+
+    .tender-card {
+      background: white;
+      border: 1px solid var(--dz-card-border);
+      border-radius: 14px;
+      padding: 18px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+    .tender-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 22px rgba(0,0,0,0.07);
+      border-color: #cbd5e1;
+    }
+
+    .card-top-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 10px;
+      gap: 8px;
+    }
+    .card-authority {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .auth-logo-badge {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: #065f46;
+      flex-shrink: 0;
+    }
+    .auth-name {
+      font-size: 13px;
+      font-weight: 800;
+      color: #0f172a;
+      line-height: 1.25;
+      max-width: 210px;
+    }
+    .auth-source {
+      font-size: 11px;
+      color: var(--dz-muted);
+      margin-top: 2px;
+    }
+    .card-star-btn {
+      background: transparent;
+      border: none;
+      font-size: 18px;
+      color: #cbd5e1;
+      cursor: pointer;
+      transition: color 0.2s, transform 0.2s;
+    }
+    .card-star-btn:hover { color: #f59e0b; transform: scale(1.15); }
+    .card-star-btn.starred { color: #f59e0b; }
+
+    .card-badges {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    .dz-tag {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .dz-tag-wilaya { background: #e0f2fe; color: #0369a1; }
+    .dz-tag-sector { background: #f1f5f9; color: #334155; }
+    .dz-tag-type { background: #ede9fe; color: #6d28d9; }
+    .dz-tag-attribution { background: #ecfdf5; color: #047857; font-weight: 800; }
+    
+    .countdown-pill {
+      font-size: 11px;
+      font-weight: 800;
+      padding: 3px 9px;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .countdown-urgent { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+    .countdown-warning { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+    .countdown-safe { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+    .countdown-expired { background: #f1f5f9; color: #94a3b8; border: 1px solid #e2e8f0; }
+
+    .tender-card-title {
+      font-size: 14.5px;
+      font-weight: 800;
+      color: #1e293b;
+      line-height: 1.5;
+      margin-bottom: 12px;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .tender-card-title:hover {
+      color: var(--dz-primary);
+    }
+
+    .tender-card-specs {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 12px;
+      margin-bottom: 14px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 12px;
+    }
+    .spec-item {
+      display: flex;
+      flex-direction: column;
+    }
+    .spec-label {
+      color: #64748b;
+      font-size: 11px;
+    }
+    .spec-val {
+      font-weight: 700;
+      color: #0f172a;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tender-card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid #f1f5f9;
+      padding-top: 12px;
+      gap: 8px;
+    }
+    .btn-view-dossier {
+      flex: 1;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: #f1f5f9;
+      color: #334155;
+      border: 1px solid #cbd5e1;
+      font-weight: 700;
+      font-size: 12.5px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .btn-view-dossier:hover {
+      background: #e2e8f0;
+    }
+    .btn-import-pipeline {
+      flex: 1;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: #059669;
+      color: white;
+      border: none;
+      font-weight: 700;
+      font-size: 12.5px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25);
+      transition: all 0.2s;
+    }
+    .btn-import-pipeline:hover {
+      background: #047857;
+      transform: translateY(-1px);
+    }
+    .btn-import-pipeline.imported {
+      background: #0284c7;
+    }
+
+    /* Modal Styling */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      padding: 16px;
+    }
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .modal-card {
+      background: white;
+      border-radius: 16px;
+      width: min(880px, 96vw);
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      display: flex;
+      flex-direction: column;
+    }
+    .modal-header {
+      padding: 18px 24px;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-body {
+      padding: 24px;
+      overflow-y: auto;
+    }
+    .modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #f8fafc;
+      border-radius: 0 0 16px 16px;
+    }
+
+    /* Notice Official Paper View */
+    .official-notice-sheet {
+      border: 1.5px solid #0f172a;
+      padding: 24px 28px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      font-size: 13.5px;
+      line-height: 1.8;
+    }
+    .notice-header-official {
+      text-align: center;
+      border-bottom: 2px solid #0f172a;
+      padding-bottom: 14px;
+      margin-bottom: 18px;
+    }
+    .notice-header-official h3 {
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+    }
+    .notice-header-official h2 {
+      font-size: 18px;
+      font-weight: 900;
+      margin-top: 6px;
+      color: #0f172a;
+      text-decoration: underline;
+    }
+
+    /* Attribution Table */
+    .attribution-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin-top: 12px;
+    }
+    .attribution-table th {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      padding: 10px;
+      font-weight: 700;
+      color: #1e293b;
+    }
+    .attribution-table td {
+      border: 1px solid #cbd5e1;
+      padding: 8px 10px;
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      background: white;
+      border-radius: 14px;
+      border: 1px dashed #cbd5e1;
+      grid-column: 1 / -1;
+    }
+    .empty-state i {
+      font-size: 44px;
+      color: #94a3b8;
+      margin-bottom: 12px;
+    }
+
+    /* Toast */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      left: 24px;
+      z-index: 10001;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    body.rtl .toast-container { left: 24px; right: auto; }
+    .toast-item {
+      background: #1e293b;
+      color: white;
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: toastIn 0.25s ease;
+    }
+    .toast-item.success { background: #059669; }
+    .toast-item.info { background: #0284c7; }
+    @keyframes toastIn { from { transform: translateY(12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  </style>
+</head>
+<body class="rtl">
+  <!-- Shared Layout Mount (Header & Sidebar) -->
+  <div id="sharedLayoutMount" data-active-page="tender_dz_portal.html"></div>
+
+  <main class="main-content">
+    <!-- Portal Banner -->
+    <div class="portal-banner">
+      <div>
+        <div class="banner-title">
+          <i class="fas fa-bullhorn" style="color:#6ee7b7;"></i>
+          <span>تندر الجزائر — بوابة المناقصات والصفقات العمومية</span>
+        </div>
+        <div class="banner-subtitle">
+          تغطية يومية ذكية وشاملة لكافة طلبات العروض الوطنية والدولية، الاستشارات، إعلانات الترسية والمنح المؤقت، وتمديد الآجال المنشورة في BOMOP، باوسيم BAOSEM، والصحافة الوطنية عبر 58 ولاية.
+        </div>
+      </div>
+      <div class="banner-actions">
+        <a href="modules/consulting/consulting_tenders_management.html" class="banner-btn banner-btn-primary" title="متابعة مسار صفقاتي في الـ ERP">
+          <i class="fas fa-tasks"></i> <span>مسار صفقاتي (ERP Pipeline)</span>
+        </a>
+        <button class="banner-btn banner-btn-glass" onclick="openPublishModal()">
+          <i class="fas fa-plus-circle"></i> <span>نشر إعلان مناقصة جديد</span>
+        </button>
+        <button class="banner-btn banner-btn-glass" onclick="refreshTendersFeed()" title="تحديث الإعلانات">
+          <i class="fas fa-sync-alt" id="refreshFeedIcon"></i> <span>تحديث</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Live Market KPIs -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-icon emerald"><i class="fas fa-file-contract"></i></div>
+        <div>
+          <div class="kpi-value" id="kpiTotalActive">0</div>
+          <div class="kpi-label">مناقصات واستشارات نشطة</div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon rose"><i class="fas fa-fire"></i></div>
+        <div>
+          <div class="kpi-value" id="kpiUrgentCount">0</div>
+          <div class="kpi-label">آجال عاجلة (&le; 3 أيام)</div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon blue"><i class="fas fa-map-marker-alt"></i></div>
+        <div>
+          <div class="kpi-value">58</div>
+          <div class="kpi-label">ولاية مغطاة على المستوى الوطني</div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon amber"><i class="fas fa-trophy"></i></div>
+        <div>
+          <div class="kpi-value" id="kpiAttributionsCount">0</div>
+          <div class="kpi-label">إعلانات منح وترسية مؤقتة</div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon purple"><i class="fas fa-star"></i></div>
+        <div>
+          <div class="kpi-value" id="kpiFavoritesCount">0</div>
+          <div class="kpi-label">صفقات محفوظة في المفضلة</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Portal Navigation Tabs -->
+    <div class="portal-tabs-nav">
+      <button class="portal-tab-btn active" data-tab="all" onclick="switchPortalTab('all')">
+        <i class="fas fa-layer-group"></i> <span>جميع المناقصات والاستشارات</span>
+        <span class="portal-tab-badge" id="tabBadgeAll">0</span>
+      </button>
+      <button class="portal-tab-btn" data-tab="attributions" onclick="switchPortalTab('attributions')">
+        <i class="fas fa-trophy"></i> <span>إعلانات المنح المؤقت والترسية</span>
+        <span class="portal-tab-badge" id="tabBadgeAttr">0</span>
+      </button>
+      <button class="portal-tab-btn" data-tab="prorogations" onclick="switchPortalTab('prorogations')">
+        <i class="fas fa-clock"></i> <span>تمديد الآجال والإلغاءات</span>
+        <span class="portal-tab-badge" id="tabBadgeProrog">0</span>
+      </button>
+      <button class="portal-tab-btn" data-tab="favorites" onclick="switchPortalTab('favorites')">
+        <i class="fas fa-star" style="color:#f59e0b;"></i> <span>مفضلاتي</span>
+        <span class="portal-tab-badge" id="tabBadgeFav">0</span>
+      </button>
+    </div>
+
+    <!-- Search & Multi-Filter Console -->
+    <div class="filter-console">
+      <div class="filter-row-top">
+        <div class="search-input-box">
+          <i class="fas fa-search"></i>
+          <input type="text" id="dzSearchText" class="search-input" placeholder="ابحث باسم المصلحة المتعاقدة، رقم الصفقة، الكلمات المفتاحية (توريد، أشغال، صيانة، حراسة...)" oninput="filterAndRenderTenders()">
+        </div>
+        <select id="dzFilterWilaya" class="filter-select" onchange="filterAndRenderTenders()">
+          <option value="">جميع الولايات (58 ولاية)</option>
+        </select>
+        <select id="dzFilterSector" class="filter-select" onchange="filterAndRenderTenders()">
+          <option value="">جميع القطاعات والأنشطة</option>
+          <option value="BTPH">BTPH والمنشآت والأشغال العمومية</option>
+          <option value="IT">إعلام آلي، شبكات واتصالات</option>
+          <option value="Medical">عتاد طبي ومستلزمات صيدلانية</option>
+          <option value="Furniture">أثاث مكتبي ولوازم وقرطاسية</option>
+          <option value="Energy">طاقة، كهرباء ومحروقات (BAOSEM)</option>
+          <option value="Transport">نقل، مركبات ولوجستيك</option>
+          <option value="Security">حراسة، أمن صناعي ونظافة</option>
+          <option value="Studies">دراسات واستشارات وهندسة</option>
+          <option value="Hydraulics">موارد مائية وري وتطهير</option>
+          <option value="Food">تغذية وإطعام جماعي</option>
+          <option value="Industry">صناعة، ميكانيك وقطع غيار</option>
+        </select>
+        <select id="dzFilterNoticeType" class="filter-select" onchange="filterAndRenderTenders()">
+          <option value="">جميع أنواع الإعلانات</option>
+          <option value="appel_offres">طلب عروض (Appel d'offres)</option>
+          <option value="consultation">استشارة بسيطة (Consultation)</option>
+          <option value="attribution">منح مؤقت (Attribution)</option>
+          <option value="prorogation">تمديد الآجال (Prorogation)</option>
+          <option value="concours">مسابقة هندسة معمارية (Concours)</option>
+        </select>
+      </div>
+
+      <!-- Quick Filter Chips -->
+      <div class="chips-row">
+        <span class="chip-item active" data-chip="all" onclick="setQuickChip('all')"><i class="fas fa-th-large"></i> الكل</span>
+        <span class="chip-item urgent" data-chip="urgent" onclick="setQuickChip('urgent')"><i class="fas fa-fire"></i> آجال عاجلة (&le; 3 أيام)</span>
+        <span class="chip-item" data-chip="sector-BTPH" onclick="setQuickChip('sector-BTPH')"><i class="fas fa-hard-hat"></i> BTPH وبناء</span>
+        <span class="chip-item" data-chip="sector-IT" onclick="setQuickChip('sector-IT')"><i class="fas fa-laptop-code"></i> إعلام آلي وتكنولوجيا</span>
+        <span class="chip-item" data-chip="sector-Medical" onclick="setQuickChip('sector-Medical')"><i class="fas fa-heartbeat"></i> عتاد طبي وصحة</span>
+        <span class="chip-item" data-chip="sector-Energy" onclick="setQuickChip('sector-Energy')"><i class="fas fa-bolt"></i> طاقة ومحروقات</span>
+        <span class="chip-item" data-chip="wilaya-16" onclick="setQuickChip('wilaya-16')"><i class="fas fa-map-pin"></i> 16 - الجزائر العاصمة</span>
+        <span class="chip-item" data-chip="wilaya-31" onclick="setQuickChip('wilaya-31')"><i class="fas fa-map-pin"></i> 31 - وهران</span>
+        <span class="chip-item" data-chip="wilaya-25" onclick="setQuickChip('wilaya-25')"><i class="fas fa-map-pin"></i> 25 - قسنطينة</span>
+      </div>
+    </div>
+
+    <!-- Active Tab: All Tenders Feed -->
+    <div id="tabContentFeed">
+      <div id="dzTendersGrid" class="tender-cards-grid">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <!-- Active Tab: Attributions Table View -->
+    <div id="tabContentAttributions" style="display:none;">
+      <div style="background:white; border-radius:14px; border:1px solid #e2e8f0; padding:20px; box-shadow:0 2px 8px rgba(0,0,0,0.03);">
+        <h3 style="font-size:16px; font-weight:800; color:#0f172a; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+          <i class="fas fa-trophy text-warning"></i> <span>سجل إعلانات المنح المؤقت والترسية الرسمية (Avis d'attribution provisoire)</span>
+        </h3>
+        <p style="font-size:12.5px; color:#64748b; margin-bottom:16px;">
+          طبقاً لأحكام المادة 65 و 82 من المرسوم الرئاسي 15-247، يحق لأي متعهد شارك في الصفقة وله مصلحة تقديم طعن أمام لجنة الصفقات المختصة في أجل أقصاه 10 أيام ابتداءً من تاريخ أول نشر للإعلان.
+        </p>
+        <div style="overflow-x:auto;">
+          <table class="attribution-table">
+            <thead>
+              <tr>
+                <th style="width:130px;">رقم الصفقة</th>
+                <th>المصلحة المتعاقدة</th>
+                <th>موضوع الصفقة</th>
+                <th style="width:180px;">المؤسسة الفائزة</th>
+                <th style="width:140px; text-align:right;">المبلغ الممنوح (TTC)</th>
+                <th style="width:100px; text-align:center;">العلامة التقنية</th>
+                <th style="width:120px; text-align:center;">أجل الطعن المتبقي</th>
+                <th style="width:80px; text-align:center;">إجراء</th>
+              </tr>
+            </thead>
+            <tbody id="attributionsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ── Modal: Tender Detailed Dossier ── -->
+  <div id="tenderDetailModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-header" style="background: linear-gradient(135deg, #064e3b, #059669); color: white;">
+        <h3 style="color:white;"><i class="fas fa-file-contract"></i> <span id="detailModalTitle">تفاصيل الإعلان ودفتر الشروط</span></h3>
+        <button class="close-modal" onclick="closeDetailModal()" style="color:white; background:rgba(255,255,255,0.2);"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body" id="detailModalBody">
+        <!-- Injected dynamically -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeDetailModal()"><i class="fas fa-times"></i> إغلاق</button>
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-outline-primary" onclick="printOfficialNotice()"><i class="fas fa-print"></i> طباعة الإعلان الرسمي</button>
+          <button class="btn btn-success" id="btnDetailImport" onclick="importCurrentModalTender()"><i class="fas fa-tasks"></i> استيراد لمناقصاتي في النظام (ERP)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Modal: Publish / Add Custom Tender ── -->
+  <div id="publishTenderModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal-card" style="width:min(720px, 95vw);">
+      <div class="modal-header" style="background: linear-gradient(135deg, #0f172a, #1e293b); color: white;">
+        <h3 style="color:white;"><i class="fas fa-plus-circle"></i> نشر وإضافة إعلان مناقصة جديد</h3>
+        <button class="close-modal" onclick="closePublishModal()" style="color:white; background:rgba(255,255,255,0.2);"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div style="grid-column: span 2;">
+            <label style="font-size:12px; font-weight:700; color:#475569;">موضوع المناقصة / الصفقة *</label>
+            <input type="text" id="pubTitle" class="search-input" style="padding:8px 12px;" placeholder="مشروع إنجاز / اقتناء وتوريد...">
+          </div>
+          <div>
+            <label style="font-size:12px; font-weight:700; color:#475569;">المصلحة المتعاقدة (الهيئة / الإدارة) *</label>
+            <input type="text" id="pubAuthority" class="search-input" style="padding:8px 12px;" placeholder="وزارة / ولاية / بلدية / مؤسسة...">
+          </div>
+          <div>
+            <label style="font-size:12px; font-weight:700; color:#475569;">رقم المرجع القانوني</label>
+            <input type="text" id="pubRef" class="search-input" style="padding:8px 12px;" placeholder="مثال: 08/DTP/2026">
+          </div>
+          <div>
+            <label style="font-size:12px; font-weight:700; color:#475569;">الولاية *</label>
+            <select id="pubWilaya" class="filter-select" style="width:100%;"></select>
+          </div>
+          <div>
+            <label style="font-size:12px; font-weight:700; color:#475569;">القطاع والنشاط</label>
+            <select id="pubSector" class="filter-select" style="width:100%;">
+              <option value="BTPH">BTPH وبناء وأشغال عمومية</option>
+              <option value="IT">إعلام آلي واتصالات</option>
+              <option value="Medical">عتاد طبي وصيدلاني</option>
+              <option value="Furniture">أثاث وقرطاسية</option>
+              <option value="Energy">طاقة ومحروقات</option>
+              <option value="Transport">نقل ومركبات</option>
+              <option value="Security">حراسة وأمن صناعي</option>
+              <option value="Studies">دراسات وهندسة</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:12px; font-weight:700; color:#475569;">نوع الإعلان</label>
+            <select id="pubType" class="filter-select" style="width:100%;">
+              <option value="appel_offres">طلب عروض وطني (Appel d'offres)</option>
+              <option value="consultation">استشارة بسيطة (Consultation)</option>
+              <option value="concours">مسابقة مشاريع (Concours)</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:12px; font-weight:700; color:#475569;">آخر أجل لإيداع العروض (Deadline) *</label>
+            <input type="date" id="pubDeadline" class="search-input" style="padding:8px 12px;">
+          </div>
+          <div>
+            <label style="font-size:12px; font-weight:700; color:#475569;">ثمن دفتر الشروط (دج)</label>
+            <input type="number" id="pubPriceCahier" class="search-input" style="padding:8px 12px;" placeholder="3000">
+          </div>
+          <div>
+            <label style="font-size:12px; font-weight:700; color:#475569;">كفالة التعهد (Caution)</label>
+            <input type="text" id="pubCaution" class="search-input" style="padding:8px 12px;" placeholder="1% أو مبلغ محدد">
+          </div>
+          <div style="grid-column: span 2;">
+            <label style="font-size:12px; font-weight:700; color:#475569;">تفاصيل وشروط دفتر الشروط والحصص</label>
+            <textarea id="pubNotes" class="search-input" style="padding:8px 12px; height:90px; resize:vertical;" placeholder="شروط التأهيل، عدد الحصص، مكان السحب والإيداع..."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closePublishModal()"><i class="fas fa-times"></i> إلغاء</button>
+        <button class="btn btn-success" onclick="saveCustomTender()"><i class="fas fa-check"></i> نشر الإعلان في المنصة</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script>
+    // ═════════════════════════════════════════════════════════════════
+    // ── 58 WILAYAS OF ALGERIA (OFFICIAL CODE & NAME) ──
+    // ═════════════════════════════════════════════════════════════════
+    const ALGERIAN_WILAYAS = [
+      { code: '01', name: 'أدرار - Adrar' },
+      { code: '02', name: 'الشلف - Chlef' },
+      { code: '03', name: 'الأغواط - Laghouat' },
+      { code: '04', name: 'أم البواقي - Oum El Bouaghi' },
+      { code: '05', name: 'باتنة - Batna' },
+      { code: '06', name: 'بجاية - Béjaïa' },
+      { code: '07', name: 'بسكرة - Biskra' },
+      { code: '08', name: 'بشار - Béchar' },
+      { code: '09', name: 'البليدة - Blida' },
+      { code: '10', name: 'البويرة - Bouira' },
+      { code: '11', name: 'تمنراست - Tamanrasset' },
+      { code: '12', name: 'تبسة - Tébessa' },
+      { code: '13', name: 'تلمسان - Tlemcen' },
+      { code: '14', name: 'تيارت - Tiaret' },
+      { code: '15', name: 'تيزي وزو - Tizi Ouzou' },
+      { code: '16', name: 'الجزائر - Alger' },
+      { code: '17', name: 'الجلفة - Djelfa' },
+      { code: '18', name: 'جيجل - Jijel' },
+      { code: '19', name: 'سطيف - Sétif' },
+      { code: '20', name: 'سعيدة - Saïda' },
+      { code: '21', name: 'سكيكدة - Skikda' },
+      { code: '22', name: 'سيدي بلعباس - Sidi Bel Abbès' },
+      { code: '23', name: 'عنابة - Annaba' },
+      { code: '24', name: 'قالمة - Guelma' },
+      { code: '25', name: 'قسنطينة - Constantine' },
+      { code: '26', name: 'المدية - Médéa' },
+      { code: '27', name: 'مستغانم - Mostaganem' },
+      { code: '28', name: 'المسيلة - M\'Sila' },
+      { code: '29', name: 'معسكر - Mascara' },
+      { code: '30', name: 'ورقلة - Ouargla' },
+      { code: '31', name: 'وهران - Oran' },
+      { code: '32', name: 'البيض - El Bayadh' },
+      { code: '33', name: 'إليزي - Illizi' },
+      { code: '34', name: 'برج بوعريريج - Bordj Bou Arréridj' },
+      { code: '35', name: 'بومرداس - Boumerdès' },
+      { code: '36', name: 'الطارف - El Tarf' },
+      { code: '37', name: 'تندوف - Tindouf' },
+      { code: '38', name: 'تيسمسيلت - Tissemsilt' },
+      { code: '39', name: 'الوادي - El Oued' },
+      { code: '40', name: 'خنشلة - Khenchela' },
+      { code: '41', name: 'سوق أهراس - Souk Ahras' },
+      { code: '42', name: 'تيبازة - Tipaza' },
+      { code: '43', name: 'ميلة - Mila' },
+      { code: '44', name: 'عين الدفلى - Aïn Defla' },
+      { code: '45', name: 'النعامة - Naâma' },
+      { code: '46', name: 'عين تموشنت - Aïn Témouchent' },
+      { code: '47', name: 'غرداية - Ghardaïa' },
+      { code: '48', name: 'غليزان - Relizane' },
+      { code: '49', name: 'تيميمون - Timimoun' },
+      { code: '50', name: 'برج باجي مختار - Bordj Badji Mokhtar' },
+      { code: '51', name: 'أولاد جلال - Ouled Djellal' },
+      { code: '52', name: 'بني عباس - Béni Abbès' },
+      { code: '53', name: 'عين صالح - In Salah' },
+      { code: '54', name: 'عين قزام - In Guezzam' },
+      { code: '55', name: 'تقرت - Touggourt' },
+      { code: '56', name: 'جانت - Djanet' },
+      { code: '57', name: 'المغير - El M\'Ghair' },
+      { code: '58', name: 'المنيعة - El Meniaa' }
+    ];
+
+    const SECTOR_LABELS = {
+      BTPH: 'BTPH وأشغال عمومية',
+      IT: 'إعلام آلي وشبكات',
+      Medical: 'عتاد طبي وصيدلاني',
+      Furniture: 'أثاث وقرطاسية',
+      Energy: 'طاقة ومحروقات (BAOSEM)',
+      Transport: 'نقل ومركبات',
+      Security: 'حراسة وأمن صناعي',
+      Studies: 'دراسات واستشارات',
+      Hydraulics: 'موارد مائية وري',
+      Food: 'تغذية وإطعام',
+      Industry: 'صناعة وميكانيك'
+    };
+
+    // ═════════════════════════════════════════════════════════════════
+    // ── SAMPLE AUTHENTIC ALGERIAN PROCUREMENT NOTICES ──
+    // ═════════════════════════════════════════════════════════════════
+    const SAMPLE_DZ_TENDERS = [
+      {
+        id: 'DZ-2026-001',
+        reference: '09/DTP/2026',
+        title: 'أشغال صيانة وإعادة تأهيل مقاطع من الطريق الوطني رقم 01 وتحديث منشآت تصريف المياه',
+        authority: 'مديرية الأشغال العمومية - ولاية البليدة',
+        wilaya: '09',
+        wilayaName: 'البليدة',
+        sector: 'BTPH',
+        type: 'appel_offres',
+        typeName: 'طلب عروض وطني مفتوح مع اشتراط قدرات دنيا',
+        source: 'BOMOP N° 1482 / جريدة الشعب',
+        publishDate: '2026-10-25',
+        deadline: new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10),
+        priceCahier: 5000,
+        caution: '1% من مبلغ العرض المالي',
+        qualification: 'شهادة التأهيل والتصنيف المهنيين درجة 3 فما فوق في الأشغال العمومية',
+        estimatedAmount: 48500000,
+        lots: ['الحصة 1: أشغال التعبيد والتزفيت بالخرسانة الإسفلتية', 'الحصة 2: منشآت تصريف مياه الأمطار والمنحدرات'],
+        depositPlace: 'مقر مديرية الأشغال العمومية - مصلحة صيانة الطرق - البليدة'
+      },
+      {
+        id: 'DZ-2026-002',
+        reference: 'AOI N° 04/DSI/AT/2026',
+        title: 'Fourniture, installation et mise en service d\'équipements réseaux cœur et sécurité informatique pour les centres régionaux',
+        authority: 'اتصالات الجزائر - المديرية العامة (Algérie Télécom)',
+        wilaya: '16',
+        wilayaName: 'الجزائر',
+        sector: 'IT',
+        type: 'appel_offres',
+        typeName: 'Appel d\'Offres National et International Restreint',
+        source: 'BAOSEM / El Moudjahid',
+        publishDate: '2026-10-28',
+        deadline: new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10), // Urgent < 3 days
+        priceCahier: 15000,
+        caution: '500,000 DZD',
+        qualification: 'Partenariat certifié Constructeur (Tier-1) et références similaires probantes',
+        estimatedAmount: 92000000,
+        lots: ['Lot 1: Routeurs cœur et switchs niveau 3', 'Lot 2: Pare-feu Next-Gen et sondes de détection'],
+        depositPlace: 'Direction Générale d\'Algérie Télécom, Route Nationale n°5, Cinq Maisons, Mohammadia, Alger'
+      },
+      {
+        id: 'DZ-2026-003',
+        reference: 'CONS-012/CHU/2026',
+        title: 'اقتناء وتوريد عتاد تصوير طبي ومستهلكات جراحة العظام لفائدة المصالح الاستشفائية',
+        authority: 'المركز الاستشفائي الجامعي مصطفى باشا - الجزائر (CHU Mustapha)',
+        wilaya: '16',
+        wilayaName: 'الجزائر',
+        sector: 'Medical',
+        type: 'consultation',
+        typeName: 'استشارة بسيطة',
+        source: 'لوحة إعلانات الإدارة والموقع الرسمي',
+        publishDate: '2026-10-29',
+        deadline: new Date(Date.now() + 6 * 86400000).toISOString().slice(0, 10),
+        priceCahier: 0, // gratuit
+        caution: 'معفى طبقاً لقانون الصفقات للاستشارات',
+        qualification: 'مؤسسات حائزة على رخصة استيراد وتوزيع العتاد الطبي المعتمدة من وزارة الصحة',
+        estimatedAmount: 14200000,
+        lots: ['الحصة 1: مستلزمات جراحة العظام والمفاصل الاصطناعية', 'الحصة 2: أجهزة تصوير بالأشعة رقمية محمولة'],
+        depositPlace: 'مكتب الصفقات العمومية - الطابق الأول - مستشفى مصطفى باشا - ساحة أول ماي'
+      },
+      {
+        id: 'DZ-2026-004',
+        reference: 'AO-SONATRACH-DP-088/2026',
+        title: 'Prestations de gardiennage, surveillance et protection des installations industrielles de production gazière',
+        authority: 'سوناطراك - قسم الإنتاج (Sonatrach DP)',
+        wilaya: '30',
+        wilayaName: 'ورقلة',
+        sector: 'Security',
+        type: 'appel_offres',
+        typeName: 'Appel d\'Offres National Ouvert',
+        source: 'BAOSEM N° 2189',
+        publishDate: '2026-10-22',
+        deadline: new Date(Date.now() + 21 * 86400000).toISOString().slice(0, 10),
+        priceCahier: 10000,
+        caution: '2,000,000 DZD (Caution bancaire obligatoire)',
+        qualification: 'Agrément d\'exercice d\'activités de gardiennage délivré par le Ministère de l\'Intérieur',
+        estimatedAmount: 145000000,
+        lots: ['Lot Unique: Surveillance globale des bases de vie et stations de compression'],
+        depositPlace: 'Sonatrach - Direction Régionale de Hassi Messaoud - Base 24 Février'
+      },
+      {
+        id: 'DZ-2026-005',
+        reference: 'ATTRIB-07/DMI/ORAN/2026',
+        title: 'مشروع إنجاز شبكة الألياف البصرية وربط الإدارات المحلية والبلديات بالولاية',
+        authority: 'ولاية وهران - مديرية المواصلات السلكية واللاسلكية',
+        wilaya: '31',
+        wilayaName: 'وهران',
+        sector: 'IT',
+        type: 'attribution',
+        typeName: 'إعلان عن منح مؤقت للصفقة (Attribution Provisoire)',
+        source: 'BOMOP / جريدة الجمهورية',
+        publishDate: '2026-10-29',
+        deadline: new Date(Date.now() + 8 * 86400000).toISOString().slice(0, 10),
+        winnerCompany: 'SARL ALGERIA NETWORK SOLUTIONS',
+        winnerAmount: 38750000,
+        techScore: '84.5 / 100',
+        notes: 'مدة الإنجاز: 04 أشهر. أجل الطعون 10 أيام ابتداءً من تاريخ أول نشر.'
+      },
+      {
+        id: 'DZ-2026-006',
+        reference: '22/DTP/SETIF/2026',
+        title: 'أشغال تدعيم الطريق الولائي رقم 64 الرابط بين بلديتي العلمة وبلاعة وتشييد الجدران الاستنادية',
+        authority: 'ولاية سطيف - مديرية الأشغال العمومية',
+        wilaya: '19',
+        wilayaName: 'سطيف',
+        sector: 'BTPH',
+        type: 'appel_offres',
+        typeName: 'طلب عروض مفتوح مع اشتراط قدرات دنيا',
+        source: 'BOMOP / جريدة النصر',
+        publishDate: '2026-10-24',
+        deadline: new Date(Date.now() + 18 * 86400000).toISOString().slice(0, 10),
+        priceCahier: 4000,
+        caution: '1% من مبلغ العرض',
+        qualification: 'تصنيف درجة 4 أو أكثر في ميدان الأشغال العمومية',
+        estimatedAmount: 64000000,
+        lots: ['حصة فريدة: أشغال الحفر، التكسية بالإسفلت وبناء الجدران الحجرية'],
+        depositPlace: 'مقر ولاية سطيف - الأمانة العامة للجنة الصفقات العمومية'
+      },
+      {
+        id: 'DZ-2026-007',
+        reference: 'SONELGAZ-DIST-05/2026',
+        title: 'Fourniture de câbles électriques moyenne et basse tension et transformateurs de distribution urbaine',
+        authority: 'سونلغاز - شركة التوزيع (Sonelgaz Distribution Constantine)',
+        wilaya: '25',
+        wilayaName: 'قسنطينة',
+        sector: 'Energy',
+        type: 'appel_offres',
+        typeName: 'Appel d\'Offres National Ouvert',
+        source: 'BAOSEM / An-Nasr',
+        publishDate: '2026-10-27',
+        deadline: new Date(Date.now() + 25 * 86400000).toISOString().slice(0, 10),
+        priceCahier: 8000,
+        caution: '1.5% du montant HT',
+        qualification: 'Fabricants ou représentants agréés avec homologation technique Sonelgaz',
+        estimatedAmount: 82500000,
+        lots: ['Lot 1: Câbles torsadés aluminium BT', 'Lot 2: Transformateurs hermétiques 400 kVA'],
+        depositPlace: 'Direction de Distribution de Constantine - Service Approvisionnements'
+      },
+      {
+        id: 'DZ-2026-008',
+        reference: 'USTHB-AO-02/2026',
+        title: 'اقتناء وتجديد أثاث مدرجات وقاعات التدريس ومكاتب الأطقم البيداغوجية لكليات الجامعة',
+        authority: 'جامعة هواري بومدين للعلوم والتكنولوجيا (USTHB - باب الزوار)',
+        wilaya: '16',
+        wilayaName: 'الجزائر',
+        sector: 'Furniture',
+        type: 'appel_offres',
+        typeName: 'طلب عروض وطني مفتوح',
+        source: 'BOMOP / جريدة الوطن',
+        publishDate: '2026-10-20',
+        deadline: new Date(Date.now() + 1 * 86400000).toISOString().slice(0, 10), // Urgent < 2 days
+        priceCahier: 3000,
+        caution: '1% من العرض المالي',
+        qualification: 'صانعو وموزعو الأثاث المكتبي والمدرسي مع تقديم عينات مطابقة',
+        estimatedAmount: 26000000,
+        lots: ['الحصة 1: طاولات ومقاعد مدرجات ثابتة', 'الحصة 2: مكاتب وكراسي دوارة وخزانات أرشيف'],
+        depositPlace: 'جامعة هواري بومدين - المديرية الفرعية للوسائل والصيانة - باب الزوار'
+      },
+      {
+        id: 'DZ-2026-009',
+        reference: 'PROROG-03/COSIDER/2026',
+        title: 'تمديد أجل استشارة اقتناء شاحنات ومعدات الخرسانة الجاهزة لمشاريع السكن',
+        authority: 'مجمع كوسيدار للبناء (Cosider Construction)',
+        wilaya: '16',
+        wilayaName: 'الجزائر',
+        sector: 'Transport',
+        type: 'prorogation',
+        typeName: 'إعلان عن تمديد آجال العروض (Avis de Prorogation de Délai)',
+        source: 'جريدة المجاهد',
+        publishDate: '2026-10-28',
+        deadline: new Date(Date.now() + 12 * 86400000).toISOString().slice(0, 10),
+        notes: 'نظراً لطلبات المتعهدين لتمديد مهلة تحضير العينات الفنية، تقرر تمديد الأجل بـ 15 يوماً إضافية.'
+      },
+      {
+        id: 'DZ-2026-010',
+        reference: 'DRE-11/OUARGLA/2026',
+        title: 'مشروع حفر وتجهيز آبار ألبينية عميقة وتوصيل قنوات الري الفلاحي بمحيطات الاستصلاح',
+        authority: 'مديرية الموارد المائية - ولاية ورقلة',
+        wilaya: '30',
+        wilayaName: 'ورقلة',
+        sector: 'Hydraulics',
+        type: 'appel_offres',
+        typeName: 'طلب عروض وطني مفتوح مع اشتراط قدرات دنيا',
+        source: 'BOMOP / جريدة الشروق',
+        publishDate: '2026-10-26',
+        deadline: new Date(Date.now() + 20 * 86400000).toISOString().slice(0, 10),
+        priceCahier: 6000,
+        caution: '800,000 دج',
+        qualification: 'شهادة التأهيل والتصنيف في قطاع الري والأشغال الهيدروليكية درجة 4 فما فوق',
+        estimatedAmount: 76000000,
+        lots: ['الحصة 1: حفر بئرين عميقين بعمق 650 متر', 'الحصة 2: توريد المضخات الغاطسة ومد القنوات'],
+        depositPlace: 'مديرية الموارد المائية - ورقلة - مصلحة حشد الموارد المائية'
+      }
+    ];
+
+    // ═════════════════════════════════════════════════════════════════
+    // ── APPLICATION STATE & STORAGE ──
+    // ═════════════════════════════════════════════════════════════════
+    const STORAGE_KEY_DZ_TENDERS = 'tender-dz-portal-tenders';
+    const STORAGE_KEY_DZ_FAVS = 'tender-dz-portal-favorites';
+
+    let allDzTenders = [];
+    let favoriteIds = [];
+    let activePortalTab = 'all'; // 'all' | 'attributions' | 'prorogations' | 'favorites'
+    let activeQuickChip = 'all';
+    let currentModalTender = null;
+
+    function initPortal(){
+      // Initialize Wilayas dropdown
+      const wilayaSelect = document.getElementById('dzFilterWilaya');
+      const pubWilayaSelect = document.getElementById('pubWilaya');
+      
+      ALGERIAN_WILAYAS.forEach(w => {
+        const opt1 = document.createElement('option');
+        opt1.value = w.code;
+        opt1.textContent = w.code + ' - ' + w.name;
+        wilayaSelect.appendChild(opt1);
+
+        const opt2 = document.createElement('option');
+        opt2.value = w.code;
+        opt2.textContent = w.code + ' - ' + w.name;
+        pubWilayaSelect.appendChild(opt2);
+      });
+
+      // Load persisted tenders or fall back to rich sample tenders
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY_DZ_TENDERS);
+        if(stored){
+          allDzTenders = JSON.parse(stored);
+        }
+      } catch(e){ allDzTenders = []; }
+
+      if(!allDzTenders || !allDzTenders.length){
+        allDzTenders = JSON.parse(JSON.stringify(SAMPLE_DZ_TENDERS));
+        saveDzTenders();
+      }
+
+      // Load favorites
+      try {
+        favoriteIds = JSON.parse(localStorage.getItem(STORAGE_KEY_DZ_FAVS) || '[]');
+      } catch(e){ favoriteIds = []; }
+
+      updatePortalKPIs();
+      filterAndRenderTenders();
+    }
+
+    function saveDzTenders(){
+      try {
+        localStorage.setItem(STORAGE_KEY_DZ_TENDERS, JSON.stringify(allDzTenders));
+      } catch(e){}
+    }
+
+    function saveFavorites(){
+      try {
+        localStorage.setItem(STORAGE_KEY_DZ_FAVS, JSON.stringify(favoriteIds));
+      } catch(e){}
+    }
+
+    // ═════════════════════════════════════════════════════════════════
+    // ── TABS & FILTERING ──
+    // ═════════════════════════════════════════════════════════════════
+    function switchPortalTab(tab){
+      activePortalTab = tab;
+      document.querySelectorAll('.portal-tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-tab') === tab);
+      });
+
+      const feedDiv = document.getElementById('tabContentFeed');
+      const attrDiv = document.getElementById('tabContentAttributions');
+
+      if(tab === 'attributions'){
+        feedDiv.style.display = 'none';
+        attrDiv.style.display = 'block';
+        renderAttributionsTable();
+      } else {
+        feedDiv.style.display = 'block';
+        attrDiv.style.display = 'none';
+        filterAndRenderTenders();
+      }
+    }
+    window.switchPortalTab = switchPortalTab;
+
+    function setQuickChip(chipId){
+      activeQuickChip = chipId;
+      document.querySelectorAll('.chip-item').forEach(c => {
+        c.classList.toggle('active', c.getAttribute('data-chip') === chipId);
+      });
+
+      // Reset or set select filters
+      if(chipId.startsWith('sector-')){
+        document.getElementById('dzFilterSector').value = chipId.replace('sector-', '');
+      } else if(chipId.startsWith('wilaya-')){
+        document.getElementById('dzFilterWilaya').value = chipId.replace('wilaya-', '');
+      } else if(chipId === 'all'){
+        document.getElementById('dzFilterSector').value = '';
+        document.getElementById('dzFilterWilaya').value = '';
+        document.getElementById('dzFilterNoticeType').value = '';
+      }
+
+      filterAndRenderTenders();
+    }
+    window.setQuickChip = setQuickChip;
+
+    function filterAndRenderTenders(){
+      const searchTxt = String(document.getElementById('dzSearchText')?.value || '').toLowerCase().trim();
+      const wilaya = document.getElementById('dzFilterWilaya')?.value;
+      const sector = document.getElementById('dzFilterSector')?.value;
+      const noticeType = document.getElementById('dzFilterNoticeType')?.value;
+      const now = new Date();
+
+      let list = allDzTenders.slice();
+
+      // Tab filtering
+      if(activePortalTab === 'favorites'){
+        list = list.filter(t => favoriteIds.includes(t.id));
+      } else if(activePortalTab === 'prorogations'){
+        list = list.filter(t => t.type === 'prorogation' || t.type === 'infructueux');
+      } else {
+        // 'all' excludes pure attributions in the main card feed
+        list = list.filter(t => t.type !== 'attribution');
+      }
+
+      // Quick chip urgent filter
+      if(activeQuickChip === 'urgent'){
+        list = list.filter(t => {
+          if(!t.deadline) return false;
+          const diff = Math.ceil((new Date(t.deadline) - now) / (1000*60*60*24));
+          return diff >= 0 && diff <= 3;
+        });
+      }
+
+      // Dropdown filters
+      if(wilaya) list = list.filter(t => t.wilaya === wilaya);
+      if(sector) list = list.filter(t => t.sector === sector);
+      if(noticeType) list = list.filter(t => t.type === noticeType);
+
+      // Search keyword
+      if(searchTxt){
+        list = list.filter(t => {
+          return [t.title, t.authority, t.reference, t.wilayaName, t.qualification, t.depositPlace, t.source]
+            .some(val => String(val || '').toLowerCase().includes(searchTxt));
+        });
+      }
+
+      renderTenderCards(list);
+    }
+    window.filterAndRenderTenders = filterAndRenderTenders;
+
+    function renderTenderCards(list){
+      const container = document.getElementById('dzTendersGrid');
+      if(!container) return;
+      container.innerHTML = '';
+
+      if(!list.length){
+        container.innerHTML = `
+          <div class="empty-state">
+            <i class="fas fa-search-minus"></i>
+            <h3 style="font-size:16px; font-weight:800; color:#334155; margin-bottom:6px;">لم يتم العثور على مناقصات مطابقة</h3>
+            <p style="font-size:13px; color:#64748b;">جرب تغيير خيارات التصفية أو البحث عن قطاع أو ولاية أخرى.</p>
+          </div>
+        `;
+        return;
+      }
+
+      const now = new Date();
+
+      list.forEach(t => {
+        const isFav = favoriteIds.includes(t.id);
+        const card = document.createElement('div');
+        card.className = 'tender-card';
+
+        // Urgency countdown
+        let countdownBadge = '';
+        if(t.deadline){
+          const d = new Date(t.deadline);
+          const diff = Math.ceil((d - now) / (1000*60*60*24));
+          if(diff < 0){
+            countdownBadge = '<span class="countdown-pill countdown-expired"><i class="fas fa-lock"></i> منتهي</span>';
+          } else if(diff <= 2){
+            countdownBadge = `<span class="countdown-pill countdown-urgent"><i class="fas fa-fire fa-shake"></i> ${diff === 0 ? 'اليوم آخر أجل!' : (diff === 1 ? 'ينتهي غداً!' : 'يومان فقط!')}</span>`;
+          } else if(diff <= 5){
+            countdownBadge = `<span class="countdown-pill countdown-warning"><i class="fas fa-clock"></i> ${diff} أيام متبقية</span>`;
+          } else {
+            countdownBadge = `<span class="countdown-pill countdown-safe"><i class="fas fa-calendar-check"></i> ${diff} يوم متبقي</span>`;
+          }
+        }
+
+        // Icon for authority
+        let authIcon = 'fa-building';
+        if(t.sector === 'IT') authIcon = 'fa-network-wired';
+        else if(t.sector === 'Medical') authIcon = 'fa-hospital-user';
+        else if(t.sector === 'Energy') authIcon = 'fa-gas-pump';
+        else if(t.sector === 'BTPH') authIcon = 'fa-hard-hat';
+
+        card.innerHTML = `
+          <div>
+            <div class="card-top-meta">
+              <div class="card-authority">
+                <div class="auth-logo-badge"><i class="fas ${authIcon}"></i></div>
+                <div>
+                  <div class="auth-name" title="${escapeHtml(t.authority)}">${escapeHtml(t.authority)}</div>
+                  <div class="auth-source"><i class="fas fa-newspaper"></i> ${escapeHtml(t.source || 'BOMOP')}</div>
+                </div>
+              </div>
+              <button class="card-star-btn ${isFav ? 'starred' : ''}" onclick="toggleFavorite('${t.id}')" title="حفظ في المفضلة">
+                <i class="${isFav ? 'fas' : 'far'} fa-star"></i>
+              </button>
+            </div>
+
+            <div class="card-badges">
+              <span class="dz-tag dz-tag-wilaya"><i class="fas fa-map-marker-alt"></i> ${escapeHtml(t.wilayaName || t.wilaya)}</span>
+              <span class="dz-tag dz-tag-sector">${escapeHtml(SECTOR_LABELS[t.sector] || t.sector || 'عام')}</span>
+              ${countdownBadge}
+            </div>
+
+            <div class="tender-card-title" onclick="openDetailModal('${t.id}')" title="${escapeHtml(t.title)}">
+              ${escapeHtml(t.title)}
+            </div>
+
+            <div class="tender-card-specs">
+              <div class="spec-item">
+                <span class="spec-label">المرجع:</span>
+                <span class="spec-val">${escapeHtml(t.reference || 'AO')}</span>
+              </div>
+              <div class="spec-item">
+                <span class="spec-label">دفتر الشروط:</span>
+                <span class="spec-val" style="color:#059669;">${t.priceCahier > 0 ? (formatMoney(t.priceCahier)) : 'مجاني (Gratuit)'}</span>
+              </div>
+              <div class="spec-item">
+                <span class="spec-label">كفالة التعهد:</span>
+                <span class="spec-val">${escapeHtml(t.caution || '1%')}</span>
+              </div>
+              <div class="spec-item">
+                <span class="spec-label">تاريخ الاستحقاق:</span>
+                <span class="spec-val" style="color:#b91c1c;">${escapeHtml(t.deadline || '-')}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="tender-card-footer">
+            <button class="btn-view-dossier" onclick="openDetailModal('${t.id}')">
+              <i class="fas fa-eye"></i> <span>معاينة الإعلان</span>
+            </button>
+            <button class="btn-import-pipeline ${isImportedToErp(t) ? 'imported' : ''}" onclick="importTenderToERP('${t.id}')">
+              <i class="fas ${isImportedToErp(t) ? 'fa-check-circle' : 'fa-plus-circle'}"></i>
+              <span>${isImportedToErp(t) ? 'موجود في الـ ERP' : 'استيراد لمناقصاتي'}</span>
+            </button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function renderAttributionsTable(){
+      const tbody = document.getElementById('attributionsTableBody');
+      if(!tbody) return;
+      tbody.innerHTML = '';
+
+      const attributions = allDzTenders.filter(t => t.type === 'attribution');
+      if(!attributions.length){
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color:#64748b;">لا توجد إعلانات منح مؤقت حالياً</td></tr>';
+        return;
+      }
+
+      attributions.forEach(t => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong style="color:var(--dz-primary);">${escapeHtml(t.reference||'ATTRIB')}</strong></td>
+          <td style="font-weight:600;">${escapeHtml(t.authority||'-')}</td>
+          <td>${escapeHtml(t.title||'-')}</td>
+          <td style="font-weight:700; color:#1e40af;">${escapeHtml(t.winnerCompany||'-')}</td>
+          <td style="text-align:right; font-weight:800; color:#059669;">${formatMoney(t.winnerAmount||0)}</td>
+          <td style="text-align:center;"><span class="badge badge-open" style="font-size:11px;">${escapeHtml(t.techScore||'-')}</span></td>
+          <td style="text-align:center;"><span class="badge badge-submitted" style="font-size:11px;">10 أيام (ساري)</span></td>
+          <td style="text-align:center;">
+            <button class="btn btn-secondary btn-sm" style="padding:3px 8px;" onclick="openDetailModal('${t.id}')" title="التفاصيل"><i class="fas fa-eye"></i></button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // ═════════════════════════════════════════════════════════════════
+    // ── ERP SEAMLESS PIPELINE IMPORT ──
+    // ═════════════════════════════════════════════════════════════════
+    function getErpStorageKey(){
+      const cid = (window.CompanyStorage && typeof window.CompanyStorage.getActiveCompanyId === 'function')
+        ? window.CompanyStorage.getActiveCompanyId()
+        : 'default';
+      return 'consulting-tenders-data::' + cid;
+    }
+
+    function isImportedToErp(tender){
+      try {
+        const raw = (window.ZS && window.ZS.getItem(getErpStorageKey())) || localStorage.getItem(getErpStorageKey()) || localStorage.getItem('consulting-tenders-data');
+        if(!raw) return false;
+        const list = JSON.parse(raw);
+        if(!Array.isArray(list)) return false;
+        return list.some(item => String(item.reference || '').trim() === String(tender.reference || '').trim());
+      } catch(e){ return false; }
+    }
+
+    function importTenderToERP(tenderId){
+      const t = allDzTenders.find(x => x.id === tenderId);
+      if(!t) return;
+
+      const storageKey = getErpStorageKey();
+      let erpTenders = [];
+      try {
+        const raw = (window.ZS && window.ZS.getItem(storageKey)) || localStorage.getItem(storageKey) || localStorage.getItem('consulting-tenders-data');
+        if(raw) erpTenders = JSON.parse(raw);
+      } catch(e){ erpTenders = []; }
+      if(!Array.isArray(erpTenders)) erpTenders = [];
+
+      // Check if already in ERP
+      const exists = erpTenders.some(item => String(item.reference || '').trim() === String(t.reference || '').trim());
+      if(exists){
+        showToast('هذه المناقصة مستوردة بالفعل في نظام الـ ERP الخاص بك.', 'info');
+        return;
+      }
+
+      // Build ERP Tender Object adhering to Decree 15-247
+      const newErpTender = {
+        id: Date.now(),
+        reference: t.reference || ('AO/' + new Date().getFullYear() + '/' + Date.now().toString().slice(-3)),
+        title: t.title || 'صفقة عمومية',
+        authority: t.authority || 'الجهة المتعاقدة',
+        deadline: t.deadline || new Date(Date.now() + 15 * 86400000).toISOString().slice(0, 10),
+        amount: Number(t.estimatedAmount || 0),
+        status: 'Open', // 'Draft'
+        notes: `[مستوردة من تندر الجزائر - Tender DZ]\nالمصدر: ${t.source || 'BOMOP'}\nالولاية: ${t.wilayaName}\nالقطاع: ${t.sector}\nثمن دفتر الشروط: ${t.priceCahier || 0} دج\nكفالة التعهد: ${t.caution || '1%'}\nشروط التأهيل: ${t.qualification || 'حسب دفتر الشروط'}\nمكان الإيداع: ${t.depositPlace || ''}`,
+        checklist: [
+          { text: 'Déclaration de candidature (تصريح بالترشح)', done: false, category: 'ملف الترشح' },
+          { text: 'Déclaration de probité (تصريح بالنزاهة)', done: false, category: 'ملف الترشح' },
+          { text: 'Registre de Commerce électronique (السجل التجاري)', done: true, category: 'ملف الترشح' },
+          { text: 'Extrait de rôle apuré (مستخرج الضرائب مصفى)', done: true, category: 'ملف الترشح' },
+          { text: 'Mise à jour CNAS & CASNOS (شهادات أداء المستحقات)', done: true, category: 'ملف الترشح' },
+          { text: 'Déclaration à souscrire (تصريح بالاكتتاب)', done: false, category: 'العرض التقني' },
+          { text: 'Mémoire technique (المذكرة التقنية)', done: false, category: 'العرض التقني' },
+          { text: 'Caution bancaire (كفالة التعهد المصرفية)', done: false, category: 'العرض المالي' },
+          { text: 'Lettre de soumission (رسالة التعهد بالعرض)', done: false, category: 'العرض المالي' },
+          { text: 'Bordereau des prix unitaires BPU (جدول الأسعار الأحادية)', done: false, category: 'العرض المالي' }
+        ],
+        cautions: [
+          {
+            id: 'CAUT-' + Date.now(),
+            type: 'soumission',
+            bank: 'BNA',
+            amount: t.estimatedAmount ? Math.round(t.estimatedAmount * 0.01) : 150000,
+            percent: 1.0,
+            expiryDate: t.deadline,
+            status: 'Active',
+            notes: 'كفالة تعهد بالعرض مستخرجة آلياً من إعلان المناقصة'
+          }
+        ],
+        bpuItems: (t.lots && t.lots.length) ? t.lots.map((lot, idx) => ({
+          designation: lot,
+          unit: 'forfait',
+          qty: 1,
+          costHT: t.estimatedAmount ? Math.round((t.estimatedAmount / 1.18) / t.lots.length) : 500000,
+          margin: 18,
+          unitPriceHT: t.estimatedAmount ? Math.round(t.estimatedAmount / t.lots.length) : 590000
+        })) : [],
+        createdAt: new Date().toISOString()
+      };
+
+      erpTenders.unshift(newErpTender);
+
+      // Save to ZS and LocalStorage
+      if(window.ZS && typeof window.ZS.setItem === 'function'){
+        window.ZS.setItem(storageKey, JSON.stringify(erpTenders));
+        window.ZS.setItem('consulting-tenders-data', JSON.stringify(erpTenders));
+      } else {
+        localStorage.setItem(storageKey, JSON.stringify(erpTenders));
+        localStorage.setItem('consulting-tenders-data', JSON.stringify(erpTenders));
+      }
+
+      showToast(`تم بنجاح استيراد المناقصة (${t.reference}) إلى مسار صفقات الـ ERP!`, 'success');
+      filterAndRenderTenders();
+      updatePortalKPIs();
+    }
+    window.importTenderToERP = importTenderToERP;
+
+    // ═════════════════════════════════════════════════════════════════
+    // ── FAVORITES & KPIS ──
+    // ═════════════════════════════════════════════════════════════════
+    function toggleFavorite(tenderId){
+      const idx = favoriteIds.indexOf(tenderId);
+      if(idx === -1){
+        favoriteIds.push(tenderId);
+        showToast('تمت إضافة المناقصة إلى المفضلة ⭐', 'success');
+      } else {
+        favoriteIds.splice(idx, 1);
+        showToast('تمت إزالة المناقصة من المفضلة', 'info');
+      }
+      saveFavorites();
+      updatePortalKPIs();
+      filterAndRenderTenders();
+    }
+    window.toggleFavorite = toggleFavorite;
+
+    function updatePortalKPIs(){
+      const now = new Date();
+      const activeTenders = allDzTenders.filter(t => t.type !== 'attribution');
+      const urgent = activeTenders.filter(t => {
+        if(!t.deadline) return false;
+        const diff = Math.ceil((new Date(t.deadline) - now) / (1000*60*60*24));
+        return diff >= 0 && diff <= 3;
+      });
+      const attributions = allDzTenders.filter(t => t.type === 'attribution');
+      const prorogations = allDzTenders.filter(t => t.type === 'prorogation' || t.type === 'infructueux');
+
+      const el = id => document.getElementById(id);
+      if(el('kpiTotalActive')) el('kpiTotalActive').textContent = activeTenders.length;
+      if(el('kpiUrgentCount')) el('kpiUrgentCount').textContent = urgent.length;
+      if(el('kpiAttributionsCount')) el('kpiAttributionsCount').textContent = attributions.length;
+      if(el('kpiFavoritesCount')) el('kpiFavoritesCount').textContent = favoriteIds.length;
+
+      if(el('tabBadgeAll')) el('tabBadgeAll').textContent = activeTenders.length;
+      if(el('tabBadgeAttr')) el('tabBadgeAttr').textContent = attributions.length;
+      if(el('tabBadgeProrog')) el('tabBadgeProrog').textContent = prorogations.length;
+      if(el('tabBadgeFav')) el('tabBadgeFav').textContent = favoriteIds.length;
+    }
+
+    // ═════════════════════════════════════════════════════════════════
+    // ── TENDER DETAIL MODAL ──
+    // ═════════════════════════════════════════════════════════════════
+    function openDetailModal(tenderId){
+      const t = allDzTenders.find(x => x.id === tenderId);
+      if(!t) return;
+      currentModalTender = t;
+
+      document.getElementById('detailModalTitle').textContent = (t.reference || 'AO') + ' — ' + (t.title || 'إعلان الصفقة');
+
+      const body = document.getElementById('detailModalBody');
+      const now = new Date();
+      let diffDays = '-';
+      if(t.deadline){
+        const d = new Date(t.deadline);
+        const diff = Math.ceil((d - now) / (1000*60*60*24));
+        diffDays = diff >= 0 ? (diff + ' يوم متبقي') : 'منتهي الصلاحية';
+      }
+
+      body.innerHTML = `
+        <div class="official-notice-sheet">
+          <div class="notice-header-official">
+            <h3>الجمهورية الجزائرية الديمقراطية الشعبية</h3>
+            <div style="font-size:13px; font-weight:700; color:#0f172a; margin-top:4px;">${escapeHtml(t.authority)}</div>
+            <h2>${escapeHtml(t.typeName || 'إعلان عن طلب عروض')}</h2>
+            <div style="font-size:13px; font-weight:800; color:#1e40af; margin-top:6px;">رقم الإعلان: ${escapeHtml(t.reference || 'AO')}</div>
+          </div>
+
+          <p style="margin-bottom:14px; text-align:justify;">
+            تعلن <strong>${escapeHtml(t.authority)}</strong> عن إطلاق <strong>${escapeHtml(t.typeName || 'طلب عروض')}</strong> المتعلق بـ:
+          </p>
+
+          <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:8px; padding:14px; font-size:14px; font-weight:800; color:#0f172a; margin-bottom:16px;">
+            ${escapeHtml(t.title)}
+          </div>
+
+          ${(t.lots && t.lots.length) ? `
+            <div style="margin-bottom:14px;">
+              <strong style="color:#0f172a;">تفصيل الحصص (Détail des Lots):</strong>
+              <ul style="margin-top:6px; padding-right:24px; line-height:1.8;">
+                ${t.lots.map(lot => `<li>${escapeHtml(lot)}</li>`).join('')}
+              </ul>
+            </div>
+          ` : ''}
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:14px; margin-bottom:16px; font-size:13px;">
+            <div>• <strong>الولاية:</strong> ${escapeHtml(t.wilayaName || t.wilaya)}</div>
+            <div>• <strong>القطاع:</strong> ${escapeHtml(SECTOR_LABELS[t.sector] || t.sector || 'عام')}</div>
+            <div>• <strong>ثمن دفتر الشروط:</strong> <span style="font-weight:800; color:#059669;">${t.priceCahier > 0 ? formatMoney(t.priceCahier) : 'مجاني'}</span></div>
+            <div>• <strong>كفالة التعهد:</strong> <strong>${escapeHtml(t.caution || '1%')}</strong></div>
+            <div>• <strong>تاريخ آخر أجل للإيداع:</strong> <span style="font-weight:800; color:#b91c1c;">${escapeHtml(t.deadline || '-')} (${diffDays})</span></div>
+            <div>• <strong>مصدر النشر:</strong> ${escapeHtml(t.source || 'BOMOP')}</div>
+          </div>
+
+          <div style="margin-bottom:14px;">
+            <strong style="color:#0f172a;">شروط المشاركة والتأهيل المطلوب:</strong>
+            <p style="margin-top:4px; color:#334155;">${escapeHtml(t.qualification || 'مفتوح لكافة المؤسسات والشركات المؤهلة والمستوفية للشروط القانونية المنصوص عليها في دفتر الشروط والمادة 67 من المرسوم الرئاسي 15-247.')}</p>
+          </div>
+
+          <div style="margin-bottom:14px;">
+            <strong style="color:#0f172a;">مكان سحب دفتر الشروط وإيداع الأظرفة:</strong>
+            <p style="margin-top:4px; color:#334155;">${escapeHtml(t.depositPlace || 'يتم سحب دفتر الشروط وإيداع العروض في مقر المصلحة المتعاقدة المذكور أعلاه قبل انقضاء آخر أجل على الساعة 12:00 زوالاً.')}</p>
+          </div>
+
+          <div style="border-top:1px dashed #cbd5e1; padding-top:10px; font-size:12px; color:#64748b; display:flex; justify-content:space-between;">
+            <span>نُشر في: ${escapeHtml(t.publishDate || '2026-10-25')}</span>
+            <span>بوابة تندر الجزائر — Zeralda ERP</span>
+          </div>
+        </div>
+      `;
+
+      const btnImport = document.getElementById('btnDetailImport');
+      if(btnImport){
+        btnImport.innerHTML = `<i class="fas ${isImportedToErp(t) ? 'fa-check' : 'fa-tasks'}"></i> <span>${isImportedToErp(t) ? 'تم الاستيراد في الـ ERP' : 'استيراد لمناقصاتي في النظام (ERP)'}</span>`;
+      }
+
+      openModal('tenderDetailModal');
+    }
+    window.openDetailModal = openDetailModal;
+
+    function closeDetailModal(){
+      closeModal('tenderDetailModal');
+    }
+    window.closeDetailModal = closeDetailModal;
+
+    function importCurrentModalTender(){
+      if(currentModalTender){
+        importTenderToERP(currentModalTender.id);
+        closeDetailModal();
+      }
+    }
+    window.importCurrentModalTender = importCurrentModalTender;
+
+    function printOfficialNotice(){
+      if(!currentModalTender) return;
+      const sheet = document.querySelector('.official-notice-sheet');
+      if(!sheet) return;
+
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(`
+        <html dir="rtl" lang="ar">
+        <head>
+          <title>${escapeHtml(currentModalTender.reference || 'Avis')} - تندر الجزائر</title>
+          <style>
+            body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; padding: 25px; color: #000; }
+            .official-notice-sheet { border: 2px solid #000; padding: 25px; }
+            .notice-header-official { text-align: center; border-bottom: 2px solid #000; padding-bottom: 12px; margin-bottom: 16px; }
+            h2, h3 { margin: 4px 0; }
+          </style>
+        </head>
+        <body>
+          ${sheet.outerHTML}
+        </body>
+        </html>
+      `);
+      printWindow.document.close();
+      setTimeout(() => { printWindow.print(); }, 400);
+    }
+    window.printOfficialNotice = printOfficialNotice;
+
+    // ═════════════════════════════════════════════════════════════════
+    // ── PUBLISH CUSTOM TENDER ──
+    // ═════════════════════════════════════════════════════════════════
+    function openPublishModal(){
+      document.getElementById('pubTitle').value = '';
+      document.getElementById('pubAuthority').value = '';
+      document.getElementById('pubRef').value = 'AO/' + new Date().getFullYear() + '/' + Date.now().toString().slice(-3);
+      document.getElementById('pubDeadline').value = new Date(Date.now() + 21 * 86400000).toISOString().slice(0, 10);
+      document.getElementById('pubPriceCahier').value = 3000;
+      document.getElementById('pubCaution').value = '1%';
+      document.getElementById('pubNotes').value = '';
+      openModal('publishTenderModal');
+    }
+    window.openPublishModal = openPublishModal;
+
+    function closePublishModal(){
+      closeModal('publishTenderModal');
+    }
+    window.closePublishModal = closePublishModal;
+
+    function saveCustomTender(){
+      const title = document.getElementById('pubTitle').value.trim();
+      const authority = document.getElementById('pubAuthority').value.trim();
+      if(!title || !authority){
+        showToast('يرجى ملء موضوع المناقصة والمصلحة المتعاقدة على الأقل.', 'error');
+        return;
+      }
+
+      const wilayaCode = document.getElementById('pubWilaya').value || '16';
+      const wilayaObj = ALGERIAN_WILAYAS.find(w => w.code === wilayaCode) || { name: 'الجزائر' };
+
+      const newTender = {
+        id: 'CUSTOM-' + Date.now(),
+        reference: document.getElementById('pubRef').value.trim() || ('AO-' + Date.now()),
+        title: title,
+        authority: authority,
+        wilaya: wilayaCode,
+        wilayaName: wilayaObj.name,
+        sector: document.getElementById('pubSector').value,
+        type: document.getElementById('pubType').value,
+        typeName: document.getElementById('pubType').options[document.getElementById('pubType').selectedIndex].text,
+        source: 'إعلان محلي مسجل يدوياً',
+        publishDate: new Date().toISOString().slice(0, 10),
+        deadline: document.getElementById('pubDeadline').value || new Date().toISOString().slice(0, 10),
+        priceCahier: parseFloat(document.getElementById('pubPriceCahier').value) || 0,
+        caution: document.getElementById('pubCaution').value.trim() || '1%',
+        qualification: 'حسب دفتر الشروط والمواصفات المرفقة',
+        estimatedAmount: 25000000,
+        depositPlace: 'مقر المصلحة المتعاقدة',
+        notes: document.getElementById('pubNotes').value.trim()
+      };
+
+      allDzTenders.unshift(newTender);
+      saveDzTenders();
+      updatePortalKPIs();
+      filterAndRenderTenders();
+      closePublishModal();
+      showToast('تم بنجاح نشر الإعلان في منصة تندر الجزائر!', 'success');
+    }
+    window.saveCustomTender = saveCustomTender;
+
+    function refreshTendersFeed(){
+      const icon = document.getElementById('refreshFeedIcon');
+      if(icon) icon.classList.add('fa-spin');
+      setTimeout(() => {
+        if(icon) icon.classList.remove('fa-spin');
+        filterAndRenderTenders();
+        updatePortalKPIs();
+        showToast('تم تحديث شريط المناقصات والصفقات الحية بنجاح.', 'success');
+      }, 500);
+    }
+    window.refreshTendersFeed = refreshTendersFeed;
+
+    // ═════════════════════════════════════════════════════════════════
+    // ── UTILITIES & MODAL HELPERS ──
+    // ═════════════════════════════════════════════════════════════════
+    function openModal(id){
+      const el = document.getElementById(id);
+      if(el){ el.classList.add('active'); el.setAttribute('aria-hidden', 'false'); }
+    }
+
+    function closeModal(id){
+      const el = document.getElementById(id);
+      if(el){ el.classList.remove('active'); el.setAttribute('aria-hidden', 'true'); }
+    }
+
+    function formatMoney(amount){
+      return Number(amount || 0).toLocaleString('fr-DZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' دج';
+    }
+
+    function escapeHtml(str){
+      if(str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function showToast(msg, type = 'info'){
+      const container = document.getElementById('toastContainer');
+      if(!container) return;
+      const t = document.createElement('div');
+      t.className = 'toast-item ' + type;
+      t.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-info-circle'}"></i> <span>${escapeHtml(msg)}</span>`;
+      container.appendChild(t);
+      setTimeout(() => {
+        t.style.opacity = '0';
+        t.style.transform = 'translateY(8px)';
+        t.style.transition = 'all 0.25s';
+        setTimeout(() => t.remove(), 250);
+      }, 3500);
+    }
+
+    // Initialize on load
+    window.addEventListener('DOMContentLoaded', initPortal);
+  </script>
+</body>
+</html>
