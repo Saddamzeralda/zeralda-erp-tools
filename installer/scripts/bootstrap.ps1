@@ -186,6 +186,14 @@ try {
         'launcher' {
             $cr = [char]13; $lf = [char]10; $crlf = "$cr$lf"
 
+            # Ensure .env exists from .env.example if missing
+            $envEx = Join-Path $AppDir '.env.example'
+            $envAct = Join-Path $AppDir '.env'
+            if (-not (Test-Path $envAct) -and (Test-Path $envEx)) {
+                Copy-Item $envEx $envAct -Force
+                Log "Created default .env from .env.example"
+            }
+
             # 1) Silent launcher VBS -- starts server in background + opens browser URL directly
             #    No tray icon -- just server + browser. Used for desktop shortcut AND auto-start.
             $trayVbs = Join-Path $AppDir 'launcher\Start_Tray_Silent.vbs'
@@ -285,31 +293,12 @@ try {
                 'If serverReady Then',
                 '    WScript.Sleep 2000',
                 'End If',
-                "' Open browser directly to the ERP URL",
+                "' Open browser directly to the local ERP dashboard URL",
                 'Dim Url',
-                'Url = ""',
-                'Dim RemoteInfoFile',
-                'RemoteInfoFile = ProjectRoot & "\data\remote_access_info.json"',
-                'If FSO.FileExists(RemoteInfoFile) Then',
-                '    On Error Resume Next',
-                '    Dim rInfoStream, rContent, rePub',
-                '    Set rInfoStream = FSO.OpenTextFile(RemoteInfoFile, 1)',
-                '    rContent = rInfoStream.ReadAll',
-                '    rInfoStream.Close',
-                '    Set rePub = New RegExp',
-                '    rePub.Pattern = """public_url""\s*:\s*""(https://[^""]+)"""',
-                '    rePub.IgnoreCase = True',
-                '    If rePub.Test(rContent) Then',
-                '        Url = rePub.Execute(rContent)(0).SubMatches(0) & "/zeralda_erp_dashboard.html"',
-                '    End If',
-                '    On Error GoTo 0',
-                'End If',
-                'If Len(Url) = 0 Then',
-                '    If Len(StartupUrl) > 0 Then',
-                '        Url = StartupUrl',
-                '    Else',
-                '        Url = "http://127.0.0.1:" & Port & "/login.html"',
-                '    End If',
+                'If Len(StartupUrl) > 0 And (InStr(StartupUrl, "127.0.0.1") > 0 Or InStr(StartupUrl, "localhost") > 0) Then',
+                '    Url = StartupUrl',
+                'Else',
+                '    Url = "http://127.0.0.1:" & Port & "/zeralda_erp_dashboard.html"',
                 'End If',
                 'WShell.Run Url, 1, False'
             )

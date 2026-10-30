@@ -27,7 +27,7 @@ PYTHON_EXE = APP_DIR / 'python' / 'python.exe'            # bundled python (not 
 SERVER_PY  = APP_DIR / 'server.py'                        # legacy fallback
 APP_MAIN   = APP_DIR / 'app' / 'main.py'                  # FastAPI app (preferred)
 ICON_PATH  = LAUNCHER / 'app.ico'
-DEFAULT_URL = 'https://zeralda-erp-employees-main-production.up.railway.app/zeralda_erp_dashboard.html'
+DEFAULT_URL = 'http://127.0.0.1:8080/zeralda_erp_dashboard.html'
 URL        = os.getenv('STARTUP_URL', DEFAULT_URL)
 LOG_FILE   = APP_DIR / 'logs' / 'tray.log'
 

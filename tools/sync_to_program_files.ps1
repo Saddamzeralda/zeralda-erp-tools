@@ -47,14 +47,14 @@ if (Test-Path $envFile) {
     $newLines = @()
     foreach ($line in $lines) {
         if ($line -match "^STARTUP_URL=") {
-            $newLines += "STARTUP_URL=https://zeralda-erp-employees-main-production.up.railway.app/zeralda_erp_dashboard.html"
+            $newLines += "STARTUP_URL=http://127.0.0.1:8080/zeralda_erp_dashboard.html"
             $hasStartup = $true
         } else {
             $newLines += $line
         }
     }
     if (-not $hasStartup) {
-        $newLines += "STARTUP_URL=https://zeralda-erp-employees-main-production.up.railway.app/zeralda_erp_dashboard.html"
+        $newLines += "STARTUP_URL=http://127.0.0.1:8080/zeralda_erp_dashboard.html"
     }
     Set-Content -Path $envFile -Value $newLines -Encoding UTF8
     Write-Host "   .env STARTUP_URL updated successfully."

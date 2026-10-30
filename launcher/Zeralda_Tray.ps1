@@ -42,7 +42,7 @@ if (-not $PSBoundParameters.ContainsKey('Port')) {
     }
 }
 if ([string]::IsNullOrWhiteSpace($erpUrl)) {
-    $erpUrl = "http://127.0.0.1:$Port/login.html"
+    $erpUrl = "http://127.0.0.1:$Port/zeralda_erp_dashboard.html"
 }
 
 # ── Server control helpers ─────────────────────────────────────────────────────

@@ -67,7 +67,7 @@ USE_HTTPS = (os.getenv("USE_HTTPS", "false").lower() == "true") and not _IS_CLOU
 LAUNCH_MODE = os.getenv("LAUNCH_MODE", "manual")
 AUTO_SHUTDOWN_ON_CLIENT_CLOSE = os.getenv("AUTO_SHUTDOWN_ON_CLIENT_CLOSE", "false").lower() == "true"
 AUTO_SHUTDOWN_GRACE_SECONDS = int(os.getenv("AUTO_SHUTDOWN_GRACE_SECONDS", "300"))
-DEFAULT_STARTUP_URL = "https://zeralda-erp-employees-main-production.up.railway.app/zeralda_erp_dashboard.html"
+DEFAULT_STARTUP_URL = f"http://127.0.0.1:{PORT}/zeralda_erp_dashboard.html"
 STARTUP_URL = os.getenv("STARTUP_URL", DEFAULT_STARTUP_URL)
 AUTO_OPEN_BROWSER = os.getenv("AUTO_OPEN_BROWSER", "true").lower() in ("true", "1", "yes")
 
@@ -406,37 +406,16 @@ def _start_browser_auto_opener() -> None:
         return
 
     def _worker():
-        time.sleep(2.5)  # Allow uvicorn to bind and tunnel to establish
+        time.sleep(2.5)  # Allow uvicorn to bind
         try:
             import webbrowser
-            import json
-            from tools import network_host_manager
 
+            # When running on a local desktop, always prioritize opening the local dashboard
             target = (STARTUP_URL or "").strip()
+            if not target or not ("127.0.0.1" in target or "localhost" in target):
+                target = f"http://127.0.0.1:{PORT}/zeralda_erp_dashboard.html"
 
-            # If dynamic tunnel is active and saved a live public URL, prefer the active live URL
-            for _ in range(6):
-                tunnel_file = network_host_manager.TUNNEL_INFO_FILE
-                alt_tunnel_file = Path("C:/Program Files/Zeralda ERP/data/remote_access_info.json")
-                for tf in (tunnel_file, alt_tunnel_file):
-                    if tf.exists():
-                        try:
-                            with open(tf, "r", encoding="utf-8") as f:
-                                t_info = json.load(f)
-                                active_url = t_info.get("public_url")
-                                if active_url and "trycloudflare.com" in active_url:
-                                    target = f"{active_url}/login.html?next=%2Fzeralda_erp_dashboard.html"
-                                    break
-                        except Exception:
-                            pass
-                if target and "trycloudflare.com" in target and not target.startswith("https://athletic-concepts"):
-                    break
-                time.sleep(0.5)
-
-            if not target:
-                target = f"http://127.0.0.1:{PORT}"
-
-            print(f"  [BROWSER] [OK] Auto-launching ERP URL: {target}")
+            print(f"  [BROWSER] [OK] Auto-launching local ERP URL: {target}")
             webbrowser.open(target)
         except Exception as e:
             print(f"  [BROWSER] [WARN] Browser auto-launch failed: {e}")
