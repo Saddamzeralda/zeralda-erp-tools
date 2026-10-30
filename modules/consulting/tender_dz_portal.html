@@ -1008,7 +1008,7 @@
       </button>
       <button class="portal-tab-btn" type="button" data-tab="sources" onclick="switchPortalTab('sources')">
         <i class="fas fa-satellite-dish" style="color:#38bdf8;"></i> <span data-en="Procurement Sources & Portals" data-ar="مصادر وبوابات الصفقات الرسمية" data-fr="Sources & Portails Officiels">مصادر وبوابات الصفقات الرسمية</span>
-        <span class="portal-tab-badge" id="tabBadgeSources" style="background:#0284c7; color:#fff;">112</span></button>
+        <span class="portal-tab-badge" id="tabBadgeSources" style="background:#0284c7; color:#fff;">128</span></button>
     
       <button class="portal-tab-btn" type="button" data-tab="legal" onclick="switchPortalTab('legal')">
         <i class="fas fa-balance-scale" style="color:#10b981;"></i> <span data-en="Legal Guide & Calculators" data-ar="الدليل القانوني وحاسبة الكفالات" data-fr="Guide Juridique & Simulateurs">الدليل القانوني وحاسبة الكفالات</span>
@@ -1147,11 +1147,13 @@
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
           <div class="search-input-box" style="max-width:340px; flex:1;">
             <i class="fas fa-search"></i>
-            <input type="text" id="sourceSearchInput" class="search-input" placeholder="ابحث في 112 مصدراً وبوابة ولائية (ماء، سكك، بنوك، صحافة، موانئ...)" oninput="filterSourcesGrid(this.value)">
+            <input type="text" id="sourceSearchInput" class="search-input" placeholder="ابحث في 128 مصدراً وبوابة ولائية (ماء، سكك، بنوك، صحافة، موانئ...)" oninput="filterSourcesGrid(this.value)">
           </div>
           <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
-            <button class="btn btn-sm btn-outline-primary active" id="srcSecBtn_all" onclick="filterSourcesByGroup('all')">الكل (112)</button>
+            <button class="btn btn-sm btn-outline-primary active" id="srcSecBtn_all" onclick="filterSourcesByGroup('all')">الكل (128)</button>
             <button class="btn btn-sm btn-outline-primary" id="srcSecBtn_wilayas" onclick="filterSourcesByGroup('wilayas')" style="font-weight:700; color:#059669; border-color:#059669;"><i class="fas fa-map-marked-alt"></i> الولايات الـ 58 (58)</button>
+            <button class="btn btn-sm btn-outline-primary" id="srcSecBtn_private" onclick="filterSourcesByGroup('private')" style="font-weight:700; color:#d97706; border-color:#d97706;"><i class="fas fa-building"></i> شركات خاصة (10)</button>
+            <button class="btn btn-sm btn-outline-primary" id="srcSecBtn_social" onclick="filterSourcesByGroup('social')" style="font-weight:700; color:#2563eb; border-color:#2563eb;"><i class="fas fa-share-alt"></i> مواقع التواصل الاجتماعي (6)</button>
             <button class="btn btn-sm btn-outline-primary" id="srcSecBtn_energy" onclick="filterSourcesByGroup('energy')">طاقة ومناجم</button>
             <button class="btn btn-sm btn-outline-primary" id="srcSecBtn_construction" onclick="filterSourcesByGroup('construction')">بناء وسكن وري</button>
             <button class="btn btn-sm btn-outline-primary" id="srcSecBtn_transport" onclick="filterSourcesByGroup('transport')">نقل وموانئ</button>
@@ -1161,7 +1163,7 @@
             <button class="btn btn-sm btn-outline-primary" id="srcSecBtn_sovereign" onclick="filterSourcesByGroup('sovereign')">سيادية وإفريقية</button>
           </div>
           <div style="font-size:12.5px; color:#64748b; font-weight:600;">
-            <i class="fas fa-check-circle text-success"></i> <span id="sourcesCounterLabel">112 منصة وقناة إشهارية رسمية عبر الـ 58 ولاية</span>
+            <i class="fas fa-check-circle text-success"></i> <span id="sourcesCounterLabel">128 منصة وقناة إشهارية رسمية عبر الـ 58 ولاية</span>
           </div>
         </div>
 
@@ -1699,7 +1701,7 @@
         filterSourceSelect.innerHTML = '';
         var optAll = document.createElement('option');
         optAll.value = '';
-        optAll.textContent = lang === 'ar' ? 'جميع المصادر والبوابات الرسمية (112 مصدراً)' : (lang === 'fr' ? 'Toutes les sources & portails officiels (22 sources)' : 'All Official Sources & Portals (22 sources)');
+        optAll.textContent = lang === 'ar' ? 'جميع المصادر والبوابات الرسمية (128 مصدراً)' : (lang === 'fr' ? 'Toutes les sources & portails officiels (22 sources)' : 'All Official Sources & Portals (22 sources)');
         filterSourceSelect.appendChild(optAll);
         ALGERIAN_PROCUREMENT_SOURCES.forEach(function(src) {
           var opt = document.createElement('option');
@@ -4153,7 +4155,333 @@
       "جراحة دقيقة",
       "مخابر طبية"
     ]
+  },
+
+  {
+    "key": "CevitalGroup",
+    "nameAr": "مجمع سيفيتال - استشارات ومشتريات المصانع (Cevital Groupe)",
+    "nameFr": "Groupe Cevital - Achats & Partenariats Industriels",
+    "category": "الشركات الخاصة والمشاريع الصناعية",
+    "sectorGroup": "private",
+    "categoryBadge": "amber",
+    "publisher": "مجمع سيفيتال (Agro-Industrie, Oxxo, MFG للزجاج، اللوجستيك والموانئ الجافة)",
+    "periodicity": "دورية ومباشرة",
+    "coverage": "صفقات وتجهيز المصانع، صيانة الآلات، الشحن البحري، خطوط التعبئة والتغليف، وعقود التوريد والمناولة",
+    "icon": "fa-industry",
+    "url": "https://www.cevital.com",
+    "portalUrlName": "cevital.com/contact-achats",
+    "tags": [
+      "سيفيتال",
+      "خواص",
+      "صناعات غذائية",
+      "عقود مناولة",
+      "تجهيزات مصانع"
+    ]
+  },
+  {
+    "key": "CondorGroup",
+    "nameAr": "مجمع كوندور للإلكترونيات والطاقة الشمسية (Groupe Condor)",
+    "nameFr": "Groupe Condor Electronics - Sourcing & Achats",
+    "category": "الصناعات الإلكترونية والكهرومنزلية الخاصة",
+    "sectorGroup": "private",
+    "categoryBadge": "amber",
+    "publisher": "مجمع كوندور إلكترونيكس (برج بوعريريج)",
+    "periodicity": "نصف شهرية",
+    "coverage": "توريد المكونات الإلكترونية، قوالب الحقن البلاستيكي، الألواح والبطاريات الشمسية، والتوزيع اللوجستيكي",
+    "icon": "fa-tv",
+    "url": "https://condor.dz",
+    "portalUrlName": "condor.dz/fr/sourcing",
+    "tags": [
+      "كوندور",
+      "إلكترونيك",
+      "طاقة شمسية",
+      "مكونات",
+      "مناولة"
+    ]
+  },
+  {
+    "key": "HasnaouiGroup",
+    "nameAr": "مجمع حسناوي للبناء والصناعة الحديثة (Groupe Hasnaoui)",
+    "nameFr": "Groupe des Sociétés Hasnaoui - BTPH Privé",
+    "category": "البناء والمنشآت والمقاولات الخاصة",
+    "sectorGroup": "private",
+    "categoryBadge": "primary",
+    "publisher": "مجمع حسناوي (سيدي بلعباس / وهران / الجزائر العاصمة)",
+    "periodicity": "أسبوعية",
+    "coverage": "عقود المقاولة من الباطن (Sous-traitance)، توريد الرخام والخرسانة، نجارة الألومنيوم، والسباكة الحديثة",
+    "icon": "fa-city",
+    "url": "https://grouphasnaoui.com",
+    "portalUrlName": "grouphasnaoui.com/appels-partenaires",
+    "tags": [
+      "حسناوي",
+      "BTPH خواص",
+      "مقاولين من الباطن",
+      "بناء حديث"
+    ]
+  },
+  {
+    "key": "PrivatePharma",
+    "nameAr": "المخابر الصيدلانية الخاصة (Biopharm / Frater-Razes / Merinal)",
+    "nameFr": "Laboratoires Pharmaceutiques Privés (Biopharm, Merinal...)",
+    "category": "الصناعة الصيدلانية الخاصة",
+    "sectorGroup": "private",
+    "categoryBadge": "purple",
+    "publisher": "تحالف المخابر الخاصة (بيوفارم، فراتر رازس، ميرينال، الحكمة الجزائر، بيكر)",
+    "periodicity": "أسبوعية",
+    "coverage": "شراء المواد الأولية الفعالة، التغليف الصيدلاني عالي الجودة، غرف التبريد والتعقيم، وتجهيزات المخابر",
+    "icon": "fa-capsules",
+    "url": "https://biopharmdz.com",
+    "portalUrlName": "biopharmdz.com / frater-razes.com",
+    "tags": [
+      "مخابر خاصة",
+      "بيوفارم",
+      "أدوية",
+      "تغليف صيدلاني"
+    ]
+  },
+  {
+    "key": "PrivateTelecom",
+    "nameAr": "متعاملو الهاتف النقال الخاص (Ooredoo Algérie & Djezzy)",
+    "nameFr": "Opérateurs Télécom Privés (Ooredoo & Djezzy)",
+    "category": "الاتصالات والشبكات الخاصة",
+    "sectorGroup": "private",
+    "categoryBadge": "sky",
+    "publisher": "شركة أوريدو الجزائر (Ooredoo) وشركة جازي (Djezzy - OTA)",
+    "periodicity": "دورية مستمرة",
+    "coverage": "بناء وتأجير أبراج الاتصالات (GSM Towers)، مد كابلات الألياف، حلول الطاقة الشمسية للمحطات، وتجهيزات IT",
+    "icon": "fa-satellite",
+    "url": "https://www.ooredoo.dz",
+    "portalUrlName": "ooredoo.dz/fr/corporate/achats",
+    "tags": [
+      "أوريدو",
+      "جازي",
+      "أبراج اتصالات",
+      "ألياف بصرية",
+      "شبكات"
+    ]
+  },
+  {
+    "key": "SoummamLait",
+    "nameAr": "مجمعات الألبان والصناعات التحويلية (Laiterie Soummam / Candia)",
+    "nameFr": "Industries Laitières & Agroalimentaire (Soummam, Candia)",
+    "category": "الصناعات الغذائية والتحويلية الخاصة",
+    "sectorGroup": "private",
+    "categoryBadge": "amber",
+    "publisher": "ملبنة صومام (أقبو - بجاية) ومجمع تشين ليت كانديا",
+    "periodicity": "دورية",
+    "coverage": "صهاريج النقل المعقمة، خطوط بسترة وتعليب الحليب ومشتقاته، أجهزة قياس الحموضة، ومستودعات التبريد الضخمة",
+    "icon": "fa-blender",
+    "url": "https://laiteriesoummam.dz",
+    "portalUrlName": "laiteriesoummam.dz/fournisseurs",
+    "tags": [
+      "صومام",
+      "ألبان",
+      "تبريد غذائي",
+      "خطوط إنتاج"
+    ]
+  },
+  {
+    "key": "PrivateBanks",
+    "nameAr": "البنوك والمؤسسات المالية الخاصة المعتمدة (SGA / BNP / Baraka / AGB)",
+    "nameFr": "Banques Privées Agréées en Algérie",
+    "category": "الصيرفة والمالية الخاصة",
+    "sectorGroup": "private",
+    "categoryBadge": "emerald",
+    "publisher": "سوسيتي جنرال الجزائر، بي إن بي باريبا، بنك البركة، الخليج الجزائر AGB، ترست بنك، فرنسبنك",
+    "periodicity": "أسبوعية",
+    "coverage": "تجهيز وأمن الفروع والوكالات البنكية، نقل الأموال، أجهزة الصراف الآلي (ATM)، والأنظمة البرمجية المشفرة",
+    "icon": "fa-university",
+    "url": "https://www.sg-algerie.com",
+    "portalUrlName": "sg-algerie.com / bnpparibas.dz / albaraka-bank.com",
+    "tags": [
+      "بنوك خاصة",
+      "سوسيتي جنرال",
+      "بي ان بي",
+      "أمن فروع"
+    ]
+  },
+  {
+    "key": "CREA_Patronat",
+    "nameAr": "مجلس التجديد الاقتصادي الجزائري ومجتمعات الأعمال (CREA / CAPC)",
+    "nameFr": "Conseil du Renouveau Économique Algérien (CREA)",
+    "category": "منظمات أرباب العمل والشراكات الاستثمارية",
+    "sectorGroup": "private",
+    "categoryBadge": "primary",
+    "publisher": "مجلس التجديد الاقتصادي الجزائري (CREA) وكنفدراليات أرباب العمل الجزائريين",
+    "periodicity": "مستمرة",
+    "coverage": "فرص الاستثمار المشترك والتحالفات، عروض تموين المصانع الكبرى، واستشارات الشراكة B2B والتصدير",
+    "icon": "fa-handshake",
+    "url": "https://crea.dz",
+    "portalUrlName": "crea.dz/opportunites-b2b",
+    "tags": [
+      "CREA",
+      "أرباب عمل",
+      "شراكات B2B",
+      "استثمار خاص"
+    ]
+  },
+  {
+    "key": "PrivateCementSteel",
+    "nameAr": "مركب توسيالي للصلب ومجمعات البناء الخاصة (Tosyali / Lafarge DZ)",
+    "nameFr": "Sidérurgie & Ciments Privés (Tosyali, LafargeHolcim Algérie)",
+    "category": "الحديد والصلب ومواد البناء للخواص",
+    "sectorGroup": "private",
+    "categoryBadge": "amber",
+    "publisher": "مركب توسيالي للحديد والصلب (بطيوة - وهران) ومجمع لافارج هولسيم الجزائر",
+    "periodicity": "نصف شهرية",
+    "coverage": "توريد خردة الحديد، قطع غيار مصانع الدرفلة، الكواشف الكيميائية، وأساطيل النقل الثقيل والشحن البحري",
+    "icon": "fa-cubes",
+    "url": "https://tosyali-algerie.com",
+    "portalUrlName": "tosyali-algerie.com/achats",
+    "tags": [
+      "توسيالي",
+      "حديد وصلب",
+      "لافارج",
+      "نقل ثقيل"
+    ]
+  },
+  {
+    "key": "DeliveryTech",
+    "nameAr": "شركات النقل السريع واللوجستيك والتكنولوجيا (Yalidine / Yassir)",
+    "nameFr": "Logistique Express & E-Commerce (Yalidine, Yassir...)",
+    "category": "اللوجستيك والتكنولوجيا والتوصيل السريع",
+    "sectorGroup": "private",
+    "categoryBadge": "sky",
+    "publisher": "شركات يالدين إكسبريس (Yalidine)، يسير (Yassir)، وزد آر إكسبريس (ZR Express)",
+    "periodicity": "أسبوعية",
+    "coverage": "كراء وتجهيز المستودعات والمستودعات المركزية (Hubs)، أساطيل الشاحنات، حلول الفرز الآلي، وحلول تتبع الطرود",
+    "icon": "fa-shipping-fast",
+    "url": "https://yalidine.com",
+    "portalUrlName": "yalidine.com / yassir.com",
+    "tags": [
+      "يالدين",
+      "يسير",
+      "توصيل سريع",
+      "مستودعات",
+      "لوجستيك"
+    ]
+  },
+  {
+    "key": "Facebook_APC_Groups",
+    "nameAr": "صفحات ومجموعات فيسبوك الرسمية للصفقات واستشارات البلديات",
+    "nameFr": "Groupes & Pages Facebook - Marchés & Consultations APC",
+    "category": "مواقع التواصل الاجتماعي - فيسبوك",
+    "sectorGroup": "social",
+    "categoryBadge": "primary",
+    "publisher": "الصفحات الرسمية لـ 1541 بلدية موثقة، وكبرى مجموعات الصفقات والمقاولات بالجزائر (+1,000,000 مقاول)",
+    "periodicity": "لحظية على مدار الساعة (24/7)",
+    "coverage": "نشر مباشر وفوري لإعلانات الاستشارات البلدية السريعة، جداول المنح المؤقت، مزادات كراء الأسواق، وعروض المقاولة من الباطن",
+    "icon": "fa-facebook",
+    "url": "https://www.facebook.com/search/groups/?q=%D9%85%D9%86%D8%A7%D9%82%D8%B5%D8%A7%D8%AA%20%D9%88%D8%A7%D8%B3%D8%AA%D8%B4%D8%A7%D8%B1%D8%A7%D8%AA%20%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1",
+    "portalUrlName": "facebook.com/groups (مناقصات الجزائر 58 ولاية)",
+    "tags": [
+      "فيسبوك",
+      "صفحات بلديات",
+      "مجموعات BTPH",
+      "استشارات سريعة"
+    ]
+  },
+  {
+    "key": "Telegram_Channels",
+    "nameAr": "قنوات وبوتات تيليغرام لنشر دفاتر الشروط والإعلانات اليومية",
+    "nameFr": "Canaux & Bots Telegram - Avis & Cahiers des Charges DZ",
+    "category": "تطبيقات المراسلة الفورية - تيليغرام",
+    "sectorGroup": "social",
+    "categoryBadge": "sky",
+    "publisher": "شبكة قنوات التيليغرام لرصد الصفقات الجزائرية (Tenders Algeria, Marchés DZ 58, Avis PDF)",
+    "periodicity": "لحظية عند صدور الجرائد صباحاً (06:00 ص)",
+    "coverage": "تحميل مباشر لملفات PDF الممسوحة ضوئياً لكافة طلبات العروض والاستشارات، قرارات تمديد الآجال، والإلغاءات",
+    "icon": "fa-telegram",
+    "url": "https://t.me/s/marches_algerie_tenders",
+    "portalUrlName": "t.me/marches_algerie_tenders (قنوات التيليغرام)",
+    "tags": [
+      "تيليغرام",
+      "ملفات PDF",
+      "تنبيهات فورية",
+      "دفاتر شروط ممسوحة"
+    ]
+  },
+  {
+    "key": "LinkedIn_Procurement",
+    "nameAr": "شبكة لينكد إن لمسؤولي المشتريات والتموين B2B (LinkedIn Algeria)",
+    "nameFr": "Réseau LinkedIn Algérie - Responsables Achats & Sourcing",
+    "category": "الشبكات المهنية للأعمال - لينكد إن",
+    "sectorGroup": "social",
+    "categoryBadge": "primary",
+    "publisher": "مدراء المشتريات وسلاسل الإمداد (Procurement & Supply Chain Managers DZ) والشركات متعددة الجنسيات",
+    "periodicity": "يومية مستمرة",
+    "coverage": "طلبات عروض الأسعار (RFQ / Requests for Quotation)، استشارات البحث عن مقاولين من الباطن، والمشاريع الهندسية الخاصة",
+    "icon": "fa-linkedin",
+    "url": "https://www.linkedin.com/search/results/content/?keywords=appel%20d%27offres%20algerie",
+    "portalUrlName": "linkedin.com/search (Achats & Marchés Algérie)",
+    "tags": [
+      "لينكد إن",
+      "RFQ",
+      "مدراء مشتريات",
+      "مقاولة من الباطن"
+    ]
+  },
+  {
+    "key": "WhatsApp_Business_Groups",
+    "nameAr": "غرف ومجتمعات الأعمال المباشرة عبر واتساب (WhatsApp Business Groups)",
+    "nameFr": "Communautés WhatsApp Business & Réseaux Fournisseurs",
+    "category": "غرف الأعمال والمراسلة - واتساب",
+    "sectorGroup": "social",
+    "categoryBadge": "emerald",
+    "publisher": "غرف التجارة الولائية، نوادي رجال الأعمال، وتجمعات الموردين المعتمدين والمقاولين الحرفيين",
+    "periodicity": "يومية ومباشرة",
+    "coverage": "تداول الصفقات العاجلة، تصريف وتصفية مخزونات المشاريع والعتاد، وطلبات التوريد السريعة بالفاتورة الشكلية (Proforma)",
+    "icon": "fa-whatsapp",
+    "url": "https://chat.whatsapp.com",
+    "portalUrlName": "whatsapp.com/business-groups",
+    "tags": [
+      "واتساب",
+      "غرف تجارة",
+      "توريد سريع",
+      "فرص تجارية"
+    ]
+  },
+  {
+    "key": "Ouedkniss_Pro",
+    "nameAr": "بوابة واد كنيس للمزايدات والصفقات المهنية (Ouedkniss Entreprises)",
+    "nameFr": "Ouedkniss Entreprises - Appels d Offres & Enchères",
+    "category": "المنصات التجارية الإلكترونية - واد كنيس",
+    "sectorGroup": "social",
+    "categoryBadge": "amber",
+    "publisher": "بوابة واد كنيس الرسمية (أقسام الصفقات، كراء العتاد، المزايدات العقارية، والتجهيزات الصناعية)",
+    "periodicity": "يومية مستمرة",
+    "coverage": "مزادات بيع وتصفية عتاد الشركات، كراء آلات الحفر والشاحنات الثقيلة، واستشارات تموين وتجهيز مقرات الشركات الخاصة",
+    "icon": "fa-shopping-bag",
+    "url": "https://www.ouedkniss.com/services/offres",
+    "portalUrlName": "ouedkniss.com/services/offres",
+    "tags": [
+      "واد كنيس",
+      "مزادات عتاد",
+      "كراء آلات",
+      "مناقصات خواص"
+    ]
+  },
+  {
+    "key": "YouTube_Instructional_DZ",
+    "nameAr": "قنوات التوجيه والتحليل القانوني للصفقات العمومية على يوتيوب",
+    "nameFr": "Chaînes Vidéo & Guides Marchés Publics Algérie",
+    "category": "المحتوى المرئي والتعليمي للصفقات",
+    "sectorGroup": "social",
+    "categoryBadge": "purple",
+    "publisher": "قنوات المستشارين القانونيين وخبراء الصفقات العمومية الجزائرية (توجيهات عملية وإرشادات)",
+    "periodicity": "أسبوعية",
+    "coverage": "فيديوهات شرح كيفية سحب وإعداد دفاتر الشروط، حساب نسب الكفالات، صياغة رسائل التعهد والطعون وتفادي الإقصاء",
+    "icon": "fa-youtube",
+    "url": "https://www.youtube.com/results?search_query=%D8%A7%D9%84%D8%B5%D9%81%D9%82%D8%A7%D8%AA+%D8%A7%D9%84%D8%B9%D9%85%D9%88%D9%85%D9%8A%D8%A9+%D8%A7%D9%84%D8%AC%D8%B2%D8%A7%D8%A6%D8%B1%D9%8A%D8%A9",
+    "portalUrlName": "youtube.com (شروحات الصفقات العمومية)",
+    "tags": [
+      "يوتيوب",
+      "شروحات قانونية",
+      "ملء دفاتر الشروط",
+      "إرشادات"
+    ]
   }
+
 ];
 
     // ═════════════════════════════════════════════════════════════════
@@ -4876,6 +5204,116 @@
         estimatedAmount: 88000000,
         depositPlace: 'مقر إدارة المسح العقاري - نهج العقيد بوقرة، الجزائر العاصمة',
         notes: 'العتاد موجه لرقمنة الأراضي الفلاحية والصناعية وتسريع إصدار العقود الملكية الإلكترونية.'
+      },
+      {
+        id: 'DZ-2026-036',
+        reference: 'CEVITAL/AGRO-BJA/2026-11',
+        title: 'طلب عروض أسعار خاص (RFQ): توريد وتركيب خط تعبئة وتغليف آلي متطور لزيوت المائدة ومستودعات التبريد بميناء بجاية',
+        authority: 'مجمع سيفيتال (Cevital Agro-Industrie) - قطاع الصناعات الغذائية',
+        wilaya: '06',
+        wilayaName: '06 - بجاية',
+        sector: 'Industry',
+        sectorName: 'صناعة، ميكانيك وقطع غيار',
+        type: 'consultation',
+        typeName: 'طلب عروض أسعار للخواص (Consultation Privée B2B)',
+        source: 'مجمع سيفيتال للخواص (Cevital)',
+        sourceKey: 'CevitalGroup',
+        publishDate: '2026-10-28',
+        deadline: new Date(Date.now() + 18 * 86400000).toISOString().slice(0, 10),
+        priceCahier: 0,
+        caution: 'شيك ضمان أو كفالة بنكية 2 000 000 دج',
+        qualification: 'المصنعون والوكلاء المعتمدون لآلات التعبئة الغذائية الآلية ومعدات الفولاذ المقاوم للصدأ (Inox)',
+        estimatedAmount: 280000000,
+        depositPlace: 'مديرية المشتريات والتموين - مجمع سيفيتال - المنطقة الصناعية المينائية، بجاية',
+        notes: 'التعامل يتم بالفاتورة الشكلية الرسمية (Proforma) وعقد توريد تجاري خاص خاضع للقانون التجاري الجزائري.'
+      },
+      {
+        id: 'DZ-2026-037',
+        reference: 'OOREDOO/PROC-TOWER/2026-04',
+        title: 'استشارة خاصة للشركات: بناء وتأهيل 45 برج اتصالات فولاذي (Tower Co) وتجهيزها بأنظمة الطاقة الشمسية الهجينة بولايات الجنوب',
+        authority: 'شركة أوريدو الجزائر (Ooredoo Algérie) - مديرية الشبكات والمشتريات',
+        wilaya: '30',
+        wilayaName: '30 - ورقلة',
+        sector: 'IT',
+        sectorName: 'إعلام آلي، شبكات واتصالات',
+        type: 'appel_offres',
+        typeName: 'مناقصة خاصة للشركات المعتمدة (Appel d Offres Privé)',
+        source: 'أوريدو الجزائر (Ooredoo Telecom)',
+        sourceKey: 'PrivateTelecom',
+        publishDate: '2026-10-27',
+        deadline: new Date(Date.now() + 25 * 86400000).toISOString().slice(0, 10),
+        priceCahier: 0,
+        caution: 'خطاب ضمان بنكي (Bank Guarantee) بقيمة 3 000 000 دج',
+        qualification: 'المقاولات المتخصصة في الهياكل المعدنية وأبراج الاتصالات والطاقة الشمسية المعتمدة لدى متعاملي الهاتف',
+        estimatedAmount: 340000000,
+        depositPlace: 'المقر العام لشركة أوريدو - أولاد فايت، الجزائر العاصمة (مع إمكانية الإيداع الإلكتروني عبر بوابة الموردين)',
+        notes: 'تشمل الصفقة التركيب في المواقع الصحراوية المعزولة واختبارات الربط اللاسلكي والأمان.'
+      },
+      {
+        id: 'DZ-2026-038',
+        reference: 'APC-ZERALDA/CONSULT-FB/2026-09',
+        title: 'استشارة بلدية مستعجلة (منشورة حصرياً عبر صفحة فيسبوك الرسمية): توريد الوجبات الساخنة للمطاعم المدرسية لبلدية زرالدة',
+        authority: 'بلدية زرالدة - ولاية الجزائر (الصفحة الرسمية الموثقة على فيسبوك)',
+        wilaya: '16',
+        wilayaName: '16 - الجزائر العاصمة',
+        sector: 'Food',
+        sectorName: 'تغذية وإطعام جماعي',
+        type: 'consultation',
+        typeName: 'استشارة بلدية مفتوحة (Consultation APC)',
+        source: 'صفحة فيسبوك الرسمية لبلدية زرالدة',
+        sourceKey: 'Facebook_APC_Groups',
+        publishDate: '2026-10-29',
+        deadline: new Date(Date.now() + 6 * 86400000).toISOString().slice(0, 10),
+        priceCahier: 3000,
+        caution: 'غير مشترطة (استشارة سريعة)',
+        qualification: 'تجار الجملة للمواد الغذائية والممونون المعتمدون المسجلون بالسجل التجاري لولاية الجزائر',
+        estimatedAmount: 18000000,
+        depositPlace: 'مقر بلدية زرالدة - مصلحة الصفقات العمومية - شارع أول نوفمبر زرالدة',
+        notes: 'تم النشر عبر صفحة الفيسبوك الرسمية لضمان الشفافية وإعلام المتعهدين المحليين، وتودع العروض في أجل أقصاه 7 أيام.'
+      },
+      {
+        id: 'DZ-2026-039',
+        reference: 'CONDOR/SOLAR-CELLS/2026',
+        title: 'استشارة توريد خاصة: اقتناء 100 ألف خلية كهروضوئية عالية الكفاءة (Mono-PERC PV Cells) لمصنع الألواح الشمسية ببرج بوعريريج',
+        authority: 'مجمع كوندور إلكترونيكس (Condor Electronics) - وحدة الطاقة الشمسية',
+        wilaya: '34',
+        wilayaName: '34 - برج بوعريريج',
+        sector: 'Energy',
+        sectorName: 'طاقة، كهرباء ومحروقات (BAOSEM)',
+        type: 'consultation',
+        typeName: 'استشارة دولية B2B للشركات المصنعة',
+        source: 'مجمع كوندور إلكترونيكس للخواص',
+        sourceKey: 'CondorGroup',
+        publishDate: '2026-10-26',
+        deadline: new Date(Date.now() + 22 * 86400000).toISOString().slice(0, 10),
+        priceCahier: 0,
+        caution: 'كفالة حسن تنفيذ 5%',
+        qualification: 'الشركات المصنعة للخلايا الكهروضوئية الحاصلة على اعتمادات TUV و IEC الدولية',
+        estimatedAmount: 410000000,
+        depositPlace: 'مديرية التموين لمجمع كوندور - المنطقة الصناعية برج بوعريريج',
+        notes: 'الطلبية موجهة لإنتاج ألواح شمسية للمشاريع الوطنية 2000MW.'
+      },
+      {
+        id: 'DZ-2026-040',
+        reference: 'TOSYALI/LOG-TRANS/2026-08',
+        title: 'مناقصة خاصة: خدمات النقل الثقيل والشحن بالشاحنات القلابة لنقل 500 ألف طن من المواد الكلسية وخردة الحديد إلى مركب بطيوة',
+        authority: 'مركب توسيالي للحديد والصلب (Tosyali Iron & Steel Algérie) - وهران',
+        wilaya: '31',
+        wilayaName: '31 - وهران',
+        sector: 'Transport',
+        sectorName: 'نقل، مركبات ولوجستيك',
+        type: 'appel_offres',
+        typeName: 'طلب عروض تجاري خاص للشركات المعتمدة',
+        source: 'مركب توسيالي للحديد والصلب (خواص)',
+        sourceKey: 'PrivateCementSteel',
+        publishDate: '2026-10-27',
+        deadline: new Date(Date.now() + 20 * 86400000).toISOString().slice(0, 10),
+        priceCahier: 0,
+        caution: 'كفالة بنكية 5 000 000 دج',
+        qualification: 'شركات النقل اللوجستي والنقل الثقيل المالكة لأسطول شاحنات قلابة لا يقل عن 25 شاحنة',
+        estimatedAmount: 520000000,
+        depositPlace: 'مقر مركب توسيالي - المنطقة الصناعية بطيوة، ولاية وهران',
+        notes: 'الصفقة سنوية قابلة للتجديد وتشمل التأمين الشامل على البضائع المنقولة والسلامة المهنية.'
       },
 {
         id: 'DZ-2026-010',
