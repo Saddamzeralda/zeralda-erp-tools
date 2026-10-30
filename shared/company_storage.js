@@ -225,6 +225,7 @@
     _cachedCompanyId = newCompanyId;
     try { localStorage.setItem('zeralda-active-company', newCompanyId); } catch (_) {}
     try { localStorage.setItem('zeralda_last_active_company', newCompanyId); } catch (_) {}
+    try { document.cookie = "zeralda-active-company=" + encodeURIComponent(newCompanyId) + "; path=/; max-age=31536000"; } catch (_) {}
 
     console.log('[company_storage] Company changed to:', newCompanyId);
 
@@ -268,7 +269,11 @@
       reloaded = true;
       clearTimeout(safetyTimer);
       console.log('[company_storage] Reloading page with new company data');
-      location.reload();
+      try {
+        location.reload();
+      } catch (_) {
+        window.location.href = window.location.href;
+      }
     }
 
     // حد أقصى للانتظار: 400 ميلي ثانية حتى لا يتعطل المستخدم

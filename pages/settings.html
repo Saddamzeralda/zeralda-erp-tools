@@ -2084,7 +2084,23 @@
         // header_company_switcher.js.
         function activateCompany(companyId){
             var settings = getSettings();
-            if (String(settings.activeCompanyId || '') === String(companyId)) return;
+            var currentActive = (window.CompanyStorage && typeof window.CompanyStorage.getActiveCompanyId === 'function')
+                ? window.CompanyStorage.getActiveCompanyId()
+                : String(settings.activeCompanyId || '');
+            if (String(currentActive) === String(companyId) && String(settings.activeCompanyId || '') === String(companyId)) return;
+
+            function doActivate() {
+                setActiveCompanyId(companyId);
+                try { localStorage.setItem('zeralda_last_active_company', companyId); } catch (_) {}
+                if (window.CompanyStorage && typeof window.CompanyStorage.clearCompanyIdCache === 'function') {
+                    window.CompanyStorage.clearCompanyIdCache();
+                }
+                window.dispatchEvent(new CustomEvent('activeCompanyChanged', { detail: { companyId: companyId } }));
+                setTimeout(function () {
+                    try { location.reload(); } catch (_) { window.location.href = window.location.href; }
+                }, 500);
+            }
+
             var flushPromise = Promise.resolve();
             if (window.AppSync && typeof window.AppSync.flushPending === 'function') {
                 flushPromise = flushPromise.then(function () {
@@ -2096,12 +2112,8 @@
                     return window.ZDB.flush().catch(function () {});
                 });
             }
-            return flushPromise.then(function () {
-                setActiveCompanyId(companyId);
-                // company_storage.js يستمع لهذا الحدث: يعرض شاشة تحميل، يمسح
-                // كاش الشركة الجديدة، يسحب بياناتها من السيرفر، ثم يعيد التحميل.
-                window.dispatchEvent(new CustomEvent('activeCompanyChanged', { detail: { companyId: companyId } }));
-            });
+            var timeoutPromise = new Promise(function (resolve) { setTimeout(resolve, 200); });
+            return Promise.race([flushPromise, timeoutPromise]).then(doActivate).catch(doActivate);
         }
 
         function getActiveCompanyId(){

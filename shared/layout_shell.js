@@ -1327,9 +1327,8 @@
       tryFetchSettingsFromServer();
     }
 
-    switcher.innerHTML = '';
-
     if (!state.companies.length) {
+      switcher.innerHTML = '';
       const opt = document.createElement('option');
       opt.value = '';
       var currentLang = (typeof getLanguage === 'function') ? getLanguage() : 'ar';
@@ -1350,15 +1349,23 @@
     }
     switcher.disabled = false;
 
-    state.companies.forEach(function (company) {
-      if (!company || !company.id) return;
-      const opt = document.createElement('option');
-      opt.value = company.id;
-      opt.textContent = company.name || 'Company';
-      switcher.appendChild(opt);
-    });
+    // Avoid DOM thrashing if the list of options has not changed
+    var currentOpts = Array.from(switcher.options).map(function (o) { return o.value; }).join(',');
+    var newOpts = state.companies.filter(function (c) { return c && c.id; }).map(function (c) { return c.id; }).join(',');
+    if (currentOpts !== newOpts) {
+      switcher.innerHTML = '';
+      state.companies.forEach(function (company) {
+        if (!company || !company.id) return;
+        const opt = document.createElement('option');
+        opt.value = company.id;
+        opt.textContent = company.name || 'Company';
+        switcher.appendChild(opt);
+      });
+    }
 
-    switcher.value = state.activeId || '';
+    if (state.activeId && switcher.value !== state.activeId) {
+      switcher.value = state.activeId;
+    }
 
     if (typeof window.applyLayoutGeometry === 'function') {
       try { window.applyLayoutGeometry(); } catch (_) {}
@@ -1398,20 +1405,83 @@
   if (typeof window.onHeaderCompanySwitch !== 'function') {
     window.onHeaderCompanySwitch = function (id) {
       console.log('[header_company_switcher] onHeaderCompanySwitch called with id:', id);
+      if (!id) return;
       const settings = getSettings();
       const companies = Array.isArray(settings.companies) ? settings.companies : [];
-      if (!id || !companies.some(function (c) { return c && c.id === id; })) return;
+      if (!companies.some(function (c) { return c && String(c.id) === String(id); })) return;
 
-      if (String(settings.activeCompanyId || '') === String(id)) {
+      var currentActive = (window.CompanyStorage && typeof window.CompanyStorage.getActiveCompanyId === 'function')
+        ? window.CompanyStorage.getActiveCompanyId()
+        : (localStorage.getItem('zeralda_last_active_company') || settings.activeCompanyId || '');
+
+      // Only skip if the company is ALREADY active across all storage layers
+      if (String(currentActive) === String(id) &&
+          String(settings.activeCompanyId || '') === String(id) &&
+          String(localStorage.getItem('zeralda_last_active_company') || '') === String(id)) {
         renderCompanySwitcher();
         return;
       }
 
-      // إصلاح جذري: flush pending writes BEFORE changing company ID.
-      // إذا غيّرنا ID أولاً، فإن flushPending سيستخدم ID الجديد ويُرسل
-      // بيانات الشركة القديمة بمفتاح الشركة الجديدة (تلوث البيانات!).
-      // المفاتيح في _pendingWrites هي بالفعل scoped (من queueSet)،
-      // لكن ZDB.flush و AppSync.flushPending يجب أن يكتملا قبل التبديل.
+      // Immediately disable switcher to prevent duplicate clicks while switching
+      const switcher = document.getElementById('companySwitcher');
+      if (switcher) switcher.disabled = true;
+
+      // Show visual transition overlay immediately for instant feedback
+      try {
+        var existingOverlay = document.getElementById('company-switch-overlay');
+        if (!existingOverlay) {
+          var targetComp = companies.find(function (c) { return c && String(c.id) === String(id); });
+          var compName = (targetComp && targetComp.name) || id;
+          var overlay = document.createElement('div');
+          overlay.id = 'company-switch-overlay';
+          overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,23,42,0.65);backdrop-filter:blur(4px);z-index:99999;display:flex;align-items:center;justify-content:center;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;';
+          overlay.innerHTML = '<div style="text-align:center;background:rgba(30,41,59,0.95);padding:22px 34px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.1);max-width:90%;"><div style="font-size:17px;margin-bottom:8px;font-weight:600;letter-spacing:0.2px;">⏳ جاري تبديل الشركة: ' + compName + '</div><div style="font-size:13px;opacity:0.85;">تحديث البيانات وسياق العمل</div></div>';
+          document.body.appendChild(overlay);
+        }
+      } catch (_) {}
+
+      function performSwitch() {
+        // 1. Update settings object
+        var updatedSettings = { ...getSettings(), activeCompanyId: id };
+        saveSettings(updatedSettings);
+
+        // 2. Synchronize all active company keys across all layers
+        if (window.ZS && typeof window.ZS.setItem === 'function') {
+          try { window.ZS.setItem('zeralda-active-company', id); } catch (_) {}
+          try { window.ZS.setItem('zeralda-settings', JSON.stringify(updatedSettings)); } catch (_) {}
+        }
+        try { localStorage.setItem('zeralda-active-company', id); } catch (_) {}
+        try { localStorage.setItem('zeralda_last_active_company', id); } catch (_) {}
+        try { localStorage.setItem('zeralda-settings', JSON.stringify(updatedSettings)); } catch (_) {}
+
+        if (window.ZDB && typeof window.ZDB.setItem === 'function') {
+          try { window.ZDB.setItem('zeralda-active-company', id); } catch (_) {}
+          try { window.ZDB.setItem('zeralda-settings', JSON.stringify(updatedSettings)); } catch (_) {}
+        }
+
+        // 3. Invalidate company cache immediately
+        if (window.CompanyStorage && typeof window.CompanyStorage.clearCompanyIdCache === 'function') {
+          try { window.CompanyStorage.clearCompanyIdCache(); } catch (_) {}
+        }
+
+        // 4. Update cookie
+        try {
+          document.cookie = "zeralda-active-company=" + encodeURIComponent(id) + "; path=/; max-age=31536000";
+        } catch (_) {}
+
+        renderCompanySwitcher();
+
+        // 5. Dispatch event so company_storage.js triggers reload
+        console.log('[header_company_switcher] Dispatching activeCompanyChanged event for company:', id);
+        window.dispatchEvent(new CustomEvent('activeCompanyChanged', { detail: { companyId: id } }));
+
+        // 6. Hard safety net: guarantee reload even if event handlers stall
+        setTimeout(function () {
+          try { location.reload(); } catch (_) { window.location.href = window.location.href; }
+        }, 500);
+      }
+
+      // Try to flush pending writes with a tight 200ms race timeout — NEVER hangs indefinitely!
       var flushPromise = Promise.resolve();
       if (window.AppSync && typeof window.AppSync.flushPending === 'function') {
         flushPromise = flushPromise.then(function () {
@@ -1424,23 +1494,8 @@
         });
       }
 
-      flushPromise.then(function () {
-        // NOW safe to switch — all pending writes for the old company are flushed
-        saveSettings({ ...settings, activeCompanyId: id });
-        // Keep zeralda-active-company in sync (used as sync fallback in company_storage.js)
-        if (window.ZS && typeof window.ZS.setItem === 'function') {
-          window.ZS.setItem('zeralda-active-company', id);
-        }
-        try { localStorage.setItem('zeralda-active-company', id); } catch (_) {}
-        try { localStorage.setItem('zeralda_last_active_company', id); } catch (_) {}
-        renderCompanySwitcher();
-
-        // Apply company-specific data context immediately across current module.
-        // company_storage.js listens for this event, flushes pending state,
-        // and safely reloads the page.
-        console.log('[header_company_switcher] Dispatching activeCompanyChanged event for company:', id);
-        window.dispatchEvent(new CustomEvent('activeCompanyChanged', { detail: { companyId: id } }));
-      });
+      var timeoutPromise = new Promise(function (resolve) { setTimeout(resolve, 200); });
+      Promise.race([flushPromise, timeoutPromise]).then(performSwitch).catch(performSwitch);
     };
   }
 
@@ -1458,7 +1513,12 @@
     }
   });
   window.addEventListener('activeCompanyChanged', renderCompanySwitcher);
-  window.addEventListener('zdb-remote-write', renderCompanySwitcher);
+  window.addEventListener('zdb-remote-write', function (e) {
+    var k = e && e.detail && e.detail.key;
+    if (!k || k === 'zeralda-settings' || k === 'zeralda-companies' || k === 'zeralda-active-company') {
+      renderCompanySwitcher();
+    }
+  });
   window.addEventListener('zdb-remote-company-change', renderCompanySwitcher);
   document.addEventListener('sharedLayoutLoaded', renderCompanySwitcher);
 
