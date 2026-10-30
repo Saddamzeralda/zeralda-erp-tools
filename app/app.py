@@ -495,6 +495,7 @@ def create_app() -> FastAPI:
             "reports_analytics.html": "modules/reports/reports_analytics.html",
             "services_management.html": "modules/services/services_management.html",
             "consulting_tenders_management.html": "modules/consulting/consulting_tenders_management.html",
+            "tender_dz_portal.html": "modules/consulting/tender_dz_portal.html",
         }
         if clean_fn in ("dashboard", "dashboard.html", "zeralda_dashboard.html"):
             from fastapi.responses import RedirectResponse
