@@ -1431,7 +1431,7 @@
                     <div>
                         <label style="display:block;font-weight:600;margin-bottom:6px;color:#374151;" id="cloudModelLabel" data-en="Model" data-ar="النموذج" data-fr="Modèle">Model</label>
                         <select id="cloudModel" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;background:white;"></select>
-                        <small style="color:#6b7280;display:block;margin-top:4px;" id="cloudModelHelp" data-en="Leave blank for the default model. For Groq use: llama-3.1-8b-instant. For Gemini use: gemini-2.0-flash." data-ar="اترك فارغاً للنموذج الافتراضي. لـ Groq استخدم: llama-3.1-8b-instant. لـ Gemini استخدم: gemini-2.0-flash." data-fr="Laissez vide pour le modèle par défaut. Pour Groq : llama-3.1-8b-instant. Pour Gemini : gemini-2.0-flash.">Leave blank for the default model. For Groq use: llama-3.1-8b-instant. For Gemini use: gemini-2.0-flash.</small>
+                        <small style="color:#6b7280;display:block;margin-top:4px;" id="cloudModelHelp" data-en="Leave blank for the default model. For Groq use: llama-3.1-8b-instant. For Gemini use: gemini-2.5-flash." data-ar="اترك فارغاً للنموذج الافتراضي. لـ Groq استخدم: llama-3.1-8b-instant. لـ Gemini استخدم: gemini-2.0-flash." data-fr="Laissez vide pour le modèle par défaut. Pour Groq : llama-3.1-8b-instant. Pour Gemini : gemini-2.0-flash.">Leave blank for the default model. For Groq use: llama-3.1-8b-instant. For Gemini use: gemini-2.5-flash.</small>
                     </div>
                     <div>
                         <label style="display:block;font-weight:600;margin-bottom:6px;color:#374151;" data-en="OCR Engine" data-ar="محرك OCR" data-fr="Moteur OCR">OCR Engine</label>
@@ -2267,7 +2267,7 @@
 
             // 3. Check model with provider-specific defaults
             var defaultModels = {
-                'gemini': 'gemini-2.0-flash',
+                'gemini': 'gemini-2.5-flash',
                 'groq': 'llama-3.3-70b-versatile'
             };
 
@@ -2403,7 +2403,7 @@
         }
 
         var CLOUD_MODELS = {
-            gemini: ['gemini-3.8-flash', 'gemini-flash-latest', 'gemini-3.5-flash', 'gemini-3.1-flash-lite', 'gemini-2.5-flash'],
+            gemini: ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-2.5-flash-lite', 'gemini-2.0-flash-lite', 'gemini-2.5-pro', 'gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-1.5-flash-8b', 'gemini-flash-latest', 'gemini-pro-latest'],
             groq: ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'llama-3.2-11b-vision-preview']
         };
 
@@ -2465,10 +2465,22 @@
             list.forEach(function(m) {
                 var opt = document.createElement('option');
                 opt.value = m;
-                // Mark vision models with a warning suffix
-                var _isVision = /vl|vision|vlm|multimodal/i.test(m);
-                opt.textContent = _isVision ? (m + '  ⚠️ (Vision — بطيء للدردشة)') : m;
-                if (_isVision) opt.style.color = '#92400e';
+                var label = m;
+                if (m === 'gemini-2.5-flash') label = m + ' ✨ (موصى به / الأسرع والأذكى للرؤية والنصوص)';
+                else if (m === 'gemini-2.0-flash') label = m + ' 🚀 (الجيل الثاني القياسي / فائق السرعة)';
+                else if (m === 'gemini-2.5-flash-lite') label = m + ' ⚡ (خفيف وسريع جداً)';
+                else if (m === 'gemini-2.0-flash-lite') label = m + ' ⚡ (خفيف واقتصادي)';
+                else if (m === 'gemini-2.5-pro') label = m + ' 🧠 (الأقوى للمهام المعقدة والبرمجة)';
+                else if (m === 'gemini-1.5-flash') label = m + ' 📄 (مستقر - سياق 1M)';
+                else if (m === 'gemini-1.5-pro') label = m + ' 📚 (مستقر - سياق 2M)';
+                else if (m === 'gemini-1.5-flash-8b') label = m + ' 🔹 (خفيف مخصص للتردد العالي)';
+                else if (m === 'gemini-flash-latest') label = m + ' 🔄 (الأحدث دائماً Flash)';
+                else if (m === 'gemini-pro-latest') label = m + ' 🔄 (الأحدث دائماً Pro)';
+                else if (/vl|vision|vlm|multimodal/i.test(m)) {
+                    label = m + '  ⚠️ (Vision — بطيء للدردشة)';
+                    opt.style.color = '#92400e';
+                }
+                opt.textContent = label;
                 modelEl.appendChild(opt);
             });
             // Restore saved model for this provider from cache, or use first option

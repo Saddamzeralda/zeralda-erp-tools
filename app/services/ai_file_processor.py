@@ -988,7 +988,7 @@ def _analyze_with_ai(
             project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
             _ai_cfg = _read_ai_settings(project_root)
             _gemini_api_key = _ai_cfg.get('gemini_api_key') or os.getenv('GEMINI_API_KEY', '')
-            _gemini_model = _ai_cfg.get('gemini_model') or 'gemini-3.6-flash'
+            _gemini_model = _ai_cfg.get('gemini_model') or 'gemini-2.5-flash'
             _safe_print(f'[AI ANALYSIS] Gemini key={bool(_gemini_api_key)}, model={_gemini_model}')
             if _gemini_api_key:
                 _safe_print(f'[AI ANALYSIS] Calling Gemini...')
