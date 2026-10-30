@@ -4523,7 +4523,12 @@
 
             if (!isEnabled) return;
 
-            if (typeof ZeraldaGoogle === 'undefined' || !ZeraldaGoogle.isSignedIn || !ZeraldaGoogle.isSignedIn()) {
+            if (typeof ZeraldaGoogle === 'undefined') return;
+            var hasDrive = typeof ZeraldaGoogle.hasDriveAccess === 'function'
+                ? ZeraldaGoogle.hasDriveAccess()
+                : (typeof ZeraldaGoogle.hasValidToken === 'function' ? ZeraldaGoogle.hasValidToken() : (!!ZeraldaGoogle.isSignedIn && ZeraldaGoogle.isSignedIn()));
+
+            if (!hasDrive) {
                 return;
             }
 
@@ -5004,22 +5009,42 @@
                 if (!silent) showToast(tSettings('google_module_not_loaded'), 'info');
                 return;
             }
-            setGoogleProgress('Creating backup on Google Drive...', true);
+            var hasDrive = typeof ZeraldaGoogle.hasDriveAccess === 'function'
+                ? ZeraldaGoogle.hasDriveAccess()
+                : (typeof ZeraldaGoogle.hasValidToken === 'function' ? ZeraldaGoogle.hasValidToken() : (!!ZeraldaGoogle.isSignedIn && ZeraldaGoogle.isSignedIn()));
+
+            if (!hasDrive) {
+                if (silent) {
+                    // Silently clear timer when Google Drive is disconnected so we don't spam background errors
+                    clearGoogleAutoBackupTimer();
+                    return;
+                }
+                showToast(tSettings('google_disconnected') || 'يرجى ربط وتفويض حساب Google Drive أولاً.', 'info');
+                return;
+            }
+
+            if (!silent) setGoogleProgress('Creating backup on Google Drive...', true);
             ZeraldaGoogle.backupToDrive(function (step) {
-                if (step === 'finding_folder') setGoogleProgress('Finding Drive folder...', true);
-                if (step === 'uploading') setGoogleProgress('Uploading backup...', true);
+                if (!silent && step === 'finding_folder') setGoogleProgress('Finding Drive folder...', true);
+                if (!silent && step === 'uploading') setGoogleProgress('Uploading backup...', true);
             }).then(function () {
                 var key = getActiveCompanyLastBackupKey();
                 ZS.setItem(key, new Date().toISOString());
-                setGoogleProgress('Backup completed.', false);
-                if (!silent) showToast(tSettings('google_backup_done'), 'success');
+                if (!silent) {
+                    setGoogleProgress('Backup completed.', false);
+                    showToast(tSettings('google_backup_done'), 'success');
+                }
                 refreshGoogleUI();
             }).catch(function (err) {
-                setGoogleProgress('Backup failed.', false);
                 if (!silent) {
+                    setGoogleProgress('Backup failed.', false);
                     showToast(tSettings('backup_failed', {msg: formatGoogleSyncError(err)}), 'info');
                 } else {
-                    console.warn('[google-auto-backup] failed:', err);
+                    if (err && String(err.message || '').indexOf('Not signed in') !== -1) {
+                        clearGoogleAutoBackupTimer();
+                    } else {
+                        console.warn('[google-auto-backup] warning:', err);
+                    }
                 }
             });
         };

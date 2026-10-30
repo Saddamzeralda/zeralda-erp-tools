@@ -1848,6 +1848,12 @@
   }
 
   function backupToDrive(onProgress) {
+    if (!accessToken) {
+      var saved = loadGoogleToken();
+      if (saved && saved.access_token && !saved.expired) {
+        accessToken = saved.access_token;
+      }
+    }
     if (!accessToken) return Promise.reject(new Error('Not signed in'));
 
     // إصلاح: احصل على القفل قبل البدء
@@ -2619,6 +2625,19 @@
     return isSignedIn();
   }
 
+  function hasValidToken() {
+    if (typeof localStorage !== 'undefined' && localStorage.getItem('zeralda-google-disconnected') === 'true') {
+      return false;
+    }
+    if (accessToken) return true;
+    var saved = loadGoogleToken();
+    if (saved && saved.access_token && !saved.expired) {
+      accessToken = saved.access_token;
+      return true;
+    }
+    return false;
+  }
+
   var _googleSyncInitDone = false;
   var _googleSyncInitInProgress = false;
   var _googleSyncInitQueue = [];
@@ -2883,6 +2902,8 @@
     signOut: signOut,
     isSignedIn: isSignedIn,
     isConnected: isSignedIn,
+    hasValidToken: hasValidToken,
+    hasDriveAccess: hasValidToken,
     getProfile: getGoogleProfile,
 
     // Per-user session management
