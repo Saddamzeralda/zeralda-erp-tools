@@ -554,9 +554,36 @@
           var tessPayload = await tessResp.json().catch(() => ({}));
           if (tessResp.ok && tessPayload.ok && (tessPayload.text || '').trim()) {
             tessPayload.ocr_engine_used = 'tesseract-fallback';
+            var rawText = String(tessPayload.text || '').trim();
+            if (!tessPayload.lineItems) {
+              var lines = rawText.split(/\r?\n/);
+              var fallbackItems = [];
+              for (var li = 0; li < lines.length; li++) {
+                var lineTrim = lines[li].trim();
+                if (!lineTrim || lineTrim.length < 4) continue;
+                if (/(?:total|tva|sous-total|net\s*a\s*payer|remise|montant\s*total|المجموع|الضريبة|الإجمالي|facture|client|date|page|merci)/i.test(lineTrim)) continue;
+                var mEnd = lineTrim.match(/(\d[\d\s.,]*\d|\d+)\s+(\d[\d\s.,]*\d|\d+)(?:\s+(\d[\d\s.,]*\d|\d+))?\s*(?:DA|DZD|EUR|€|\$)?\s*$/i);
+                if (mEnd) {
+                  var descPart = lineTrim.slice(0, mEnd.index).trim().replace(/^(?:[0-9]{1,3}\s*[\.\-\/:\)]\s*)/, '').trim();
+                  if (descPart.length >= 2) {
+                    var v1 = parseFloat(mEnd[1].replace(/\s/g, '').replace(',', '.')) || 0;
+                    var v2 = parseFloat(mEnd[2].replace(/\s/g, '').replace(',', '.')) || 0;
+                    var v3 = mEnd[3] ? (parseFloat(mEnd[3].replace(/\s/g, '').replace(',', '.')) || 0) : 0;
+                    var qVal = 1, pVal = 0, tVal = 0;
+                    if (v3 > 0) { qVal = v1; pVal = v2; tVal = v3; }
+                    else if (v2 > 0) { qVal = v1; pVal = v2; tVal = v1 * v2; }
+                    fallbackItems.push({ description: descPart, quantity: qVal, unit_price: pVal, total: tVal });
+                  }
+                }
+              }
+              if (fallbackItems.length) {
+                tessPayload.lineItems = fallbackItems;
+              }
+            }
+            console.log('[UnifiedOCR] Tesseract fallback extraction completed (' + (tessPayload.lineItems ? tessPayload.lineItems.length : 0) + ' items detected).');
             return {
               payload: tessPayload,
-              text: String(tessPayload.text || '').trim(),
+              text: rawText,
               mimeType: mimeType,
               fileName: String(file.name || ''),
               engineUsed: 'tesseract'
