@@ -1008,7 +1008,7 @@
       </button>
       <button class="portal-tab-btn" type="button" data-tab="sources" onclick="switchPortalTab('sources')">
         <i class="fas fa-satellite-dish" style="color:#38bdf8;"></i> <span data-en="Procurement Sources & Portals" data-ar="مصادر وبوابات الصفقات الرسمية" data-fr="Sources & Portails Officiels">مصادر وبوابات الصفقات الرسمية</span>
-        <span class="portal-tab-badge" id="tabBadgeSources" style="background:#0284c7; color:#fff;">11</span>
+        <span class="portal-tab-badge" id="tabBadgeSources" style="background:#0284c7; color:#fff;">22</span>
       </button>
     </div>
 
@@ -1077,6 +1077,11 @@
         <span class="chip-item" data-chip="source-Press" onclick="setQuickChip('source-Press')"><i class="fas fa-newspaper"></i> <span data-ar="الصحف الوطنية" data-fr="Presse Nationale" data-en="National Press">الصحف الوطنية</span></span>
         <span class="chip-item" data-chip="source-TelecomPost" onclick="setQuickChip('source-TelecomPost')"><i class="fas fa-network-wired"></i> <span data-ar="اتصالات الجزائر" data-fr="Algérie Télécom" data-en="Telecom">اتصالات الجزائر</span></span>
         <span class="chip-item" data-chip="source-Sonelgaz" onclick="setQuickChip('source-Sonelgaz')"><i class="fas fa-bolt"></i> <span data-ar="سونلغاز" data-fr="Sonelgaz" data-en="Sonelgaz">سونلغاز</span></span>
+        <span class="chip-item" data-chip="source-WaterSector" onclick="setQuickChip('source-WaterSector')"><i class="fas fa-tint"></i> <span data-ar="المياه (ADE/SEAAL)" data-fr="Eau (ADE/SEAAL)" data-en="Water Sector">المياه (ADE/SEAAL)</span></span>
+        <span class="chip-item" data-chip="source-RailwayTransport" onclick="setQuickChip('source-RailwayTransport')"><i class="fas fa-train"></i> <span data-ar="السكك (SNTF)" data-fr="Ferroviaire (SNTF)" data-en="Railways (SNTF)">السكك (SNTF)</span></span>
+        <span class="chip-item" data-chip="source-FinancialBanks" onclick="setQuickChip('source-FinancialBanks')"><i class="fas fa-university"></i> <span data-ar="البنوك (CPA/BNA)" data-fr="Banques (CPA/BNA)" data-en="Banks">البنوك (CPA/BNA)</span></span>
+        <span class="chip-item" data-chip="source-HealthPharma" onclick="setQuickChip('source-HealthPharma')"><i class="fas fa-pills"></i> <span data-ar="صيدال والصحة" data-fr="Saidal & Santé" data-en="Health & Pharma">صيدال والصحة</span></span>
+        <span class="chip-item" data-chip="source-MaritimePorts" onclick="setQuickChip('source-MaritimePorts')"><i class="fas fa-anchor"></i> <span data-ar="الموانئ (EPAL)" data-fr="Ports (EPAL)" data-en="Ports">الموانئ (EPAL)</span></span>
       </div>
     </div>
 
@@ -1133,6 +1138,16 @@
             <button class="btn btn-outline-primary" type="button" onclick="switchPortalTab('all')">
               <i class="fas fa-th-list"></i> <span data-ar="العودة لشريط المناقصات" data-fr="Retour au flux des marchés" data-en="Back to Tenders Feed">العودة لشريط المناقصات</span>
             </button>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
+          <div class="search-input-box" style="max-width:380px; flex:1;">
+            <i class="fas fa-search"></i>
+            <input type="text" id="sourceSearchInput" class="search-input" placeholder="ابحث في مصادر الصفقات (ماء، سكك، بنوك، صحافة، موانئ...)" oninput="filterSourcesGrid(this.value)">
+          </div>
+          <div style="font-size:12.5px; color:#64748b; font-weight:600;">
+            <i class="fas fa-check-circle text-success"></i> <span id="sourcesCounterLabel">22 منصة وقناة إشهارية رسمية</span>
           </div>
         </div>
 
@@ -1531,6 +1546,37 @@
         if (curPubT) pubTypeSelect.value = curPubT;
       }
 
+      // Update Sources Dropdowns in Filter and Publish Modal
+      var filterSourceSelect = document.getElementById('dzFilterSource');
+      if (filterSourceSelect && typeof ALGERIAN_PROCUREMENT_SOURCES !== 'undefined') {
+        var curFiltSrc = filterSourceSelect.value;
+        filterSourceSelect.innerHTML = '';
+        var optAll = document.createElement('option');
+        optAll.value = '';
+        optAll.textContent = lang === 'ar' ? 'جميع المصادر والبوابات الرسمية (22 مصدراً)' : (lang === 'fr' ? 'Toutes les sources & portails officiels (22 sources)' : 'All Official Sources & Portals (22 sources)');
+        filterSourceSelect.appendChild(optAll);
+        ALGERIAN_PROCUREMENT_SOURCES.forEach(function(src) {
+          var opt = document.createElement('option');
+          opt.value = src.key;
+          opt.textContent = lang === 'ar' ? (src.key + ' - ' + src.nameAr) : (src.key + ' - ' + (src.nameFr || src.nameAr));
+          filterSourceSelect.appendChild(opt);
+        });
+        if (curFiltSrc) filterSourceSelect.value = curFiltSrc;
+      }
+
+      var pubSourceSelect = document.getElementById('pubSource');
+      if (pubSourceSelect && typeof ALGERIAN_PROCUREMENT_SOURCES !== 'undefined') {
+        var curPubSrc = pubSourceSelect.value;
+        pubSourceSelect.innerHTML = '';
+        ALGERIAN_PROCUREMENT_SOURCES.forEach(function(src) {
+          var opt = document.createElement('option');
+          opt.value = src.key;
+          opt.textContent = lang === 'ar' ? (src.key + ' - ' + src.nameAr) : (src.key + ' - ' + (src.nameFr || src.nameAr));
+          pubSourceSelect.appendChild(opt);
+        });
+        if (curPubSrc) pubSourceSelect.value = curPubSrc;
+      }
+
       // Re-render Attributions table
       renderAttributionsTable();
       filterAndRenderTenders();
@@ -1545,8 +1591,7 @@
     // ── SAMPLE AUTHENTIC ALGERIAN PROCUREMENT NOTICES ──
     // ═════════════════════════════════════════════════════════════════
         // ═════════════════════════════════════════════════════════════════
-    // ── 11 AUTHENTIC ALGERIAN PROCUREMENT SOURCES & CHANNELS ──
-    // ═════════════════════════════════════════════════════════════════
+    // ── 22 AUTHENTIC ALGERIAN PROCUREMENT SOURCES & CHANNELS ──
     const ALGERIAN_PROCUREMENT_SOURCES = [
       {
         key: 'BOMOP',
@@ -1698,12 +1743,169 @@
         periodicity: 'شهرية',
         coverage: 'مشاريع التنمية المستدامة، محطات تحلية مياه البحر الكبرى، دراسات الانتقال الطاقوي وتطوير الرقمنة',
         icon: 'fa-globe',
-        url: 'https://www.undp.org/algeria/procurement',
-        portalUrlName: 'undp.org/algeria/procurement',
-        tags: ['تمويل دولي', 'تحلية مياه البحر', 'دراسات عليا', 'بيئة']
+        url: 'https://www.undp.org/algeria',
+        portalUrlName: 'undp.org/algeria / afdb.org',
+        tags: ['تمويل دولي', 'تنمية مستدامة', 'طاقات بديلة', 'مياه']
+      },
+      {
+        key: 'WaterSector',
+        nameAr: 'قطاع الموارد المائية والتطهير (ADE / SEAAL / ONA)',
+        nameFr: 'Ressources en Eau & Assainissement (ADE, SEAAL, ONA)',
+        category: 'الموارد المائية والري',
+        categoryBadge: 'sky',
+        publisher: 'الجزائرية للمياه (ADE)، شركة سيال (SEAAL)، والديوان الوطني للتطهير (ONA)',
+        periodicity: 'أسبوعية',
+        coverage: 'تأهيل وتوسيع شبكات الشرب، محطات تصفية المياه العادمة، صمامات ومضخات الجر، ومشاريع تحلية مياه البحر',
+        icon: 'fa-tint',
+        url: 'https://www.seaal.dz',
+        portalUrlName: 'seaal.dz / ade.dz / ona-dz.org',
+        tags: ['مياه صالحة للشرب', 'تطهير', 'صمامات ومضخات', 'قنوات جر']
+      },
+      {
+        key: 'RailwayTransport',
+        nameAr: 'الشركة الوطنية للنقل بالسكك الحديدية ومترو الجزائر (SNTF / EMA)',
+        nameFr: 'Transports Ferroviaires & Métro (SNTF, Entreprise Métro d Alger)',
+        category: 'النقل والسكك الحديدية',
+        categoryBadge: 'primary',
+        publisher: 'الشركة الوطنية للنقل بالسكك الحديدية (SNTF) ومؤسسة مترو الجزائر (EMA)',
+        periodicity: 'دورية',
+        coverage: 'توريد عتاد السكك الحديدية، صيانة القاطرات، نظم الإشارات والتحكم الآلي، وتوسعات خطوط المترو والترامواي',
+        icon: 'fa-train',
+        url: 'https://www.sntf.dz',
+        portalUrlName: 'sntf.dz / metroalger-dz.com',
+        tags: ['سكك حديدية', 'قاطرات', 'إشارات وتحكم', 'ترامواي ومترو']
+      },
+      {
+        key: 'CementsGICA',
+        nameAr: 'المجمع الصناعي لإسمنت الجزائر (Groupe GICA)',
+        nameFr: 'Groupe Industriel des Ciments d Algérie (GICA)',
+        category: 'الصناعة الثقيلة ومواد البناء',
+        categoryBadge: 'amber',
+        publisher: 'مجمع جيكا ومصانع الإسمنت التابعة له عبر الوطن (عين الكبيرة، حجر السود، الشلف...)',
+        periodicity: 'نصف شهرية',
+        coverage: 'صيانة وتحديث أفران الإسمنت، الآلات الصناعية، أكياس التعبئة، وقطع الغيار الميكانيكية والنقل الثقيل',
+        icon: 'fa-industry',
+        url: 'https://www.gica.dz',
+        portalUrlName: 'gica.dz/appels-offres',
+        tags: ['إسمنت', 'أفران صناعية', 'قطع غيار مصانع', 'تغليف ونقل']
+      },
+      {
+        key: 'FinancialBanks',
+        nameAr: 'البنوك العمومية والمؤسسات المالية (CPA / BNA / BEA / BDL / BADR / CNEP)',
+        nameFr: 'Banques Publiques & Institutions Financières',
+        category: 'المالية والمصارف',
+        categoryBadge: 'emerald',
+        publisher: 'القرض الشعبي الجزائري، بنك الجزائر الخارجي، البنك الوطني الجزائري، بنك الفلاحة، كناب بنك',
+        periodicity: 'أسبوعية',
+        coverage: 'المنظومات المصرفية المركزية (Core Banking)، الأمن السيبراني، تجهيز الوكالات البنكية، نقل الأموال، ومراكز البيانات المالية',
+        icon: 'fa-money-check-alt',
+        url: 'https://www.cpa-bank.dz',
+        portalUrlName: 'cpa-bank.dz / bna.dz / bea.dz',
+        tags: ['أنظمة بنكية', 'أمن سيبراني', 'تجهيز وكالات', 'خوادم مالية']
+      },
+      {
+        key: 'AgroFood',
+        nameAr: 'ديوان الحبوب وديوان الحليب والأمن الغذائي (OAIC / ONIL / Agrodiv)',
+        nameFr: 'Offices des Céréales & Lait (OAIC, ONIL, Agrodiv)',
+        category: 'الفلاحة والأمن الغذائي',
+        categoryBadge: 'amber',
+        publisher: 'الديوان الجزائري المهني للحبوب (OAIC) والديوان الوطني للحليب (ONIL) ومجمع أغروديف (Agrodiv)',
+        periodicity: 'دورية',
+        coverage: 'مناقصات توريد الحبوب والقمح، مساحيق الحليب الصناعية، صوامع التخزين المعدنية والخرسانية، ومطاحن الدقيق',
+        icon: 'fa-seedling',
+        url: 'https://www.oaic.dz',
+        portalUrlName: 'oaic.dz / onil.dz',
+        tags: ['قمح وحبوب', 'حليب وبودرة', 'صوامع تخزين', 'نقل محاصيل']
+      },
+      {
+        key: 'HealthPharma',
+        nameAr: 'مجمع صيدال والصيدلية المركزية للمستشفيات (Saidal / PCH)',
+        nameFr: 'Groupe Saidal & Pharmacie Centrale des Hôpitaux (PCH)',
+        category: 'الصحة والصناعة الصيدلانية',
+        categoryBadge: 'purple',
+        publisher: 'مجمع صيدال (Saidal) والصيدلية المركزية للمستشفيات (PCH) والمراكز الاستشفائية الجامعية (CHU)',
+        periodicity: 'أسبوعية',
+        coverage: 'المواد الأولية لصناعة الأدوية، اللقاحات، التجهيزات الطبية الحيوية، غرف التعقيم والمستلزمات الجراحية والمخبرية',
+        icon: 'fa-pills',
+        url: 'https://www.saidalgroup.dz',
+        portalUrlName: 'saidalgroup.dz / pch.dz',
+        tags: ['أدوية ومواد خام', 'مستلزمات طبية', 'مخابر', 'مستشفيات']
+      },
+      {
+        key: 'MaritimePorts',
+        nameAr: 'موانئ الجزائر والملاحة البحرية (EPAL / Djen Djen / Bejaia / Oran)',
+        nameFr: 'Entreprises Portuaires Algériennes & Marine Marchande',
+        category: 'الموانئ والنقل البحري',
+        categoryBadge: 'sky',
+        publisher: 'مؤسسات موانئ الجزائر، جن جن، بجاية، وهران، والشركة الوطنية للملاحة البحرية (CNAN / Hyproc)',
+        periodicity: 'نصف شهرية',
+        coverage: 'رافعات الحاويات العملاقة، زوارق الإرشاد والقطر، صيانة وتعميق الأرصفة البحرية، وتأمين المنشآت المينائية',
+        icon: 'fa-anchor',
+        url: 'https://www.portalger.com.dz',
+        portalUrlName: 'portalger.com.dz / port-djendjen.dz',
+        tags: ['رافعات موانئ', 'شحن وتفريغ', 'قطر بحري', 'صيانة أرصفة']
+      },
+      {
+        key: 'HigherEducation',
+        nameAr: 'الجامعات ومراكز البحث العلمي (CERIST / CDTA / CRTI / MESRS)',
+        nameFr: 'Enseignement Supérieur & Recherche Scientifique',
+        category: 'التعليم العالي والبحث العلمي',
+        categoryBadge: 'emerald',
+        publisher: 'وزارة التعليم العالي، مركز تطوير التكنولوجيات المتقدمة (CDTA)، مركز البحث في الإعلام العلمي (CERIST)',
+        periodicity: 'أسبوعية',
+        coverage: 'تجهيزات المخابر المتقدمة، الحواسيب الفائقة، شبكات الألياف الجامعية، وقواعد البيانات والاشتراكات العلمية',
+        icon: 'fa-graduation-cap',
+        url: 'https://www.mesrs.dz',
+        portalUrlName: 'mesrs.dz / cerist.dz / cdta.dz',
+        tags: ['مخابر بحث', 'حواسيب فائقة', 'شبكات علمية', 'تجهيزات جامعية']
+      },
+      {
+        key: 'MadarGroup',
+        nameAr: 'مجمع مدار القابضة وفروعه الصناعية (MADAR Holding)',
+        nameFr: 'Société Holding MADAR & Filiales',
+        category: 'الصناعات المتنوعة والتحويلية',
+        categoryBadge: 'primary',
+        publisher: 'مجمع مدار القابضة والشركات التابعة (التبغ، السكر، النسيج، الطباعة، التغليف، التطوير العقاري)',
+        periodicity: 'شهرية',
+        coverage: 'خطوط الإنتاج الصناعي، التغليف الفاخر، صفقات المواد الكيميائية والصناعات الغذائية والتطوير العقاري',
+        icon: 'fa-building',
+        url: 'https://madarholding.com',
+        portalUrlName: 'madarholding.com',
+        tags: ['صناعات تحويلية', 'تغليف', 'تكرير السكر', 'نسيج']
+      },
+      {
+        key: 'ElectronicsDZ',
+        nameAr: 'الصناعات الإلكترونية والكهرومنزلية (ENIE / ENIEM)',
+        nameFr: 'Industries Électroniques & Électroménager (ENIE, ENIEM)',
+        category: 'الصناعات التكنولوجية والكهرومنزلية',
+        categoryBadge: 'amber',
+        publisher: 'المؤسسة الوطنية للصناعات الإلكترونية (سيدي بلعباس) والمؤسسة الوطنية للأجهزة الكهرومنزلية (تيزي وزو)',
+        periodicity: 'دورية',
+        coverage: 'توريد الشرائح والدوائر المدمجة، خطوط تجميع الأجهزة المنزلية، الألواح الشمسية ومحولات الطاقة',
+        icon: 'fa-microchip',
+        url: 'https://www.enie.dz',
+        portalUrlName: 'enie.dz / eniem.com.dz',
+        tags: ['إلكترونيك', 'كهرومنزلي', 'دوائر مدمجة', 'طاقة شمسية']
+      },
+      {
+        key: 'PrivatePortals',
+        nameAr: 'منصات وبوابات اليقظة ورصد المناقصات الجزائرية (Tender DZ / Algérie Marchés)',
+        nameFr: 'Portails Privés de Veille Marchés DZ (Tender DZ, Algérie Marchés)',
+        category: 'بوابات اليقظة والرصد اليومي',
+        categoryBadge: 'purple',
+        publisher: 'منصات الرصد التجاري (Tender DZ, Algérie Marchés, Marchés d Algérie, Ediacar)',
+        periodicity: 'لحظية ومباشرة (24/7)',
+        coverage: 'تجميع ذكي لآلاف المناقصات من 58 ولاية، تنبيهات عبر البريد والواتساب، وتحميل فوري لدفاتر الشروط الممسوحة ضوئياً',
+        icon: 'fa-bell',
+        url: 'https://www.algerie-marches.ch',
+        portalUrlName: 'tenderdz.com / algerie-marches.com',
+        tags: ['يقظة يومية', 'تنبيهات فورية', 'دفاتر شروط', 'أرشيف صفقات']
       }
     ];
 
+    // ═════════════════════════════════════════════════════════════════
+    // ── SAMPLE AUTHENTIC ALGERIAN PROCUREMENT NOTICES ──
+    // ═════════════════════════════════════════════════════════════════
     const SAMPLE_DZ_TENDERS = [
       {
         id: 'DZ-2026-001',
@@ -2025,7 +2227,183 @@
         lots: ['Lot Unique: Diagnostic énergétique et plan directeur de décarbonation'],
         depositPlace: 'Soumission électronique via le portail Quantum UNDP Algérie'
       },
+            {
+        id: 'DZ-2026-018',
+        reference: 'ADE/DGR/AO-N°09/2026',
+        title: 'تأهيل وتحديث شبكة توزيع مياه الشرب وتركيب صمامات القياس والتحكم عن بُعد (Tele-Management) لولاية وهران',
+        authority: 'الجزائرية للمياه (ADE) - مديرية وحدة وهران',
+        wilaya: '31',
+        wilayaName: '31 - وهران',
+        sector: 'Hydraulics',
+        sectorName: 'موارد مائية وري وتطهير',
+        type: 'appel_offres',
+        typeName: 'طلب عروض وطني مفتوح مع اشتراط قدرات دنيا',
+        source: 'قطاع الموارد المائية والتطهير (ADE / SEAAL)',
+        sourceKey: 'WaterSector',
+        publishDate: '2026-10-27',
+        deadline: new Date(Date.now() + 27 * 86400000).toISOString().slice(0, 10),
+        priceCahier: 12000,
+        caution: '1 500 000 دج',
+        qualification: 'شهادة التأهيل والتصنيف المهنيين في نشاط الري درجة 5 فما فوق',
+        estimatedAmount: 95000000,
+        depositPlace: 'مقر وحدة الجزائرية للمياه بولاية وهران - حي جمال الدين',
+        notes: 'مدة صلاحية العروض 120 يوماً. فتح الأظرفة يتم في جلسة علنية بنفس يوم انقضاء الآجال على الساعة 13:30.'
+      },
       {
+        id: 'DZ-2026-019',
+        reference: 'SNTF/DMR/2026-T04',
+        title: 'اقتناء قطع غيار وتجهيزات صيانة القاطرات الكهربائية الحديثة وأنظمة السلامة السككية والاتصالات الرقمية',
+        authority: 'الشركة الوطنية للنقل بالسكك الحديدية (SNTF) - مديرية صيانة العتاد',
+        wilaya: '16',
+        wilayaName: '16 - الجزائر العاصمة',
+        sector: 'Transport',
+        sectorName: 'نقل، مركبات ولوجستيك',
+        type: 'appel_offres',
+        typeName: 'طلب عروض دولي مفتوح (AOI)',
+        source: 'الشركة الوطنية للنقل بالسكك الحديدية (SNTF)',
+        sourceKey: 'RailwayTransport',
+        publishDate: '2026-10-26',
+        deadline: new Date(Date.now() + 41 * 86400000).toISOString().slice(0, 10),
+        priceCahier: 25000,
+        caution: '3 000 000 دج أو ما يعادلها بالعملة الصعبة',
+        qualification: 'المصنعون المتخصصون أو الموزعون الحصريون لقطع غيار السكك الحديدية معتمدون دولياً',
+        estimatedAmount: 320000000,
+        depositPlace: 'مديرية الصيانة والعتاد - 21 شارع حسيبة بن بوعلي، الجزائر',
+        notes: 'العروض تودع مصحوبة بعينات معتمدة وشهادات المطابقة ISO-9001 وشهادة السلامة الأوروبية والسككية.'
+      },
+      {
+        id: 'DZ-2026-020',
+        reference: 'GICA/SCAEK/08/2026',
+        title: 'أشغال الصيانة الكبرى وتحديث خطوط الإنتاج للأفران الدوارة وتوريد 5 ملايين كيس كرافت ورقي ثلاثي الطبقات',
+        authority: 'مجمع إسمنت الجزائر (GICA) - شركة إسمنت عين الكبيرة (SCAEK)',
+        wilaya: '19',
+        wilayaName: '19 - سطيف',
+        sector: 'Industry',
+        sectorName: 'صناعة، ميكانيك وقطع غيار',
+        type: 'appel_offres',
+        typeName: 'طلب عروض وطني مفتوح',
+        source: 'المجمع الصناعي لإسمنت الجزائر (GICA)',
+        sourceKey: 'CementsGICA',
+        publishDate: '2026-10-25',
+        deadline: new Date(Date.now() + 25 * 86400000).toISOString().slice(0, 10),
+        priceCahier: 15000,
+        caution: '2 000 000 دج',
+        qualification: 'مؤسسات متخصصة في الصيانة الميكانيكية للمصانع الثقيلة أو مصنعي الورق الصناعي',
+        estimatedAmount: 180000000,
+        depositPlace: 'مصنع إسمنت عين الكبيرة - ولاية سطيف',
+        notes: 'الزيارة الميدانية الموجهة لموقع المصنع إلزامية لكل متعهد قبل إيداع العرض المالي والتقني.'
+      },
+      {
+        id: 'DZ-2026-021',
+        reference: 'CPA/DSI/SEC-2026/03',
+        title: 'اقتناء وتثبيت حلول أمن البيانات السيبرانية والجدران النارية المتقدمة (NGFW) وتجهيز خوادم مركز العمليات الأمنية (SOC)',
+        authority: 'القرض الشعبي الجزائري (CPA) - مديرية نظم المعلومات',
+        wilaya: '16',
+        wilayaName: '16 - الجزائر العاصمة',
+        sector: 'IT',
+        sectorName: 'إعلام آلي، شبكات واتصالات',
+        type: 'appel_offres',
+        typeName: 'طلب عروض وطني ودولي محدود',
+        source: 'البنوك العمومية والمؤسسات المالية (CPA / BNA)',
+        sourceKey: 'FinancialBanks',
+        publishDate: '2026-10-28',
+        deadline: new Date(Date.now() + 29 * 86400000).toISOString().slice(0, 10),
+        priceCahier: 20000,
+        caution: '2 500 000 دج',
+        qualification: 'شركات تكنولوجيا المعلومات شريك ذهبي أو بلاتيني للحلول الأمنية العالمية',
+        estimatedAmount: 145000000,
+        depositPlace: 'المقر العام للقرض الشعبي الجزائري - 02 شارع الكولونيل عميروش، الجزائر',
+        notes: 'الصفقة تشمل رخص التشغيل لمدة 3 سنوات مع الدعم الفني على مدار 24/7 ونقل الخبرة للمهندسين.'
+      },
+      {
+        id: 'DZ-2026-022',
+        reference: 'OAIC/DG/IMP-CEREAL/2026',
+        title: 'استشارة دولية لاقتناء وشحن 150 ألف طن من القمح اللين والصيانة الدورية لنظم تفريغ صوامع الموانئ الجافة',
+        authority: 'الديوان الجزائري المهني للحبوب (OAIC) - المديرية العامة',
+        wilaya: '16',
+        wilayaName: '16 - الجزائر العاصمة',
+        sector: 'Food',
+        sectorName: 'تغذية وإطعام جماعي',
+        type: 'consultation',
+        typeName: 'استشارة دولية مفتوحة',
+        source: 'ديوان الحبوب وديوان الحليب (OAIC / ONIL)',
+        sourceKey: 'AgroFood',
+        publishDate: '2026-10-29',
+        deadline: new Date(Date.now() + 16 * 86400000).toISOString().slice(0, 10),
+        priceCahier: 30000,
+        caution: '1% من المبلغ الإجمالي',
+        qualification: 'الشركات الدولية المعتمدة في تجارة الحبوب والمصنفة درجة أولى',
+        estimatedAmount: 850000000,
+        depositPlace: 'مقر ديوان الحبوب - شارع بوقرة، الأبيار، الجزائر',
+        notes: 'الشحن والتسليم يتم عبر موانئ الجزائر، جن جن، ومستغانم وفق جدول زمني دقيق.'
+      },
+      {
+        id: 'DZ-2026-023',
+        reference: 'SAIDAL/UP-DAR-EL-BEIDA/2026-05',
+        title: 'توريد المواد الفعالة والمذيبات النقية لإنتاج المضادات الحيوية وأدوية القلب والأوعية الدموية وتجهيزات مخابر التحليل',
+        authority: 'مجمع صيدال (Groupe Saidal) - وحدة إنتاج الدار البيضاء',
+        wilaya: '16',
+        wilayaName: '16 - الجزائر العاصمة',
+        sector: 'Medical',
+        sectorName: 'عتاد طبي ومستلزمات صيدلانية',
+        type: 'appel_offres',
+        typeName: 'طلب عروض وطني ودولي مفتوح',
+        source: 'مجمع صيدال والصيدلية المركزية (Saidal / PCH)',
+        sourceKey: 'HealthPharma',
+        publishDate: '2026-10-27',
+        deadline: new Date(Date.now() + 28 * 86400000).toISOString().slice(0, 10),
+        priceCahier: 15000,
+        caution: '1 800 000 دج',
+        qualification: 'المخابر وموردي المواد الأولية الصيدلانية المطابقة لمعايير GMP و Pharmacopée Européenne',
+        estimatedAmount: 210000000,
+        depositPlace: 'مقر إدارة مجمع صيدال - المنطقة الصناعية الدار البيضاء، الجزائر العاصمة',
+        notes: 'الشهادات التحليلية وتتبع المنشأ إجبارية في الملف التقني.'
+      },
+      {
+        id: 'DZ-2026-024',
+        reference: 'EPAL/D-TECH/PORT-2026/02',
+        title: 'اقتناء رافعتين عملاقتين لمناولة الحاويات من رصيف الميناء (Ship-to-Shore Gantry Cranes) وتدريب طواقم القيادة',
+        authority: 'مؤسسة ميناء الجزائر (EPAL) - مديرية التجهيز والصيانة البحرية',
+        wilaya: '16',
+        wilayaName: '16 - الجزائر العاصمة',
+        sector: 'Transport',
+        sectorName: 'نقل، مركبات ولوجستيك',
+        type: 'appel_offres',
+        typeName: 'طلب عروض دولي مفتوح',
+        source: 'موانئ الجزائر والملاحة البحرية (EPAL)',
+        sourceKey: 'MaritimePorts',
+        publishDate: '2026-10-24',
+        deadline: new Date(Date.now() + 46 * 86400000).toISOString().slice(0, 10),
+        priceCahier: 40000,
+        caution: '5 000 000 دج',
+        qualification: 'الشركات الدولية المصنعة للرافعات الشاطئية ومعدات الموانئ الثقيلة',
+        estimatedAmount: 780000000,
+        depositPlace: 'مقر مؤسسة ميناء الجزائر - 02 شارع أنغولا، الميناء، الجزائر العاصمة',
+        notes: 'يشمل العقد التركيب، التجارب الميدانية على الرصيف، وتوفير قطع الغيار الأصلية لمدة عامين.'
+      },
+      {
+        id: 'DZ-2026-025',
+        reference: 'CERIST/ARN/HPC-2026/01',
+        title: 'توريد وتركيب عنقود حوسبة فائق الأداء (Supercomputer Cluster) وتوسيع ربط الشبكة الأكاديمية الوطنية للبحث (ARN)',
+        authority: 'مركز البحث في الإعلام العلمي والتقني (CERIST) - وزارة التعليم العالي',
+        wilaya: '16',
+        wilayaName: '16 - الجزائر العاصمة',
+        sector: 'IT',
+        sectorName: 'إعلام آلي، شبكات واتصالات',
+        type: 'appel_offres',
+        typeName: 'طلب عروض وطني مفتوح مع اشتراط قدرات دنيا',
+        source: 'الجامعات ومراكز البحث العلمي (CERIST / CDTA)',
+        sourceKey: 'HigherEducation',
+        publishDate: '2026-10-28',
+        deadline: new Date(Date.now() + 31 * 86400000).toISOString().slice(0, 10),
+        priceCahier: 15000,
+        caution: '2 200 000 دج',
+        qualification: 'شركات متخصصة في بنية الحوسبة الفائقة (HPC) والشبكات عالية السرعة InfiniBand',
+        estimatedAmount: 190000000,
+        depositPlace: 'مقر مركز سيرست - شارع الأخوة عيسيو، بن عكنون، الجزائر العاصمة',
+        notes: 'العقد موجه لدعم مراكز أبحاث الذكاء الاصطناعي والحوسبة السحابية الوطنية.'
+      },
+{
         id: 'DZ-2026-010',
         reference: 'DRE-11/OUARGLA/2026',
         title: 'مشروع حفر وتجهيز آبار ألبينية عميقة وتوصيل قنوات الري الفلاحي بمحيطات الاستصلاح',
@@ -2349,7 +2727,7 @@
         // ═════════════════════════════════════════════════════════════════
     // ── SOURCES DIRECTORY RENDERER ──
     // ═════════════════════════════════════════════════════════════════
-    function renderSourcesDirectory(){
+    function renderSourcesDirectory(searchQuery){
       const container = document.getElementById('sourcesDirectoryGrid');
       if(!container) return;
       container.innerHTML = '';
@@ -2357,7 +2735,29 @@
       const isAr = lang === 'ar';
       const isFr = lang === 'fr';
 
-      ALGERIAN_PROCUREMENT_SOURCES.forEach(s => {
+      let list = (typeof ALGERIAN_PROCUREMENT_SOURCES !== 'undefined') ? ALGERIAN_PROCUREMENT_SOURCES.slice() : [];
+      if(searchQuery && searchQuery.trim()){
+        const q = searchQuery.trim().toLowerCase();
+        list = list.filter(s => {
+          return [s.nameAr, s.nameFr, s.category, s.publisher, s.coverage, s.key, ...(s.tags || [])]
+            .some(val => String(val || '').toLowerCase().includes(q));
+        });
+      }
+
+      const counterEl = document.getElementById('sourcesCounterLabel');
+      if(counterEl){
+        counterEl.textContent = isAr ? (list.length + ' منصة وقناة إشهارية معتمدة') : (list.length + ' plateformes et canaux officiels');
+      }
+
+      if(!list.length){
+        container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:36px; color:#94a3b8;">
+          <i class="fas fa-search" style="font-size:28px; margin-bottom:10px; display:block; opacity:0.5;"></i>
+          <p style="font-size:14px; font-weight:600;">${isAr ? 'لم يتم العثور على مصادر تطابق بحثك' : (isFr ? 'Aucune source ne correspond à votre recherche' : 'No matching sources found')}</p>
+        </div>`;
+        return;
+      }
+
+      list.forEach(s => {
         const card = document.createElement('div');
         card.className = 'source-card';
         const displayName = isAr ? s.nameAr : (s.nameFr || s.nameAr);
@@ -2404,6 +2804,11 @@
       });
     }
     window.renderSourcesDirectory = renderSourcesDirectory;
+
+    function filterSourcesGrid(q){
+      renderSourcesDirectory(q);
+    }
+    window.filterSourcesGrid = filterSourcesGrid;
 
     function filterBySource(sourceKey){
       switchPortalTab('all');
