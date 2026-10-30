@@ -18,7 +18,7 @@ os.environ["ENVIRONMENT"] = "development"
 os.environ["REQUIRE_AUTH"] = "false"
 os.environ["LICENSE_DEV_BYPASS"] = "true"
 
-from app.services import storage, sync_service, license_service
+from app.services import storage, sync_service, license_service, pdf
 
 
 class TestStorageEngine(unittest.TestCase):
@@ -234,6 +234,76 @@ class TestStaticAssetsIntegrity(unittest.TestCase):
     def test_shell_layout_exists(self):
         shell_path = BASE_DIR / "shared" / "layout_shell.js"
         self.assertTrue(shell_path.is_file(), "shared/layout_shell.js must exist")
+
+
+class TestBisInvoiceNumberingAndPdf(unittest.TestCase):
+    """Test secondary invoice numbering (Bis/Ter) and PDF generation."""
+
+    def test_pdf_generation_with_bis_invoice_number(self):
+        invoice_doc = {
+            "id": "INV-TEST-BIS-01",
+            "invoiceNumber": "005/2026 Bis",
+            "date": "2026-10-30",
+            "customer": {"name": "Sarl Client Test Bis", "address": "Alger", "phone": "0550000000"},
+            "items": [
+                {"description": "Prestation Informatique Bis", "quantity": 1, "price": 45000, "total": 45000, "unit": "service"}
+            ],
+            "subtotal": 45000,
+            "tax": 8550,
+            "taxRate": 19,
+            "stamp": 0,
+            "stampRate": 0,
+            "total": 53550,
+            "paymentMethod": "Virement bancaire"
+        }
+        company_info = {
+            "name": "Zeralda Tech",
+            "phone": "023000000",
+            "email": "contact@zeralda.dz"
+        }
+        for lang in ["ar", "fr", "en"]:
+            pdf_bytes = pdf.generate_single_document_pdf(
+                invoice_doc,
+                doc_type="invoice",
+                company_info=company_info,
+                currency="DZD",
+                lang=lang
+            )
+            self.assertIsInstance(pdf_bytes, bytes)
+            self.assertGreater(len(pdf_bytes), 1000)
+            self.assertTrue(pdf_bytes.startswith(b"%PDF"), f"Output must be a valid PDF in {lang}")
+
+    def test_zip_generation_with_bis_invoices(self):
+        sample_store = {
+            "invoices-data": [
+                {
+                    "id": "INV-001",
+                    "invoiceNumber": "001/2026",
+                    "date": "2026-01-15",
+                    "customer": {"name": "Client Principal"},
+                    "items": [{"description": "Item 1", "quantity": 1, "price": 1000, "total": 1000}],
+                    "subtotal": 1000, "tax": 0, "total": 1000
+                },
+                {
+                    "id": "INV-001-BIS",
+                    "invoiceNumber": "001/2026 Bis",
+                    "date": "2026-01-16",
+                    "customer": {"name": "Client Principal"},
+                    "items": [{"description": "Item 1 Bis", "quantity": 1, "price": 500, "total": 500}],
+                    "subtotal": 500, "tax": 0, "total": 500
+                }
+            ]
+        }
+        res = pdf.generate_organized_invoices_zip(sample_store, lang="fr")
+        self.assertIsInstance(res, dict)
+        zip_bytes = res.get("zip_bytes")
+        self.assertIsInstance(zip_bytes, bytes)
+        self.assertGreater(len(zip_bytes), 1000)
+        import zipfile
+        import io
+        with zipfile.ZipFile(io.BytesIO(zip_bytes), "r") as zf:
+            namelist = zf.namelist()
+            self.assertTrue(any("Bis" in name for name in namelist), f"Expected Bis file in zip, got: {namelist}")
 
 
 if __name__ == "__main__":

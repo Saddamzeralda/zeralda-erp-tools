@@ -1125,7 +1125,26 @@
                 <span class="draft-status" id="invoiceDraftStatus"></span>
               </div>
                 <div class="form-row">
-                    <div class="form-group"><label class="form-label"><i class="fas fa-hashtag"></i><span data-en="Invoice Number" data-ar="رقم الفاتورة" data-fr="Numéro Facture">Invoice Number</span></label><input type="text" class="form-input" id="invoiceNumberInput" dir="ltr" placeholder="001/2026" data-en-placeholder="Auto-generated" data-ar-placeholder="تلقائي" data-fr-placeholder="Auto"></div>
+                    <div class="form-group">
+                      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                        <label class="form-label" style="margin-bottom:0;"><i class="fas fa-hashtag"></i><span data-en="Invoice Number" data-ar="رقم الفاتورة" data-fr="Numéro Facture">Invoice Number</span></label>
+                        <div style="display:inline-flex; align-items:center; gap:6px;">
+                          <label for="invoiceBisCheckbox" style="margin:0; font-size:12px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:4px; color:#4f46e5;">
+                            <input type="checkbox" id="invoiceBisCheckbox" style="cursor:pointer;" onchange="toggleInvoiceBis(this.checked)">
+                            <span data-en="Bis" data-ar="Bis" data-fr="Bis">Bis</span>
+                          </label>
+                          <select id="invoiceNumberSuffix" class="form-select" style="display:none; padding:1px 6px; font-size:11px; height:24px; border-radius:4px; border-color:#4f46e5;" onchange="onInvoiceSuffixChange(this.value)">
+                            <option value="Bis">Bis</option>
+                            <option value="Ter">Ter</option>
+                            <option value="Quater">Quater</option>
+                          </select>
+                        </div>
+                      </div>
+                      <input type="text" class="form-input" id="invoiceNumberInput" dir="ltr" placeholder="001/2026" data-en-placeholder="Auto-generated" data-ar-placeholder="تلقائي" data-fr-placeholder="Auto" oninput="onInvoiceNumberManualInput()">
+                      <div id="invoiceBisBadge" style="display:none; margin-top:4px; font-size:11px; color:#4338ca; background:#e0e7ff; padding:2px 8px; border-radius:4px; font-weight:600; width:fit-content;">
+                        <i class="fas fa-info-circle"></i> <span data-en="Secondary numbering (Bis)" data-ar="ترقيم ثانوي نشط (Bis)" data-fr="Numérotation secondaire (Bis)">ترقيم ثانوي نشط (Bis)</span>
+                      </div>
+                    </div>
                     <div class="form-group"><label class="form-label"><i class="fas fa-calendar"></i><span data-en="Invoice Date" data-ar="تاريخ الفاتورة" data-fr="Date Facture">Invoice Date</span></label><input type="date" class="form-input" id="invoiceDate" dir="ltr" required></div>
 
                     <!-- customer select with add button -->
@@ -1430,7 +1449,26 @@
                 <span class="draft-status" id="proformaDraftStatus"></span>
               </div>
                 <div class="form-row">
-                    <div class="form-group"><label class="form-label"><i class="fas fa-hashtag"></i><span data-en="Proforma Number" data-ar="رقم الفاتورة الشكلية" data-fr="Numéro Proforma">Proforma Number</span></label><input type="text" class="form-input" id="proformaNumberInput" dir="ltr" placeholder="001/2026" data-en-placeholder="Auto-generated" data-ar-placeholder="تلقائي" data-fr-placeholder="Auto"></div>
+                    <div class="form-group">
+                      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                        <label class="form-label" style="margin-bottom:0;"><i class="fas fa-hashtag"></i><span data-en="Proforma Number" data-ar="رقم الفاتورة الشكلية" data-fr="Numéro Proforma">Proforma Number</span></label>
+                        <div style="display:inline-flex; align-items:center; gap:6px;">
+                          <label for="proformaBisCheckbox" style="margin:0; font-size:12px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:4px; color:#4f46e5;">
+                            <input type="checkbox" id="proformaBisCheckbox" style="cursor:pointer;" onchange="toggleProformaBis(this.checked)">
+                            <span data-en="Bis" data-ar="Bis" data-fr="Bis">Bis</span>
+                          </label>
+                          <select id="proformaNumberSuffix" class="form-select" style="display:none; padding:1px 6px; font-size:11px; height:24px; border-radius:4px; border-color:#4f46e5;" onchange="onProformaSuffixChange(this.value)">
+                            <option value="Bis">Bis</option>
+                            <option value="Ter">Ter</option>
+                            <option value="Quater">Quater</option>
+                          </select>
+                        </div>
+                      </div>
+                      <input type="text" class="form-input" id="proformaNumberInput" dir="ltr" placeholder="001/2026" data-en-placeholder="Auto-generated" data-ar-placeholder="تلقائي" data-fr-placeholder="Auto" oninput="onProformaNumberManualInput()">
+                      <div id="proformaBisBadge" style="display:none; margin-top:4px; font-size:11px; color:#4338ca; background:#e0e7ff; padding:2px 8px; border-radius:4px; font-weight:600; width:fit-content;">
+                        <i class="fas fa-info-circle"></i> <span data-en="Secondary numbering (Bis)" data-ar="ترقيم ثانوي نشط (Bis)" data-fr="Numérotation secondaire (Bis)">ترقيم ثانوي نشط (Bis)</span>
+                      </div>
+                    </div>
                     <div class="form-group"><label class="form-label"><i class="fas fa-calendar"></i><span data-en="Proforma Date" data-ar="تاريخ الفاتورة الشكلية" data-fr="Date Proforma">Proforma Date</span></label><input type="date" class="form-input" id="proformaDate" dir="ltr" required></div>
 
                     <!-- proforma customer select with add button -->
@@ -2087,6 +2125,8 @@ const translations = {
 // i18n augmentations (auto-added)
 (function(){
     var add = {
+        bis_secondary:           { en: 'Bis (Secondary)', ar: 'ترقيم ثانوي (Bis)', fr: 'Numérotation Bis' },
+        create_bis_invoice:      { en: 'Create Bis Invoice', ar: 'إنشاء فاتورة ثانوية (Bis)', fr: 'Créer une facture Bis' },
         add_new_product:         { en: 'Add New Product', ar: 'إضافة منتج جديد', fr: 'Ajouter un nouveau produit' },
         add_new_item_option:     { en: '➕ Add New Item', ar: '➕ إضافة منتج جديد', fr: '➕ Ajouter un nouveau produit' },
         new_product_catalog:     { en: '+ New Product', ar: '+ منتج جديد', fr: '+ Nouveau Produit' },
@@ -3527,16 +3567,16 @@ function isDateInRange(dateStr, from, to){
 function formatProformaNumber(id){
   if(window.formatProformaNumber && window.formatProformaNumber !== formatProformaNumber) return window.formatProformaNumber(id);
   if(id === null || id === undefined) return "";
-  const value = String(id);
-  if(/^\d{1,}\/\d{4}$/.test(value)) return value;
+  const value = String(id).trim();
+  if(/^\d{1,}\/\d{4}(?:\s+(?:Bis|Ter|Quater|[A-Za-z]+))?$/i.test(value)) return value;
   return value.replace(/^PRO-/, "");
 }
 
 function formatInvoiceNumber(id){
   if(window.formatInvoiceNumber && window.formatInvoiceNumber !== formatInvoiceNumber) return window.formatInvoiceNumber(id);
   if(id === null || id === undefined) return "";
-  const value = String(id);
-  if(/^\d{1,}\/\d{4}$/.test(value)) return value;
+  const value = String(id).trim();
+  if(/^\d{1,}\/\d{4}(?:\s+(?:Bis|Ter|Quater|[A-Za-z]+))?$/i.test(value)) return value;
   return value.replace(/^INV-/, "");
 }
 
@@ -3567,7 +3607,7 @@ function generateInvoiceNumberForDate(dateValue){
   let maxSeq = 0;
   (invoicesData || []).forEach(inv => {
     const shown = String((inv && (inv.invoiceNumber || inv.id)) || "");
-    const match = shown.match(/^(\d+)\/(\d{4})$/);
+    const match = shown.match(/^(\d+)\/(\d{4})(?:\s+(?:Bis|Ter|Quater|[A-Za-z]+))?$/i);
     if(!match) return;
     if(match[2] !== year) return;
     const seq = Number(match[1] || 0);
@@ -3581,7 +3621,7 @@ function generateProformaNumberForDate(dateValue){
   let maxSeq = 0;
   (proformasData || []).forEach(prof => {
     const shown = String((prof && (prof.proformaNumber || prof.id)) || "");
-    const match = shown.match(/^(\d+)\/(\d{4})$/);
+    const match = shown.match(/^(\d+)\/(\d{4})(?:\s+(?:Bis|Ter|Quater|[A-Za-z]+))?$/i);
     if(!match) return;
     if(match[2] !== year) return;
     const seq = Number(match[1] || 0);
@@ -3591,7 +3631,7 @@ function generateProformaNumberForDate(dateValue){
 }
 
 function ensureDocumentNumbersPattern(){
-  const pat = /^(\d+)\/(\d{4})$/;
+  const pat = /^(\d+)\/(\d{4})(?:\s+(?:Bis|Ter|Quater|[A-Za-z]+))?$/i;
   const invoiceYearSeq = {};
   const proformaYearSeq = {};
 
@@ -3650,6 +3690,164 @@ function ensureDocumentNumbersPattern(){
 
   if(invoiceChanged) { ZS.setItem("invoices-data", JSON.stringify(invoicesData)); window.invoicesData = invoicesData; }
   if(proformaChanged) ZS.setItem("proformas-data", JSON.stringify(proformasData));
+}
+
+function getLatestBaseInvoiceNumber(dateValue){
+  const year = getInvoiceYearFromDate(dateValue);
+  let maxSeq = 0;
+  (invoicesData || []).forEach(inv => {
+    const shown = String((inv && (inv.invoiceNumber || inv.id)) || "");
+    const match = shown.match(/^(\d+)\/(\d{4})(?:\s+(?:Bis|Ter|Quater|[A-Za-z]+))?$/i);
+    if(!match) return;
+    if(match[2] !== year) return;
+    const seq = Number(match[1] || 0);
+    if(seq > maxSeq) maxSeq = seq;
+  });
+  if(maxSeq === 0) maxSeq = 1;
+  return String(maxSeq).padStart(3, "0") + "/" + year;
+}
+
+function getLatestBaseProformaNumber(dateValue){
+  const year = getProformaYearFromDate(dateValue);
+  let maxSeq = 0;
+  (proformasData || []).forEach(prof => {
+    const shown = String((prof && (prof.proformaNumber || prof.id)) || "");
+    const match = shown.match(/^(\d+)\/(\d{4})(?:\s+(?:Bis|Ter|Quater|[A-Za-z]+))?$/i);
+    if(!match) return;
+    if(match[2] !== year) return;
+    const seq = Number(match[1] || 0);
+    if(seq > maxSeq) maxSeq = seq;
+  });
+  if(maxSeq === 0) maxSeq = 1;
+  return String(maxSeq).padStart(3, "0") + "/" + year;
+}
+
+function toggleInvoiceBis(checked){
+  const numInput = document.getElementById("invoiceNumberInput");
+  const suffixSelect = document.getElementById("invoiceNumberSuffix");
+  const badge = document.getElementById("invoiceBisBadge");
+  const suffix = (suffixSelect && suffixSelect.value) || "Bis";
+
+  if(suffixSelect) suffixSelect.style.display = checked ? "inline-block" : "none";
+  if(badge) badge.style.display = checked ? "inline-block" : "none";
+
+  if(!numInput) return;
+  let val = numInput.value.trim();
+
+  if(checked){
+    if(!val){
+      const dateVal = document.getElementById("invoiceDate") ? document.getElementById("invoiceDate").value : "";
+      val = getLatestBaseInvoiceNumber(dateVal);
+    }
+    val = val.replace(/\s+(?:Bis|Ter|Quater|[A-Za-z]+)$/i, "");
+    numInput.value = val + " " + suffix;
+  } else {
+    numInput.value = val.replace(/\s+(?:Bis|Ter|Quater|[A-Za-z]+)$/i, "");
+  }
+}
+
+function onInvoiceSuffixChange(suffix){
+  const numInput = document.getElementById("invoiceNumberInput");
+  if(!numInput) return;
+  let val = numInput.value.trim();
+  if(!val){
+    const dateVal = document.getElementById("invoiceDate") ? document.getElementById("invoiceDate").value : "";
+    val = getLatestBaseInvoiceNumber(dateVal);
+  }
+  val = val.replace(/\s+(?:Bis|Ter|Quater|[A-Za-z]+)$/i, "");
+  numInput.value = val + " " + (suffix || "Bis");
+}
+
+function onInvoiceNumberManualInput(){
+  const numInput = document.getElementById("invoiceNumberInput");
+  const bisCheck = document.getElementById("invoiceBisCheckbox");
+  const suffixSelect = document.getElementById("invoiceNumberSuffix");
+  const badge = document.getElementById("invoiceBisBadge");
+  if(!numInput || !bisCheck) return;
+
+  const m = numInput.value.trim().match(/\s+(Bis|Ter|Quater|[A-Za-z]+)$/i);
+  if(m){
+    bisCheck.checked = true;
+    if(suffixSelect){
+      suffixSelect.style.display = "inline-block";
+      const matchedSuffix = m[1];
+      for(let opt of suffixSelect.options){
+        if(opt.value.toLowerCase() === matchedSuffix.toLowerCase()){
+          suffixSelect.value = opt.value;
+          break;
+        }
+      }
+    }
+    if(badge) badge.style.display = "inline-block";
+  } else {
+    bisCheck.checked = false;
+    if(suffixSelect) suffixSelect.style.display = "none";
+    if(badge) badge.style.display = "none";
+  }
+}
+
+function toggleProformaBis(checked){
+  const numInput = document.getElementById("proformaNumberInput");
+  const suffixSelect = document.getElementById("proformaNumberSuffix");
+  const badge = document.getElementById("proformaBisBadge");
+  const suffix = (suffixSelect && suffixSelect.value) || "Bis";
+
+  if(suffixSelect) suffixSelect.style.display = checked ? "inline-block" : "none";
+  if(badge) badge.style.display = checked ? "inline-block" : "none";
+
+  if(!numInput) return;
+  let val = numInput.value.trim();
+
+  if(checked){
+    if(!val){
+      const dateVal = document.getElementById("proformaDate") ? document.getElementById("proformaDate").value : "";
+      val = getLatestBaseProformaNumber(dateVal);
+    }
+    val = val.replace(/\s+(?:Bis|Ter|Quater|[A-Za-z]+)$/i, "");
+    numInput.value = val + " " + suffix;
+  } else {
+    numInput.value = val.replace(/\s+(?:Bis|Ter|Quater|[A-Za-z]+)$/i, "");
+  }
+}
+
+function onProformaSuffixChange(suffix){
+  const numInput = document.getElementById("proformaNumberInput");
+  if(!numInput) return;
+  let val = numInput.value.trim();
+  if(!val){
+    const dateVal = document.getElementById("proformaDate") ? document.getElementById("proformaDate").value : "";
+    val = getLatestBaseProformaNumber(dateVal);
+  }
+  val = val.replace(/\s+(?:Bis|Ter|Quater|[A-Za-z]+)$/i, "");
+  numInput.value = val + " " + (suffix || "Bis");
+}
+
+function onProformaNumberManualInput(){
+  const numInput = document.getElementById("proformaNumberInput");
+  const bisCheck = document.getElementById("proformaBisCheckbox");
+  const suffixSelect = document.getElementById("proformaNumberSuffix");
+  const badge = document.getElementById("proformaBisBadge");
+  if(!numInput || !bisCheck) return;
+
+  const m = numInput.value.trim().match(/\s+(Bis|Ter|Quater|[A-Za-z]+)$/i);
+  if(m){
+    bisCheck.checked = true;
+    if(suffixSelect){
+      suffixSelect.style.display = "inline-block";
+      const matchedSuffix = m[1];
+      for(let opt of suffixSelect.options){
+        if(opt.value.toLowerCase() === matchedSuffix.toLowerCase()){
+          suffixSelect.value = opt.value;
+          break;
+        }
+      }
+    }
+    if(badge) badge.style.display = "inline-block";
+  } else {
+    bisCheck.checked = false;
+    if(suffixSelect) suffixSelect.style.display = "none";
+    if(badge) badge.style.display = "none";
+  }
 }
 
 function normalizePaymentMethodValue(value){
@@ -4704,6 +4902,8 @@ function triggerInvoiceOcrImport(type){
             var numInput = document.getElementById(numInputId);
             if (numInput) {
               numInput.value = String(invNum).trim();
+              if (type === 'proforma' && typeof onProformaNumberManualInput === 'function') onProformaNumberManualInput();
+              else if (typeof onInvoiceNumberManualInput === 'function') onInvoiceNumberManualInput();
             }
           }
 
@@ -6563,7 +6763,10 @@ function populateInvoiceForm(inv){
   document.getElementById("invoiceItems").innerHTML = "";
   // ── Fill invoice number field when editing ──
   const invNumInput = document.getElementById("invoiceNumberInput");
-  if(invNumInput) invNumInput.value = inv.invoiceNumber || getInvoiceDisplayNumber(inv) || "";
+  if(invNumInput) {
+    invNumInput.value = inv.invoiceNumber || getInvoiceDisplayNumber(inv) || "";
+    if(typeof onInvoiceNumberManualInput === 'function') onInvoiceNumberManualInput();
+  }
   if(inv.date) document.getElementById("invoiceDate").value = inv.date; else document.getElementById("invoiceDate").valueAsDate = new Date();
   const s = document.getElementById("invoiceCustomer");
   s.innerHTML = '<option value="">' + escapeHTML(tr('select_customer','Select Customer')) + '</option>';
@@ -6632,7 +6835,10 @@ function populateProformaForm(prof){
   document.getElementById("proformaItems").innerHTML = "";
   // ── Fill proforma number field when editing ──
   const profNumInput = document.getElementById("proformaNumberInput");
-  if(profNumInput) profNumInput.value = prof.proformaNumber || getProformaDisplayNumber(prof) || "";
+  if(profNumInput) {
+    profNumInput.value = prof.proformaNumber || getProformaDisplayNumber(prof) || "";
+    if(typeof onProformaNumberManualInput === 'function') onProformaNumberManualInput();
+  }
   if(prof.date) document.getElementById("proformaDate").value = prof.date; else document.getElementById("proformaDate").valueAsDate = new Date();
   const s = document.getElementById("proformaCustomer");
   s.innerHTML = '<option value="">' + escapeHTML(tr('select_customer','Select Customer')) + '</option>';
@@ -6987,6 +7193,12 @@ function openCreateInvoice(){
   document.getElementById("invoiceItems").innerHTML="";
   const invNumInput = document.getElementById("invoiceNumberInput");
   if(invNumInput) invNumInput.value = "";
+  const invBisCheck = document.getElementById("invoiceBisCheckbox");
+  if(invBisCheck) invBisCheck.checked = false;
+  const invSuffixSelect = document.getElementById("invoiceNumberSuffix");
+  if(invSuffixSelect) { invSuffixSelect.value = "Bis"; invSuffixSelect.style.display = "none"; }
+  const invBisBadge = document.getElementById("invoiceBisBadge");
+  if(invBisBadge) invBisBadge.style.display = "none";
   document.getElementById("invoiceDate").valueAsDate=new Date();
   const s = document.getElementById("invoiceCustomer");
   s.innerHTML = '<option value="">' + escapeHTML(tr('select_customer','Select Customer')) + '</option>';
@@ -7022,6 +7234,12 @@ function openCreateProforma(){
   document.getElementById("proformaItems").innerHTML="";
   const profNumInput = document.getElementById("proformaNumberInput");
   if(profNumInput) profNumInput.value = "";
+  const profBisCheck = document.getElementById("proformaBisCheckbox");
+  if(profBisCheck) profBisCheck.checked = false;
+  const profSuffixSelect = document.getElementById("proformaNumberSuffix");
+  if(profSuffixSelect) { profSuffixSelect.value = "Bis"; profSuffixSelect.style.display = "none"; }
+  const profBisBadge = document.getElementById("proformaBisBadge");
+  if(profBisBadge) profBisBadge.style.display = "none";
   document.getElementById("proformaDate").valueAsDate=new Date();
   const s = document.getElementById("proformaCustomer");
   s.innerHTML = '<option value="">' + escapeHTML(tr('select_customer','Select Customer')) + '</option>';
@@ -7116,9 +7334,15 @@ window.addEventListener("load", function(){
           updatedPaid = Math.max(0, Math.min(existingPaid, Number(tt || 0)));
           updatedStatus = (Number(tt || 0) > 0 && updatedPaid >= Number(tt || 0)) ? "Paid" : "Pending";
         }
+        let invoiceNumVal = (document.getElementById("invoiceNumberInput") && document.getElementById("invoiceNumberInput").value.trim()) || invoicesData[idx].invoiceNumber || generateInvoiceNumberForDate(document.getElementById("invoiceDate").value);
+        const invBisCheck = document.getElementById("invoiceBisCheckbox");
+        const invSuffixSelect = document.getElementById("invoiceNumberSuffix");
+        if(invBisCheck && invBisCheck.checked && !/\s+(?:Bis|Ter|Quater|[A-Za-z]+)$/i.test(invoiceNumVal)){
+          invoiceNumVal = invoiceNumVal + " " + ((invSuffixSelect && invSuffixSelect.value) || "Bis");
+        }
         const updated = {
           id: editingInvoiceId,
-          invoiceNumber: (document.getElementById("invoiceNumberInput") && document.getElementById("invoiceNumberInput").value.trim()) || invoicesData[idx].invoiceNumber || generateInvoiceNumberForDate(document.getElementById("invoiceDate").value),
+          invoiceNumber: invoiceNumVal,
           date: document.getElementById("invoiceDate").value,
           customer: cu,
           items: invoiceItemsArray.map(i=>({description:i.description,quantity:i.quantity,price:i.price,total:i.total,productId:i.productId,unit:i.unit||"unit",fp:i.fp||""})),
@@ -7171,7 +7395,13 @@ window.addEventListener("load", function(){
             }
           }
         } catch(e) {}
-        const inv = { id:"INV-"+Date.now(), invoiceNumber: (document.getElementById("invoiceNumberInput") && document.getElementById("invoiceNumberInput").value.trim()) || generateInvoiceNumberForDate(document.getElementById("invoiceDate").value), date:document.getElementById("invoiceDate").value, customer:cu, items:invoiceItemsArray.map(i=>({description:i.description,quantity:i.quantity,price:i.price,total:i.total,productId:i.productId,unit:i.unit||"unit",fp:i.fp||""})), subtotal:st, tax:tx, taxRate:taxRate, stamp:stamp, stampRate:stampRate, total:tt, status:initialStatus, paymentMethod:paymentMethod, paid:initialPaid, payments:[], lowStockNotice:hasStockShortageOnSave };
+        let invoiceNumVal = (document.getElementById("invoiceNumberInput") && document.getElementById("invoiceNumberInput").value.trim()) || generateInvoiceNumberForDate(document.getElementById("invoiceDate").value);
+        const invBisCheck = document.getElementById("invoiceBisCheckbox");
+        const invSuffixSelect = document.getElementById("invoiceNumberSuffix");
+        if(invBisCheck && invBisCheck.checked && !/\s+(?:Bis|Ter|Quater|[A-Za-z]+)$/i.test(invoiceNumVal)){
+          invoiceNumVal = invoiceNumVal + " " + ((invSuffixSelect && invSuffixSelect.value) || "Bis");
+        }
+        const inv = { id:"INV-"+Date.now(), invoiceNumber: invoiceNumVal, date:document.getElementById("invoiceDate").value, customer:cu, items:invoiceItemsArray.map(i=>({description:i.description,quantity:i.quantity,price:i.price,total:i.total,productId:i.productId,unit:i.unit||"unit",fp:i.fp||""})), subtotal:st, tax:tx, taxRate:taxRate, stamp:stamp, stampRate:stampRate, total:tt, status:initialStatus, paymentMethod:paymentMethod, paid:initialPaid, payments:[], lowStockNotice:hasStockShortageOnSave };
         invoicesData.push(inv);
         if (window.DataGuard && typeof window.DataGuard.protectBeforeSave === 'function') {
           try { window.DataGuard.protectBeforeSave('invoice-create'); } catch(e) {}
@@ -7276,10 +7506,16 @@ function showInvoiceNotification(inv){
           editingProformaId = null;
           return;
         }
+        let profNumberToSave = (document.getElementById("proformaNumberInput") && document.getElementById("proformaNumberInput").value.trim()) || proformasData[idx].proformaNumber || generateProformaNumberForDate(document.getElementById("proformaDate").value);
+        const profBisCheck = document.getElementById("proformaBisCheckbox");
+        const profSuffixSelect = document.getElementById("proformaNumberSuffix");
+        if(profBisCheck && profBisCheck.checked && !/\s+(?:Bis|Ter|Quater|[A-Za-z]+)$/i.test(profNumberToSave)){
+          profNumberToSave = profNumberToSave + " " + ((profSuffixSelect && profSuffixSelect.value) || "Bis");
+        }
         const updated = {
           ...proformasData[idx],
           id: editingProformaId,
-          proformaNumber: (document.getElementById("proformaNumberInput") && document.getElementById("proformaNumberInput").value.trim()) || proformasData[idx].proformaNumber || generateProformaNumberForDate(document.getElementById("proformaDate").value),
+          proformaNumber: profNumberToSave,
           date: document.getElementById("proformaDate").value,
           customer: cu,
           items: proformaItemsArray.map(i=>({description:i.description,quantity:i.quantity,price:i.price,total:i.total,productId:i.productId,unit:i.unit||"unit",fp:i.fp||""})),
@@ -7297,7 +7533,13 @@ function showInvoiceNotification(inv){
         const proBtnText = document.getElementById("saveProformaBtnText");
         if(proBtnText) proBtnText.textContent = (translations[getPreviewLang()]||translations.en).save_proforma || "Save Proforma";
       } else {
-        const prof = { id:"PRO-"+Date.now(), proformaNumber: (document.getElementById("proformaNumberInput") && document.getElementById("proformaNumberInput").value.trim()) || generateProformaNumberForDate(document.getElementById("proformaDate").value), date:document.getElementById("proformaDate").value, customer:cu, items:proformaItemsArray.map(i=>({description:i.description,quantity:i.quantity,price:i.price,total:i.total,productId:i.productId,unit:i.unit||"unit",fp:i.fp||""})), subtotal:st, tax:tx, taxRate:taxRate, total:tt, notes:document.getElementById("proformaNotes").value, status:"Draft" };
+        let profNumberToSave = (document.getElementById("proformaNumberInput") && document.getElementById("proformaNumberInput").value.trim()) || generateProformaNumberForDate(document.getElementById("proformaDate").value);
+        const profBisCheck = document.getElementById("proformaBisCheckbox");
+        const profSuffixSelect = document.getElementById("proformaNumberSuffix");
+        if(profBisCheck && profBisCheck.checked && !/\s+(?:Bis|Ter|Quater|[A-Za-z]+)$/i.test(profNumberToSave)){
+          profNumberToSave = profNumberToSave + " " + ((profSuffixSelect && profSuffixSelect.value) || "Bis");
+        }
+        const prof = { id:"PRO-"+Date.now(), proformaNumber: profNumberToSave, date:document.getElementById("proformaDate").value, customer:cu, items:proformaItemsArray.map(i=>({description:i.description,quantity:i.quantity,price:i.price,total:i.total,productId:i.productId,unit:i.unit||"unit",fp:i.fp||""})), subtotal:st, tax:tx, taxRate:taxRate, total:tt, notes:document.getElementById("proformaNotes").value, status:"Draft" };
         proformasData.push(prof);
         ZS.setItem("proformas-data", JSON.stringify(proformasData));
         alert(tr('proforma_created','✅ Proforma created: {id}').replace('{id}', getProformaDisplayNumber(prof)));

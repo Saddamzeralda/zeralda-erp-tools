@@ -184,8 +184,8 @@
 
   function formatInvoiceNumber(id) {
     if (id === null || id === undefined) return "";
-    var value = String(id);
-    if (/^\d{1,}\/\d{4}$/.test(value)) return value;
+    var value = String(id).trim();
+    if (/^\d{1,}\/\d{4}(?:\s+(?:Bis|Ter|Quater|[A-Za-z]+))?$/i.test(value)) return value;
     if (value.indexOf("INV-") === 0) value = value.replace(/^INV-/, "");
     return value;
   }
@@ -792,6 +792,116 @@
     updateStats();
   }
 
+  function createBisInvoiceFrom(invoiceId) {
+    var source = (invoicesData || []).find(function (i) { return i.id === invoiceId; });
+    if (!source) return;
+
+    if (typeof openCreateInvoice === "function") {
+      openCreateInvoice();
+    } else if (typeof window.openCreateInvoice === "function") {
+      window.openCreateInvoice();
+    }
+
+    var baseNum = String(source.invoiceNumber || formatInvoiceNumber(source.id) || "").trim();
+    baseNum = baseNum.replace(/\s+(?:Bis|Ter|Quater|[A-Za-z]+)$/i, "");
+    if (!/^\d+\/\d{4}$/.test(baseNum)) {
+      var d = source.date || new Date().toISOString().slice(0, 10);
+      baseNum = typeof getLatestBaseInvoiceNumber === "function" ? getLatestBaseInvoiceNumber(d) : generateInvoiceNumberForDate(d);
+    }
+
+    var targetSuffix = "Bis";
+    var existingWithBis = (invoicesData || []).some(function(inv) {
+      return String(inv.invoiceNumber || "").trim().toLowerCase() === (baseNum + " bis").toLowerCase();
+    });
+    if (existingWithBis) {
+      var existingWithTer = (invoicesData || []).some(function(inv) {
+        return String(inv.invoiceNumber || "").trim().toLowerCase() === (baseNum + " ter").toLowerCase();
+      });
+      targetSuffix = existingWithTer ? "Quater" : "Ter";
+    }
+
+    var invNumInput = document.getElementById("invoiceNumberInput");
+    var bisCheck = document.getElementById("invoiceBisCheckbox");
+    var suffixSelect = document.getElementById("invoiceNumberSuffix");
+    var bisBadge = document.getElementById("invoiceBisBadge");
+
+    if (bisCheck) bisCheck.checked = true;
+    if (suffixSelect) {
+      suffixSelect.value = targetSuffix;
+      suffixSelect.style.display = "inline-block";
+    }
+    if (bisBadge) bisBadge.style.display = "inline-block";
+    if (invNumInput) {
+      invNumInput.value = baseNum + " " + targetSuffix;
+    }
+
+    if (source.customer && source.customer.id) {
+      var custSelect = document.getElementById("invoiceCustomer");
+      if (custSelect) custSelect.value = source.customer.id;
+    }
+    if (source.date) {
+      var dateInput = document.getElementById("invoiceDate");
+      if (dateInput) dateInput.value = source.date;
+    }
+    if (source.paymentMethod) {
+      var payInput = document.getElementById("invoicePaymentMethod");
+      if (payInput) payInput.value = source.paymentMethod;
+    }
+    if (source.stampRate !== undefined) {
+      var stampInput = document.getElementById("invoiceStampRate");
+      if (stampInput) stampInput.value = String(source.stampRate);
+    }
+    if (source.taxRate !== undefined) {
+      var taxInput = document.getElementById("invoiceTaxRate");
+      if (taxInput) taxInput.value = source.taxRate;
+      var taxCheck = document.getElementById("invoiceIncludeTax");
+      if (taxCheck) taxCheck.checked = Boolean(source.tax || source.taxRate > 0);
+    }
+
+    if (Array.isArray(source.items) && source.items.length > 0) {
+      if (typeof window.invoiceItemsArray !== "undefined") {
+        window.invoiceItemsArray = [];
+      }
+      var itemsCont = document.getElementById("invoiceItems");
+      if (itemsCont) itemsCont.innerHTML = "";
+      source.items.forEach(function(item) {
+        if (typeof addInvoiceItem === "function") {
+          addInvoiceItem();
+          var arr = typeof invoiceItemsArray !== "undefined" ? invoiceItemsArray : window.invoiceItemsArray;
+          if (arr && arr.length > 0) {
+            var id = arr.length - 1;
+            arr[id].productId = item.productId || 0;
+            arr[id].description = item.description || "";
+            arr[id].quantity = item.quantity || 1;
+            arr[id].price = item.price || 0;
+            arr[id].total = item.total || arr[id].quantity * arr[id].price;
+            arr[id].unit = item.unit || "unit";
+            arr[id].fp = item.fp || "";
+
+            var row = document.getElementById("item-" + id);
+            if (row) {
+              var picker = row.querySelector('.product-picker');
+              if (picker && picker._setProduct) {
+                picker._setProduct(item.productId || 0, item.description || '');
+              }
+              var fpSelect = row.querySelector('select[data-role="fp"]');
+              if (fpSelect) fpSelect.value = arr[id].fp || "";
+              var unitSelectEl = Array.from(row.querySelectorAll("select")).find(function(s){ return s !== fpSelect; });
+              if (unitSelectEl) unitSelectEl.value = arr[id].unit;
+              var qtyInput = row.querySelector('input[data-role="qty"]');
+              var priceInput = row.querySelector('input[data-role="price"]');
+              if (qtyInput) qtyInput.value = arr[id].quantity;
+              if (priceInput) priceInput.value = arr[id].price;
+              var span = document.getElementById("item-total-" + id);
+              if (span) span.textContent = Number(arr[id].total).toFixed(2);
+            }
+          }
+        }
+      });
+      if (typeof calculateInvoiceTotal === "function") calculateInvoiceTotal();
+    }
+  }
+
   function loadInvoicesTable() {
     bindInvoiceActions();
     // تحديث أيقونات الترتيب في عناوين الأعمدة
@@ -877,7 +987,13 @@
       tdSelect.appendChild(rowCheck);
 
       var tdId = document.createElement("td");
-      tdId.innerHTML = "<strong>" + escapeHTML(formatInvoiceNumber(inv.invoiceNumber || inv.id)) + "</strong>";
+      var formattedInvNum = formatInvoiceNumber(inv.invoiceNumber || inv.id);
+      var isBisInvoice = /\b(bis|ter|quater)\b/i.test(formattedInvNum);
+      if (isBisInvoice) {
+        tdId.innerHTML = "<strong>" + escapeHTML(formattedInvNum) + "</strong> <span style=\"margin-inline-start:4px; background:#e0e7ff; color:#3730a3; font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; text-transform:uppercase;\">BIS</span>";
+      } else {
+        tdId.innerHTML = "<strong>" + escapeHTML(formattedInvNum) + "</strong>";
+      }
 
       var tdCustomer = document.createElement("td");
       tdCustomer.textContent = (inv.customer && inv.customer.name) || "-";
@@ -948,6 +1064,19 @@
       btnDuplicate.title = t("duplicate", "Duplicate");
       btnDuplicate.addEventListener("click", function () { duplicateInvoiceRecord(inv.id); });
 
+      var btnBis = document.createElement("button");
+      btnBis.className = "btn";
+      btnBis.style.cssText = "padding:8px 10px;font-size:11px;font-weight:700;background:#4f46e5;color:#fff;border-radius:4px;";
+      btnBis.innerHTML = 'Bis';
+      btnBis.title = t("create_bis_invoice", "Create Bis Invoice (Secondary Numbering)");
+      btnBis.addEventListener("click", function () {
+        if (typeof createBisInvoiceFrom === 'function') {
+          createBisInvoiceFrom(inv.id);
+        } else if (typeof window.createBisInvoiceFrom === 'function') {
+          window.createBisInvoiceFrom(inv.id);
+        }
+      });
+
       var btnPay = document.createElement("button");
       btnPay.className = "btn btn-warning";
       btnPay.style.padding = "8px 12px";
@@ -962,6 +1091,7 @@
       actionsDiv.appendChild(btnEdit);
       actionsDiv.appendChild(btnWhatsApp);
       actionsDiv.appendChild(btnDuplicate);
+      actionsDiv.appendChild(btnBis);
       actionsDiv.appendChild(btnDelete);
       actionsDiv.appendChild(btnPay);
       tdActions.appendChild(actionsDiv);
@@ -1052,6 +1182,7 @@
   window.loadInvoicesTable = loadInvoicesTable;
   window.setSortColumn = setSortColumn;
   window.duplicateInvoiceRecord = duplicateInvoiceRecord;
+  window.createBisInvoiceFrom = createBisInvoiceFrom;
   window.openInvoicePaymentModal = openInvoicePaymentModal;
 
   window.SalesInvoicesModule = {
@@ -1081,8 +1212,8 @@
 
   function formatProformaNumber(id) {
     if (id === null || id === undefined) return "";
-    var value = String(id);
-    if (/^\d{1,}\/\d{4}$/.test(value)) return value;
+    var value = String(id).trim();
+    if (/^\d{1,}\/\d{4}(?:\s+(?:Bis|Ter|Quater|[A-Za-z]+))?$/i.test(value)) return value;
     if (value.indexOf("PRO-") === 0) value = value.replace(/^PRO-/, "");
     return value;
   }
@@ -1143,7 +1274,13 @@
       var tdId = document.createElement("td");
       tdId.style.padding = "12px";
       tdId.style.border = "1px solid #333";
-      tdId.innerHTML = "<strong>" + escapeHTML(formatProformaNumber(prof.proformaNumber || prof.id)) + "</strong>";
+      var formattedProfNum = formatProformaNumber(prof.proformaNumber || prof.id);
+      var isProfBis = /\b(bis|ter|quater)\b/i.test(formattedProfNum);
+      if (isProfBis) {
+        tdId.innerHTML = "<strong>" + escapeHTML(formattedProfNum) + "</strong> <span style=\"margin-inline-start:4px; background:#e0e7ff; color:#3730a3; font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; text-transform:uppercase;\">BIS</span>";
+      } else {
+        tdId.innerHTML = "<strong>" + escapeHTML(formattedProfNum) + "</strong>";
+      }
 
       var tdCustomer = document.createElement("td");
       tdCustomer.style.padding = "12px";
