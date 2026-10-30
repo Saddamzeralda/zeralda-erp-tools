@@ -1064,19 +1064,6 @@
       btnDuplicate.title = t("duplicate", "Duplicate");
       btnDuplicate.addEventListener("click", function () { duplicateInvoiceRecord(inv.id); });
 
-      var btnBis = document.createElement("button");
-      btnBis.className = "btn";
-      btnBis.style.cssText = "padding:8px 10px;font-size:11px;font-weight:700;background:#4f46e5;color:#fff;border-radius:4px;";
-      btnBis.innerHTML = 'Bis';
-      btnBis.title = t("create_bis_invoice", "Create Bis Invoice (Secondary Numbering)");
-      btnBis.addEventListener("click", function () {
-        if (typeof createBisInvoiceFrom === 'function') {
-          createBisInvoiceFrom(inv.id);
-        } else if (typeof window.createBisInvoiceFrom === 'function') {
-          window.createBisInvoiceFrom(inv.id);
-        }
-      });
-
       var btnPay = document.createElement("button");
       btnPay.className = "btn btn-warning";
       btnPay.style.padding = "8px 12px";
@@ -1091,7 +1078,6 @@
       actionsDiv.appendChild(btnEdit);
       actionsDiv.appendChild(btnWhatsApp);
       actionsDiv.appendChild(btnDuplicate);
-      actionsDiv.appendChild(btnBis);
       actionsDiv.appendChild(btnDelete);
       actionsDiv.appendChild(btnPay);
       tdActions.appendChild(actionsDiv);
