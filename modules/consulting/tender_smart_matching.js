@@ -2203,10 +2203,31 @@ Comprenant: Méthodologie, planning prévisionnel, moyens humains et matériels,
             itemsSummary.push(item.qty + 'x ' + item.name + ' (' + unitP.toFixed(2) + ' DZD)');
         });
 
+        var bpuArray = currentAnalysisItems.map(function(item) {
+            var benchmarks = (typeof window.getMarketPriceBenchmarks === 'function') ? window.getMarketPriceBenchmarks(item.name) : [];
+            var lastPrice = benchmarks.length > 0 ? benchmarks[0].price : 0;
+            var unitP = item.customPrice != null ? item.customPrice : (lastPrice > 0 ? (lastPrice * (1 + margin)) : 10000);
+            return {
+                designation: item.name,
+                unit: item.unit || 'u',
+                qty: Number(item.qty || 1),
+                costHT: lastPrice > 0 ? lastPrice : Math.round(unitP / (1 + margin)),
+                margin: Math.round(margin * 100),
+                unitPriceHT: Math.round(unitP)
+            };
+        });
+
         if (currentActiveTenderIdx !== null) {
             var tender = (typeof window.getTenderByIndex === 'function') ? window.getTenderByIndex(currentActiveTenderIdx) : null;
             if (tender) {
                 tender.amount = totalAmount;
+                tender.bpuItems = bpuArray;
+                tender.costing = Object.assign({}, tender.costing, {
+                    financialHT: totalAmount,
+                    financialTTC: Math.round(totalAmount * 1.19),
+                    marginPct: Math.round(margin * 100),
+                    bpuItems: bpuArray
+                });
                 tender.notes = (tender.notes ? tender.notes + '\n\n' : '') + '[Smart Pricing Calculation]:\n' + itemsSummary.join('\n');
                 if (typeof window.saveData === 'function') window.saveData();
                 if (typeof window.renderAll === 'function') window.renderAll();
