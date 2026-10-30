@@ -90,6 +90,22 @@
                 style="color:#38bdf8;">
           <i class="fas fa-network-wired" aria-hidden="true"></i>
         </button>
+        <div class="header-notif-wrapper" id="headerNotifWrapper" style="position:relative; display:inline-flex; align-items:center;">
+          <button id="headerNotificationsBtn" class="header-fullscreen-btn" type="button"
+                  onclick="window.toggleNotificationsDropdown && window.toggleNotificationsDropdown(event)"
+                  data-en-title="Notifications & Alerts"
+                  data-ar-title="مركز الإشعارات والتنبيهات"
+                  data-fr-title="Centre de notifications & alertes"
+                  title="مركز الإشعارات والتنبيهات"
+                  aria-label="Notifications & Alerts"
+                  style="color:#f59e0b; position:relative;">
+            <i class="fas fa-bell" id="headerNotifBellIcon" aria-hidden="true"></i>
+            <span id="headerNotifBadge" class="header-notif-badge" style="display:none;">0</span>
+          </button>
+          <div id="headerNotifDropdown" class="header-notif-dropdown" style="display:none;" role="region" aria-label="مركز الإشعارات والتنبيهات">
+            <!-- Dynamic Notification Content -->
+          </div>
+        </div>
         <div class="user-info" id="layoutUserInfo">
           <div class="user-avatar" id="layoutUserAvatar">US</div>
           <div>

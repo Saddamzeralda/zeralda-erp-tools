@@ -812,7 +812,7 @@
     // Use cached HTML if available (avoids fetch on every page navigation)
     var fetchPromise = _cachedLayoutHTML
       ? Promise.resolve(_cachedLayoutHTML)
-      : fetch('shared/layout_shell.html?v=20261027_v3')
+      : fetch('shared/layout_shell.html?v=20261030_v1')
           .then(function (res) {
             if (!res.ok) throw new Error('Failed to load layout_shell.html: ' + res.status);
             return res.text();
@@ -879,6 +879,13 @@
             cp.src = 'shared/command_palette.js?v=20261017_v1';
             cp.defer = true;
             document.head.appendChild(cp);
+          }
+
+          if (!window.ZeraldaNotifications && !document.querySelector('script[src*="notification_center.js"]')) {
+            var np = document.createElement('script');
+            np.src = 'shared/notification_center.js?v=20261030_v1';
+            np.defer = true;
+            document.head.appendChild(np);
           }
         } catch (_) {}
 
