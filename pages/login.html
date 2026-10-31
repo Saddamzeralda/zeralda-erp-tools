@@ -1058,12 +1058,18 @@
           picture: user.picture || ''
         });
 
-        // Set active user and flag automatic Google Drive sync on login
+        // Set active user and flag automatic Google Drive sync on login ONLY if Google is connected
         ZS.setItem('zeralda-current-user', JSON.stringify(user));
-        ZS.setItem('zeralda-drive-auto-sync-on-login', 'true');
+        var hasValidGoogleToken = false;
         try {
-          var gToken = ZS.getItem('zeralda-google-token');
-          var gProf = ZS.getItem('zeralda-google-profile');
+          var gToken = ZS.getItem('zeralda-google-token') || (window.localStorage && localStorage.getItem('zeralda-google-token'));
+          var gProf = ZS.getItem('zeralda-google-profile') || (window.localStorage && localStorage.getItem('zeralda-google-profile'));
+          if (gToken) {
+            try {
+              var parsedGT = JSON.parse(gToken);
+              if (parsedGT && parsedGT.access_token && !parsedGT.expired) hasValidGoogleToken = true;
+            } catch (_) {}
+          }
           var uIds = ['default'];
           if (user.id) uIds.push(String(user.id));
           if (user.email) uIds.push(String(user.email));
@@ -1073,6 +1079,11 @@
             if (gProf) ZS.setItem('zeralda-google-profile::' + uIds[ui], gProf);
           }
         } catch (_) {}
+        if (hasValidGoogleToken) {
+          ZS.setItem('zeralda-drive-auto-sync-on-login', 'true');
+        } else {
+          ZS.removeItem('zeralda-drive-auto-sync-on-login');
+        }
 
         if (data.must_change_password || user.must_change_password) {
           showForceChangePasswordModal(token, password, function () {
@@ -1496,22 +1507,33 @@
           localStorage.setItem('zeralda-saved-phone', phone);
         } catch (_) {}
 
-        // Set active user and flag automatic Google Drive sync on login
+        // Set active user and flag automatic Google Drive sync on login ONLY if Google is connected
         var keyUser = data.user || { id: data.user_email || phone, email: data.user_email || phone, username: phone };
         ZS.setItem('zeralda-current-user', JSON.stringify(keyUser));
-        ZS.setItem('zeralda-drive-auto-sync-on-login', 'true');
+        var hasValidGoogleTokenKey = false;
         try {
-          var gToken = ZS.getItem('zeralda-google-token');
+          var gToken = ZS.getItem('zeralda-google-token') || (window.localStorage && localStorage.getItem('zeralda-google-token'));
+          if (gToken) {
+            try {
+              var parsedGTK = JSON.parse(gToken);
+              if (parsedGTK && parsedGTK.access_token && !parsedGTK.expired) hasValidGoogleTokenKey = true;
+            } catch (_) {}
+          }
           if (gToken && keyUser && (keyUser.id || keyUser.email)) {
             var uid = String(keyUser.id || keyUser.email);
             ZS.setItem('zeralda-google-token::' + uid, gToken);
           }
-          var gProf = ZS.getItem('zeralda-google-profile');
+          var gProf = ZS.getItem('zeralda-google-profile') || (window.localStorage && localStorage.getItem('zeralda-google-profile'));
           if (gProf && keyUser && (keyUser.id || keyUser.email)) {
             var uid = String(keyUser.id || keyUser.email);
             ZS.setItem('zeralda-google-profile::' + uid, gProf);
           }
         } catch (_) {}
+        if (hasValidGoogleTokenKey) {
+          ZS.setItem('zeralda-drive-auto-sync-on-login', 'true');
+        } else {
+          ZS.removeItem('zeralda-drive-auto-sync-on-login');
+        }
 
         syncServerPrefsAndRedirect(token, nextPage);
       }).catch(function (err) {

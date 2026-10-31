@@ -2780,7 +2780,7 @@
     var flag = ZS.getItem('zeralda-drive-auto-sync-on-login');
     if (!flag && !force) {
       // If not flagged for login sync, just ensure silent reconnect in background
-      if (!isSignedIn()) {
+      if (!hasValidToken()) {
         tryAutoReconnect(function (ok) {
           if (ok) {
             console.log('[Google Drive] Auto-reconnected in background');
@@ -2792,8 +2792,7 @@
     }
 
     function doSync() {
-      if (!isSignedIn()) {
-        console.log('[Google Drive] Cannot auto-sync on login: not signed in');
+      if (!hasValidToken()) {
         ZS.removeItem('zeralda-drive-auto-sync-on-login');
         return;
       }
@@ -2807,19 +2806,22 @@
         _showGoogleSyncToast('✅ اكتملت المزامنة والنسخ الاحتياطي السحابي على Google Drive بنجاح', 'success');
         _emitGoogleSyncState({ connected: true, action: 'auto_sync_completed', timestamp: new Date().toISOString() });
       }).catch(function (err) {
-        console.warn('[Google Drive] Auto-sync on login failed:', err);
         ZS.removeItem('zeralda-drive-auto-sync-on-login');
+        if (err && (err.message === 'Not signed in' || String(err).indexOf('Not signed in') !== -1)) {
+          console.log('[Google Drive] Auto-sync skipped: not signed in');
+        } else {
+          console.warn('[Google Drive] Auto-sync on login failed:', err);
+        }
       });
     }
 
-    if (isSignedIn()) {
+    if (hasValidToken()) {
       doSync();
     } else {
       tryAutoReconnect(function (ok) {
-        if (ok) {
+        if (ok && hasValidToken()) {
           doSync();
         } else {
-          console.log('[Google Drive] tryAutoReconnect failed, clearing login sync flag');
           ZS.removeItem('zeralda-drive-auto-sync-on-login');
         }
       });
