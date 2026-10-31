@@ -540,6 +540,12 @@
                 </div>
 
                 <div class="settings-nav-item" role="button" tabindex="0"
+                     onclick="showSection('whatsapp', this)" onkeydown="if(event.key==='Enter' || event.key===' ') showSection('whatsapp', this)" style="border:1.5px solid #25D366; background:linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);">
+                    <div class="settings-icon green" style="background: linear-gradient(135deg,#25D366,#128C7E); color:#fff;"><i class="fab fa-whatsapp" aria-hidden="true"></i></div>
+                    <div><strong data-en="WhatsApp API" data-ar="واتساب API" data-fr="WhatsApp API" style="color:#065f46;">واتساب API</strong></div>
+                </div>
+
+                <div class="settings-nav-item" role="button" tabindex="0"
                      onclick="showSection('factory-reset', this)" onkeydown="if(event.key==='Enter' || event.key===' ') showSection('factory-reset', this)">
                     <div class="settings-icon red"><i class="fas fa-power-off" aria-hidden="true"></i></div>
                     <div><strong data-en="Factory Reset" data-ar="إعادة ضبط المصنع" data-fr="Réinitialisation">Factory Reset</strong></div>
@@ -1157,6 +1163,175 @@
                 <button class="btn btn-secondary" onclick="previewNotification()">
                     <i class="fas fa-bell"></i>
                     <span data-en="Send Test Notification" data-ar="إرسال إشعار تجريبي" data-fr="Envoyer une notification test">Send Test Notification</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- ════════════════════════════════════════════════════════════════════ -->
+        <!-- 📱 WHATSAPP API SETTINGS | إعدادات واتساب API الموحدة -->
+        <!-- ════════════════════════════════════════════════════════════════════ -->
+        <div id="whatsapp" class="settings-section">
+            <div class="section-header">
+                <div class="section-title">
+                    <i class="fab fa-whatsapp" style="color:#25D366; font-size:24px;"></i>
+                    <span data-en="WhatsApp API Integration" data-ar="دمج وإعدادات واتساب API" data-fr="Intégration WhatsApp API">دمج وإعدادات واتساب API</span>
+                </div>
+                <div>
+                    <span id="waStatusBadge" style="padding:4px 12px; border-radius:20px; font-size:12px; font-weight:700; background:#fee2e2; color:#b91c1c;">
+                        <i class="fas fa-circle" style="font-size:8px;"></i> غير مفعّل
+                    </span>
+                </div>
+            </div>
+
+            <div class="alert-box alert-info" style="border-left:4px solid #25D366; background:#f0fdf4; color:#065f46;">
+                <i class="fab fa-whatsapp" style="font-size:24px; color:#25D366;"></i>
+                <div>
+                    <strong>إرسال تلقائي مباشر للفواتير وسندات الطلب بصيغة PDF</strong>
+                    <p style="margin:4px 0 0; font-size:13px; color:#166534;">
+                        يتيح لك هذا الدمج إرسال فواتير المبيعات وعروض الأسعار والتنبيهات للزبائن مباشرة من داخل البرنامج بنقرة واحدة عبر أرقام واتساب، دون الحاجة لتحميل الـ PDF يدوياً.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Main Toggle & Provider Selector -->
+            <div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:18px; margin-bottom:18px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
+                    <div>
+                        <h4 style="margin:0; font-size:15px; font-weight:700; color:#1e293b;">تفعيل واتساب API (WhatsApp API Active)</h4>
+                        <p style="margin:3px 0 0; font-size:12px; color:#64748b;">عند التفعيل، سيعتمد النظام على الـ API بدلاً من فتح واتساب ويب يدوياً</p>
+                    </div>
+                    <label style="position:relative; display:inline-block; width:52px; height:28px; cursor:pointer;">
+                        <input type="checkbox" id="waEnabledCheckbox" onchange="onWaEnabledToggle(this.checked)" style="opacity:0; width:0; height:0;">
+                        <span style="position:absolute; inset:0; background:#cbd5e1; border-radius:34px; transition:0.3s;" id="waToggleTrack"></span>
+                        <span style="position:absolute; content:''; height:22px; width:22px; left:3px; bottom:3px; background:white; border-radius:50%; transition:0.3s;" id="waToggleThumb"></span>
+                    </label>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label"><i class="fas fa-server"></i> مزود الخدمة (Provider):</label>
+                        <select id="waProviderSelect" class="form-select" onchange="onWaProviderChange(this.value)">
+                            <option value="ultramsg">🟢 UltraMsg (بوابة سريعة عبر QR Code - موصى بها)</option>
+                            <option value="meta">🔵 Meta WhatsApp Business Cloud API (الرسمي من فيسبوك)</option>
+                            <option value="green_api">🟡 Green-API (بوابة عبر QR Code)</option>
+                            <option value="custom_webhook">⚙️ خادم محلي / Webhook مخصص (Baileys / WPPConnect)</option>
+                            <option value="click_to_chat">🔗 فتح واتساب ويب يدوياً (بدون API)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label"><i class="fas fa-globe"></i> الرمز الدولي الافتراضي (Country Code):</label>
+                        <input type="text" id="waDefaultCountryCode" class="form-input" placeholder="213" value="213">
+                        <small style="color:#64748b; font-size:11px;">الجزائر: 213 (سيتم إضافة الرمز تلقائياً للأرقام المحلية مثل 0550...)</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Provider Specific Configuration Cards -->
+            <!-- 1. UltraMsg -->
+            <div id="wa-ultramsg-card" class="wa-provider-card" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:18px; margin-bottom:18px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <h4 style="margin:0; font-size:14px; font-weight:700; color:#0f766e;"><i class="fas fa-qrcode"></i> إعدادات UltraMsg</h4>
+                    <a href="https://ultramsg.com" target="_blank" style="font-size:12px; color:#2563eb; text-decoration:none;"><i class="fas fa-external-link-alt"></i> فتح موقع UltraMsg</a>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">معرف النسخة (Instance ID):</label>
+                        <input type="text" id="waUltraInstanceId" class="form-input" placeholder="instanceXXXXX">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">رمز الوصول (Token):</label>
+                        <input type="password" id="waUltraToken" class="form-input" placeholder="••••••••">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Meta Cloud API -->
+            <div id="wa-meta-card" class="wa-provider-card" style="display:none; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:18px; margin-bottom:18px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <h4 style="margin:0; font-size:14px; font-weight:700; color:#1d4ed8;"><i class="fab fa-facebook"></i> إعدادات Meta WhatsApp Cloud API</h4>
+                    <a href="https://developers.facebook.com" target="_blank" style="font-size:12px; color:#2563eb; text-decoration:none;"><i class="fas fa-external-link-alt"></i> Meta Developers Portal</a>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Phone Number ID:</label>
+                        <input type="text" id="waMetaPhoneId" class="form-input" placeholder="1029384756...">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Access Token (Permanent or System User Token):</label>
+                        <input type="password" id="waMetaToken" class="form-input" placeholder="EAAX••••••••">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">WhatsApp Business Account ID (WABA ID - اختياري):</label>
+                        <input type="text" id="waMetaWabaId" class="form-input" placeholder="192837465...">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Green-API -->
+            <div id="wa-green-card" class="wa-provider-card" style="display:none; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:18px; margin-bottom:18px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <h4 style="margin:0; font-size:14px; font-weight:700; color:#b45309;"><i class="fas fa-link"></i> إعدادات Green-API</h4>
+                    <a href="https://green-api.com" target="_blank" style="font-size:12px; color:#2563eb; text-decoration:none;"><i class="fas fa-external-link-alt"></i> موقع Green-API</a>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">idInstance:</label>
+                        <input type="text" id="waGreenIdInstance" class="form-input" placeholder="1101827364">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">apiTokenInstance:</label>
+                        <input type="password" id="waGreenApiToken" class="form-input" placeholder="••••••••">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Custom Webhook -->
+            <div id="wa-custom-card" class="wa-provider-card" style="display:none; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:18px; margin-bottom:18px;">
+                <h4 style="margin:0 0 12px 0; font-size:14px; font-weight:700; color:#475569;"><i class="fas fa-network-wired"></i> إعدادات خادم محلي أو Webhook مخصص</h4>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">رابط الخدمة (Endpoint URL):</label>
+                        <input type="text" id="waCustomEndpoint" class="form-input" placeholder="http://localhost:3000/send-message">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">مفتاح الحماية (API Key / Bearer Token - اختياري):</label>
+                        <input type="password" id="waCustomApiKey" class="form-input" placeholder="••••••••">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Templates Section -->
+            <div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:18px; margin-bottom:18px;">
+                <h4 style="margin:0 0 12px 0; font-size:14px; font-weight:700; color:#1e293b;"><i class="fas fa-comment-alt"></i> قوالب نصوص الرسائل التلقائية</h4>
+                <div class="form-group" style="margin-bottom:12px;">
+                    <label class="form-label">نص رسالة الفاتورة المرفقة (Invoice Caption):</label>
+                    <textarea id="waTemplateInvoice" class="form-textarea" rows="2" style="width:100%;"></textarea>
+                    <small style="color:#64748b; font-size:11px;">المتغيرات المتاحة: {customer_name}، {invoice_number}، {total}</small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">نص رسالة الفاتورة الشكلية (Proforma Caption):</label>
+                    <textarea id="waTemplateProforma" class="form-textarea" rows="2" style="width:100%;"></textarea>
+                    <small style="color:#64748b; font-size:11px;">المتغيرات المتاحة: {customer_name}، {proforma_number}، {total}</small>
+                </div>
+            </div>
+
+            <!-- Test Connection Box -->
+            <div style="background:#f1f5f9; border:1px solid #cbd5e1; border-radius:12px; padding:16px; margin-bottom:20px;">
+                <h4 style="margin:0 0 10px 0; font-size:14px; font-weight:700; color:#334155;"><i class="fas fa-vial"></i> اختبار الاتصال وإرسال تجريبي</h4>
+                <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                    <input type="text" id="waTestPhoneNumber" class="form-input" placeholder="أدخل رقم هاتف للتجربة (مثال: 0550123456)" style="flex:1; min-width:220px;">
+                    <button type="button" class="btn btn-secondary" onclick="testWhatsAppApiConnection()" id="btnWaTest">
+                        <i class="fas fa-paper-plane"></i> اختبار الإرسال
+                    </button>
+                </div>
+                <div id="waTestResultBox" style="margin-top:10px; font-size:13px; display:none;"></div>
+            </div>
+
+            <!-- Action buttons -->
+            <div style="display:flex; gap:12px;">
+                <button type="button" class="btn btn-primary" onclick="saveWhatsAppApiSettings()" id="btnSaveWhatsApp" style="background:#25D366;">
+                    <i class="fas fa-save"></i> حفظ إعدادات واتساب
                 </button>
             </div>
         </div>
@@ -6477,7 +6652,177 @@ async function disable2FA() {
     }
 }
 
+// ── WhatsApp API Integration Script ──────────────────────────────────────────
+function onWaProviderChange(provider) {
+    document.querySelectorAll('.wa-provider-card').forEach(function(el) { el.style.display = 'none'; });
+    if (provider === 'ultramsg') {
+        var card = document.getElementById('wa-ultramsg-card'); if (card) card.style.display = 'block';
+    } else if (provider === 'meta') {
+        var card = document.getElementById('wa-meta-card'); if (card) card.style.display = 'block';
+    } else if (provider === 'green_api') {
+        var card = document.getElementById('wa-green-card'); if (card) card.style.display = 'block';
+    } else if (provider === 'custom_webhook') {
+        var card = document.getElementById('wa-custom-card'); if (card) card.style.display = 'block';
+    }
+}
+
+function onWaEnabledToggle(checked) {
+    var track = document.getElementById('waToggleTrack');
+    var thumb = document.getElementById('waToggleThumb');
+    var badge = document.getElementById('waStatusBadge');
+    if (track) track.style.background = checked ? '#25D366' : '#cbd5e1';
+    if (thumb) thumb.style.transform = checked ? 'translateX(24px)' : 'translateX(0)';
+    if (badge) {
+        if (checked) {
+            badge.style.background = '#dcfce7'; badge.style.color = '#15803d';
+            badge.innerHTML = '<i class="fas fa-check-circle" style="font-size:10px;"></i> مفعّل (Active)';
+        } else {
+            badge.style.background = '#fee2e2'; badge.style.color = '#b91c1c';
+            badge.innerHTML = '<i class="fas fa-circle" style="font-size:8px;"></i> غير مفعّل';
+        }
+    }
+}
+
+async function loadWhatsAppSettings() {
+    try {
+        var res = await fetch('/api/whatsapp/config');
+        if (!res.ok) return;
+        var data = await res.json();
+        if (!data.ok || !data.config) return;
+        var c = data.config;
+
+        var chk = document.getElementById('waEnabledCheckbox');
+        if (chk) { chk.checked = !!c.enabled; onWaEnabledToggle(chk.checked); }
+
+        var prov = document.getElementById('waProviderSelect');
+        if (prov && c.provider) { prov.value = c.provider; onWaProviderChange(c.provider); }
+
+        var cc = document.getElementById('waDefaultCountryCode');
+        if (cc && c.default_country_code) cc.value = c.default_country_code;
+
+        if (c.ultramsg) {
+            var inst = document.getElementById('waUltraInstanceId'); if (inst) inst.value = c.ultramsg.instance_id || '';
+            var tok = document.getElementById('waUltraToken'); if (tok) tok.value = c.ultramsg.token || '';
+        }
+        if (c.meta) {
+            var pid = document.getElementById('waMetaPhoneId'); if (pid) pid.value = c.meta.phone_number_id || '';
+            var tok = document.getElementById('waMetaToken'); if (tok) tok.value = c.meta.access_token || '';
+            var waba = document.getElementById('waMetaWabaId'); if (waba) waba.value = c.meta.business_account_id || '';
+        }
+        if (c.green_api) {
+            var gid = document.getElementById('waGreenIdInstance'); if (gid) gid.value = c.green_api.id_instance || '';
+            var gtok = document.getElementById('waGreenApiToken'); if (gtok) gtok.value = c.green_api.api_token_instance || '';
+        }
+        if (c.custom_webhook) {
+            var ep = document.getElementById('waCustomEndpoint'); if (ep) ep.value = c.custom_webhook.endpoint_url || '';
+            var key = document.getElementById('waCustomApiKey'); if (key) key.value = c.custom_webhook.api_key || '';
+        }
+        if (c.templates) {
+            var invTpl = document.getElementById('waTemplateInvoice'); if (invTpl) invTpl.value = c.templates.invoice_caption || '';
+            var proTpl = document.getElementById('waTemplateProforma'); if (proTpl) proTpl.value = c.templates.proforma_caption || '';
+        }
+    } catch(err) {
+        console.warn('[WhatsApp] Failed to load config:', err);
+    }
+}
+
+async function saveWhatsAppApiSettings() {
+    var btn = document.getElementById('btnSaveWhatsApp');
+    var origText = btn ? btn.innerHTML : '';
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...'; }
+
+    var payload = {
+        enabled: document.getElementById('waEnabledCheckbox') ? document.getElementById('waEnabledCheckbox').checked : false,
+        provider: document.getElementById('waProviderSelect') ? document.getElementById('waProviderSelect').value : 'ultramsg',
+        default_country_code: document.getElementById('waDefaultCountryCode') ? document.getElementById('waDefaultCountryCode').value.trim() : '213',
+        ultramsg: {
+            instance_id: document.getElementById('waUltraInstanceId') ? document.getElementById('waUltraInstanceId').value.trim() : '',
+            token: document.getElementById('waUltraToken') ? document.getElementById('waUltraToken').value.trim() : ''
+        },
+        meta: {
+            phone_number_id: document.getElementById('waMetaPhoneId') ? document.getElementById('waMetaPhoneId').value.trim() : '',
+            access_token: document.getElementById('waMetaToken') ? document.getElementById('waMetaToken').value.trim() : '',
+            business_account_id: document.getElementById('waMetaWabaId') ? document.getElementById('waMetaWabaId').value.trim() : ''
+        },
+        green_api: {
+            id_instance: document.getElementById('waGreenIdInstance') ? document.getElementById('waGreenIdInstance').value.trim() : '',
+            api_token_instance: document.getElementById('waGreenApiToken') ? document.getElementById('waGreenApiToken').value.trim() : ''
+        },
+        custom_webhook: {
+            endpoint_url: document.getElementById('waCustomEndpoint') ? document.getElementById('waCustomEndpoint').value.trim() : '',
+            api_key: document.getElementById('waCustomApiKey') ? document.getElementById('waCustomApiKey').value.trim() : ''
+        },
+        templates: {
+            invoice_caption: document.getElementById('waTemplateInvoice') ? document.getElementById('waTemplateInvoice').value.trim() : '',
+            proforma_caption: document.getElementById('waTemplateProforma') ? document.getElementById('waTemplateProforma').value.trim() : ''
+        }
+    };
+
+    try {
+        var res = await fetch('/api/whatsapp/config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        var data = await res.json();
+        if (btn) { btn.disabled = false; btn.innerHTML = origText; }
+
+        if (res.ok && data.ok) {
+            alert('✅ تم حفظ إعدادات واتساب بنجاح!');
+            loadWhatsAppSettings();
+        } else {
+            alert('❌ فشل حفظ الإعدادات: ' + (data.error || 'خطأ غير معروف'));
+        }
+    } catch(err) {
+        if (btn) { btn.disabled = false; btn.innerHTML = origText; }
+        alert('❌ خطأ في الاتصال بالخادم: ' + err.message);
+    }
+}
+
+async function testWhatsAppApiConnection() {
+    var btn = document.getElementById('btnWaTest');
+    var resultBox = document.getElementById('waTestResultBox');
+    var phoneInput = document.getElementById('waTestPhoneNumber');
+    var phone = phoneInput ? phoneInput.value.trim() : '';
+
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الفحص...'; }
+    if (resultBox) { resultBox.style.display = 'block'; resultBox.innerHTML = '<span style="color:#0284c7;"><i class="fas fa-spinner fa-spin"></i> جاري الاتصال بمزود WhatsApp...</span>'; }
+
+    try {
+        var res = await fetch('/api/whatsapp/test', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone: phone })
+        });
+        var data = await res.json();
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> اختبار الإرسال'; }
+
+        if (res.ok && data.ok) {
+            resultBox.innerHTML = '<div style="padding:10px; background:#dcfce7; border:1px solid #86efac; border-radius:8px; color:#15803d;"><strong>✅ الاتصال ناجح!</strong> ' + (phone ? 'تم إرسال رسالة تجريبية إلى ' + phone : 'بيانات الاعتماد صحيحة وجاهزة للعمل.') + '</div>';
+        } else {
+            var err = data.error || (data.detail && data.detail.error) || 'فشل الاتصال';
+            if (typeof err === 'object') err = JSON.stringify(err);
+            resultBox.innerHTML = '<div style="padding:10px; background:#fee2e2; border:1px solid #fca5a5; border-radius:8px; color:#b91c1c;"><strong>❌ فشل الاختبار:</strong> ' + err + '</div>';
+        }
+    } catch(err) {
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> اختبار الإرسال'; }
+        resultBox.innerHTML = '<div style="padding:10px; background:#fee2e2; border:1px solid #fca5a5; border-radius:8px; color:#b91c1c;"><strong>❌ خطأ:</strong> ' + err.message + '</div>';
+    }
+}
+
+// Hook showSection
+var _prevShowSectionWA = typeof showSection === 'function' ? showSection : null;
+if (_prevShowSectionWA) {
+    showSection = function(id, el) {
+        _prevShowSectionWA(id, el);
+        if (id === 'whatsapp') {
+            setTimeout(loadWhatsAppSettings, 100);
+        }
+    };
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(loadWhatsAppSettings, 600);
     setTimeout(check2FAStatus, 800);
 });
 </script>

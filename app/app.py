@@ -404,7 +404,7 @@ def create_app() -> FastAPI:
         )
 
     # ── Routers ──────────────────────────────────────────────────────────
-    from app.handlers import auth, store, ai, backup, ocr, misc, files, sync, license as license_handler, notifications as notifications_handler
+    from app.handlers import auth, store, ai, backup, ocr, misc, files, sync, license as license_handler, notifications as notifications_handler, whatsapp as whatsapp_handler
 
     app.include_router(auth.router)
     app.include_router(auth.keys_router)
@@ -418,6 +418,7 @@ def create_app() -> FastAPI:
     app.include_router(misc.router)
     app.include_router(license_handler.router)
     app.include_router(notifications_handler.router)
+    app.include_router(whatsapp_handler.router)
 
     # ── Static files (serves HTML/JS/CSS/images from project root) ───────
     base_dir = Path(__file__).resolve().parent.parent

@@ -2488,6 +2488,150 @@ async function shareInvoiceViaWhatsApp(invoiceId) {
         return;
       }
 
+      // Check WhatsApp API integration
+      var waApiConfig = null;
+      try {
+        var cfgRes = await fetch('/api/whatsapp/config');
+        if (cfgRes.ok) {
+          var cfgData = await cfgRes.json();
+          if (cfgData.ok && cfgData.config && cfgData.config.enabled && cfgData.config.provider !== 'click_to_chat') {
+            waApiConfig = cfgData.config;
+          }
+        }
+      } catch(e) {}
+
+      if (waApiConfig && (cleanPhone || phone)) {
+        var targetPhone = cleanPhone || phone;
+        var b64Data = await new Promise(function(resolve, reject) {
+          var reader = new FileReader();
+          reader.onloadend = function() { resolve(reader.result); };
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+
+        var custName = customer.name || '';
+        var caption = (waApiConfig.templates && waApiConfig.templates.invoice_caption) || shortText;
+        caption = caption.replace('{customer_name}', custName)
+                         .replace('{invoice_number}', invoiceNumber)
+                         .replace('{total}', (invoice.total || 0));
+
+        var sendDirect = confirm(
+          '📱 تم اكتشاف خدمة WhatsApp API مفعّلة!\n\n' +
+          'هل ترغب في إرسال الفاتورة تلقائياً كملف PDF إلى رقم الزبون (' + targetPhone + ') مباشرة بنقرة واحدة؟\n\n' +
+          '• [موافق / OK]: إرسال فوري ومباشر عبر WhatsApp API\n' +
+          '• [إلغاء / Cancel]: فتح WhatsApp Web يدوياً كالمعتاد'
+        );
+
+        if (sendDirect) {
+          if (typeof showLoadingOverlay === 'function') {
+            showLoadingOverlay('جاري إرسال الفاتورة عبر WhatsApp API...');
+          }
+          try {
+            var sendRes = await fetch('/api/whatsapp/send-document', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                phone: targetPhone,
+                document: b64Data,
+                filename: fileName,
+                caption: caption
+              })
+            });
+            var sendData = await sendRes.json();
+            if (typeof hideLoadingOverlay === 'function') hideLoadingOverlay();
+
+            if (sendRes.ok && sendData.ok) {
+              if (typeof showNotification === 'function') {
+                showNotification('✅ تم إرسال الفاتورة PDF بنجاح إلى واتساب (' + targetPhone + ')', 'success', 7000);
+              } else {
+                alert('✅ تم إرسال الفاتورة PDF بنجاح إلى رقم الواتساب: ' + targetPhone);
+              }
+              logShareEvent(invoiceId, 'whatsapp-api', targetPhone);
+              return;
+            } else {
+              var errDetail = (sendData && (sendData.error || sendData.detail)) || 'فشل الإرسال';
+              if (typeof errDetail === 'object') errDetail = JSON.stringify(errDetail);
+              alert('⚠️ تنبيه: تعذر الإرسال عبر WhatsApp API (' + errDetail + '). سيتم التبديل إلى WhatsApp Web.');
+            }
+          } catch(apiErr) {
+            if (typeof hideLoadingOverlay === 'function') hideLoadingOverlay();
+            console.warn('[WhatsApp API] Error:', apiErr);
+          }
+        }
+      }
+
+      // Check WhatsApp API integration
+      var waApiConfigProf = null;
+      try {
+        var cfgResProf = await fetch('/api/whatsapp/config');
+        if (cfgResProf.ok) {
+          var cfgDataProf = await cfgResProf.json();
+          if (cfgDataProf.ok && cfgDataProf.config && cfgDataProf.config.enabled && cfgDataProf.config.provider !== 'click_to_chat') {
+            waApiConfigProf = cfgDataProf.config;
+          }
+        }
+      } catch(e) {}
+
+      if (waApiConfigProf && (cleanPhone || phone)) {
+        var targetPhoneProf = cleanPhone || phone;
+        var b64DataProf = await new Promise(function(resolve, reject) {
+          var reader = new FileReader();
+          reader.onloadend = function() { resolve(reader.result); };
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+
+        var custNameProf = customer.name || '';
+        var captionProf = (waApiConfigProf.templates && waApiConfigProf.templates.proforma_caption) || shortText;
+        captionProf = captionProf.replace('{customer_name}', custNameProf)
+                                 .replace('{proforma_number}', proformaNumber)
+                                 .replace('{total}', (prof.total || 0));
+
+        var sendDirectProf = confirm(
+          '📱 تم اكتشاف خدمة WhatsApp API مفعّلة!\n\n' +
+          'هل ترغب في إرسال الفاتورة الشكلية (Proforma) تلقائياً كملف PDF إلى رقم الزبون (' + targetPhoneProf + ') مباشرة بنقرة واحدة؟\n\n' +
+          '• [موافق / OK]: إرسال فوري ومباشر عبر WhatsApp API\n' +
+          '• [إلغاء / Cancel]: فتح WhatsApp Web يدوياً كالمعتاد'
+        );
+
+        if (sendDirectProf) {
+          if (typeof showLoadingOverlay === 'function') {
+            showLoadingOverlay('جاري إرسال البروفورما عبر WhatsApp API...');
+          }
+          try {
+            var sendResProf = await fetch('/api/whatsapp/send-document', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                phone: targetPhoneProf,
+                document: b64DataProf,
+                filename: fileName,
+                caption: captionProf
+              })
+            });
+            var sendDataProf = await sendResProf.json();
+            if (typeof hideLoadingOverlay === 'function') hideLoadingOverlay();
+
+            if (sendResProf.ok && sendDataProf.ok) {
+              if (typeof showNotification === 'function') {
+                showNotification('✅ تم إرسال البروفورما PDF بنجاح إلى واتساب (' + targetPhoneProf + ')', 'success', 7000);
+              } else {
+                alert('✅ تم إرسال البروفورما PDF بنجاح إلى رقم الواتساب: ' + targetPhoneProf);
+              }
+              logShareEvent(proformaId, 'whatsapp-api', targetPhoneProf);
+              return;
+            } else {
+              var errDetailProf = (sendDataProf && (sendDataProf.error || sendDataProf.detail)) || 'فشل الإرسال';
+              if (typeof errDetailProf === 'object') errDetailProf = JSON.stringify(errDetailProf);
+              alert('⚠️ تنبيه: تعذر الإرسال عبر WhatsApp API (' + errDetailProf + '). سيتم التبديل إلى WhatsApp Web.');
+            }
+          } catch(apiErrProf) {
+            if (typeof hideLoadingOverlay === 'function') hideLoadingOverlay();
+            console.warn('[WhatsApp API] Error:', apiErrProf);
+          }
+        }
+      }
+
       const file = new File([blob], fileName, { type: 'application/pdf' });
 
       // Check if Web Share API supports file sharing (mobile devices)
