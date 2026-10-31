@@ -63,7 +63,11 @@
 
 	function readAuthMeta() {
 		try {
-			const raw = ZS.getItem(AUTH_META_KEY);
+			let raw = '';
+			try { if (window.ZS && window.ZS.getItem) raw = window.ZS.getItem(AUTH_META_KEY) || ''; } catch (_) {}
+			if (!raw) {
+				try { if (window.localStorage) raw = localStorage.getItem(AUTH_META_KEY) || ''; } catch (_) {}
+			}
 			if (!raw) return { failedByUser: {} };
 			
 			const parsed = JSON.parse(raw);
@@ -96,7 +100,9 @@
 				nextMeta.failedByUser = {};
 			}
 			
-			ZS.setItem(AUTH_META_KEY, JSON.stringify(nextMeta));
+			const jsonStr = JSON.stringify(nextMeta);
+			try { if (window.ZS && window.ZS.setItem) window.ZS.setItem(AUTH_META_KEY, jsonStr); } catch (_) {}
+			try { if (window.localStorage) localStorage.setItem(AUTH_META_KEY, jsonStr); } catch (_) {}
 		} catch (e) {
 			console.error('[app_sync] Failed to write auth meta:', e.message);
 		}

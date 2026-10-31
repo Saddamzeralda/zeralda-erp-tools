@@ -38,6 +38,15 @@ class StoreBulkWriteRequest(BaseModel):
     allow_shrink: Optional[bool] = False
 
 
+LOCAL_SESSION_KEYS = (
+    "zeralda-auth-meta",
+    "zeralda-auth-token",
+    "zeralda-session-token",
+    "zeralda-client-session-id",
+    "zeralda-temp-credential",
+)
+
+
 def _protect_critical_collection(
     key: str,
     old_val: Any,
@@ -276,6 +285,8 @@ async def get_store(request: Request, key: Optional[str] = None):
     versions = {}
     is_admin = user.get("role") == "admin"
     for k, v in store.items():
+        if k in LOCAL_SESSION_KEYS or any(k.startswith(p + "::") for p in LOCAL_SESSION_KEYS):
+            continue
         if is_admin or is_key_permitted_for_user(k, user, action="read", active_company_id=active_cid):
             if k == "zeralda-settings":
                 v = sanitize_settings_for_user(v, user)
@@ -357,6 +368,10 @@ async def write_store(request: Request):
                        status="rejected")
         return {"ok": True, "version": storage.current_key_version(storage.read_history(), req.key),
                 "rejected": True, "reason": "__flushing keys are not stored"}
+
+    # Reject local-only auth and session keys — they belong in memory/cookies only
+    if req.key in LOCAL_SESSION_KEYS or any(req.key.startswith(p + "::") for p in LOCAL_SESSION_KEYS):
+        return {"ok": True, "version": 1, "rejected": True, "reason": "Session keys are client-local only"}
 
     import json
     try:

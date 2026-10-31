@@ -1063,8 +1063,8 @@
     var _memReady = false;
     var _memReadyPromise = null;
     var _memKeys = [];
-    // مفاتيح لا تُرسل للخادم (تُحفظ في cookie + memory فقط)
-    var _LOCAL_ONLY_KEYS = ['zeralda-auth-token', 'zeralda-auth-meta', 'zeralda-session-token'];
+    // مفاتيح لا تُرسل للخادم (تُحفظ في cookie + memory فقط) وتُمنع من الكتابة أو الاسترجاع من الخادم
+    var _LOCAL_ONLY_KEYS = ['zeralda-auth-token', 'zeralda-auth-meta', 'zeralda-session-token', 'zeralda-client-session-id', 'zeralda-temp-credential', 'zeralda-company-migration-lock'];
 
     function _getServerToken() {
         try {
@@ -1126,6 +1126,7 @@
             _memStore = {};
             _memKeys = [];
             Object.keys(j.data).forEach(function(key) {
+                if (_isLocalOnly(key)) return;
                 var val = j.data[key];
                 if (typeof val !== 'string') {
                     try { val = JSON.stringify(val); } catch(_) { return; }
@@ -1163,6 +1164,7 @@
             _memStore = {};
             _memKeys = [];
             Object.keys(j.data).forEach(function(key) {
+                if (_isLocalOnly(key)) return;
                 var val = j.data[key];
                 if (typeof val !== 'string') {
                     try { val = JSON.stringify(val); } catch(_) { return; }

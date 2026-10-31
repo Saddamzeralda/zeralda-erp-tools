@@ -1028,14 +1028,16 @@
           document.cookie = "zeralda-auth-token=" + encodeURIComponent(token) +
             "; path=/; max-age=604800; SameSite=Lax";
         } catch (_) {}
-        ZS.setItem(AUTH_META_KEY, JSON.stringify({
+        var authMetaVal = JSON.stringify({
           failedByUser: {},
           userId: user.email || user.username || username,
           loginAt: Date.now(),
           lastActivityAt: Date.now(),
           expiresAt: expiresAt,
           rememberMe: rememberChecked
-        }));
+        });
+        ZS.setItem(AUTH_META_KEY, authMetaVal);
+        try { localStorage.setItem(AUTH_META_KEY, authMetaVal); } catch (_) {}
 
         if (document.getElementById('rememberMe').checked) {
           // Store a simple hash of the username instead of plaintext
@@ -1478,14 +1480,16 @@
           document.cookie = "zeralda-auth-token=" + encodeURIComponent(token) +
             "; path=/; max-age=604800; SameSite=Lax";
         } catch (_) {}
-        ZS.setItem(AUTH_META_KEY, JSON.stringify({
+        var keyAuthMetaVal = JSON.stringify({
           userId: data.user_email || phone,
           phone: phone,
           loginAt: Date.now(),
           lastActivityAt: Date.now(),
           expiresAt: keyExpiresAt,
           rememberMe: false
-        }));
+        });
+        ZS.setItem(AUTH_META_KEY, keyAuthMetaVal);
+        try { localStorage.setItem(AUTH_META_KEY, keyAuthMetaVal); } catch (_) {}
 
         try {
           localStorage.setItem('zeralda-saved-unified-key', key);
@@ -1809,7 +1813,7 @@
             localStorage.setItem(TOKEN_KEY, token);
             localStorage.setItem('zeralda-session-token', token);
           } catch (_) {}
-          ZS.setItem(AUTH_META_KEY, JSON.stringify({
+          var gAuthMetaVal = JSON.stringify({
             failedByUser: {},
             userId: user.email || '',
             loginAt: Date.now(),
@@ -1817,7 +1821,9 @@
             expiresAt: expiresAt,
             rememberMe: rememberChecked,
             googleLogin: true
-          }));
+          });
+          ZS.setItem(AUTH_META_KEY, gAuthMetaVal);
+          try { localStorage.setItem(AUTH_META_KEY, gAuthMetaVal); } catch (_) {}
 
           // Set active user and per-user Google tokens
           var uIds = ['default'];
@@ -2048,14 +2054,16 @@
           ZS.setItem(TOKEN_KEY, token);
           ZS.setItem('zeralda-session-token', token);
           document.cookie = "zeralda-auth-token=" + encodeURIComponent(token) + "; path=/; max-age=604800; SameSite=Lax";
-          ZS.setItem(AUTH_META_KEY, JSON.stringify({
+          var faAuthMetaVal = JSON.stringify({
             failedByUser: {},
             userId: user.email || user.username || _pending2FAEmail,
             loginAt: Date.now(),
             lastActivityAt: Date.now(),
             expiresAt: Date.now() + (10 * 60 * 60 * 1000),
             rememberMe: false
-          }));
+          });
+          ZS.setItem(AUTH_META_KEY, faAuthMetaVal);
+          try { localStorage.setItem(AUTH_META_KEY, faAuthMetaVal); } catch (_) {}
           if (data.must_change_password || user.must_change_password) {
             showForceChangePasswordModal(token, '', function () {
               syncServerPrefsAndRedirect(token, nextPage);
