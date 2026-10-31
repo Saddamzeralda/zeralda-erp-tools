@@ -3754,6 +3754,40 @@
     }
     window.switchLettreLang = switchLettreLang;
 
+    function copyLettreToClipboard(){
+      const sheet = document.getElementById('lettreDocumentSheet');
+      const text = sheet ? (sheet.innerText || sheet.textContent || '') : '';
+      if(!text.trim()){
+        if(typeof showToast === 'function') showToast('لا يوجد نص لنسخه.', 'warning');
+        return;
+      }
+      function _fallbackCopy(t){
+        const ta = document.createElement('textarea');
+        ta.value = t;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+          document.execCommand('copy');
+          if(typeof showToast === 'function') showToast('تم نسخ نص الرسالة إلى الحافظة بنجاح.', 'success');
+        } catch(e) {
+          if(typeof showToast === 'function') showToast('تعذر النسخ تلقائياً.', 'danger');
+        }
+        document.body.removeChild(ta);
+      }
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).then(() => {
+          if(typeof showToast === 'function') showToast('تم نسخ نص الرسالة إلى الحافظة بنجاح.', 'success');
+        }).catch(() => {
+          _fallbackCopy(text);
+        });
+      } else {
+        _fallbackCopy(text);
+      }
+    }
+    window.copyLettreToClipboard = copyLettreToClipboard;
+
     function updateLettreLangButtons(){
       ['btnLettreAr', 'btnLettreFr', 'btnLettreDecl'].forEach(id => {
         const btn = document.getElementById(id);
@@ -4763,6 +4797,40 @@
       renderOfficialProcurementDoc();
     }
     window.switchLettreLang = switchLettreLang;
+
+    function copyLettreToClipboard(){
+      const sheet = document.getElementById('lettreDocumentSheet');
+      const text = sheet ? (sheet.innerText || sheet.textContent || '') : '';
+      if(!text.trim()){
+        if(typeof showToast === 'function') showToast('لا يوجد نص لنسخه.', 'warning');
+        return;
+      }
+      function _fallbackCopy(t){
+        const ta = document.createElement('textarea');
+        ta.value = t;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+          document.execCommand('copy');
+          if(typeof showToast === 'function') showToast('تم نسخ نص الرسالة إلى الحافظة بنجاح.', 'success');
+        } catch(e) {
+          if(typeof showToast === 'function') showToast('تعذر النسخ تلقائياً.', 'danger');
+        }
+        document.body.removeChild(ta);
+      }
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).then(() => {
+          if(typeof showToast === 'function') showToast('تم نسخ نص الرسالة إلى الحافظة بنجاح.', 'success');
+        }).catch(() => {
+          _fallbackCopy(text);
+        });
+      } else {
+        _fallbackCopy(text);
+      }
+    }
+    window.copyLettreToClipboard = copyLettreToClipboard;
 
     function printOfficialLettre(){
       document.body.classList.add('printing-lettre');
