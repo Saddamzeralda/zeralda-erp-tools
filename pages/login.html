@@ -1980,6 +1980,7 @@
       </p>
       <div id="errorForcePwd" style="color:var(--error,#ef4444);font-size:13px;margin-bottom:14px;min-height:18px;font-weight:500;"></div>
       <form id="formForceChangePassword" onsubmit="event.preventDefault(); submitForcePasswordChange();">
+        <input type="text" name="username" id="forcePwdUsername" autocomplete="username" style="display:none;" aria-hidden="true" tabindex="-1" value="admin" />
         <div style="text-align:right;margin-bottom:12px;">
           <label style="font-size:12px;font-weight:600;color:var(--ink,#1e293b);display:block;margin-bottom:6px;">كلمة المرور الجديدة</label>
           <input type="password" id="newPwdForce" autocomplete="new-password" placeholder="••••••••" style="width:100%;padding:12px;border:1.5px solid var(--border,#cbd5e1);border-radius:10px;outline:none;background:var(--bg,#f8fafc);color:var(--ink,#0f172a);font-size:14px;" />
