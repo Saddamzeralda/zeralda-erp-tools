@@ -149,7 +149,7 @@
   function formatInvoiceNumber(id) {
     if (id === null || id === undefined) return "";
     var value = String(id).trim();
-    if (/^\d{1,}\/\d{4}(?:\s+(?:Bis|Ter|Quater|[A-Za-z]+))?$/i.test(value)) return value;
+    if (/^\d+([/-]\d{4})?(?:[\s\-_/]+(?:Bis|Ter|Quater|[A-Za-z]+))?$/i.test(value)) return value;
     if (value.indexOf("INV-") === 0) value = value.replace(/^INV-/, "");
     return value;
   }
@@ -1038,10 +1038,21 @@
         openInvoicePaymentModal(inv.id);
       });
 
+      var btnBis = document.createElement("button");
+      btnBis.className = "btn btn-outline-primary";
+      btnBis.style.padding = "8px 12px";
+      btnBis.style.fontSize = "12px";
+      btnBis.innerHTML = '<span style="font-weight:700;font-size:11px;">BIS</span>';
+      btnBis.title = t("create_bis_invoice", "Create Bis Invoice");
+      btnBis.addEventListener("click", function () {
+        createBisInvoiceFrom(inv.id);
+      });
+
       actionsDiv.appendChild(btnView);
       actionsDiv.appendChild(btnEdit);
       actionsDiv.appendChild(btnWhatsApp);
       actionsDiv.appendChild(btnDuplicate);
+      actionsDiv.appendChild(btnBis);
       actionsDiv.appendChild(btnDelete);
       actionsDiv.appendChild(btnPay);
       tdActions.appendChild(actionsDiv);
@@ -1163,7 +1174,7 @@
   function formatProformaNumber(id) {
     if (id === null || id === undefined) return "";
     var value = String(id).trim();
-    if (/^\d{1,}\/\d{4}(?:\s+(?:Bis|Ter|Quater|[A-Za-z]+))?$/i.test(value)) return value;
+    if (/^\d+([/-]\d{4})?(?:[\s\-_/]+(?:Bis|Ter|Quater|[A-Za-z]+))?$/i.test(value)) return value;
     if (value.indexOf("PRO-") === 0) value = value.replace(/^PRO-/, "");
     return value;
   }
@@ -1906,6 +1917,12 @@
       editingInvoiceId = null;
       invoiceFormInitialState = null;
       invoiceModalForceClose = false;
+      var invBisCheck = document.getElementById("invoiceBisCheckbox");
+      if (invBisCheck) invBisCheck.checked = false;
+      var invSuffixSelect = document.getElementById("invoiceNumberSuffix");
+      if (invSuffixSelect) { invSuffixSelect.value = "Bis"; invSuffixSelect.style.display = "none"; }
+      var invBisBadge = document.getElementById("invoiceBisBadge");
+      if (invBisBadge) invBisBadge.style.display = "none";
       const t = translations[ZS.getItem('preferred-language') || 'en'] || {};
       const saveBtnText = document.getElementById('saveInvoiceBtnText');
       if (saveBtnText) saveBtnText.textContent = t.save_invoice || 'Save Invoice';
@@ -1936,6 +1953,12 @@
       editingProformaId = null;
       proformaFormInitialState = null;
       proformaModalForceClose = false;
+      var profBisCheck = document.getElementById("proformaBisCheckbox");
+      if (profBisCheck) profBisCheck.checked = false;
+      var profSuffixSelect = document.getElementById("proformaNumberSuffix");
+      if (profSuffixSelect) { profSuffixSelect.value = "Bis"; profSuffixSelect.style.display = "none"; }
+      var profBisBadge = document.getElementById("proformaBisBadge");
+      if (profBisBadge) profBisBadge.style.display = "none";
       const saveProformaBtnText = document.getElementById('saveProformaBtnText');
       if (saveProformaBtnText) {
         saveProformaBtnText.textContent = t('save_proforma', 'Save Proforma');
