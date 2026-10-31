@@ -768,7 +768,7 @@
 
     var baseNum = String(source.invoiceNumber || formatInvoiceNumber(source.id) || "").trim();
     baseNum = baseNum.replace(/\s+(?:Bis|Ter|Quater|[A-Za-z]+)$/i, "");
-    if (!/^\d+\/\d{4}$/.test(baseNum)) {
+    if (!/^\d+[/-]\d{4}$/.test(baseNum)) {
       var d = source.date || new Date().toISOString().slice(0, 10);
       baseNum = typeof getLatestBaseInvoiceNumber === "function" ? getLatestBaseInvoiceNumber(d) : generateInvoiceNumberForDate(d);
     }
@@ -951,10 +951,11 @@
       tdSelect.appendChild(rowCheck);
 
       var tdId = document.createElement("td");
-      var formattedInvNum = formatInvoiceNumber(inv.invoiceNumber || inv.id);
-      var isBisInvoice = /\b(bis|ter|quater)\b/i.test(formattedInvNum);
+      var formattedInvNum = (typeof getInvoiceDisplayNumber === 'function') ? getInvoiceDisplayNumber(inv) : formatInvoiceNumber(inv.invoiceNumber || inv.id);
+      var isBisInvoice = Boolean(inv.isBis) || /\b(bis|ter|quater)\b/i.test(formattedInvNum);
       if (isBisInvoice) {
-        tdId.innerHTML = "<strong>" + escapeHTML(formattedInvNum) + "</strong> <span style=\"margin-inline-start:4px; background:#e0e7ff; color:#3730a3; font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; text-transform:uppercase;\">BIS</span>";
+        var bisBadgeText = escapeHTML(inv.bisSuffix || (formattedInvNum.match(/\b(bis|ter|quater)\b/i) || [])[0] || "BIS").toUpperCase();
+        tdId.innerHTML = "<strong>" + escapeHTML(formattedInvNum) + "</strong> <span style=\"margin-inline-start:4px; background:#e0e7ff; color:#3730a3; font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; text-transform:uppercase;\">" + bisBadgeText + "</span>";
       } else {
         tdId.innerHTML = "<strong>" + escapeHTML(formattedInvNum) + "</strong>";
       }
@@ -1144,6 +1145,113 @@
   window.setSortColumn = setSortColumn;
   window.duplicateInvoiceRecord = duplicateInvoiceRecord;
   window.createBisInvoiceFrom = createBisInvoiceFrom;
+
+  function createBisProformaFrom(proformaId) {
+    var storedProf = [];
+    try { storedProf = JSON.parse(ZS.getItem("proformas-data") || "[]"); } catch(e) {}
+    var source = (storedProf || []).find(function (p) { return p.id === proformaId; });
+    if (!source) return;
+
+    if (typeof openCreateProforma === "function") {
+      openCreateProforma();
+    } else if (typeof window.openCreateProforma === "function") {
+      window.openCreateProforma();
+    }
+
+    var baseNum = String(source.proformaNumber || (typeof formatProformaNumber === "function" ? formatProformaNumber(source.id) : source.id) || "").trim();
+    baseNum = baseNum.replace(/\s+(?:Bis|Ter|Quater|[A-Za-z]+)$/i, "");
+    if (!/^\d+[/-]\d{4}$/.test(baseNum)) {
+      var d = source.date || new Date().toISOString().slice(0, 10);
+      baseNum = typeof getLatestBaseProformaNumber === "function" ? getLatestBaseProformaNumber(d) : generateProformaNumberForDate(d);
+    }
+
+    var targetSuffix = "Bis";
+    var existingWithBis = (storedProf || []).some(function(prof) {
+      return String(prof.proformaNumber || "").trim().toLowerCase() === (baseNum + " bis").toLowerCase();
+    });
+    if (existingWithBis) {
+      var existingWithTer = (storedProf || []).some(function(prof) {
+        return String(prof.proformaNumber || "").trim().toLowerCase() === (baseNum + " ter").toLowerCase();
+      });
+      targetSuffix = existingWithTer ? "Quater" : "Ter";
+    }
+
+    var profNumInput = document.getElementById("proformaNumberInput");
+    var bisCheck = document.getElementById("proformaBisCheckbox");
+    var suffixSelect = document.getElementById("proformaNumberSuffix");
+    var bisBadge = document.getElementById("proformaBisBadge");
+
+    if (bisCheck) bisCheck.checked = true;
+    if (suffixSelect) {
+      suffixSelect.value = targetSuffix;
+      suffixSelect.style.display = "inline-block";
+    }
+    if (bisBadge) bisBadge.style.display = "inline-block";
+    if (profNumInput) {
+      profNumInput.value = baseNum + " " + targetSuffix;
+    }
+
+    if (source.customer && source.customer.id) {
+      var custSelect = document.getElementById("proformaCustomer");
+      if (custSelect) custSelect.value = source.customer.id;
+    }
+    if (source.date) {
+      var dateInput = document.getElementById("proformaDate");
+      if (dateInput) dateInput.value = source.date;
+    }
+    if (source.taxRate !== undefined) {
+      var taxInput = document.getElementById("proformaTaxRate");
+      if (taxInput) taxInput.value = source.taxRate;
+      var taxCheck = document.getElementById("proformaIncludeTax");
+      if (taxCheck) taxCheck.checked = Boolean(source.tax || source.taxRate > 0);
+    }
+    if (source.notes) {
+      var notesInput = document.getElementById("proformaNotes");
+      if (notesInput) notesInput.value = source.notes;
+    }
+
+    if (Array.isArray(source.items) && source.items.length > 0) {
+      if (typeof window.proformaItemsArray !== "undefined") {
+        window.proformaItemsArray = [];
+      }
+      var itemsCont = document.getElementById("proformaItems");
+      if (itemsCont) itemsCont.innerHTML = "";
+      source.items.forEach(function(item) {
+        if (typeof addProformaItem === "function") {
+          addProformaItem();
+          var arr = typeof proformaItemsArray !== "undefined" ? proformaItemsArray : window.proformaItemsArray;
+          if (arr && arr.length > 0) {
+            var id = arr.length - 1;
+            arr[id].productId = item.productId || 0;
+            arr[id].description = item.description || "";
+            arr[id].quantity = item.quantity || 1;
+            arr[id].price = item.price || 0;
+            arr[id].total = item.total || arr[id].quantity * arr[id].price;
+            arr[id].unit = item.unit || "unit";
+            arr[id].fp = item.fp || "";
+
+            var row = document.getElementById("pitem-" + id);
+            if (row) {
+              var picker = row.querySelector('.product-picker');
+              if (picker && picker._setProduct) {
+                picker._setProduct(item.productId || 0, item.description || '');
+              }
+              var unitSelectEl = row.querySelector("select");
+              if (unitSelectEl) unitSelectEl.value = arr[id].unit;
+              var qtyInput = row.querySelector('input[data-role="qty"]');
+              var priceInput = row.querySelector('input[data-role="price"]');
+              if (qtyInput) qtyInput.value = arr[id].quantity;
+              if (priceInput) priceInput.value = arr[id].price;
+              var span = document.getElementById("pitem-total-" + id);
+              if (span) span.textContent = Number(arr[id].total).toFixed(2);
+            }
+          }
+        }
+      });
+      if (typeof calculateProformaTotal === "function") calculateProformaTotal();
+    }
+  }
+  window.createBisProformaFrom = createBisProformaFrom;
   window.openInvoicePaymentModal = openInvoicePaymentModal;
 
   window.SalesInvoicesModule = {
@@ -1235,10 +1343,11 @@
       var tdId = document.createElement("td");
       tdId.style.padding = "12px";
       tdId.style.border = "1px solid #333";
-      var formattedProfNum = formatProformaNumber(prof.proformaNumber || prof.id);
-      var isProfBis = /\b(bis|ter|quater)\b/i.test(formattedProfNum);
+      var formattedProfNum = (typeof getProformaDisplayNumber === 'function') ? getProformaDisplayNumber(prof) : formatProformaNumber(prof.proformaNumber || prof.id);
+      var isProfBis = Boolean(prof.isBis) || /\b(bis|ter|quater)\b/i.test(formattedProfNum);
       if (isProfBis) {
-        tdId.innerHTML = "<strong>" + escapeHTML(formattedProfNum) + "</strong> <span style=\"margin-inline-start:4px; background:#e0e7ff; color:#3730a3; font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; text-transform:uppercase;\">BIS</span>";
+        var profBadgeText = escapeHTML(prof.bisSuffix || (formattedProfNum.match(/\b(bis|ter|quater)\b/i) || [])[0] || "BIS").toUpperCase();
+        tdId.innerHTML = "<strong>" + escapeHTML(formattedProfNum) + "</strong> <span style=\"margin-inline-start:4px; background:#e0e7ff; color:#3730a3; font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; text-transform:uppercase;\">" + profBadgeText + "</span>";
       } else {
         tdId.innerHTML = "<strong>" + escapeHTML(formattedProfNum) + "</strong>";
       }
@@ -1317,6 +1426,16 @@
       actionsDiv.appendChild(btnWA);
       actionsDiv.appendChild(btnView);
       actionsDiv.appendChild(btnEdit);
+      var btnBisProf = document.createElement("button");
+      btnBisProf.className = "btn btn-outline-primary";
+      btnBisProf.style.padding = "8px 12px";
+      btnBisProf.style.fontSize = "12px";
+      btnBisProf.innerHTML = '<span style="font-weight:700;font-size:11px;">BIS</span>';
+      btnBisProf.title = t("create_bis_proforma", "Create Bis Proforma");
+      btnBisProf.addEventListener("click", function () {
+        if (typeof createBisProformaFrom === "function") createBisProformaFrom(prof.id);
+      });
+      actionsDiv.appendChild(btnBisProf);
       actionsDiv.appendChild(btnDelete);
       tdActions.appendChild(actionsDiv);
 
@@ -1752,6 +1871,9 @@
       stampRate: document.getElementById('invoiceStampRate')?.value || '1',
       includeTax: !!document.getElementById('invoiceIncludeTax')?.checked,
       taxRate: document.getElementById('invoiceTaxRate')?.value || '',
+      invoiceNumber: document.getElementById('invoiceNumberInput')?.value || '',
+      isBis: !!document.getElementById('invoiceBisCheckbox')?.checked,
+      bisSuffix: document.getElementById('invoiceNumberSuffix')?.value || 'Bis',
       items: (invoiceItemsArray || []).map(i => ({
         productId: i.productId || 0,
         description: i.description || '',
@@ -1779,6 +1901,9 @@
       includeTax: !!document.getElementById('proformaIncludeTax')?.checked,
       taxRate: document.getElementById('proformaTaxRate')?.value || '',
       notes: document.getElementById('proformaNotes')?.value || '',
+      proformaNumber: document.getElementById('proformaNumberInput')?.value || '',
+      isBis: !!document.getElementById('proformaBisCheckbox')?.checked,
+      bisSuffix: document.getElementById('proformaNumberSuffix')?.value || 'Bis',
       items: (proformaItemsArray || []).map(i => ({
         productId: i.productId || 0,
         description: i.description || '',
@@ -1932,6 +2057,7 @@
         if (storedInv) {
           var parsedInv = JSON.parse(storedInv);
           if (Array.isArray(parsedInv) && parsedInv.length > 0) {
+            invoicesData = parsedInv;
             window.invoicesData = parsedInv;
           }
         }

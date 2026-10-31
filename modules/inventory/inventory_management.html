@@ -3800,7 +3800,9 @@
                     btn.disabled = false;
                     btn.textContent = btn.dataset.originalText || '';
                 }
-                showToast('AI assistant removed — price suggestion unavailable', 'warning');
+                if (typeof showToast === 'function') {
+                    showToast('AI assistant removed — price suggestion unavailable', 'warning');
+                }
                 return;
 
                 const suggested = Number(result.suggested_price || 0);

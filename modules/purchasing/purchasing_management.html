@@ -6338,9 +6338,9 @@
                 + '  <div style="text-align:left; font-size:13px; color:#64748b;">تاريخ الاستخراج: ' + new Date().toLocaleDateString('ar-DZ') + '</div>'
                 + '</div>'
                 + '<div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:18px;">'
-                + '  <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:12px; border-radius:8px; text-align:center;"><div style="font-size:12px; color:#64748b;">إجمالي الفواتير</div><div style="font-size:16px; font-weight:700; color:#0284c7;">' + fmtMoney(totalBilled) + '</div></div>'
-                + '  <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:12px; border-radius:8px; text-align:center;"><div style="font-size:12px; color:#64748b;">إجمالي المدفوع</div><div style="font-size:16px; font-weight:700; color:#16a34a;">' + fmtMoney(totalPaid) + '</div></div>'
-                + '  <div style="background:#fef2f2; border:1px solid #fecaca; padding:12px; border-radius:8px; text-align:center;"><div style="font-size:12px; color:#dc2626;">الرصيد المستحق (Solde)</div><div style="font-size:16px; font-weight:700; color:#dc2626;">' + fmtMoney(balanceDue) + '</div></div>'
+                + '  <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:12px; border-radius:8px; text-align:center;"><div style="font-size:12px; color:#64748b;">إجمالي الفواتير</div><div style="font-size:16px; font-weight:700; color:#0284c7;">' + formatMoney(totalBilled) + '</div></div>'
+                + '  <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:12px; border-radius:8px; text-align:center;"><div style="font-size:12px; color:#64748b;">إجمالي المدفوع</div><div style="font-size:16px; font-weight:700; color:#16a34a;">' + formatMoney(totalPaid) + '</div></div>'
+                + '  <div style="background:#fef2f2; border:1px solid #fecaca; padding:12px; border-radius:8px; text-align:center;"><div style="font-size:12px; color:#dc2626;">الرصيد المستحق (Solde)</div><div style="font-size:16px; font-weight:700; color:#dc2626;">' + formatMoney(balanceDue) + '</div></div>'
                 + '</div>'
                 + '<h4 style="margin-bottom:8px;">سجل الفواتير والمعاملات:</h4>'
                 + '<table style="width:100%; border-collapse:collapse; font-size:13px;">'
@@ -6351,7 +6351,7 @@
                 bills.forEach(function(b) {
                     html += '<tr><td style="border:1px solid #cbd5e1; padding:8px;">' + escHtml(b.id || b.billNumber || '') + '</td>'
                         + '<td style="border:1px solid #cbd5e1; padding:8px;">' + escHtml(b.date || '') + '</td>'
-                        + '<td style="border:1px solid #cbd5e1; padding:8px; text-align:right; font-weight:700;">' + fmtMoney(b.total) + '</td>'
+                        + '<td style="border:1px solid #cbd5e1; padding:8px; text-align:right; font-weight:700;">' + formatMoney(b.total) + '</td>'
                         + '<td style="border:1px solid #cbd5e1; padding:8px; text-align:center;">' + escHtml(b.status || '') + '</td></tr>';
                 });
             } else {
@@ -6476,7 +6476,7 @@
 
             journalEntries.unshift(newEntry);
             ZS.setItem('finance_journal_entries', JSON.stringify(journalEntries));
-            alert('تم ترحيل فاتورة الشراء بنجاح إلى اليومية المحاسبية SCF!\nرقم القيد: ' + eId + '\nالمدين مشتريات (380): ' + fmtMoney(totalHT) + '\nالمدين TVA (4456): ' + fmtMoney(tvaAmt) + '\nالدائن مورد (401): ' + fmtMoney(totalTTC));
+            alert('تم ترحيل فاتورة الشراء بنجاح إلى اليومية المحاسبية SCF!\nرقم القيد: ' + eId + '\nالمدين مشتريات (380): ' + formatMoney(totalHT) + '\nالمدين TVA (4456): ' + formatMoney(tvaAmt) + '\nالدائن مورد (401): ' + formatMoney(totalTTC));
         }
         window.comptabiliserCurrentBillToFinance = comptabiliserCurrentBillToFinance;
     </script>

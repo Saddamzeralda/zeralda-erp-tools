@@ -2804,7 +2804,7 @@
                 if (d.ok) {
                     if (typeof showToast === 'function') showToast('✅ ' + tSettings('ai_settings_saved_ok'), 'success', 2000);
                     else window.alert('✅ ' + tSettings('ai_settings_saved_ok'));
-                    checkAiStatus();
+                    if (typeof checkAiStatus === 'function') checkAiStatus();
                 } else {
                     if (typeof showToast === 'function') showToast('❌ ' + (d.error || tSettings('save_failed')), 'info');
                     else window.alert('❌ ' + (d.error || tSettings('save_failed')));
@@ -3593,7 +3593,7 @@
                         if (d.ok) {
                             if (typeof showToast === 'function') showToast('✅ ' + tSettings('ai_settings_saved_ok'), 'success', 2000);
                             else window.alert('✅ ' + tSettings('ai_settings_saved_ok'));
-                            checkAiStatus();
+                            if (typeof checkAiStatus === 'function') checkAiStatus();
                         } else {
                             if (typeof showToast === 'function') showToast('❌ ' + (d.error || tSettings('save_failed')), 'info');
                             else window.alert('❌ ' + (d.error || tSettings('save_failed')));
@@ -5264,7 +5264,7 @@
             }).then(function (res) {
                 setGoogleProgress('تم حفظ ملف PDF الشامل على Google Drive بنجاح.', false);
                 showToast('✅ تم حفظ التقرير الشامل (PDF) لجميع الصفحات والفواتير على Google Drive بنجاح!', 'success');
-                loadGoogleDriveBackupsList();
+                if (typeof loadGoogleDriveBackupsList === 'function') loadGoogleDriveBackupsList();
             }).catch(function (err) {
                 setGoogleProgress('فشل رفع ملف PDF.', false);
                 showToast('تعذر حفظ PDF على Drive: ' + (err && err.message ? err.message : err), 'info');

@@ -3476,14 +3476,16 @@
             if (hrGeneratedArchive.length >= HR_ARCHIVE_WARN_AT && hrGeneratedArchive.length < HR_ARCHIVE_MAX) {
                 try {
                     var remaining = HR_ARCHIVE_MAX - hrGeneratedArchive.length;
-                    showToast && showToast(
-                        tRuntime('hr_archive_near_capacity', {
-                            count: hrGeneratedArchive.length,
-                            max: HR_ARCHIVE_MAX,
-                            remaining: remaining
-                        }),
-                        'warning'
-                    );
+                    if (typeof showToast === 'function') {
+                        showToast(
+                            tRuntime('hr_archive_near_capacity', {
+                                count: hrGeneratedArchive.length,
+                                max: HR_ARCHIVE_MAX,
+                                remaining: remaining
+                            }),
+                            'warning'
+                        );
+                    }
                 } catch (e) {}
             }
             if (hrGeneratedArchive.length > HR_ARCHIVE_MAX) {

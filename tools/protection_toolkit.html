@@ -854,10 +854,13 @@ function copyKeyText(elementId) {
 }
 
 function copyBothKeys() {
-    const k = document.getElementById('res-keygen-key').value;
-    const l = document.getElementById('res-license-key').value;
-    const phone = document.getElementById('res-phone').textContent;
-    const text = `رقم الهاتف: ${phone}\nرمز التفعيل للهاتف: ${k}\nمفتاح الترخيص للجهاز: ${l}`;
+    const kEl = document.getElementById('res-unified-key') || document.getElementById('res-keygen-key');
+    const lEl = document.getElementById('res-legacy-key') || document.getElementById('res-license-key');
+    const phoneEl = document.getElementById('res-phone');
+    const k = (kEl && (kEl.value || kEl.textContent)) || '';
+    const l = (lEl && (lEl.value || lEl.textContent)) || '';
+    const phone = (phoneEl && (phoneEl.value || phoneEl.textContent)) || '';
+    const text = `رقم الهاتف: ${phone}\nرمز التفعيل: ${k}\nمفتاح الترخيص: ${l}`;
     navigator.clipboard.writeText(text).then(() => {
         toast('تم نسخ معلومات المفاتيح كاملة للحافظة', 'success', 3000);
     }).catch(() => {

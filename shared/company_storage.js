@@ -124,6 +124,31 @@
     });
   }
 
+  function getCompanies() {
+    var list = [];
+    try {
+      var raw = (typeof window.ZS !== 'undefined' && typeof window.ZS.getItem === 'function')
+        ? window.ZS.getItem('zeralda-settings')
+        : (typeof localStorage !== 'undefined' ? localStorage.getItem('zeralda-settings') : null);
+      if (raw) {
+        var s = typeof raw === 'string' ? JSON.parse(raw) : raw;
+        if (s && Array.isArray(s.companies) && s.companies.length) list = s.companies;
+      }
+    } catch (_) {}
+    if (!list.length) {
+      try {
+        var leg = (typeof window.ZS !== 'undefined' && typeof window.ZS.getItem === 'function')
+          ? window.ZS.getItem('zeralda-companies')
+          : (typeof localStorage !== 'undefined' ? localStorage.getItem('zeralda-companies') : null);
+        if (leg) {
+          var lp = typeof leg === 'string' ? JSON.parse(leg) : leg;
+          if (Array.isArray(lp) && lp.length) list = lp;
+        }
+      } catch (_) {}
+    }
+    return list;
+  }
+
   function getCompanyDisplayName(companyId) {
     if (!companyId) return '';
     try {
@@ -317,6 +342,7 @@
   window.CompanyStorage = {
     scopedKeys: SCOPED_KEYS,
     getActiveCompanyId: getActiveCompanyId,
+    getCompanies: getCompanies,
     getCompanyDisplayName: getCompanyDisplayName,
     scopedKey: scopedKey,
     isScoped: isScoped,

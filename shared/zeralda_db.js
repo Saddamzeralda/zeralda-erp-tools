@@ -37,6 +37,39 @@
         };
     }
 
+    // Global universal toast notification system
+    if (typeof window.showToast !== 'function') {
+        window.showToast = function (message, type, duration) {
+            try {
+                var container = document.getElementById('toastContainer') || document.getElementById('zeralda-toast-container');
+                if (!container) {
+                    container = document.createElement('div');
+                    container.id = 'zeralda-toast-container';
+                    container.style.cssText = 'position:fixed;bottom:24px;left:24px;z-index:999999;display:flex;flex-direction:column;gap:8px;pointer-events:none;';
+                    document.body.appendChild(container);
+                }
+                var toast = document.createElement('div');
+                toast.className = 'toast ' + (type || 'info');
+                var bg = '#0284c7';
+                if (type === 'success') bg = '#16a34a';
+                else if (type === 'error' || type === 'danger') bg = '#dc2626';
+                else if (type === 'warning') bg = '#d97706';
+                toast.style.cssText = 'pointer-events:auto;background:' + bg + ';color:#ffffff;padding:12px 18px;border-radius:10px;font-size:13.5px;font-weight:600;box-shadow:0 10px 25px -5px rgba(0,0,0,0.3);display:flex;align-items:center;gap:10px;transition:all 0.3s ease;';
+                toast.textContent = String(message || '');
+                container.appendChild(toast);
+                setTimeout(function () {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateY(10px)';
+                    setTimeout(function () {
+                        try { if (toast.parentNode) toast.parentNode.removeChild(toast); } catch (_) {}
+                    }, 300);
+                }, Number(duration) || 3500);
+            } catch (_) {
+                console.log('[TOAST]', message);
+            }
+        };
+    }
+
     var DB_NAME = 'zeralda_erp';
     var STORE_NAME = 'kv_store';
     // FIX: IndexedDB schema version with migration support.

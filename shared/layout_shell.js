@@ -1407,8 +1407,20 @@
       console.log('[header_company_switcher] onHeaderCompanySwitch called with id:', id);
       if (!id) return;
       const settings = getSettings();
-      const companies = Array.isArray(settings.companies) ? settings.companies : [];
-      if (!companies.some(function (c) { return c && String(c.id) === String(id); })) return;
+      var companies = Array.isArray(settings.companies) ? settings.companies : [];
+      if (!companies.length && window.CompanyStorage && typeof window.CompanyStorage.getCompanies === 'function') {
+        companies = window.CompanyStorage.getCompanies();
+      }
+
+      // Auto-recovery safety timeout: re-enable switcher after 2.5s if reload is stalled
+      setTimeout(function () {
+        var sw = document.getElementById('companySwitcher');
+        if (sw) sw.disabled = false;
+        var existingOverlay = document.getElementById('company-switch-overlay');
+        if (existingOverlay && existingOverlay.parentNode) {
+          try { existingOverlay.parentNode.removeChild(existingOverlay); } catch (_) {}
+        }
+      }, 2500);
 
       var currentActive = (window.CompanyStorage && typeof window.CompanyStorage.getActiveCompanyId === 'function')
         ? window.CompanyStorage.getActiveCompanyId()

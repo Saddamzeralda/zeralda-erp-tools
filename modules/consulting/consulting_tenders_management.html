@@ -22,7 +22,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
   <script src="shared/print_engine.js" defer></script>
   <script src="shared/unified_document_printer.js" defer></script>
-  <script src="modules/consulting/tender_smart_matching.js?v=20261017_v10" defer></script>
+  <script src="modules/consulting/tender_smart_matching.js?v=20261017_v10"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
@@ -4477,6 +4477,11 @@
       renderOfficialProcurementDoc();
     }
     window.switchProcurementDoc = switchProcurementDoc;
+
+    function renderLettreDocument() {
+      return renderOfficialProcurementDoc();
+    }
+    window.renderLettreDocument = renderLettreDocument;
 
     function renderOfficialProcurementDoc(){
       const sheet = document.getElementById('lettreDocumentSheet');

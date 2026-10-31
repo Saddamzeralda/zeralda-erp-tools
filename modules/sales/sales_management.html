@@ -3561,12 +3561,20 @@ function formatInvoiceNumber(id){
 
 function getInvoiceDisplayNumber(inv){
   if(!inv) return "";
-  return formatInvoiceNumber(inv.invoiceNumber || inv.id || "");
+  let val = formatInvoiceNumber(inv.invoiceNumber || inv.id || "");
+  if(inv.isBis && !/\b(bis|ter|quater)\b/i.test(val)){
+    val += " " + (inv.bisSuffix || "Bis");
+  }
+  return val;
 }
 
 function getProformaDisplayNumber(prof){
   if(!prof) return "";
-  return formatProformaNumber(prof.proformaNumber || prof.id || "");
+  let val = formatProformaNumber(prof.proformaNumber || prof.id || "");
+  if(prof.isBis && !/\b(bis|ter|quater)\b/i.test(val)){
+    val += " " + (prof.bisSuffix || "Bis");
+  }
+  return val;
 }
 
 function getInvoiceYearFromDate(dateValue){
@@ -5197,6 +5205,9 @@ function saveInvoiceDraft(){
     stampRate: document.getElementById("invoiceStampRate") ? document.getElementById("invoiceStampRate").value : "1",
     includeTax: document.getElementById("invoiceIncludeTax").checked,
     taxRate: document.getElementById("invoiceTaxRate").value || "",
+    invoiceNumber: document.getElementById("invoiceNumberInput") ? document.getElementById("invoiceNumberInput").value : "",
+    isBis: Boolean(document.getElementById("invoiceBisCheckbox") && document.getElementById("invoiceBisCheckbox").checked),
+    bisSuffix: document.getElementById("invoiceNumberSuffix") ? document.getElementById("invoiceNumberSuffix").value : "Bis",
     items: invoiceItemsArray.map(i=>({
       productId: i.productId,
       description: i.description,
@@ -5238,6 +5249,20 @@ function applyInvoiceDraft(draft){
   if(document.getElementById("invoiceStampRate")) document.getElementById("invoiceStampRate").value = draft.stampRate || "1";
   document.getElementById("invoiceIncludeTax").checked = !!draft.includeTax;
   document.getElementById("invoiceTaxRate").value = draft.taxRate !== undefined ? draft.taxRate : 19;
+  if(draft.invoiceNumber !== undefined){
+    const numInput = document.getElementById("invoiceNumberInput");
+    if(numInput) numInput.value = draft.invoiceNumber || "";
+  }
+  const bisCheck = document.getElementById("invoiceBisCheckbox");
+  const suffixSelect = document.getElementById("invoiceNumberSuffix");
+  const badge = document.getElementById("invoiceBisBadge");
+  const isBis = Boolean(draft.isBis);
+  if(bisCheck) bisCheck.checked = isBis;
+  if(suffixSelect){
+    suffixSelect.style.display = isBis ? "inline-block" : "none";
+    if(draft.bisSuffix) suffixSelect.value = draft.bisSuffix;
+  }
+  if(badge) badge.style.display = isBis ? "inline-block" : "none";
   (draft.items || []).forEach(item => {
     addInvoiceItem();
     const id = invoiceItemsArray.length - 1;
@@ -5272,6 +5297,9 @@ function saveProformaDraft(){
     includeTax: document.getElementById("proformaIncludeTax").checked,
     taxRate: document.getElementById("proformaTaxRate").value || "",
     notes: document.getElementById("proformaNotes").value || "",
+    proformaNumber: document.getElementById("proformaNumberInput") ? document.getElementById("proformaNumberInput").value : "",
+    isBis: Boolean(document.getElementById("proformaBisCheckbox") && document.getElementById("proformaBisCheckbox").checked),
+    bisSuffix: document.getElementById("proformaNumberSuffix") ? document.getElementById("proformaNumberSuffix").value : "Bis",
     items: proformaItemsArray.map(i=>({
       productId: i.productId,
       description: i.description,
@@ -5312,6 +5340,20 @@ function applyProformaDraft(draft){
   document.getElementById("proformaIncludeTax").checked = !!draft.includeTax;
   document.getElementById("proformaTaxRate").value = draft.taxRate !== undefined ? draft.taxRate : 19;
   document.getElementById("proformaNotes").value = draft.notes || "";
+  if(draft.proformaNumber !== undefined){
+    const profNumInput = document.getElementById("proformaNumberInput");
+    if(profNumInput) profNumInput.value = draft.proformaNumber || "";
+  }
+  const profBisCheck = document.getElementById("proformaBisCheckbox");
+  const profSuffixSelect = document.getElementById("proformaNumberSuffix");
+  const profBadge = document.getElementById("proformaBisBadge");
+  const isProfBis = Boolean(draft.isBis);
+  if(profBisCheck) profBisCheck.checked = isProfBis;
+  if(profSuffixSelect){
+    profSuffixSelect.style.display = isProfBis ? "inline-block" : "none";
+    if(draft.bisSuffix) profSuffixSelect.value = draft.bisSuffix;
+  }
+  if(profBadge) profBadge.style.display = isProfBis ? "inline-block" : "none";
   (draft.items || []).forEach(item => {
     addProformaItem();
     const id = proformaItemsArray.length - 1;
@@ -6785,6 +6827,9 @@ function populateInvoiceForm(inv){
       if(isBisDoc) suffixSelect.value = bisSuffix;
     }
     if(badge) badge.style.display = isBisDoc ? "inline-block" : "none";
+    if(isBisDoc && !/(?:[\s\-_/]+|^)(?:Bis|Ter|Quater)\b/i.test(invNumInput.value)){
+      invNumInput.value = invNumInput.value.trim() + " " + bisSuffix;
+    }
   }
   if(inv.date) document.getElementById("invoiceDate").value = inv.date; else document.getElementById("invoiceDate").valueAsDate = new Date();
   const s = document.getElementById("invoiceCustomer");
@@ -6868,6 +6913,9 @@ function populateProformaForm(prof){
       if(isBisDoc) suffixSelect.value = bisSuffix;
     }
     if(badge) badge.style.display = isBisDoc ? "inline-block" : "none";
+    if(isBisDoc && !/(?:[\s\-_/]+|^)(?:Bis|Ter|Quater)\b/i.test(profNumInput.value)){
+      profNumInput.value = profNumInput.value.trim() + " " + bisSuffix;
+    }
   }
   if(prof.date) document.getElementById("proformaDate").value = prof.date; else document.getElementById("proformaDate").valueAsDate = new Date();
   const s = document.getElementById("proformaCustomer");
@@ -7369,7 +7417,7 @@ window.addEventListener("load", function(){
         const invSuffixSelect = document.getElementById("invoiceNumberSuffix");
         const isBisChecked = Boolean(invBisCheck && invBisCheck.checked);
         const bisMatch = invoiceNumVal.match(/(?:[\s\-_/]+)(Bis|Ter|Quater|[A-Za-z]+)$/i);
-        const isBisDoc = isBisChecked || Boolean(bisMatch);
+        const isBisDoc = invBisCheck ? isBisChecked : Boolean(bisMatch);
         const docSuffix = (invSuffixSelect && invSuffixSelect.value) || (bisMatch ? bisMatch[1] : "Bis");
         if(isBisDoc){
           if(bisMatch){
@@ -7443,7 +7491,7 @@ window.addEventListener("load", function(){
         const invSuffixSelect = document.getElementById("invoiceNumberSuffix");
         const isBisChecked = Boolean(invBisCheck && invBisCheck.checked);
         const bisMatch = invoiceNumVal.match(/(?:[\s\-_/]+)(Bis|Ter|Quater|[A-Za-z]+)$/i);
-        const isBisDoc = isBisChecked || Boolean(bisMatch);
+        const isBisDoc = invBisCheck ? isBisChecked : Boolean(bisMatch);
         const docSuffix = (invSuffixSelect && invSuffixSelect.value) || (bisMatch ? bisMatch[1] : "Bis");
         if(isBisDoc){
           if(bisMatch){
@@ -7564,7 +7612,7 @@ function showInvoiceNotification(inv){
         const profSuffixSelect = document.getElementById("proformaNumberSuffix");
         const isBisChecked = Boolean(profBisCheck && profBisCheck.checked);
         const bisMatch = profNumberToSave.match(/(?:[\s\-_/]+)(Bis|Ter|Quater|[A-Za-z]+)$/i);
-        const isBisDoc = isBisChecked || Boolean(bisMatch);
+        const isBisDoc = profBisCheck ? isBisChecked : Boolean(bisMatch);
         const docSuffix = (profSuffixSelect && profSuffixSelect.value) || (bisMatch ? bisMatch[1] : "Bis");
         if(isBisDoc){
           if(bisMatch){
@@ -7604,7 +7652,7 @@ function showInvoiceNotification(inv){
         const profSuffixSelect = document.getElementById("proformaNumberSuffix");
         const isBisChecked = Boolean(profBisCheck && profBisCheck.checked);
         const bisMatch = profNumberToSave.match(/(?:[\s\-_/]+)(Bis|Ter|Quater|[A-Za-z]+)$/i);
-        const isBisDoc = isBisChecked || Boolean(bisMatch);
+        const isBisDoc = profBisCheck ? isBisChecked : Boolean(bisMatch);
         const docSuffix = (profSuffixSelect && profSuffixSelect.value) || (bisMatch ? bisMatch[1] : "Bis");
         if(isBisDoc){
           if(bisMatch){
