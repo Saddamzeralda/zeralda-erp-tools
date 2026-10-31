@@ -1316,7 +1316,11 @@
         try { document.cookie = "zeralda-auth-token=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax"; } catch(_) {}
         var msg = urlParams.get('msg');
         if (msg) {
-          try { showError(msg); } catch (_) {}
+          var displayMsg = msg;
+          if (msg === 'Session expired') {
+            displayMsg = 'انتهت مدة الجلسة بسبب عدم النشاط. يرجى تسجيل الدخول مرة أخرى.';
+          }
+          try { showError(displayMsg, true); } catch (_) {}
         }
         return;
       }
@@ -1975,17 +1979,19 @@
         لحماية بيانات وأمان النظام، يجب استبدال كلمة مرور المشرف الافتراضية بكلمة مرور قوية جديدة قبل الدخول.
       </p>
       <div id="errorForcePwd" style="color:var(--error,#ef4444);font-size:13px;margin-bottom:14px;min-height:18px;font-weight:500;"></div>
-      <div style="text-align:right;margin-bottom:12px;">
-        <label style="font-size:12px;font-weight:600;color:var(--ink,#1e293b);display:block;margin-bottom:6px;">كلمة المرور الجديدة</label>
-        <input type="password" id="newPwdForce" placeholder="••••••••" style="width:100%;padding:12px;border:1.5px solid var(--border,#cbd5e1);border-radius:10px;outline:none;background:var(--bg,#f8fafc);color:var(--ink,#0f172a);font-size:14px;" />
-      </div>
-      <div style="text-align:right;margin-bottom:22px;">
-        <label style="font-size:12px;font-weight:600;color:var(--ink,#1e293b);display:block;margin-bottom:6px;">تأكيد كلمة المرور الجديدة</label>
-        <input type="password" id="confirmPwdForce" placeholder="••••••••" style="width:100%;padding:12px;border:1.5px solid var(--border,#cbd5e1);border-radius:10px;outline:none;background:var(--bg,#f8fafc);color:var(--ink,#0f172a);font-size:14px;" />
-      </div>
-      <button type="button" id="btnSubmitForcePwd" onclick="submitForcePasswordChange()" style="width:100%;padding:13px;background:var(--accent,#d36b2e);color:#fff;border:none;border-radius:10px;cursor:pointer;font-weight:700;font-size:15px;transition:background 0.2s;">
-        تحديث كلمة المرور والمتابعة
-      </button>
+      <form id="formForceChangePassword" onsubmit="event.preventDefault(); submitForcePasswordChange();">
+        <div style="text-align:right;margin-bottom:12px;">
+          <label style="font-size:12px;font-weight:600;color:var(--ink,#1e293b);display:block;margin-bottom:6px;">كلمة المرور الجديدة</label>
+          <input type="password" id="newPwdForce" autocomplete="new-password" placeholder="••••••••" style="width:100%;padding:12px;border:1.5px solid var(--border,#cbd5e1);border-radius:10px;outline:none;background:var(--bg,#f8fafc);color:var(--ink,#0f172a);font-size:14px;" />
+        </div>
+        <div style="text-align:right;margin-bottom:22px;">
+          <label style="font-size:12px;font-weight:600;color:var(--ink,#1e293b);display:block;margin-bottom:6px;">تأكيد كلمة المرور الجديدة</label>
+          <input type="password" id="confirmPwdForce" autocomplete="new-password" placeholder="••••••••" style="width:100%;padding:12px;border:1.5px solid var(--border,#cbd5e1);border-radius:10px;outline:none;background:var(--bg,#f8fafc);color:var(--ink,#0f172a);font-size:14px;" />
+        </div>
+        <button type="submit" id="btnSubmitForcePwd" style="width:100%;padding:13px;background:var(--accent,#d36b2e);color:#fff;border:none;border-radius:10px;cursor:pointer;font-weight:700;font-size:15px;transition:background 0.2s;">
+          تحديث كلمة المرور والمتابعة
+        </button>
+      </form>
     </div>
   </div>
 

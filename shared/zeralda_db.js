@@ -1291,7 +1291,9 @@
         // لا ترسل للخادم إذا لم يكن الـ token متاحاً (مثل صفحة login)
         var token = _getServerToken();
         if (!token) {
-            console.log('[ZS] No token — skipping server push for', key);
+            if (!_isLoginPage && key.indexOf('zeralda-company-migration-lock') === -1 && key.indexOf('zeralda-client-session-id') === -1) {
+                console.log('[ZS] No token — skipping server push for', key);
+            }
             return;
         }
         if (!_memReady && key.indexOf('zeralda-license-') !== 0) {
@@ -1389,7 +1391,9 @@
     function _deleteFromServer(key) {
         var token = _getServerToken();
         if (!token) {
-            console.log('[ZS] No token — skipping server delete for', key);
+            if (!_isLoginPage && key.indexOf('zeralda-company-migration-lock') === -1 && key.indexOf('zeralda-client-session-id') === -1) {
+                console.log('[ZS] No token — skipping server delete for', key);
+            }
             return;
         }
         if (!_memReady && key.indexOf('zeralda-license-') !== 0) {
@@ -1453,13 +1457,18 @@
 
     // تهيئة — تحميل متزامن فوري (الخادم محلي ~10ms)
     // تخطي التحميل على صفحات login/license/oauth (لا يوجد token بعد)
-    var _isLoginPage = /(^|\/)(login|license|oauth_callback|restore_session)\.html/i.test(String(window.location.pathname || ''));
+    var _isLoginPage = /(^|\/)(login|license|oauth_callback|restore_session)\.html/i.test(String(window.location.pathname || '')) ||
+                       /(^|\/)(login|license|oauth_callback|restore_session)\.html/i.test(String(window.location.href || ''));
 
     if (!_isLoginPage && _getServerToken()) {
         _loadFromServerSync();
     }
 
-    if (!_memReady) {
+    if (_isLoginPage) {
+        // على صفحات الدخول والترخيص: الذاكرة جاهزة محلياً فوراً ولا ننتظر session token
+        _memReady = true;
+        _memReadyPromise = Promise.resolve(0);
+    } else if (!_memReady) {
         // فشل التحميل أو لا يوجد token — أعد المحاولة بشكل غير متزامن
         // مع انتظار توفر الـ token (حد أقصى 5 محاولات لتجنب الحلقة اللانهائية)
         _memReadyPromise = new Promise(function(resolve) {
@@ -1472,9 +1481,9 @@
                     var shouldRedirectToLogin = !_getServerToken() ||
                         (_lastLoadError && _lastLoadError.status === 401);
                     if (shouldRedirectToLogin) {
-                        console.warn('[ZS] Max load attempts reached (' + _maxAttempts + ') — no valid session. Redirecting to login.');
                         // لا تحوّل تلقائياً على صفحات login/restore لتجنب الحلقة
                         if (!_isLoginPage) {
+                            console.warn('[ZS] Max load attempts reached (' + _maxAttempts + ') — no valid session. Redirecting to login.');
                             try { window.location.href = 'login.html'; } catch(e) {}
                         }
                     } else {
@@ -1495,7 +1504,7 @@
                 }
             }
             // تأخير قصير لإعطاء وقت لضبط الـ cookie
-            setTimeout(tryLoad, _isLoginPage ? 3000 : 500);
+            setTimeout(tryLoad, 500);
         });
     } else {
         _memReadyPromise = Promise.resolve(_memKeys.length);

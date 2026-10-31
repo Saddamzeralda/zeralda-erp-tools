@@ -352,6 +352,10 @@
   }
 
   function migrateUnscopedToScoped() {
+    var isAuthPage = /(^|\/)(login|license|oauth_callback|restore_session)\.html/i.test(String(window.location.pathname || '')) ||
+                     /(^|\/)(login|license|oauth_callback|restore_session)\.html/i.test(String(window.location.href || ''));
+    if (isAuthPage) return;
+
     var companyId = getActiveCompanyId();
     if (!companyId || !window.ZDB) return;
     // Skip if already migrated for this company
