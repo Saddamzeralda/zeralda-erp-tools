@@ -11,6 +11,32 @@
 (function () {
     'use strict';
 
+    // Global early fallback for createRuntimeTranslator to prevent script loading race conditions
+    if (typeof window.createRuntimeTranslator !== 'function') {
+        window.createRuntimeTranslator = function (dict) {
+            var safeDict = dict || {};
+            return function (key, vars, fallback) {
+                var replacements = vars;
+                var defaultText = fallback;
+                if (replacements == null) replacements = {};
+                if (typeof replacements === 'string') {
+                    defaultText = replacements;
+                    replacements = {};
+                }
+                var lang = 'ar';
+                try {
+                    if (window.ZS && window.ZS.getItem) lang = window.ZS.getItem('preferred-language') || 'ar';
+                    else if (window.localStorage) lang = localStorage.getItem('preferred-language') || 'ar';
+                } catch (_) {}
+                var entry = safeDict[key];
+                var template = (entry && (entry[lang] || entry.ar || entry.fr || entry.en)) || defaultText || key;
+                return String(template).replace(/\{(\w+)\}/g, function (_, name) {
+                    return replacements[name] != null ? replacements[name] : '';
+                });
+            };
+        };
+    }
+
     var DB_NAME = 'zeralda_erp';
     var STORE_NAME = 'kv_store';
     // FIX: IndexedDB schema version with migration support.
