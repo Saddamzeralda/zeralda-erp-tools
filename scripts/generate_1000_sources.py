@@ -1112,3 +1112,4 @@ if __name__ == "__main__":
     with open("scripts/generated_sources.json", "w", encoding="utf-8") as f:
         json.dump(sources, f, ensure_ascii=False, indent=2)
     print("Saved to scripts/generated_sources.json successfully.")
+
