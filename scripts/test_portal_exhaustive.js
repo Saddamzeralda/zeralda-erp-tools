@@ -36,6 +36,7 @@ function createMockElement(id, tagName = 'div') {
     value: '',
     textContent: '',
     innerHTML: '',
+    options: [],
     style: {},
     className: '',
     classList: {
@@ -47,6 +48,9 @@ function createMockElement(id, tagName = 'div') {
     children: [],
     appendChild: function(child) {
       el.children.push(child);
+      if (child && (child.tagName === 'OPTION' || child.tagName === 'OPTGROUP')) {
+        el.options.push(child);
+      }
       return child;
     },
     querySelectorAll: function(sel) {
@@ -261,6 +265,44 @@ console.log(`dzFilterSource child nodes count: ${filterSourceSelect.children.len
 const optgroups = filterSourceSelect.children.filter(c => c.tagName === 'OPTGROUP');
 console.log(`dzFilterSource optgroups count: ${optgroups.length}`);
 optgroups.forEach(g => console.log(`  Optgroup: ${g.label}`));
+
+// Test handleSectorFilterChange for COMMUNES and ENTERPRISES dropdown values
+console.log('\n--- Testing Sector Dropdown COMMUNES & ENTERPRISES ---');
+global.window.handleSectorFilterChange('COMMUNES');
+feedStats = mockDocument.getElementById('dzFeedStats').innerHTML;
+console.log(`Dropdown sector 'COMMUNES':\n${feedStats.trim()}`);
+if (!feedStats.includes('616')) {
+  console.error('FAIL: Dropdown sector COMMUNES returned unexpected count!');
+  process.exit(1);
+}
+
+global.window.handleSectorFilterChange('ENTERPRISES');
+feedStats = mockDocument.getElementById('dzFeedStats').innerHTML;
+console.log(`Dropdown sector 'ENTERPRISES':\n${feedStats.trim()}`);
+if (!feedStats.includes('458')) {
+  console.error('FAIL: Dropdown sector ENTERPRISES returned unexpected count!');
+  process.exit(1);
+}
+
+// Test Source Quick Chip: Sonelgaz
+console.log('\n--- Testing Quick Chip source-Sonelgaz ---');
+global.window.setQuickChip('source-Sonelgaz');
+feedStats = mockDocument.getElementById('dzFeedStats').innerHTML;
+console.log(`Quick chip 'source-Sonelgaz':\n${feedStats.trim()}`);
+if (!feedStats.includes('صفقة مطابقة')) {
+  console.error('FAIL: Quick chip source-Sonelgaz failed!');
+  process.exit(1);
+}
+
+// Test Clear All
+console.log('\n--- Testing clearAllMultiFilters() ---');
+global.window.clearAllMultiFilters();
+feedStats = mockDocument.getElementById('dzFeedStats').innerHTML;
+console.log(`After clearAllMultiFilters():\n${feedStats.trim()}`);
+if (!feedStats.includes('1835')) {
+  console.error('FAIL: clearAllMultiFilters() failed to restore 1835 active tenders!');
+  process.exit(1);
+}
 
 console.log('\n=======================================');
 console.log('EXHAUSTIVE TEST COMPLETE: 100% SUCCESS!');
