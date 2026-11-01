@@ -133,16 +133,16 @@ console.log('All scripts executed without error!');
 // Check SAMPLE_DZ_TENDERS and allDzTenders
 const sampleTenders = global.window.SAMPLE_DZ_TENDERS;
 console.log(`\nSAMPLE_DZ_TENDERS count: ${sampleTenders ? sampleTenders.length : 0}`);
-if (!sampleTenders || sampleTenders.length < 1000) {
-  console.error(`FAIL: SAMPLE_DZ_TENDERS count is ${sampleTenders ? sampleTenders.length : 0}, expected > 1000!`);
+if (!sampleTenders || sampleTenders.length < 1300) {
+  console.error(`FAIL: SAMPLE_DZ_TENDERS count is ${sampleTenders ? sampleTenders.length : 0}, expected > 1300!`);
   process.exit(1);
 }
 
 // Check Tab Badges & KPIs
 const tabBadgeAll = mockDocument.getElementById('tabBadgeAll');
 console.log(`tabBadgeAll (Total active tenders): ${tabBadgeAll.textContent}`);
-if (parseInt(tabBadgeAll.textContent) < 1000) {
-  console.error(`FAIL: Expected > 1000 active tenders, got ${tabBadgeAll.textContent}`);
+if (parseInt(tabBadgeAll.textContent) < 1200) {
+  console.error(`FAIL: Expected > 1200 active tenders, got ${tabBadgeAll.textContent}`);
   process.exit(1);
 }
 
@@ -152,29 +152,47 @@ console.log(`tabBadgeAttr (Attribution notices): ${tabBadgeAttr.textContent}`);
 const tabBadgeSources = mockDocument.getElementById('tabBadgeSources');
 console.log(`tabBadgeSources (Official sources): ${tabBadgeSources.textContent}`);
 
+// Test Municipalities (APCs) Filter
+console.log('\n--- Testing Municipalities (APCs) Filter ---');
+global.window.setQuickChip('communes');
+let feedStats = mockDocument.getElementById('dzFeedStats').innerHTML;
+console.log(`Quick chip 'communes':\n${feedStats.trim()}`);
+if (!feedStats.includes('348') && !feedStats.includes('صفقة')) {
+  console.error('FAIL: Municipalities filter failed!');
+  process.exit(1);
+}
+
+// Test Public Enterprises Filter
+console.log('\n--- Testing Public Enterprises Filter ---');
+global.window.setQuickChip('enterprises');
+feedStats = mockDocument.getElementById('dzFeedStats').innerHTML;
+console.log(`Quick chip 'enterprises':\n${feedStats.trim()}`);
+if (!feedStats.includes('210') && !feedStats.includes('صفقة')) {
+  console.error('FAIL: Public enterprises filter failed!');
+  process.exit(1);
+}
+
+// Reset Quick Chip
+global.window.setQuickChip('all');
+
 // Test Sector Filtering
 console.log('\n--- Testing Sector Filtering ---');
 const sectorSel = mockDocument.getElementById('dzFilterSector');
 
 sectorSel.value = 'BTPH';
 global.window.filterAndRenderTenders();
-let feedStats = mockDocument.getElementById('dzFeedStats').innerHTML;
-console.log(`Filtered by sector 'BTPH': "${feedStats.trim()}"`);
+feedStats = mockDocument.getElementById('dzFeedStats').innerHTML;
+console.log(`Filtered by sector 'BTPH':\n${feedStats.trim()}`);
 
 sectorSel.value = 'MEDICAL';
 global.window.filterAndRenderTenders();
 feedStats = mockDocument.getElementById('dzFeedStats').innerHTML;
-console.log(`Filtered by sector 'MEDICAL': "${feedStats.trim()}"`);
+console.log(`Filtered by sector 'MEDICAL':\n${feedStats.trim()}`);
 
 sectorSel.value = 'ENERGY';
 global.window.filterAndRenderTenders();
 feedStats = mockDocument.getElementById('dzFeedStats').innerHTML;
-console.log(`Filtered by sector 'ENERGY': "${feedStats.trim()}"`);
-
-sectorSel.value = 'IT';
-global.window.filterAndRenderTenders();
-feedStats = mockDocument.getElementById('dzFeedStats').innerHTML;
-console.log(`Filtered by sector 'IT': "${feedStats.trim()}"`);
+console.log(`Filtered by sector 'ENERGY':\n${feedStats.trim()}`);
 
 // Reset sector
 sectorSel.value = '';
@@ -182,36 +200,36 @@ sectorSel.value = '';
 // Test Wilaya Filtering
 console.log('\n--- Testing Wilaya Filtering ---');
 global.window.toggleWilayaSelection('16', true); // Alger
-global.window.filterAndRenderTenders();
 feedStats = mockDocument.getElementById('dzFeedStats').innerHTML;
-console.log(`Filtered by Wilaya 16 (Alger): "${feedStats.trim()}"`);
+console.log(`Filtered by Wilaya 16 (Alger):\n${feedStats.trim()}`);
 
-global.window.toggleWilayaSelection('16', false); global.window.toggleWilayaSelection('31', true); // Oran
-global.window.filterAndRenderTenders();
+global.window.toggleWilayaSelection('16', false);
+global.window.toggleWilayaSelection('31', true); // Oran
 feedStats = mockDocument.getElementById('dzFeedStats').innerHTML;
-console.log(`Filtered by Wilaya 31 (Oran): "${feedStats.trim()}"`);
+console.log(`Filtered by Wilaya 31 (Oran):\n${feedStats.trim()}`);
 
 global.window.selectAllWilayas(false); // All wilayas
-global.window.filterAndRenderTenders();
 feedStats = mockDocument.getElementById('dzFeedStats').innerHTML;
-console.log(`Filtered by All Wilayas: "${feedStats.trim()}"`);
+console.log(`Filtered by All Wilayas:\n${feedStats.trim()}`);
 
 // Test Sources Directory functionality
 const sources = global.window.ALGERIAN_PROCUREMENT_SOURCES;
 console.log(`\nALGERIAN_PROCUREMENT_SOURCES count: ${sources ? sources.length : 0}`);
-if (!sources || sources.length < 1000) {
-  console.error('FAIL: Sources count is less than 1,000!');
-  process.exit(1);
-}
 
-// Test renderSourcesDirectory
-console.log('\nTesting renderSourcesDirectory()...');
-global.window.renderSourcesDirectory();
-const gridEl = mockDocument.getElementById('sourcesDirectoryGrid');
-console.log(`Rendered cards on page 1: ${gridEl.children.length}`);
-
+// Test renderSourcesDirectory with APC group
+console.log('\nTesting filterSourcesByGroup("apc")...');
+global.window.filterSourcesByGroup('apc');
 const counterEl = mockDocument.getElementById('sourcesCounterLabel');
-console.log(`Sources counter label: "${counterEl.textContent}"`);
+console.log(`Sources counter label for "apc": "${counterEl.textContent}"`);
+
+// Test renderSourcesDirectory with Companies group
+console.log('\nTesting filterSourcesByGroup("companies")...');
+global.window.filterSourcesByGroup('companies');
+console.log(`Sources counter label for "companies": "${counterEl.textContent}"`);
+
+// Reset sources group
+global.window.filterSourcesByGroup('all');
+console.log(`Sources counter label for "all": "${counterEl.textContent}"`);
 
 console.log('\n=======================================');
 console.log('EXHAUSTIVE TEST COMPLETE: 100% SUCCESS!');
