@@ -928,7 +928,7 @@
 
           if (!window.ZeraldaNotifications && !document.querySelector('script[src*="notification_center.js"]')) {
             var np = document.createElement('script');
-            np.src = 'shared/notification_center.js?v=20261101_i18n';
+            np.src = 'shared/notification_center.js?v=20261101_tenders_fix';
             np.defer = true;
             document.head.appendChild(np);
           }

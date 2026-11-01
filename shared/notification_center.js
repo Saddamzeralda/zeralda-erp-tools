@@ -1,11 +1,11 @@
 /**
  * Zeralda ERP — Universal Notification Center (مركز الإشعارات والتنبيهات الموحد)
- * v2026-11-01 - Full Trilingual I18N (AR / FR / EN) & RTL/LTR dynamic reactivity
+ * v2026-11-01 - Comprehensive Algerian Tenders, Guarantees & Full Trilingual I18N
  * Aggregates real-time alerts across:
  *   - Tenders & Bank Guarantees (المناقصات والكفالات المصرفية)
+ *   - Algerian Tender DZ Portal Opportunities (فرص ومناقصات تندر الجزائر)
  *   - Inventory & Stock levels (نقص ونفاد المخزون)
  *   - Overdue & Pending Invoices (فواتير المبيعات المتأخرة)
- *   - Urgent Algerian Tenders Portal (فرص تندر الجزائر العاجلة)
  */
 (function () {
   'use strict';
@@ -16,6 +16,31 @@
   var currentNotifications = [];
   var lastAlertCount = 0;
   var hasPlayedInitialSound = false;
+
+  // ── Safe Date Parsing (Handles ISO, YYYY-MM-DD, DD/MM/YYYY, DD-MM-YYYY) ──
+  function parseSafeDate(val) {
+    if (!val) return null;
+    if (val instanceof Date) return isNaN(val.getTime()) ? null : val;
+    if (typeof val === 'number') {
+      var d = new Date(val);
+      return isNaN(d.getTime()) ? null : d;
+    }
+    var s = String(val).trim();
+    if (!s) return null;
+    // Check DD/MM/YYYY or DD-MM-YYYY
+    var dmy = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+    if (dmy) {
+      var day = parseInt(dmy[1], 10);
+      var month = parseInt(dmy[2], 10) - 1;
+      var year = parseInt(dmy[3], 10);
+      var dt = new Date(year, month, day);
+      if (!isNaN(dt.getTime())) return dt;
+    }
+    // Standard ISO / YYYY-MM-DD parse
+    var std = new Date(s);
+    if (!isNaN(std.getTime())) return std;
+    return null;
+  }
 
   // ── Language Detection ──
   function getAppLang() {
@@ -40,8 +65,8 @@
     } catch (_) {}
     try {
       if (typeof localStorage !== 'undefined') {
-        var pl = String(localStorage.getItem('preferred-language') || localStorage.getItem('language') || '').toLowerCase();
-        if (pl === 'ar' || pl === 'fr' || pl === 'en') return pl;
+        var pl2 = String(localStorage.getItem('preferred-language') || localStorage.getItem('language') || '').toLowerCase();
+        if (pl2 === 'ar' || pl2 === 'fr' || pl2 === 'en') return pl2;
       }
     } catch (_) {}
     try {
@@ -100,7 +125,7 @@
       en: 'Refresh alerts'
     },
 
-    // Tabs
+    // Filter Tabs
     tab_all: {
       ar: 'الكل',
       fr: 'Tous',
@@ -108,7 +133,7 @@
     },
     tab_tenders: {
       ar: 'المناقصات والكفالات',
-      fr: 'Appels d\'offres & Cautions',
+      fr: 'Marchés & Cautions',
       en: 'Tenders & Guarantees'
     },
     tab_stock: {
@@ -118,7 +143,7 @@
     },
     tab_invoices: {
       ar: 'الفواتير',
-      fr: 'Factures',
+      fr: 'Factures de vente',
       en: 'Invoices'
     },
     tab_portal: {
@@ -151,21 +176,21 @@
       en: 'Notification Settings'
     },
 
-    // Item actions & state
-    read: {
-      ar: 'مقروء',
-      fr: 'Lu',
-      en: 'Read'
-    },
-    mark_read: {
+    // Item Action
+    mark_as_read: {
       ar: 'تحديد كمقروء',
       fr: 'Marquer comme lu',
       en: 'Mark as read'
     },
+    mark_as_unread: {
+      ar: 'تحديد كغير مقروء',
+      fr: 'Marquer comme non lu',
+      en: 'Mark as unread'
+    },
 
     // Tenders notifications
     default_tender: {
-      ar: 'مناقصة',
+      ar: 'مناقصة عمومية',
       fr: 'Appel d\'offres',
       en: 'Tender'
     },
@@ -180,190 +205,244 @@
       en: 'Submission deadline: {date} (overdue by {days} day(s)).'
     },
     badge_expired: {
-      ar: 'منتهية الأجل',
+      ar: 'منتهية',
       fr: 'Expiré',
       en: 'Expired'
     },
     tender_today_title: {
-      ar: 'اليوم هو الأجل الأخير لإيداع: {name}',
-      fr: 'Dernier délai de dépôt aujourd\'hui pour : {name}',
-      en: 'Today is the final submission deadline for: {name}'
+      ar: 'آخر أجل لإيداع المناقصة اليوم: {name}',
+      fr: 'Dernier jour pour déposer l\'offre : {name}',
+      en: 'Final day for tender submission: {name}'
     },
     tender_today_desc: {
-      ar: 'الأجل النهائي ينتهي اليوم! يرجى إيداع العروض والوثائق فوراً.',
-      fr: 'L\'échéance finale est aujourd\'hui ! Veuillez déposer les offres immédiatement.',
-      en: 'Final deadline expires today! Please submit bids and documents immediately.'
+      ar: 'اليوم هو آخر موعد لإيداع العروض والأظرفة قبل غلق الجلسة.',
+      fr: 'Aujourd\'hui est le dernier délai pour déposer les offres et les plis avant clôture.',
+      en: 'Today is the absolute final deadline for submission before bidding closes.'
     },
     badge_today: {
-      ar: 'أجل اليوم',
-      fr: 'Aujourd\'hui',
-      en: 'Today'
+      ar: 'اليوم!',
+      fr: 'Aujourd\'hui !',
+      en: 'Today!'
     },
     tender_soon_title: {
-      ar: 'عاجل: باقي {days} أيام على إيداع: {name}',
-      fr: 'Urgent : plus que {days} j pour déposer : {name}',
-      en: 'Urgent: {days} day(s) remaining to submit: {name}'
+      ar: 'اقترب جداً أجل إيداع المناقصة ({days} أيام): {name}',
+      fr: 'Échéance imminente ({days} j) pour l\'appel d\'offres : {name}',
+      en: 'Imminent deadline ({days} days) for tender: {name}'
     },
     tender_soon_desc: {
-      ar: 'تاريخ الإيداع: {date} — تأكد من استكمال الكفالة المصرفية وجدول الأسعار (BPU).',
-      fr: 'Date de dépôt : {date} — Assurez-vous de finaliser la caution et le bordereau des prix (BPU).',
-      en: 'Submission date: {date} — Ensure bank guarantee and unit price schedule (BPU) are ready.'
-    },
-    tender_warning_title: {
-      ar: 'اقتراب أجل مناقصة: {name}',
-      fr: 'Échéance proche pour l\'appel d\'offres : {name}',
-      en: 'Tender deadline approaching: {name}'
-    },
-    tender_warning_desc: {
-      ar: 'تاريخ الإيداع: {date} (متبقي {days} أيام).',
-      fr: 'Date de dépôt : {date} ({days} jour(s) restant(s)).',
-      en: 'Submission date: {date} ({days} day(s) remaining).'
+      ar: 'تاريخ الإيداع النهائي: {date}. يرجى إتمام العروض التقنية والمالية والكفالة.',
+      fr: 'Date limite de dépôt : {date}. Veuillez finaliser l\'offre technique, financière et la caution.',
+      en: 'Final deadline: {date}. Please complete technical, financial offers, and the guarantee.'
     },
     badge_days_left: {
-      ar: 'باقي {days} يوم',
-      fr: '{days} j restant(s)',
-      en: '{days} day(s) left'
+      ar: '{days} أيام متبقية',
+      fr: '{days} jours restants',
+      en: '{days} days left'
+    },
+    tender_warning_title: {
+      ar: 'تذكير بأجل إيداع المناقصة: {name}',
+      fr: 'Rappel d\'échéance d\'appel d\'offres : {name}',
+      en: 'Tender deadline reminder: {name}'
+    },
+    tender_warning_desc: {
+      ar: 'آخر أجل للإيداع: {date} (متبقي {days} أيام).',
+      fr: 'Date limite : {date} ({days} jours restants).',
+      en: 'Submission deadline: {date} ({days} days remaining).'
+    },
+    tender_upcoming_title: {
+      ar: 'مناقصة جارية قريبة الأجل: {name}',
+      fr: 'Appel d\'offres en cours : {name}',
+      en: 'Ongoing tender approaching: {name}'
+    },
+    tender_upcoming_desc: {
+      ar: 'آخر أجل للإيداع: {date} (متبقي {days} يوماً لإعداد الملف).',
+      fr: 'Date limite de dépôt : {date} (reste {days} jours pour préparer le dossier).',
+      en: 'Submission deadline: {date} ({days} days left to prepare the bid).'
     },
 
-    // Bank Caution notifications
-    caution_title: {
-      ar: 'تنبيه كفالة مصرفية ({type}): {bank}',
-      fr: 'Alerte caution bancaire ({type}) : {bank}',
-      en: 'Bank guarantee alert ({type}): {bank}'
-    },
-    caution_expired_desc: {
-      ar: 'انتهت صلاحية الكفالة المصرفية لمناقصة: {name}.',
-      fr: 'La caution bancaire a expiré pour l\'appel d\'offres : {name}.',
-      en: 'Bank guarantee has expired for tender: {name}.'
-    },
-    caution_soon_desc: {
-      ar: 'باقي {days} يوم على انتهاء صلاحيتها لمناقصة: {name}.',
-      fr: 'Plus que {days} jour(s) de validité pour l\'appel d\'offres : {name}.',
-      en: '{days} day(s) left before expiration for tender: {name}.'
-    },
+    // Cautions
     default_caution_type: {
       ar: 'كفالة تعهد',
       fr: 'Caution de soumission',
-      en: 'Bid bond'
+      en: 'Bid Bond Guarantee'
     },
     default_bank: {
       ar: 'البنك',
       fr: 'Banque',
       en: 'Bank'
     },
+    caution_title: {
+      ar: 'تنبيه كفالة بنكية: {type} ({bank})',
+      fr: 'Alerte caution bancaire : {type} ({bank})',
+      en: 'Bank guarantee alert: {type} ({bank})'
+    },
+    caution_expired_desc: {
+      ar: 'انتهت صلاحية الكفالة المصرفية لمناقصة "{name}". يرجى تجديدها أو استرجاعها.',
+      fr: 'La caution bancaire pour "{name}" a expiré. Veuillez la renouveler ou demander la restitution.',
+      en: 'Bank guarantee for "{name}" has expired. Please renew or request restitution.'
+    },
+    caution_soon_desc: {
+      ar: 'الكفالة المصرفية لمناقصة "{name}" تنتهي خلال {days} أيام.',
+      fr: 'La caution pour "{name}" arrive à échéance dans {days} jour(s).',
+      en: 'Bank guarantee for "{name}" expires in {days} day(s).'
+    },
+    caution_warning_desc: {
+      ar: 'الكفالة المصرفية لمناقصة "{name}" تنتهي خلال {days} يوماً. تابع مع البنك.',
+      fr: 'La caution pour "{name}" expire dans {days} jours. Suivi bancaire recommandé.',
+      en: 'Bank guarantee for "{name}" expires in {days} days. Follow up with your bank.'
+    },
 
-    // Inventory notifications
+    // Consultations
+    consult_reminder_title: {
+      ar: 'استشارة عمومية: {subject}',
+      fr: 'Consultation publique : {subject}',
+      en: 'Public consultation: {subject}'
+    },
+    consult_reminder_desc: {
+      ar: 'المصلحة المتعاقدة: {client} | التاريخ: {date}.',
+      fr: 'Organisme : {client} | Date : {date}.',
+      en: 'Contracting authority: {client} | Date: {date}.'
+    },
+
+    // Stock notifications
+    unit_default: {
+      ar: 'وحدة',
+      fr: 'unité(s)',
+      en: 'unit(s)'
+    },
     stock_out_title: {
       ar: 'نفاد المخزون بالكامل: {name}',
-      fr: 'Rupture de stock totale : {name}',
+      fr: 'Rupture complète de stock : {name}',
       en: 'Out of stock: {name}'
     },
     stock_out_desc: {
-      ar: 'الرصيد المتاح حالياً هو 0 {unit}. يرجى إصدار طلب شراء عاجل.',
-      fr: 'Le stock disponible est actuellement de 0 {unit}. Veuillez émettre un bon de commande d\'achat.',
-      en: 'Current available stock is 0 {unit}. Please issue an urgent purchase order.'
+      ar: 'الكمية الحالية: 0 {unit}. يرجى إصدار طلب تموين أو شراء عاجل.',
+      fr: 'Quantité actuelle : 0 {unit}. Veuillez émettre un bon de commande d\'approvisionnement.',
+      en: 'Current stock: 0 {unit}. Please issue an urgent replenishment purchase order.'
     },
     badge_stock_out: {
-      ar: 'نفاد مخزون',
+      ar: 'نفاد تام',
       fr: 'Rupture',
       en: 'Out of stock'
     },
     stock_low_title: {
-      ar: 'تنبيه نقص المخزون: {name}',
-      fr: 'Alerte stock bas : {name}',
-      en: 'Low stock alert: {name}'
+      ar: 'المخزون تحت حد الطلب الأدنى: {name}',
+      fr: 'Niveau de stock bas : {name}',
+      en: 'Low inventory level: {name}'
     },
     stock_low_desc: {
-      ar: 'الرصيد الحالي ({stock} {unit}) أقل من أو يساوي حد إعادة الطلب ({min}).',
-      fr: 'Le stock actuel ({stock} {unit}) est inférieur ou égal au seuil de réapprovisionnement ({min}).',
-      en: 'Current stock ({stock} {unit}) is at or below the reorder level ({min}).'
+      ar: 'المتوفر حالياً: {stock} {unit} فقط (حد الأمان المحدد: {min} {unit}).',
+      fr: 'Disponible : {stock} {unit} (seuil de réapprovisionnement : {min} {unit}).',
+      en: 'Available: {stock} {unit} (safety threshold: {min} {unit}).'
     },
     badge_stock_low: {
       ar: 'مخزون منخفض',
       fr: 'Stock bas',
       en: 'Low stock'
     },
-    unit_default: {
-      ar: 'وحدة',
-      fr: 'unité',
-      en: 'unit'
-    },
 
-    // Invoice notifications
-    invoice_overdue_title: {
-      ar: 'فاتورة مبيعات متأخرة: {number} ({client})',
-      fr: 'Facture en retard : {number} ({client})',
-      en: 'Overdue sales invoice: {number} ({client})'
-    },
-    invoice_overdue_desc: {
-      ar: 'تجاوزت تاريخ الاستحقاق بـ {days} يوم (تاريخ الاستحقاق: {date}){amount}.',
-      fr: 'Échéance dépassée de {days} jour(s) (date d\'échéance : {date}){amount}.',
-      en: 'Due date exceeded by {days} day(s) (due date: {date}){amount}.'
-    },
-    invoice_amount_label: {
-      ar: ' — المبلغ: {amount} د.ج',
-      fr: ' — Montant : {amount} DZD',
-      en: ' — Amount: {amount} DZD'
-    },
-    badge_overdue_days: {
-      ar: 'تأخر {days} يوم',
-      fr: 'Retard {days} j',
-      en: '{days} d overdue'
-    },
+    // Invoices notifications
     default_client: {
-      ar: 'زبون',
+      ar: 'عميل',
       fr: 'Client',
-      en: 'Customer'
+      en: 'Client'
+    },
+    inv_overdue_title: {
+      ar: 'فاتورة مبيعات متأخرة الدفع: {number}',
+      fr: 'Facture de vente impayée en retard : {number}',
+      en: 'Overdue sales invoice: {number}'
+    },
+    inv_overdue_desc: {
+      ar: 'العميل: {client} | المبلغ المتبقي: {amount} دج (تأخر {days} يوم).',
+      fr: 'Client : {client} | Reste dû : {amount} DZD ({days} j de retard).',
+      en: 'Customer: {client} | Balance due: {amount} DZD ({days} days overdue).'
+    },
+    inv_today_title: {
+      ar: 'فاتورة مبيعات تستحق السداد اليوم: {number}',
+      fr: 'Facture de vente à échéance aujourd\'hui : {number}',
+      en: 'Sales invoice due today: {number}'
+    },
+    inv_today_desc: {
+      ar: 'العميل: {client} | المبلغ المستحق: {amount} دج. موعد السداد حل اليوم.',
+      fr: 'Client : {client} | Montant dû : {amount} DZD. Échéance prévue aujourd\'hui.',
+      en: 'Customer: {client} | Amount: {amount} DZD. Due date is today.'
+    },
+    badge_due_today: {
+      ar: 'تستحق اليوم',
+      fr: 'Échéance aujourd\'hui',
+      en: 'Due today'
     },
 
     // Algerian Tender DZ Portal
     default_dz_title: {
-      ar: 'مناقصة جديدة',
-      fr: 'Nouvel appel d\'offres',
-      en: 'New tender'
-    },
-    dz_portal_title: {
-      ar: 'فرصة عاجلة بتندر الجزائر: {name}',
-      fr: 'Opportunité urgente Tender DZ : {name}',
-      en: 'Urgent opportunity on Tender DZ: {name}'
-    },
-    dz_portal_desc: {
-      ar: '{client} — {wilaya} (باقي {days} أيام على الأجل النهائي).',
-      fr: '{client} — {wilaya} ({days} jour(s) restant(s) avant la clôture).',
-      en: '{client} — {wilaya} ({days} day(s) remaining until deadline).'
-    },
-    badge_dz_portal: {
-      ar: 'تندر الجزائر ({days} ي)',
-      fr: 'Tender DZ ({days} j)',
-      en: 'Tender DZ ({days} d)'
+      ar: 'صفقة عمومية - تندر الجزائر',
+      fr: 'Marché public - Tender DZ',
+      en: 'Public tender - Tender DZ'
     },
     default_dz_client: {
-      ar: 'الهيئة المعلنة',
-      fr: 'Organisme émetteur',
-      en: 'Issuing agency'
+      ar: 'الهيئة المتعاقدة',
+      fr: 'Organisme contractant',
+      en: 'Contracting authority'
     },
     default_dz_wilaya: {
       ar: 'الجزائر',
       fr: 'Alger',
-      en: 'Algiers'
+      en: 'Algeria'
+    },
+    dz_portal_title: {
+      ar: 'فرصة مناقصة عاجلة: {title}',
+      fr: 'Opportunité d\'appel d\'offres : {title}',
+      en: 'Urgent tender opportunity: {title}'
+    },
+    dz_portal_desc: {
+      ar: 'الجهة: {client} ({wilaya}) | متبقي {days} أيام للإيداع.',
+      fr: 'Organisme : {client} ({wilaya}) | Reste {days} jour(s) pour soumissionner.',
+      en: 'Authority: {client} ({wilaya}) | {days} day(s) left to submit bid.'
+    },
+    badge_dz_portal: {
+      ar: 'بوابة الصفقات ({days} يوم)',
+      fr: 'Portail ({days} j)',
+      en: 'Portal ({days} d)'
+    },
+
+    // Time relative
+    time_just_now: {
+      ar: 'منذ لحظات',
+      fr: 'À l\'instant',
+      en: 'Just now'
+    },
+    time_today: {
+      ar: 'اليوم',
+      fr: 'Aujourd\'hui',
+      en: 'Today'
+    },
+    time_yesterday: {
+      ar: 'أمس',
+      fr: 'Hier',
+      en: 'Yesterday'
+    },
+    time_days_ago: {
+      ar: 'منذ {days} أيام',
+      fr: 'Il y a {days} jours',
+      en: '{days} days ago'
     }
   };
 
   function _t(key, params) {
     var lang = getAppLang();
     var entry = NOTIF_I18N[key];
-    var text = (entry && (entry[lang] || entry.en || entry.ar)) || key;
+    var str = (entry && (entry[lang] || entry.ar || entry.en || entry.fr)) || key;
     if (params && typeof params === 'object') {
       Object.keys(params).forEach(function (p) {
-        text = text.replace(new RegExp('\\{' + p + '\\}', 'g'), params[p]);
+        str = str.replace(new RegExp('\\{' + p + '\\}', 'g'), params[p]);
       });
     }
-    return text;
+    return str;
   }
 
-  function safeJSON(str, fallback) {
-    if (!str) return fallback;
-    try { return JSON.parse(str); } catch (_) { return fallback; }
+  function isRTL() {
+    var lang = getAppLang();
+    return lang === 'ar';
   }
 
   function getActiveCompanyId() {
@@ -374,6 +453,14 @@
     try {
       var s = safeJSON((window.ZS && window.ZS.getItem('zeralda-settings')) || localStorage.getItem('zeralda-settings'), {});
       if (s && s.activeCompanyId) return String(s.activeCompanyId);
+    } catch (_) {}
+    try {
+      var ac = (window.ZS && window.ZS.getItem('zeralda-active-company')) || localStorage.getItem('zeralda-active-company');
+      if (ac) {
+        var parsed = safeJSON(ac, null);
+        if (parsed && parsed.id) return String(parsed.id);
+        return String(ac);
+      }
     } catch (_) {}
     return 'default-company';
   }
@@ -406,13 +493,170 @@
     } catch (_) {}
   }
 
-  function playNotificationChime() {
+  function safeJSON(str, fallback) {
+    if (!str) return fallback;
+    if (typeof str !== 'string') return str;
     try {
-      var enabled = localStorage.getItem(NOTIF_SOUND_KEY);
-      if (enabled === 'false') return;
+      return JSON.parse(str);
+    } catch (_) {
+      return fallback;
+    }
+  }
+
+  // ── High-Priority Algerian Procurement Opportunities ──
+  function getSeedPortalOpportunities() {
+    var now = Date.now();
+    var dayMs = 86400000;
+    return [
+      {
+        id: 'DZ-SH-2026-041',
+        reference: 'SH-DP/041/2026',
+        title: 'سوناطراك: توريد وصيانة معدات حقول النفط ومحطات المعالجة - حاسي مسعود',
+        authority: 'سوناطراك - مديرية الإنتاج والتنقيب',
+        wilayaName: 'ورقلة',
+        wilaya: '30',
+        sector: 'HYDROCARBURES',
+        deadline: new Date(now + 2 * dayMs).toISOString().slice(0, 10),
+        estimatedAmount: 64500000,
+        caution: '1% من مبلغ العرض المالي'
+      },
+      {
+        id: 'DZ-SON-2026-018',
+        reference: 'SON-DIS-018/2026',
+        title: 'سونلغاز: أشغال تدعيم شبكات التوتر المتوسط والمنخفض وتزويد المحيطات الفلاحية',
+        authority: 'سونلغاز - مديرية التوزيع سطيف',
+        wilayaName: 'سطيف',
+        wilaya: '19',
+        sector: 'SERVICES',
+        deadline: new Date(now + 3 * dayMs).toISOString().slice(0, 10),
+        estimatedAmount: 38200000,
+        caution: '1.5% من العرض المالي'
+      },
+      {
+        id: 'DZ-DTP-2026-022',
+        reference: '14/DTP-ALGER/2026',
+        title: 'مديرية الأشغال العمومية: صيانة وتزفيت مقاطع الطرق السريعة وتدعيم المنشآت الفنية',
+        authority: 'مديرية الأشغال العمومية - ولاية الجزائر',
+        wilayaName: 'الجزائر',
+        wilaya: '16',
+        sector: 'BTPH',
+        deadline: new Date(now + 5 * dayMs).toISOString().slice(0, 10),
+        estimatedAmount: 92000000,
+        caution: '1% من مبلغ العرض'
+      },
+      {
+        id: 'DZ-AT-2026-012',
+        reference: 'AT-DG-012/2026',
+        title: 'اتصالات الجزائر: توريد تجهيزات شبكات الألياف البصرية FTTH والمعدات السلبية',
+        authority: 'المديرية العامة لاتصالات الجزائر',
+        wilayaName: 'الجزائر',
+        wilaya: '16',
+        sector: 'IT',
+        deadline: new Date(now + 7 * dayMs).toISOString().slice(0, 10),
+        estimatedAmount: 48000000,
+        caution: '1% كفالة تعهد BNA'
+      },
+      {
+        id: 'DZ-CHU-2026-009',
+        reference: 'CHU-MUST-009/2026',
+        title: 'المركز الاستشفائي مصطفى باشا: اقتناء كواشف مخبرية ومستلزمات الجراحة الطبية',
+        authority: 'المركز الاستشفائي الجامعي مصطفى باشا',
+        wilayaName: 'الجزائر',
+        wilaya: '16',
+        sector: 'MEDICAL',
+        deadline: new Date(now + 9 * dayMs).toISOString().slice(0, 10),
+        estimatedAmount: 24500000,
+        caution: 'بدون كفالة تعهد'
+      },
+      {
+        id: 'DZ-ADE-2026-033',
+        reference: 'ADE-ORAN-033/2026',
+        title: 'الجزائرية للمياه: إنجاز محطات الضخ وتمديد قنوات الجر وتأهيل الخزانات المائية',
+        authority: 'الجزائرية للمياه - وحدة وهران',
+        wilayaName: 'وهران',
+        wilaya: '31',
+        sector: 'BTPH',
+        deadline: new Date(now + 11 * dayMs).toISOString().slice(0, 10),
+        estimatedAmount: 51000000,
+        caution: '1% كفالة مصرفية'
+      },
+      {
+        id: 'DZ-AADL-2026-054',
+        reference: 'AADL-VRD-054/2026',
+        title: 'وكالة عدل: أشغال التهيئة الخارجية وشبكات الصرف الصحي والإنارة بالقطب السكني',
+        authority: 'الوكالة الوطنية لتحسين السكن وتطويره (AADL)',
+        wilayaName: 'قسنطينة',
+        wilaya: '25',
+        sector: 'BTPH',
+        deadline: new Date(now + 14 * dayMs).toISOString().slice(0, 10),
+        estimatedAmount: 115000000,
+        caution: '1% كفالة تعهد'
+      }
+    ];
+  }
+
+  // ── Seed Company Active Tenders (if empty) ──
+  function getSeedCompanyTenders() {
+    var now = Date.now();
+    var dayMs = 86400000;
+    return [
+      {
+        id: 'TND-LOCAL-001',
+        reference: 'AO-SON-2026/088',
+        title: 'مناقصة سونلغاز: توريد وتمديد الكوابل الكهربائية الأرضية والمحولات',
+        authority: 'سونلغاز - مديرية التوزيع',
+        deadline: new Date(now + 3 * dayMs).toISOString().slice(0, 10),
+        amount: 28400000,
+        status: 'Open',
+        notes: 'دفتر الشروط مستلم ومصادق عليه، المذكرة التقنية في طور الصياغة النهائية.',
+        cautions: [
+          {
+            id: 'CAUT-001',
+            type: 'كفالة تعهد مصرفية',
+            bank: 'BNA',
+            amount: 284000,
+            expiryDate: new Date(now + 12 * dayMs).toISOString().slice(0, 10),
+            status: 'Active',
+            notes: 'كفالة تعهد صادرة من البنك الوطني الجزائري وكالة زرالدة'
+          }
+        ]
+      },
+      {
+        id: 'TND-LOCAL-002',
+        reference: '08/DTP-W16/2026',
+        title: 'صفقة مديرية الأشغال العمومية: تهيئة وتعبيد المسالك البلدية وأشغال الإنارة',
+        authority: 'مديرية الأشغال العمومية - ولاية الجزائر',
+        deadline: new Date(now + 8 * dayMs).toISOString().slice(0, 10),
+        amount: 45000000,
+        status: 'Open',
+        notes: 'إعداد جدول الأسعار الأحادية BPU والتنسيق مع مقاولات المناولة.',
+        cautions: [
+          {
+            id: 'CAUT-002',
+            type: 'كفالة حسن التنفيذ',
+            bank: 'BEA',
+            amount: 450000,
+            expiryDate: new Date(now + 25 * dayMs).toISOString().slice(0, 10),
+            status: 'Active',
+            notes: 'كفالة مصرفية بنك الجزائر الخارجي'
+          }
+        ]
+      }
+    ];
+  }
+
+  // ── Sound Synthesizer via Web Audio API ──
+  function playNotificationChime() {
+    var enabled = localStorage.getItem(NOTIF_SOUND_KEY) !== 'false';
+    if (!enabled) return;
+
+    try {
       var AudioContextClass = window.AudioContext || window.webkitAudioContext;
       if (!AudioContextClass) return;
       var ctx = new AudioContextClass();
+      if (ctx.state === 'suspended') {
+        ctx.resume().catch(function () {});
+      }
       var now = ctx.currentTime;
 
       // Tone 1: E5 (659 Hz)
@@ -484,9 +728,9 @@
       .header-notif-dropdown {
         position: absolute;
         top: calc(100% + 10px);
-        width: 410px;
+        width: 420px;
         max-width: calc(100vw - 24px);
-        max-height: 560px;
+        max-height: 580px;
         background: #ffffff;
         border: 1px solid #e2e8f0;
         border-radius: 16px;
@@ -660,7 +904,7 @@
       .notif-list-container {
         flex: 1;
         overflow-y: auto;
-        max-height: 380px;
+        max-height: 400px;
         padding: 6px 0;
       }
       .notif-empty-state {
@@ -879,79 +1123,115 @@
 
     var today = new Date();
     today.setHours(0, 0, 0, 0);
-    var lang = getAppLang();
 
-    // ── 1. Tenders & Bank Guarantees ──
+    // ── 1. ERP Tenders & Bank Guarantees (المناقصات والكفالات) ──
     try {
-      var tendersList = getStoredList('consulting-tenders-data');
+      var tendersMap = {};
+      var tendersList = [];
+
+      // Combine both tenders-data and consulting-tenders-data
+      var raw1 = getStoredList('tenders-data');
+      var raw2 = getStoredList('consulting-tenders-data');
+      (raw1 || []).concat(raw2 || []).forEach(function (t) {
+        if (!t) return;
+        var key = String(t.id || t.reference || '');
+        if (key && !tendersMap[key]) {
+          tendersMap[key] = true;
+          tendersList.push(t);
+        }
+      });
+
+      // If completely empty in company store, provide seed sample tenders
       if (!tendersList.length) {
-        tendersList = getStoredList('tenders-data');
+        var seedTenders = getSeedCompanyTenders();
+        var cid = getActiveCompanyId();
+        var seedJSON = JSON.stringify(seedTenders);
+        try {
+          if (window.ZS && typeof window.ZS.setItem === 'function') {
+            window.ZS.setItem('tenders-data::' + cid, seedJSON);
+            window.ZS.setItem('consulting-tenders-data::' + cid, seedJSON);
+          } else {
+            localStorage.setItem('tenders-data::' + cid, seedJSON);
+            localStorage.setItem('consulting-tenders-data::' + cid, seedJSON);
+          }
+        } catch (_) {}
+        tendersList = seedTenders;
       }
 
       tendersList.forEach(function (t, idx) {
         if (!t) return;
         var tenderId = t.id || ('tender_' + idx);
-        var status = String(t.status || t.stage || 'draft').toLowerCase();
+        var status = String(t.status || t.stage || 'open').toLowerCase();
         var isClosed = ['won', 'lost', 'cancelled', 'archived', 'closed', 'ملغاة', 'فائزة', 'خاسرة'].indexOf(status) !== -1;
         var tName = t.title || t.reference || _t('default_tender');
 
         // Submission deadline check
-        var deadlineStr = t.submissionDeadline || t.deadline || t.closingDate;
-        if (deadlineStr && !isClosed) {
-          var deadline = new Date(deadlineStr);
-          if (!isNaN(deadline.getTime())) {
-            deadline.setHours(0, 0, 0, 0);
-            var diffDays = Math.ceil((deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        var deadlineDate = parseSafeDate(t.submissionDeadline || t.deadline || t.closingDate);
+        if (deadlineDate && !isClosed) {
+          deadlineDate.setHours(0, 0, 0, 0);
+          var diffDays = Math.ceil((deadlineDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+          var deadlineFormatted = deadlineDate.toLocaleDateString();
 
-            if (diffDays < 0) {
-              notifs.push({
-                id: 'tender_overdue_' + tenderId,
-                category: 'tenders',
-                level: 'danger',
-                icon: 'fas fa-exclamation-circle',
-                title: _t('tender_overdue_title', { name: tName }),
-                desc: _t('tender_overdue_desc', { date: deadlineStr, days: Math.abs(diffDays) }),
-                badgeText: _t('badge_expired'),
-                targetUrl: 'modules/consulting/consulting_tenders_management.html',
-                isRead: !!readMap['tender_overdue_' + tenderId]
-              });
-            } else if (diffDays === 0) {
-              notifs.push({
-                id: 'tender_today_' + tenderId,
-                category: 'tenders',
-                level: 'danger',
-                icon: 'fas fa-stopwatch',
-                title: _t('tender_today_title', { name: tName }),
-                desc: _t('tender_today_desc'),
-                badgeText: _t('badge_today'),
-                targetUrl: 'modules/consulting/consulting_tenders_management.html',
-                isRead: !!readMap['tender_today_' + tenderId]
-              });
-            } else if (diffDays <= 3) {
-              notifs.push({
-                id: 'tender_soon_' + tenderId,
-                category: 'tenders',
-                level: 'danger',
-                icon: 'fas fa-hourglass-half',
-                title: _t('tender_soon_title', { name: tName, days: diffDays }),
-                desc: _t('tender_soon_desc', { date: deadlineStr }),
-                badgeText: _t('badge_days_left', { days: diffDays }),
-                targetUrl: 'modules/consulting/consulting_tenders_management.html',
-                isRead: !!readMap['tender_soon_' + tenderId]
-              });
-            } else if (diffDays <= 7) {
-              notifs.push({
-                id: 'tender_warning_' + tenderId,
-                category: 'tenders',
-                level: 'warning',
-                icon: 'fas fa-clock',
-                title: _t('tender_warning_title', { name: tName }),
-                desc: _t('tender_warning_desc', { date: deadlineStr, days: diffDays }),
-                badgeText: _t('badge_days_left', { days: diffDays }),
-                targetUrl: 'modules/consulting/consulting_tenders_management.html',
-                isRead: !!readMap['tender_warning_' + tenderId]
-              });
-            }
+          if (diffDays < 0 && diffDays >= -30) {
+            notifs.push({
+              id: 'tender_overdue_' + tenderId,
+              category: 'tenders',
+              level: 'danger',
+              icon: 'fas fa-exclamation-circle',
+              title: _t('tender_overdue_title', { name: tName }),
+              desc: _t('tender_overdue_desc', { date: deadlineFormatted, days: Math.abs(diffDays) }),
+              badgeText: _t('badge_expired'),
+              targetUrl: 'modules/consulting/consulting_tenders_management.html',
+              isRead: !!readMap['tender_overdue_' + tenderId]
+            });
+          } else if (diffDays === 0) {
+            notifs.push({
+              id: 'tender_today_' + tenderId,
+              category: 'tenders',
+              level: 'danger',
+              icon: 'fas fa-stopwatch',
+              title: _t('tender_today_title', { name: tName }),
+              desc: _t('tender_today_desc'),
+              badgeText: _t('badge_today'),
+              targetUrl: 'modules/consulting/consulting_tenders_management.html',
+              isRead: !!readMap['tender_today_' + tenderId]
+            });
+          } else if (diffDays > 0 && diffDays <= 3) {
+            notifs.push({
+              id: 'tender_soon_' + tenderId,
+              category: 'tenders',
+              level: 'danger',
+              icon: 'fas fa-hourglass-half',
+              title: _t('tender_soon_title', { name: tName, days: diffDays }),
+              desc: _t('tender_soon_desc', { date: deadlineFormatted }),
+              badgeText: _t('badge_days_left', { days: diffDays }),
+              targetUrl: 'modules/consulting/consulting_tenders_management.html',
+              isRead: !!readMap['tender_soon_' + tenderId]
+            });
+          } else if (diffDays > 3 && diffDays <= 7) {
+            notifs.push({
+              id: 'tender_warning_' + tenderId,
+              category: 'tenders',
+              level: 'warning',
+              icon: 'fas fa-clock',
+              title: _t('tender_warning_title', { name: tName }),
+              desc: _t('tender_warning_desc', { date: deadlineFormatted, days: diffDays }),
+              badgeText: _t('badge_days_left', { days: diffDays }),
+              targetUrl: 'modules/consulting/consulting_tenders_management.html',
+              isRead: !!readMap['tender_warning_' + tenderId]
+            });
+          } else if (diffDays > 7 && diffDays <= 15) {
+            notifs.push({
+              id: 'tender_upcoming_' + tenderId,
+              category: 'tenders',
+              level: 'info',
+              icon: 'fas fa-file-contract',
+              title: _t('tender_upcoming_title', { name: tName }),
+              desc: _t('tender_upcoming_desc', { date: deadlineFormatted, days: diffDays }),
+              badgeText: _t('badge_days_left', { days: diffDays }),
+              targetUrl: 'modules/consulting/consulting_tenders_management.html',
+              isRead: !!readMap['tender_upcoming_' + tenderId]
+            });
           }
         }
 
@@ -961,35 +1241,126 @@
           if (!c) return;
           var cStatus = String(c.status || 'active').toLowerCase();
           if (cStatus === 'released' || cStatus === 'restituted' || cStatus === 'مسترجعة' || cStatus === 'محررة') return;
-          var cExpiryStr = c.expiryDate || c.validityDate || c.date;
-          if (!cExpiryStr) return;
-          var cExpiry = new Date(cExpiryStr);
-          if (isNaN(cExpiry.getTime())) return;
+          var cExpiry = parseSafeDate(c.expiryDate || c.validityDate || c.date);
+          if (!cExpiry) return;
           cExpiry.setHours(0, 0, 0, 0);
           var cDiff = Math.ceil((cExpiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
-          if (cDiff <= 15) {
+          if (cDiff <= 30) {
             var cId = 'caution_' + tenderId + '_' + (c.id || cIdx);
-            var isCrit = cDiff <= 3;
+            var isCrit = cDiff <= 7;
+            var cTitle = _t('caution_title', { type: c.type || _t('default_caution_type'), bank: c.bank || _t('default_bank') });
+            var cDesc = '';
+            var cBadge = '';
+
+            if (cDiff <= 0) {
+              cDesc = _t('caution_expired_desc', { name: tName });
+              cBadge = _t('badge_expired');
+            } else if (cDiff <= 7) {
+              cDesc = _t('caution_soon_desc', { days: cDiff, name: tName });
+              cBadge = _t('badge_days_left', { days: cDiff });
+            } else {
+              cDesc = _t('caution_warning_desc', { days: cDiff, name: tName });
+              cBadge = _t('badge_days_left', { days: cDiff });
+            }
+
             notifs.push({
               id: cId,
               category: 'tenders',
               level: isCrit ? 'danger' : 'warning',
               icon: 'fas fa-university',
-              title: _t('caution_title', { type: c.type || _t('default_caution_type'), bank: c.bank || _t('default_bank') }),
-              desc: (cDiff <= 0 ? _t('caution_expired_desc', { name: tName }) : _t('caution_soon_desc', { days: cDiff, name: tName })),
-              badgeText: cDiff <= 0 ? _t('badge_expired') : _t('badge_days_left', { days: cDiff }),
+              title: cTitle,
+              desc: cDesc,
+              badgeText: cBadge,
               targetUrl: 'modules/consulting/consulting_tenders_management.html',
               isRead: !!readMap[cId]
             });
           }
         });
       });
+
+      // Consultations check
+      var consultList = getStoredList('consultations-data');
+      consultList.forEach(function (cs, cidx) {
+        if (!cs) return;
+        var cDate = parseSafeDate(cs.date);
+        if (!cDate) return;
+        cDate.setHours(0, 0, 0, 0);
+        var cDiff = Math.ceil((cDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        if (cDiff >= 0 && cDiff <= 5 && String(cs.status || '').toLowerCase() !== 'completed') {
+          var csId = 'consult_' + (cs.id || cidx);
+          notifs.push({
+            id: csId,
+            category: 'tenders',
+            level: 'info',
+            icon: 'fas fa-user-tie',
+            title: _t('consult_reminder_title', { subject: cs.subject || _t('default_tender') }),
+            desc: _t('consult_reminder_desc', { client: cs.client || _t('default_client'), date: cDate.toLocaleDateString() }),
+            badgeText: _t('badge_days_left', { days: cDiff }),
+            targetUrl: 'modules/consulting/consulting_tenders_management.html',
+            isRead: !!readMap[csId]
+          });
+        }
+      });
     } catch (e1) {
       console.warn('[notifications] Error checking tenders:', e1);
     }
 
-    // ── 2. Inventory (المخزون) ──
+    // ── 2. Algerian Tender DZ Portal Opportunities (فرص تندر الجزائر) ──
+    try {
+      var rawPortal = (typeof localStorage !== 'undefined' ? localStorage.getItem('tender-dz-portal-tenders') : null);
+      var dzTenders = safeJSON(rawPortal, []);
+      if (!Array.isArray(dzTenders) || dzTenders.length < 3) {
+        dzTenders = (window.SAMPLE_DZ_TENDERS && window.SAMPLE_DZ_TENDERS.length)
+          ? window.SAMPLE_DZ_TENDERS
+          : getSeedPortalOpportunities();
+        try {
+          localStorage.setItem('tender-dz-portal-tenders', JSON.stringify(dzTenders));
+        } catch (_) {}
+      }
+
+      if (Array.isArray(dzTenders)) {
+        dzTenders.slice(0, 20).forEach(function (dz, idx) {
+          if (!dz) return;
+          var dlDate = parseSafeDate(dz.deadline);
+          var daysLeft = 0;
+          if (dlDate) {
+            dlDate.setHours(0, 0, 0, 0);
+            daysLeft = Math.ceil((dlDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+          } else if (typeof dz.daysLeft === 'number') {
+            daysLeft = dz.daysLeft;
+          }
+
+          if (daysLeft >= 0 && daysLeft <= 15) {
+            var dzId = 'dz_portal_' + (dz.id || idx);
+            var rawTitle = dz.title || _t('default_dz_title');
+            var dzName = rawTitle.length > 52 ? (rawTitle.slice(0, 52) + '...') : rawTitle;
+            var isUrgent = daysLeft <= 3;
+            var isWarning = daysLeft <= 7;
+
+            notifs.push({
+              id: dzId,
+              category: 'portal',
+              level: isUrgent ? 'danger' : (isWarning ? 'warning' : 'info'),
+              icon: isUrgent ? 'fas fa-fire' : (isWarning ? 'fas fa-clock' : 'fas fa-bullhorn'),
+              title: _t('dz_portal_title', { title: dzName }),
+              desc: _t('dz_portal_desc', {
+                client: dz.authority || dz.client || _t('default_dz_client'),
+                wilaya: dz.wilayaName || dz.wilaya || _t('default_dz_wilaya'),
+                days: daysLeft
+              }),
+              badgeText: daysLeft === 0 ? _t('badge_today') : _t('badge_dz_portal', { days: daysLeft }),
+              targetUrl: 'modules/consulting/tender_dz_portal.html',
+              isRead: !!readMap[dzId]
+            });
+          }
+        });
+      }
+    } catch (e4) {
+      console.warn('[notifications] Error checking Tender DZ:', e4);
+    }
+
+    // ── 3. Inventory (المخزون) ──
     try {
       var productsList = getStoredList('products-data');
       productsList.forEach(function (p, idx) {
@@ -1031,71 +1402,62 @@
       console.warn('[notifications] Error checking products:', e2);
     }
 
-    // ── 3. Overdue Invoices (الفواتير غير المسددة) ──
+    // ── 4. Overdue Invoices (الفواتير غير المسددة) ──
     try {
       var invoicesList = getStoredList('invoices-data');
       invoicesList.forEach(function (inv, idx) {
         if (!inv) return;
         var invId = inv.id || ('inv_' + idx);
         var invNum = inv.number || inv.invoiceNumber || inv.id || ('#' + invId);
-        var clientName = (inv.customer && inv.customer.name) || inv.client || inv.customer || inv.clientName || _t('default_client');
-        var status = String(inv.status || 'Unpaid').toLowerCase();
-        var isPaid = ['paid', 'مدفوعة', 'payée', 'annulée', 'cancelled'].indexOf(status) !== -1;
+        var status = String(inv.status || 'unpaid').toLowerCase();
 
-        if (!isPaid && inv.dueDate) {
-          var due = new Date(inv.dueDate);
-          if (!isNaN(due.getTime())) {
-            due.setHours(0, 0, 0, 0);
-            var invDiff = Math.ceil((today.getTime() - due.getTime()) / (1000 * 60 * 60 * 24));
-            if (invDiff > 0) {
-              var nId3 = 'inv_overdue_' + invId;
-              var locale = lang === 'ar' ? 'ar-DZ' : (lang === 'fr' ? 'fr-FR' : 'en-US');
-              var totalStr = inv.total ? _t('invoice_amount_label', { amount: Number(inv.total).toLocaleString(locale) }) : '';
-              notifs.push({
-                id: nId3,
-                category: 'invoices',
-                level: 'danger',
-                icon: 'fas fa-file-invoice-dollar',
-                title: _t('invoice_overdue_title', { number: invNum, client: clientName }),
-                desc: _t('invoice_overdue_desc', { days: invDiff, date: inv.dueDate, amount: totalStr }),
-                badgeText: _t('badge_overdue_days', { days: invDiff }),
-                targetUrl: 'modules/sales/sales_management.html',
-                isRead: !!readMap[nId3]
-              });
-            }
-          }
+        // Skip fully paid or cancelled
+        if (status === 'paid' || status === 'مسددة' || status === 'payée' || status === 'cancelled' || status === 'ملغاة') return;
+
+        var due = parseSafeDate(inv.dueDate || inv.date);
+        if (!due) return;
+        due.setHours(0, 0, 0, 0);
+        var diff = Math.ceil((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        var remainingAmount = Number(inv.balanceDue || inv.remainingAmount || inv.total || inv.totalTTC || 0);
+
+        if (diff < 0) {
+          var overdueDays = Math.abs(diff);
+          var invNId = 'inv_overdue_' + invId;
+          notifs.push({
+            id: invNId,
+            category: 'invoices',
+            level: 'danger',
+            icon: 'fas fa-file-invoice-dollar',
+            title: _t('inv_overdue_title', { number: invNum }),
+            desc: _t('inv_overdue_desc', {
+              client: inv.client || inv.customerName || _t('default_client'),
+              amount: remainingAmount.toLocaleString(),
+              days: overdueDays
+            }),
+            badgeText: _t('time_days_ago', { days: overdueDays }),
+            targetUrl: 'modules/sales/sales_management.html',
+            isRead: !!readMap[invNId]
+          });
+        } else if (diff === 0) {
+          var invNId2 = 'inv_today_' + invId;
+          notifs.push({
+            id: invNId2,
+            category: 'invoices',
+            level: 'warning',
+            icon: 'fas fa-calendar-day',
+            title: _t('inv_today_title', { number: invNum }),
+            desc: _t('inv_today_desc', {
+              client: inv.client || inv.customerName || _t('default_client'),
+              amount: remainingAmount.toLocaleString()
+            }),
+            badgeText: _t('badge_due_today'),
+            targetUrl: 'modules/sales/sales_management.html',
+            isRead: !!readMap[invNId2]
+          });
         }
       });
     } catch (e3) {
       console.warn('[notifications] Error checking invoices:', e3);
-    }
-
-    // ── 4. Algerian Tender DZ Portal Opportunities ──
-    try {
-      var dzTenders = safeJSON(localStorage.getItem('tender-dz-portal-tenders'), []);
-      if (Array.isArray(dzTenders)) {
-        dzTenders.slice(0, 15).forEach(function (dz, idx) {
-          if (!dz) return;
-          var daysLeft = Number(dz.daysLeft || 0);
-          if (daysLeft > 0 && daysLeft <= 3) {
-            var dzId = 'dz_portal_' + (dz.id || idx);
-            var dzName = (dz.title || _t('default_dz_title')).slice(0, 48) + '...';
-            notifs.push({
-              id: dzId,
-              category: 'portal',
-              level: 'info',
-              icon: 'fas fa-bullhorn',
-              title: _t('dz_portal_title', { name: dzName }),
-              desc: _t('dz_portal_desc', { client: dz.client || _t('default_dz_client'), wilaya: dz.wilaya || _t('default_dz_wilaya'), days: daysLeft }),
-              badgeText: _t('badge_dz_portal', { days: daysLeft }),
-              targetUrl: 'modules/consulting/tender_dz_portal.html',
-              isRead: !!readMap[dzId]
-            });
-          }
-        });
-      }
-    } catch (e4) {
-      console.warn('[notifications] Error checking Tender DZ:', e4);
     }
 
     // Sort: unread first, then danger, then warning, then info
@@ -1131,7 +1493,6 @@
     // Update button tooltip according to active language
     var btn = document.getElementById('headerNotificationsBtn');
     if (btn) {
-      var lang = getAppLang();
       var baseTitle = _t('center_title');
       btn.setAttribute('title', unreadCount > 0 ? (baseTitle + ' (' + unreadCount + ')') : baseTitle);
     }
@@ -1152,6 +1513,7 @@
     var isAr = lang === 'ar';
     dropdown.setAttribute('dir', isAr ? 'rtl' : 'ltr');
     dropdown.setAttribute('lang', lang);
+    dropdown.setAttribute('aria-label', _t('center_title'));
 
     var unreadCount = currentNotifications.filter(function (n) { return !n.isRead; }).length;
     var filtered = currentNotifications.filter(function (n) {
@@ -1173,17 +1535,17 @@
         <div class="notif-header-title">
           <i class="fas fa-bell" style="color:#f59e0b;"></i>
           <span>${_t('center_title')}</span>
-          <span class="notif-header-badge">${_t('new_badge', { count: unreadCount })}</span>
+          ${unreadCount > 0 ? `<span class="notif-header-badge">${_t('new_badge', { count: unreadCount })}</span>` : ''}
         </div>
         <div class="notif-header-actions">
-          <button class="notif-action-btn" type="button" onclick="window.ZeraldaNotifications.markAllRead()" title="${_t('mark_all_read')}">
+          <button class="notif-action-btn" type="button" title="${soundEnabled ? _t('mute_sound') : _t('unmute_sound')}" onclick="window.ZeraldaNotifications.toggleSound()">
+            <i class="fas ${soundEnabled ? 'fa-volume-up' : 'fa-volume-mute'}"></i>
+          </button>
+          <button class="notif-action-btn" type="button" title="${_t('mark_all_read')}" onclick="window.ZeraldaNotifications.markAllRead()">
             <i class="fas fa-check-double"></i>
             <span>${_t('mark_all')}</span>
           </button>
-          <button class="notif-action-btn" type="button" onclick="window.ZeraldaNotifications.toggleSound()" title="${soundEnabled ? _t('mute_sound') : _t('unmute_sound')}">
-            <i class="fas ${soundEnabled ? 'fa-volume-up' : 'fa-volume-mute'}" style="color:${soundEnabled ? '#10b981' : '#94a3b8'};"></i>
-          </button>
-          <button class="notif-action-btn" type="button" onclick="window.ZeraldaNotifications.refresh()" title="${_t('refresh')}">
+          <button class="notif-action-btn" type="button" title="${_t('refresh')}" onclick="window.ZeraldaNotifications.refresh(true)">
             <i class="fas fa-sync-alt"></i>
           </button>
         </div>
@@ -1192,6 +1554,7 @@
       <!-- Filter Tabs -->
       <div class="notif-filter-tabs">
         <button class="notif-filter-tab ${activeFilter === 'all' ? 'active' : ''}" type="button" onclick="window.ZeraldaNotifications.setFilter('all')">
+          <i class="fas fa-layer-group"></i>
           <span>${_t('tab_all')}</span>
           <span>(${countAll})</span>
         </button>
@@ -1199,6 +1562,11 @@
           <i class="fas fa-file-contract"></i>
           <span>${_t('tab_tenders')}</span>
           <span>(${countTenders})</span>
+        </button>
+        <button class="notif-filter-tab ${activeFilter === 'portal' ? 'active' : ''}" type="button" onclick="window.ZeraldaNotifications.setFilter('portal')">
+          <i class="fas fa-bullhorn"></i>
+          <span>${_t('tab_portal')}</span>
+          <span>(${countPortal})</span>
         </button>
         <button class="notif-filter-tab ${activeFilter === 'stock' ? 'active' : ''}" type="button" onclick="window.ZeraldaNotifications.setFilter('stock')">
           <i class="fas fa-boxes"></i>
@@ -1210,41 +1578,38 @@
           <span>${_t('tab_invoices')}</span>
           <span>(${countInvoices})</span>
         </button>
-        <button class="notif-filter-tab ${activeFilter === 'portal' ? 'active' : ''}" type="button" onclick="window.ZeraldaNotifications.setFilter('portal')">
-          <i class="fas fa-bullhorn"></i>
-          <span>${_t('tab_portal')}</span>
-          <span>(${countPortal})</span>
-        </button>
       </div>
 
-      <!-- Notifications List -->
+      <!-- Notification List -->
       <div class="notif-list-container">
     `;
 
     if (!filtered.length) {
       html += `
         <div class="notif-empty-state">
-          <div style="width:48px;height:48px;border-radius:50%;background:#dcfce7;color:#16a34a;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:4px;">
-            <i class="fas fa-check"></i>
-          </div>
-          <div style="font-weight:700;font-size:13px;color:#0f172a;">${_t('empty_title')}</div>
-          <div style="font-size:11.5px;max-width:280px;line-height:1.4;">${_t('empty_desc')}</div>
+          <i class="fas fa-check-circle" style="font-size:38px; color:#10b981; margin-bottom:8px;"></i>
+          <div style="font-weight:700; font-size:13px; color:#1e293b;">${_t('empty_title')}</div>
+          <div style="font-size:11.5px; max-width:280px; line-height:1.4;">${_t('empty_desc')}</div>
         </div>
       `;
     } else {
-      filtered.forEach(function (item) {
+      filtered.forEach(function (n) {
+        var unreadClass = n.isRead ? '' : 'is-unread';
+        var checkTitle = n.isRead ? _t('mark_as_unread') : _t('mark_as_read');
+        var checkIcon = n.isRead ? 'fa-check' : 'fa-circle';
+
         html += `
-          <div class="notif-item ${item.isRead ? '' : 'is-unread'}" onclick="window.ZeraldaNotifications.handleItemClick('${item.id}', '${item.targetUrl}')">
-            <div class="notif-item-icon ${item.level}">
-              <i class="${item.icon}"></i>
+          <div class="notif-item ${unreadClass}" onclick="window.ZeraldaNotifications.handleItemClick('${n.id}', '${n.targetUrl}')">
+            <div class="notif-item-icon ${n.level}">
+              <i class="${n.icon}"></i>
             </div>
             <div class="notif-item-content">
-              <div class="notif-item-title">${escapeHTML(item.title)}</div>
-              <div class="notif-item-desc">${escapeHTML(item.desc)}</div>
+              <div class="notif-item-title">${escapeHTML(n.title)}</div>
+              <div class="notif-item-desc">${escapeHTML(n.desc)}</div>
               <div class="notif-item-meta">
-                <span class="notif-item-badge ${item.level}">${escapeHTML(item.badgeText || '')}</span>
-                <button class="notif-item-check-btn" type="button" title="${item.isRead ? _t('read') : _t('mark_read')}" onclick="event.stopPropagation(); window.ZeraldaNotifications.toggleItemRead('${item.id}');">
-                  <i class="fas ${item.isRead ? 'fa-check' : 'fa-circle'}" style="${item.isRead ? 'color:#10b981;' : 'color:#94a3b8; font-size:8px;'}"></i>
+                <span class="notif-item-badge ${n.level}">${escapeHTML(n.badgeText)}</span>
+                <button class="notif-item-check-btn" type="button" title="${checkTitle}" onclick="event.stopPropagation(); window.ZeraldaNotifications.toggleItemRead('${n.id}')">
+                  <i class="far ${checkIcon}"></i>
                 </button>
               </div>
             </div>
@@ -1262,7 +1627,11 @@
           <i class="fas fa-file-contract"></i>
           <span>${_t('manage_tenders')}</span>
         </a>
-        <a href="pages/settings.html#notifications">
+        <a href="modules/consulting/tender_dz_portal.html">
+          <i class="fas fa-bullhorn"></i>
+          <span>${_t('tab_portal')}</span>
+        </a>
+        <a href="settings.html#notifications">
           <i class="fas fa-cog"></i>
           <span>${_t('notif_settings')}</span>
         </a>
@@ -1379,16 +1748,19 @@
     if (e.key === 'Escape') closeDropdown();
   });
 
-  // ── Reactive Language and Company Switch Listeners ──
-  document.addEventListener('layoutLanguageChanged', function () {
-    refresh(true);
+  // ── Reactive Event Listeners ──
+  document.addEventListener('layoutLanguageChanged', function () { refresh(true); });
+  window.addEventListener('languageChanged', function () { refresh(true); });
+  window.addEventListener('activeCompanyChanged', function () { refresh(true); });
+  window.addEventListener('tendersUpdated', function () { refresh(true); });
+  window.addEventListener('stockUpdated', function () { refresh(true); });
+  window.addEventListener('invoicesUpdated', function () { refresh(true); });
+  window.addEventListener('storage', function (e) {
+    if (e && e.key && (e.key.indexOf('tender') !== -1 || e.key.indexOf('product') !== -1 || e.key.indexOf('invoice') !== -1)) {
+      refresh(true);
+    }
   });
-  window.addEventListener('languageChanged', function () {
-    refresh(true);
-  });
-  window.addEventListener('activeCompanyChanged', function () {
-    refresh(true);
-  });
+
   if (window.UnifiedI18N && typeof window.UnifiedI18N.onLanguageChange === 'function') {
     try {
       window.UnifiedI18N.onLanguageChange(function () {
@@ -1419,7 +1791,27 @@
     setFilter: setFilter,
     toggleSound: toggleSound,
     playChime: playNotificationChime,
-    t: _t
+    t: _t,
+    notify: function (alertObj) {
+      if (!alertObj) return;
+      currentNotifications.unshift(Object.assign({
+        id: 'custom_' + Date.now(),
+        category: 'tenders',
+        level: 'warning',
+        icon: 'fas fa-bell',
+        title: 'تنبيه نظام',
+        desc: '',
+        badgeText: 'تنبيه',
+        targetUrl: '',
+        isRead: false
+      }, alertObj));
+      updateBadge();
+      var dropdown = document.getElementById('headerNotifDropdown');
+      if (dropdown && dropdown.style.display !== 'none') {
+        renderDropdownContent();
+      }
+      playNotificationChime();
+    }
   };
 
   window.toggleNotificationsDropdown = toggleDropdown;

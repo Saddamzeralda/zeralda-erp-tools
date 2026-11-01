@@ -1524,9 +1524,32 @@
 
     // ── Load & Save Data ──
     function loadData(){
-      try { consultations = JSON.parse(ZS.getItem(scopedKey(CONSULT_KEY)) || '[]'); } catch(e){ consultations = []; }
-      try { tenders = JSON.parse(ZS.getItem(scopedKey(TENDER_KEY)) || '[]'); } catch(e){ tenders = []; }
-      try { requisitions = JSON.parse(ZS.getItem(scopedKey(REQ_KEY)) || '[]'); } catch(e){ requisitions = []; }
+      try { consultations = JSON.parse(ZS.getItem(scopedKey(CONSULT_KEY)) || ZS.getItem(CONSULT_KEY) || '[]'); } catch(e){ consultations = []; }
+      try {
+        var rawTenders = ZS.getItem(scopedKey(TENDER_KEY)) || ZS.getItem(TENDER_KEY);
+        tenders = JSON.parse(rawTenders || '[]');
+      } catch(e){ tenders = []; }
+
+      // Also merge any tenders imported from Tender DZ portal under consulting-tenders-data
+      try {
+        var extraRaw = ZS.getItem(scopedKey('consulting-tenders-data')) || ZS.getItem('consulting-tenders-data');
+        if (extraRaw) {
+          var extraList = JSON.parse(extraRaw);
+          if (Array.isArray(extraList) && extraList.length) {
+            var refMap = {};
+            tenders.forEach(function(t){ if(t && (t.id || t.reference)) refMap[String(t.id || t.reference)] = true; });
+            extraList.forEach(function(et){
+              var k = String(et && (et.id || et.reference) || '');
+              if(k && !refMap[k]){
+                tenders.push(et);
+                refMap[k] = true;
+              }
+            });
+          }
+        }
+      } catch(e){}
+
+      try { requisitions = JSON.parse(ZS.getItem(scopedKey(REQ_KEY)) || ZS.getItem(REQ_KEY) || '[]'); } catch(e){ requisitions = []; }
       if(!Array.isArray(consultations)) consultations = [];
       if(!Array.isArray(tenders)) tenders = [];
       if(!Array.isArray(requisitions)) requisitions = [];
@@ -1552,9 +1575,19 @@
     window.loadData = loadData;
 
     function saveData(){
+      var jsonTenders = JSON.stringify(tenders);
+      ZS.setItem(scopedKey(TENDER_KEY), jsonTenders);
+      ZS.setItem(TENDER_KEY, jsonTenders);
+      ZS.setItem(scopedKey('consulting-tenders-data'), jsonTenders);
+      ZS.setItem('consulting-tenders-data', jsonTenders);
       ZS.setItem(scopedKey(CONSULT_KEY), JSON.stringify(consultations));
-      ZS.setItem(scopedKey(TENDER_KEY), JSON.stringify(tenders));
       ZS.setItem(scopedKey(REQ_KEY), JSON.stringify(requisitions));
+      try {
+        window.dispatchEvent(new CustomEvent('tendersUpdated'));
+      } catch(_) {}
+      if (window.ZeraldaNotifications && typeof window.ZeraldaNotifications.refresh === 'function') {
+        window.ZeraldaNotifications.refresh(true);
+      }
     }
     window.saveData = saveData;
 

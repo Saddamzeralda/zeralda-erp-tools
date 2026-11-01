@@ -8299,6 +8299,7 @@
     const STORAGE_KEY_DZ_TENDERS = 'tender-dz-portal-tenders';
     const STORAGE_KEY_DZ_FAVS = 'tender-dz-portal-favorites';
 
+    window.SAMPLE_DZ_TENDERS = (typeof SAMPLE_DZ_TENDERS !== "undefined") ? SAMPLE_DZ_TENDERS : [];
     let allDzTenders = [];
     let favoriteIds = [];
     let activePortalTab = 'all'; // 'all' | 'attributions' | 'prorogations' | 'favorites'
@@ -9132,13 +9133,25 @@
 
       erpTenders.unshift(newErpTender);
 
-      // Save to ZS and LocalStorage
+      // Save to ZS and LocalStorage across all standard ERP tender keys
+      const scopedTendersKey = 'tenders-data::' + cid;
+      const tendersJSON = JSON.stringify(erpTenders);
       if(window.ZS && typeof window.ZS.setItem === 'function'){
-        window.ZS.setItem(storageKey, JSON.stringify(erpTenders));
-        window.ZS.setItem('consulting-tenders-data', JSON.stringify(erpTenders));
+        window.ZS.setItem(storageKey, tendersJSON);
+        window.ZS.setItem('consulting-tenders-data', tendersJSON);
+        window.ZS.setItem(scopedTendersKey, tendersJSON);
+        window.ZS.setItem('tenders-data', tendersJSON);
       } else {
-        localStorage.setItem(storageKey, JSON.stringify(erpTenders));
-        localStorage.setItem('consulting-tenders-data', JSON.stringify(erpTenders));
+        localStorage.setItem(storageKey, tendersJSON);
+        localStorage.setItem('consulting-tenders-data', tendersJSON);
+        localStorage.setItem(scopedTendersKey, tendersJSON);
+        localStorage.setItem('tenders-data', tendersJSON);
+      }
+      try {
+        window.dispatchEvent(new CustomEvent('tendersUpdated'));
+      } catch(_) {}
+      if (window.ZeraldaNotifications && typeof window.ZeraldaNotifications.refresh === 'function') {
+        window.ZeraldaNotifications.refresh(true);
       }
 
       const importMsg = (getLang() === 'ar')
