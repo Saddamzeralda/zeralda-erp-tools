@@ -3230,16 +3230,79 @@ function applyActiveUserFromSettings(){
   }
 }
 
-function getActiveCompanyFromSettings(){
+function getActiveCompanyFromSettings(targetCompanyId){
   try {
-    const raw = ZS.getItem("zeralda-settings");
-    if(!raw) return null;
-    const settings = JSON.parse(raw);
-    const companies = settings && Array.isArray(settings.companies) ? settings.companies : [];
-    const activeId = settings && settings.activeCompanyId ? settings.activeCompanyId : null;
-    if(companies.length){
-      const found = companies.find(c => c.id === activeId) || companies[0];
-      if(found){
+    // 1. Determine active company ID (explicit target has priority)
+    var activeId = targetCompanyId || null;
+
+    if (!activeId) {
+      if (typeof window.CompanyStorage !== 'undefined' && typeof window.CompanyStorage.getActiveCompanyId === 'function') {
+        try { activeId = window.CompanyStorage.getActiveCompanyId(); } catch(_) {}
+      }
+    }
+    if (!activeId && typeof window.ZS !== 'undefined' && typeof window.ZS.getItem === 'function') {
+      try {
+        var ac = window.ZS.getItem('zeralda-active-company');
+        if (ac) {
+          try { activeId = JSON.parse(ac).id || String(ac); } catch(_) { activeId = String(ac); }
+        }
+      } catch(_) {}
+    }
+    if (!activeId && typeof localStorage !== 'undefined') {
+      try {
+        var acLoc = localStorage.getItem('zeralda_last_active_company') || localStorage.getItem('zeralda-active-company');
+        if (acLoc) {
+          try { activeId = JSON.parse(acLoc).id || String(acLoc); } catch(_) { activeId = String(acLoc); }
+        }
+      } catch(_) {}
+    }
+
+    // 2. Retrieve companies list from all available sources
+    var companies = [];
+    if (typeof window.CompanyStorage !== 'undefined' && typeof window.CompanyStorage.getCompanies === 'function') {
+      try {
+        var csList = window.CompanyStorage.getCompanies();
+        if (Array.isArray(csList) && csList.length) companies = csList;
+      } catch(_) {}
+    }
+
+    var settings = null;
+    try {
+      var raw = (typeof window.ZS !== 'undefined' && typeof window.ZS.getItem === 'function')
+        ? window.ZS.getItem("zeralda-settings")
+        : (typeof localStorage !== 'undefined' ? localStorage.getItem("zeralda-settings") : null);
+      if (raw) settings = typeof raw === 'string' ? JSON.parse(raw) : raw;
+      if ((!companies || !companies.length) && settings && Array.isArray(settings.companies) && settings.companies.length) {
+        companies = settings.companies;
+      }
+      if (!activeId && settings && settings.activeCompanyId) {
+        activeId = settings.activeCompanyId;
+      }
+    } catch(_) {}
+
+    if (!companies || !companies.length) {
+      try {
+        var legRaw = (typeof window.ZS !== 'undefined' && typeof window.ZS.getItem === 'function')
+          ? window.ZS.getItem("zeralda-companies")
+          : (typeof localStorage !== 'undefined' ? localStorage.getItem("zeralda-companies") : null);
+        if (legRaw) {
+          var leg = typeof legRaw === 'string' ? JSON.parse(legRaw) : legRaw;
+          if (Array.isArray(leg) && leg.length) companies = leg;
+        }
+      } catch(_) {}
+    }
+
+    // 3. Find matching company by ID
+    if (companies && companies.length) {
+      var found = null;
+      if (activeId) {
+        found = companies.find(function(c){ return c && String(c.id) === String(activeId); });
+      }
+      // If no targetCompanyId was explicitly requested and activeId didn't match, fallback to first company
+      if (!found && !targetCompanyId) {
+        found = companies[0];
+      }
+      if (found) {
         return {
           ...found,
           bp: found.bp || found.companyBP || found.boitePostale || '',
@@ -3248,8 +3311,10 @@ function getActiveCompanyFromSettings(){
       }
       return null;
     }
-    if(settings && settings.company){
-      const old = settings.company;
+
+    // 4. Fallback: single company legacy settings
+    if (settings && settings.company) {
+      var old = settings.company;
       return {
         name: old.name || old.companyName || "Company",
         address: old.address || "",
@@ -3274,6 +3339,8 @@ function getActiveCompanyFromSettings(){
     return null;
   }
 }
+window.getActiveCompanyFromSettings = getActiveCompanyFromSettings;
+window.getActiveCompanyProfile = function(cid) { return getActiveCompanyFromSettings(cid); };
 
 function buildCompanyInfoHTML(){
   const c = getActiveCompanyFromSettings();
@@ -5973,7 +6040,7 @@ function numLtr(numStr){
   return '<bdi dir="ltr" style="unicode-bidi:isolate;display:inline-block;white-space:nowrap;">' + escapeHTML(String(numStr)) + '</bdi>';
 }
 function buildFactureHTML(opts){
-  var doc = opts.doc;
+  var doc = opts.doc || {};
   var type = opts.type || 'invoice';
   var t = opts.t || {};
   var c = opts.currency || 'DA';
@@ -5982,7 +6049,8 @@ function buildFactureHTML(opts){
   var amountWords = opts.amountWords || '';
   var showDate = opts.showDate !== false;
 
-  var company = (typeof getActiveCompanyFromSettings === 'function') ? (getActiveCompanyFromSettings() || {}) : {};
+  var targetCompanyId = (opts.company && opts.company.id) || (doc && (doc.companyId || (doc.company && doc.company.id))) || null;
+  var company = opts.company || ((typeof getActiveCompanyFromSettings === 'function') ? (getActiveCompanyFromSettings(targetCompanyId) || {}) : {});
   var customer = doc.customer || {};
   var items = doc.items || [];
   var subtotal = Number(doc.subtotal || 0);
@@ -6451,6 +6519,92 @@ async function generateInvoicePdfBlob(invoiceId) {
     return null;
   }
 }
+
+// Generate proforma PDF as a Blob (for WhatsApp sharing)
+async function generateProformaPdfBlob(proformaId) {
+  if (!window.html2canvas || !window.jspdf || !window.jspdf.jsPDF) {
+    return null;
+  }
+
+  const prof = proformasData.find(p => p.id === proformaId);
+  if (!prof) return null;
+
+  const c = getCurrencySymbol();
+  const lang = getPreviewLang();
+  const t = translations[lang] || translations.en;
+  const sellerName = typeof getActiveUserName === 'function' ? String(getActiveUserName() || '') : '';
+  const amountWords = getAmountWordsSafe(prof.total || 0, lang);
+
+  const html = buildFactureHTML({
+    doc: prof, type: 'proforma', t: t, currency: c, lang: lang,
+    sellerName: sellerName, amountWords: amountWords,
+    showDate: true
+  });
+
+  let host = document.createElement('div');
+  host.style.position = 'fixed';
+  host.style.top = '0';
+  host.style.left = '0';
+  host.style.width = '794px';
+  host.style.background = '#ffffff';
+  host.style.zIndex = '-9999';
+  host.style.opacity = '1';
+  host.style.pointerEvents = 'none';
+  host.innerHTML = html;
+  document.body.appendChild(host);
+
+  try {
+    await new Promise(r => setTimeout(r, 60));
+    const canvas = await html2canvas(host, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#ffffff',
+      logging: false,
+      width: 794,
+      windowWidth: 794
+    });
+
+    if (host && host.parentNode) host.parentNode.removeChild(host);
+    host = null;
+
+    const jsPDF = window.jspdf.jsPDF;
+    const doc = new jsPDF('p', 'mm', 'a4');
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+    const margin = 8;
+    const contentW = pageW - (margin * 2);
+    const contentH = pageH - (margin * 2);
+
+    const scale = contentW / canvas.width;
+    const fullImgH = canvas.height * scale;
+    const imgData = canvas.toDataURL('image/png', 0.95);
+
+    if (fullImgH <= contentH) {
+      doc.addImage(imgData, 'PNG', margin, margin, contentW, fullImgH, undefined, 'FAST');
+    } else {
+      const totalPages = Math.ceil(fullImgH / contentH);
+      for (let i = 0; i < totalPages; i++) {
+        if (i > 0) doc.addPage();
+        const sliceH = Math.min(canvas.height - (i * (contentH / scale)), contentH / scale);
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = canvas.width;
+        tempCanvas.height = sliceH;
+        const tempCtx = tempCanvas.getContext('2d');
+        tempCtx.drawImage(canvas, 0, i * (contentH / scale), canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+        doc.addImage(tempCanvas.toDataURL('image/png', 0.95), 'PNG', margin, margin, contentW, sliceH * scale, undefined, 'FAST');
+      }
+    }
+
+    return doc.output('blob');
+  } catch(err) {
+    if (host && host.parentNode) host.parentNode.removeChild(host);
+    console.error('generateProformaPdfBlob error:', err);
+    return null;
+  }
+}
+window.generateInvoicePdfBlob = generateInvoicePdfBlob;
+window.generateProformaPdfBlob = generateProformaPdfBlob;
 
 
 var _currentPreviewInvoiceId = null;
@@ -6987,7 +7141,7 @@ function convertProformaToInvoice(){
         }
       }
     } catch(e) {}
-    const inv={id:"INV-"+Date.now(),invoiceNumber:generateInvoiceNumberForDate(new Date().toISOString().split("T")[0]),date:new Date().toISOString().split("T")[0],customer:currentProforma.customer,items:currentProforma.items.map(i=>({ ...i, unit: i.unit || "unit" })),subtotal:currentProforma.subtotal,tax:currentProforma.tax,taxRate:currentProforma.taxRate,stamp:0,stampRate:0,total:currentProforma.total,status:"Pending",paymentMethod:"",payments:[],fromProforma:currentProforma.id,lowStockNotice:hasStockShortage};
+    const inv={id:"INV-"+Date.now(),companyId:currentProforma.companyId || (window.CompanyStorage && window.CompanyStorage.getActiveCompanyId()) || 'default-company',invoiceNumber:generateInvoiceNumberForDate(new Date().toISOString().split("T")[0]),date:new Date().toISOString().split("T")[0],customer:currentProforma.customer,items:currentProforma.items.map(i=>({ ...i, unit: i.unit || "unit" })),subtotal:currentProforma.subtotal,tax:currentProforma.tax,taxRate:currentProforma.taxRate,stamp:0,stampRate:0,total:currentProforma.total,status:"Pending",paymentMethod:"",payments:[],fromProforma:currentProforma.id,lowStockNotice:hasStockShortage};
     invoicesData.push(inv);
     if (window.DataGuard && typeof window.DataGuard.protectBeforeSave === 'function') {
       try { window.DataGuard.protectBeforeSave('proforma-convert'); } catch(e) {}
@@ -7430,6 +7584,7 @@ window.addEventListener("load", function(){
         }
         const updated = {
           id: editingInvoiceId,
+          companyId: (invoicesData[idx] && invoicesData[idx].companyId) || (window.CompanyStorage && window.CompanyStorage.getActiveCompanyId()) || 'default-company',
           invoiceNumber: invoiceNumVal,
           isBis: isBisDoc,
           bisSuffix: isBisDoc ? docSuffix : "",
@@ -7502,7 +7657,7 @@ window.addEventListener("load", function(){
         } else {
           invoiceNumVal = invoiceNumVal.replace(/(?:[\s\-_/]+)(?:Bis|Ter|Quater|[A-Za-z]+)$/i, "").trim();
         }
-        const inv = { id:"INV-"+Date.now(), invoiceNumber: invoiceNumVal, isBis: isBisDoc, bisSuffix: isBisDoc ? docSuffix : "", date:document.getElementById("invoiceDate").value, customer:cu, items:invoiceItemsArray.map(i=>({description:i.description,quantity:i.quantity,price:i.price,total:i.total,productId:i.productId,unit:i.unit||"unit",fp:i.fp||""})), subtotal:st, tax:tx, taxRate:taxRate, stamp:stamp, stampRate:stampRate, total:tt, status:initialStatus, paymentMethod:paymentMethod, paid:initialPaid, payments:[], lowStockNotice:hasStockShortageOnSave };
+        const inv = { id:"INV-"+Date.now(), companyId: (window.CompanyStorage && window.CompanyStorage.getActiveCompanyId()) || 'default-company', invoiceNumber: invoiceNumVal, isBis: isBisDoc, bisSuffix: isBisDoc ? docSuffix : "", date:document.getElementById("invoiceDate").value, customer:cu, items:invoiceItemsArray.map(i=>({description:i.description,quantity:i.quantity,price:i.price,total:i.total,productId:i.productId,unit:i.unit||"unit",fp:i.fp||""})), subtotal:st, tax:tx, taxRate:taxRate, stamp:stamp, stampRate:stampRate, total:tt, status:initialStatus, paymentMethod:paymentMethod, paid:initialPaid, payments:[], lowStockNotice:hasStockShortageOnSave };
         invoicesData.push(inv);
         if (window.DataGuard && typeof window.DataGuard.protectBeforeSave === 'function') {
           try { window.DataGuard.protectBeforeSave('invoice-create'); } catch(e) {}
@@ -7626,6 +7781,7 @@ function showInvoiceNotification(inv){
         const updated = {
           ...proformasData[idx],
           id: editingProformaId,
+          companyId: (proformasData[idx] && proformasData[idx].companyId) || (window.CompanyStorage && window.CompanyStorage.getActiveCompanyId()) || 'default-company',
           proformaNumber: profNumberToSave,
           isBis: isBisDoc,
           bisSuffix: isBisDoc ? docSuffix : "",
@@ -7663,7 +7819,7 @@ function showInvoiceNotification(inv){
         } else {
           profNumberToSave = profNumberToSave.replace(/(?:[\s\-_/]+)(?:Bis|Ter|Quater|[A-Za-z]+)$/i, "").trim();
         }
-        const prof = { id:"PRO-"+Date.now(), proformaNumber: profNumberToSave, isBis: isBisDoc, bisSuffix: isBisDoc ? docSuffix : "", date:document.getElementById("proformaDate").value, customer:cu, items:proformaItemsArray.map(i=>({description:i.description,quantity:i.quantity,price:i.price,total:i.total,productId:i.productId,unit:i.unit||"unit",fp:i.fp||""})), subtotal:st, tax:tx, taxRate:taxRate, total:tt, notes:document.getElementById("proformaNotes").value, status:"Draft" };
+        const prof = { id:"PRO-"+Date.now(), companyId: (window.CompanyStorage && window.CompanyStorage.getActiveCompanyId()) || 'default-company', proformaNumber: profNumberToSave, isBis: isBisDoc, bisSuffix: isBisDoc ? docSuffix : "", date:document.getElementById("proformaDate").value, customer:cu, items:proformaItemsArray.map(i=>({description:i.description,quantity:i.quantity,price:i.price,total:i.total,productId:i.productId,unit:i.unit||"unit",fp:i.fp||""})), subtotal:st, tax:tx, taxRate:taxRate, total:tt, notes:document.getElementById("proformaNotes").value, status:"Draft" };
         proformasData.push(prof);
         ZS.setItem("proformas-data", JSON.stringify(proformasData));
         window.proformasData = proformasData;
@@ -8561,6 +8717,16 @@ window.openQuotationAnalyzerModal = openQuotationAnalyzerModal;
         try { if (typeof loadCustomersTable === 'function') loadCustomersTable(); } catch(err){}
         try { if (typeof syncDraftUI === 'function') { syncDraftUI('invoice'); syncDraftUI('proforma'); } } catch(err){}
       }
+      window.addEventListener('activeCompanyChanged', function (e) {
+        try {
+          if (typeof initSalesScopedData === 'function') initSalesScopedData();
+          if (typeof loadInvoicesTable === 'function') loadInvoicesTable();
+          if (typeof loadProformasTable === 'function') loadProformasTable();
+          if (typeof loadCustomersTable === 'function') loadCustomersTable();
+          if (typeof updateStats === 'function') updateStats();
+          if (typeof buildCompanyInfoHTML === 'function') buildCompanyInfoHTML();
+        } catch(_) {}
+      });
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', bootstrapSalesTables);
       } else {
@@ -8709,7 +8875,8 @@ function renderDeliveryNoteHtml(showPrices) {
   const container = document.getElementById('deliveryNotePreviewArea');
   if (!container || !_currentDeliveryInvoice) return;
   const doc = _currentDeliveryInvoice;
-  const company = typeof getActiveCompanyProfile === 'function' ? getActiveCompanyProfile() : {};
+  const targetCompanyId = (doc && (doc.companyId || (doc.company && doc.company.id))) || null;
+  const company = (typeof getActiveCompanyProfile === 'function' ? getActiveCompanyProfile(targetCompanyId) : null) || (typeof getActiveCompanyFromSettings === 'function' ? getActiveCompanyFromSettings(targetCompanyId) : null) || {};
   const blNumber = 'BL-' + (doc.invoiceNumber || doc.id || '').replace(/^INV-/, '');
 
   let itemsRows = '';

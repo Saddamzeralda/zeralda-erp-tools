@@ -740,6 +740,7 @@
     var today = new Date().toISOString().slice(0, 10);
     var copy = JSON.parse(JSON.stringify(source));
     copy.id = "INV-" + Date.now();
+    copy.companyId = source.companyId || (window.CompanyStorage && window.CompanyStorage.getActiveCompanyId()) || 'default-company';
     copy.invoiceNumber = generateInvoiceNumberForDate(today);
     copy.date = today;
     copy.status = "Pending";
@@ -873,26 +874,21 @@
     // حفظ البيانات السابقة للحماية من فقدان البيانات
     var previousData = Array.isArray(invoicesData) ? invoicesData.slice() : [];
 
-    // دائماً اقرأ من localStorage أولاً للحصول على أحدث البيانات
+    // دائماً اقرأ من التخزين المعزول بالشركة للحصول على أحدث البيانات
     try {
-      var storedInvoices = JSON.parse(ZS.getItem("invoices-data") || "[]");
-      console.log('[Invoices] loadInvoicesTable: localStorage data count:', Array.isArray(storedInvoices) ? storedInvoices.length : 'N/A', 'window.invoicesData count:', (window.invoicesData || []).length);
-      if (Array.isArray(storedInvoices) && storedInvoices.length > 0) {
-        invoicesData = storedInvoices;
-        window.invoicesData = invoicesData;
+      var rawInvoices = ZS.getItem("invoices-data");
+      if (rawInvoices !== null && typeof rawInvoices !== "undefined") {
+        var storedInvoices = JSON.parse(rawInvoices || "[]");
+        console.log('[Invoices] loadInvoicesTable: scoped data count:', Array.isArray(storedInvoices) ? storedInvoices.length : 'N/A');
+        if (Array.isArray(storedInvoices)) {
+          invoicesData = storedInvoices;
+          window.invoicesData = invoicesData;
+        }
+      } else if ((!Array.isArray(invoicesData) || invoicesData.length === 0) && typeof window.invoicesData !== "undefined" && Array.isArray(window.invoicesData)) {
+        invoicesData = window.invoicesData;
       }
     } catch (err) {
       console.error("Error rehydrating invoices data:", err);
-    }
-
-    // إذا كانت localStorage فارغة، استخدم window.invoicesData كاحتياط
-    if ((!Array.isArray(invoicesData) || invoicesData.length === 0) && typeof window.invoicesData !== "undefined" && Array.isArray(window.invoicesData) && window.invoicesData.length > 0) {
-      invoicesData = window.invoicesData;
-    }
-
-    // إذا كانت البيانات لا تزال فارغة، استخدم البيانات السابقة
-    if ((!Array.isArray(invoicesData) || invoicesData.length === 0) && previousData.length > 0) {
-      invoicesData = previousData;
     }
 
     // مزامنة window.invoicesData مع البيانات المحدّثة
