@@ -265,20 +265,23 @@ def sanitize_settings_for_user(settings_val: Any, user: Dict[str, Any]) -> Any:
 @router.get("")
 async def get_store(request: Request, key: Optional[str] = None):
     user = _user_or_raise(request, "read")
+
+    # Fast single-key path: do NOT load or copy the entire 1.35MB store + history
+    if key:
+        active_cid = _extract_active_company(request, user)
+        if not is_key_permitted_for_user(key, user, action="read", active_company_id=active_cid):
+            raise HTTPException(403, detail={"ok": False, "error": "Access denied to requested key", "code": "KEY_ACCESS_DENIED"})
+        val = storage.read_store_value(key)
+        version = storage.get_key_version(key)
+        if key == "zeralda-settings":
+            val = sanitize_settings_for_user(val, user)
+        return {"ok": True, "value": val, "version": version}
+
     with storage._lock:
         store = storage.read_store()
         hist = storage.read_history()
 
     active_cid = _extract_active_company(request, user, store)
-
-    if key:
-        if not is_key_permitted_for_user(key, user, action="read", active_company_id=active_cid):
-            raise HTTPException(403, detail={"ok": False, "error": "Access denied to requested key", "code": "KEY_ACCESS_DENIED"})
-        val = store.get(key)
-        if key == "zeralda-settings":
-            val = sanitize_settings_for_user(val, user)
-        return {"ok": True, "value": val,
-                "version": storage.current_key_version(hist, key)}
 
     # Scoped dump: filter keys according to user role and active company
     filtered_store = {}
@@ -291,7 +294,8 @@ async def get_store(request: Request, key: Optional[str] = None):
             if k == "zeralda-settings":
                 v = sanitize_settings_for_user(v, user)
             filtered_store[k] = v
-            versions[k] = storage.current_key_version(hist, k)
+
+    versions = storage.all_key_versions(filtered_store, hist)
 
     log_structured("INFO", "Storage read", action="store_read",
                    user=user.get("email"), role=user.get("role"),
@@ -373,11 +377,14 @@ async def write_store(request: Request):
     if req.key in LOCAL_SESSION_KEYS or any(req.key.startswith(p + "::") for p in LOCAL_SESSION_KEYS):
         return {"ok": True, "version": 1, "rejected": True, "reason": "Session keys are client-local only"}
 
-    import json
-    try:
-        value_bytes = len(json.dumps(req.value, ensure_ascii=False).encode("utf-8"))
-    except Exception:
-        raise HTTPException(400, detail={"ok": False, "error": "value is not JSON-serializable"})
+    if isinstance(req.value, str):
+        value_bytes = len(req.value.encode("utf-8"))
+    else:
+        import json
+        try:
+            value_bytes = len(json.dumps(req.value, ensure_ascii=False).encode("utf-8"))
+        except Exception:
+            raise HTTPException(400, detail={"ok": False, "error": "value is not JSON-serializable"})
     if value_bytes > storage.MAX_STORE_VALUE_BYTES:
         log_structured("WARNING", "Storage write rejected: value too large",
                        action="store_write", user=user.get("email"), key=req.key,

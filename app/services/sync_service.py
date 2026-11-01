@@ -296,11 +296,10 @@ def reconcile_sync(auth_token: Optional[str] = None) -> Dict[str, Any]:
 def _update_sync_metadata(status: str, ts: int) -> None:
     """Save sync metadata into storage without triggering full business event ripples."""
     try:
-        current = storage.read_store()
-        current[SYNC_STATE_KEY] = {
+        val = {
             "last_sync_ts": ts,
             "last_status": status,
         }
-        storage.write_store(current)
+        storage.write_key(SYNC_STATE_KEY, val)
     except Exception:
         pass
