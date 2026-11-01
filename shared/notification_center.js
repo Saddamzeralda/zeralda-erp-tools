@@ -1141,22 +1141,8 @@
         }
       });
 
-      // If completely empty in company store, provide seed sample tenders
-      if (!tendersList.length) {
-        var seedTenders = getSeedCompanyTenders();
-        var cid = getActiveCompanyId();
-        var seedJSON = JSON.stringify(seedTenders);
-        try {
-          if (window.ZS && typeof window.ZS.setItem === 'function') {
-            window.ZS.setItem('tenders-data::' + cid, seedJSON);
-            window.ZS.setItem('consulting-tenders-data::' + cid, seedJSON);
-          } else {
-            localStorage.setItem('tenders-data::' + cid, seedJSON);
-            localStorage.setItem('consulting-tenders-data::' + cid, seedJSON);
-          }
-        } catch (_) {}
-        tendersList = seedTenders;
-      }
+      // If tendersList is empty, do NOT overwrite the company store.
+      // (Forced writes would cause user edits/deletions to be overwritten on every gather).
 
       tendersList.forEach(function (t, idx) {
         if (!t) return;
