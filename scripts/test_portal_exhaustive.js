@@ -231,6 +231,37 @@ console.log(`Sources counter label for "companies": "${counterEl.textContent}"`)
 global.window.filterSourcesByGroup('all');
 console.log(`Sources counter label for "all": "${counterEl.textContent}"`);
 
+// Test Sources filtered by Wilaya
+console.log('\nTesting filterSourcesByWilaya("16") (Alger)...');
+if (typeof global.window.filterSourcesByWilaya === 'function') {
+  global.window.filterSourcesByWilaya('16');
+  console.log(`Sources counter label for Wilaya 16: "${counterEl.textContent}"`);
+  global.window.filterSourcesByWilaya('');
+}
+
+// Test Tenders Sorting
+console.log('\n--- Testing Tenders Sorting ---');
+const sortSel = mockDocument.getElementById('dzSortSelect');
+if (sortSel) {
+  sortSel.value = 'amount_desc';
+  global.window.filterAndRenderTenders();
+  feedStats = mockDocument.getElementById('dzFeedStats').innerHTML;
+  console.log(`Sorted by amount_desc:\n${feedStats.trim()}`);
+
+  sortSel.value = 'deadline_asc';
+  global.window.filterAndRenderTenders();
+  feedStats = mockDocument.getElementById('dzFeedStats').innerHTML;
+  console.log(`Sorted by deadline_asc:\n${feedStats.trim()}`);
+}
+
+// Test Grouped optgroups in dzFilterSource
+console.log('\n--- Testing Source Optgroups ---');
+const filterSourceSelect = mockDocument.getElementById('dzFilterSource');
+console.log(`dzFilterSource child nodes count: ${filterSourceSelect.children.length}`);
+const optgroups = filterSourceSelect.children.filter(c => c.tagName === 'OPTGROUP');
+console.log(`dzFilterSource optgroups count: ${optgroups.length}`);
+optgroups.forEach(g => console.log(`  Optgroup: ${g.label}`));
+
 console.log('\n=======================================');
 console.log('EXHAUSTIVE TEST COMPLETE: 100% SUCCESS!');
 console.log('=======================================');
