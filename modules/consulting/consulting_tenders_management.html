@@ -361,6 +361,26 @@
     .lettre-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0f172a; padding-bottom: 14px; margin-bottom: 20px; }
     .lettre-stamp-box { border: 2px dashed #94a3b8; border-radius: 8px; padding: 18px 24px; min-height: 110px; min-width: 200px; text-align: center; color: #64748b; font-size: 12px; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; }
 
+    /* Statutory Procurement Suite Tabs & Editor Styles */
+    .procurement-cat-pill {
+      background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 8px; padding: 7px 12px;
+      font-size: 12px; font-weight: 700; color: #475569; cursor: pointer; white-space: nowrap;
+      display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s ease;
+    }
+    .procurement-cat-pill:hover { background: #e2e8f0; color: #1e293b; }
+    .procurement-cat-pill.active { background: #1e40af; border-color: #1e40af; color: white; box-shadow: 0 2px 6px rgba(30,64,175,0.25); }
+
+    .procurement-doc-pill {
+      background: white; border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px 12px;
+      font-size: 11.5px; font-weight: 600; color: #334155; cursor: pointer; display: inline-flex;
+      align-items: center; gap: 6px; transition: all 0.2s ease;
+    }
+    .procurement-doc-pill:hover { border-color: #94a3b8; background: #f8fafc; }
+    .procurement-doc-pill.active { background: #0284c7; border-color: #0284c7; color: white; box-shadow: 0 2px 5px rgba(2,132,199,0.25); }
+
+    .doc-params-box { transition: all 0.25s ease; }
+    .doc-params-box.collapsed { display: none !important; }
+
     /* Print styling */
     @media print {
       body.printing-lettre * { visibility: hidden !important; }
@@ -1296,62 +1316,90 @@
     </div>
   </div>
 
-  <!-- ── Algerian Public Procurement "Lettre de Soumission" Modal ── -->
+  <!-- ── Algerian Public Procurement Statutory Documents Suite (Decree 15-247) Modal ── -->
   <div id="lettreSoumissionModal" class="modal-overlay" aria-hidden="true">
-    <div class="modal-card" role="dialog" aria-modal="true" style="width:min(940px, 96vw);">
-      <div class="modal-header" style="background: linear-gradient(135deg, #1e3a8a, #2563eb); color: white;">
-        <h3 style="color:white;"><i class="fas fa-file-contract"></i> <span data-en="Official Public Procurement Documents (Decree 15-247)" data-ar="وثائق الصفقات العمومية الرسمية (وفق المرسوم الرئاسي 15-247)" data-fr="Documents Officiels des Marchés Publics (Décret 15-247)">وثائق الصفقات العمومية الرسمية (وفق المرسوم الرئاسي 15-247)</span></h3>
-        <button class="close-modal" onclick="closeLettreSoumissionModal()" style="color:white; background:rgba(255,255,255,0.2);"><i class="fas fa-times"></i></button>
+    <div class="modal-card" role="dialog" aria-modal="true" style="width:min(1120px, 98vw); max-height:94vh; display:flex; flex-direction:column;">
+      <div class="modal-header" style="background: linear-gradient(135deg, #0f172a, #1e3a8a, #2563eb); color: white; padding: 14px 20px;">
+        <h3 style="color:white; font-size:16px; margin:0; display:flex; align-items:center; gap:8px;">
+          <i class="fas fa-file-contract" style="color:#60a5fa;"></i>
+          <span data-en="Procurement Documents Suite (Decree 15-247)" data-ar="محرر وثائق وتسيير الصفقات العمومية (المرسوم الرئاسي 15-247)" data-fr="Éditeur des Documents des Marchés Publics (Décret 15-247)">محرر وثائق وتسيير الصفقات العمومية (المرسوم الرئاسي 15-247)</span>
+        </h3>
+        <button class="close-modal" onclick="closeLettreSoumissionModal()" style="color:white; background:rgba(255,255,255,0.15); border-radius:8px; border:none; width:32px; height:32px; cursor:pointer;"><i class="fas fa-times"></i></button>
       </div>
-      <div class="modal-body">
-        <!-- Tender Selector, 4 Statutory Forms & Language Switcher -->
-        <div style="background:#f8fafc; padding:12px 16px; border-radius:12px; margin-bottom:14px; border:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-            <label style="font-weight:700; font-size:12.5px; color:#475569;" data-en="Select Tender:" data-ar="المناقصة المستهدفة:" data-fr="Sélectionner l'AO :">المناقصة المستهدفة:</label>
-            <select id="lettreTenderSelect" class="form-input" style="min-width:240px;" onchange="onLettreTenderChange()"></select>
+
+      <div class="modal-body" style="padding:14px 20px; overflow-y:auto; flex:1;">
+        <!-- Top Control Bar: Tender Selection, Actions, and Language Switcher -->
+        <div style="background:#f8fafc; padding:12px 16px; border-radius:10px; margin-bottom:12px; border:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; flex:1; min-width:280px;">
+            <label style="font-weight:700; font-size:12.5px; color:#475569;" data-en="Target Tender:" data-ar="المناقصة المستهدفة:" data-fr="Marché ciblé :">المناقصة المستهدفة:</label>
+            <select id="lettreTenderSelect" class="form-input" style="flex:1; min-width:220px; max-width:440px;" onchange="onLettreTenderChange()"></select>
           </div>
-          <!-- Language Toggle -->
-          <div class="view-switcher" style="background:#e2e8f0; padding:3px; border-radius:8px;">
-            <button type="button" id="btnLettreLangAr" class="view-btn active" onclick="switchLettreLang('ar')"><i class="fas fa-language"></i> العربية</button>
-            <button type="button" id="btnLettreLangFr" class="view-btn" onclick="switchLettreLang('fr')"><i class="fas fa-globe"></i> Français</button>
+          
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <button type="button" class="btn btn-outline-primary btn-sm" id="btnToggleDocEditor" onclick="toggleDocParamsEditor()" title="إظهار / إخفاء شريط التحرير والتخصيص" style="display:inline-flex; align-items:center; gap:5px; font-weight:600; padding:6px 12px; border-radius:8px;">
+              <i class="fas fa-sliders-h"></i> <span id="lblToggleDocEditor">تخصيص البيانات</span>
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="resetProcurementDocParams()" title="استعادة القيم الافتراضية من المناقصة" style="display:inline-flex; align-items:center; gap:5px; font-weight:600; padding:6px 10px; border-radius:8px;">
+              <i class="fas fa-undo"></i> <span>استعادة الافتراضي</span>
+            </button>
+            <!-- Language Toggle -->
+            <div class="view-switcher" style="background:#e2e8f0; padding:3px; border-radius:8px;">
+              <button type="button" id="btnLettreLangAr" class="view-btn active" onclick="switchLettreLang('ar')"><i class="fas fa-language"></i> العربية</button>
+              <button type="button" id="btnLettreLangFr" class="view-btn" onclick="switchLettreLang('fr')"><i class="fas fa-globe"></i> Français</button>
+            </div>
           </div>
         </div>
 
-        <!-- 4 Standard Decree 15-247 Document Selectors -->
-        <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:8px; margin-bottom:14px;">
-          <button type="button" id="docTabSoumission" class="costing-subtab active" onclick="switchProcurementDoc('lettre_soumission')" style="text-align:center; padding:8px 4px; font-size:12px; display:flex; flex-direction:column; align-items:center; gap:3px;">
-            <i class="fas fa-file-signature text-primary" style="font-size:16px;"></i>
-            <span style="font-weight:700;">رسالة التعهد بالعرض</span>
-            <span style="font-size:10px; color:#64748b;">Lettre de soumission</span>
+        <!-- 5 Procurement Lifecycle Category Tabs -->
+        <div class="procurement-category-tabs" style="display:flex; gap:6px; margin-bottom:10px; overflow-x:auto; padding-bottom:4px; border-bottom:1px solid #e2e8f0;">
+          <button type="button" id="catTabDossier" class="procurement-cat-pill active" onclick="switchProcurementCategory('dossier')" style="padding:7px 12px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; border:1px solid #cbd5e1; background:#f1f5f9; color:#475569; display:inline-flex; align-items:center; gap:6px;">
+            <i class="fas fa-folder-open"></i> <span>ملف الترشح والعرض (4)</span>
           </button>
-          <button type="button" id="docTabSouscrire" class="costing-subtab" onclick="switchProcurementDoc('declaration_souscrire')" style="text-align:center; padding:8px 4px; font-size:12px; display:flex; flex-direction:column; align-items:center; gap:3px;">
-            <i class="fas fa-pen-nib text-warning" style="font-size:16px;"></i>
-            <span style="font-weight:700;">التصريح بالاكتتاب</span>
-            <span style="font-size:10px; color:#64748b;">Déclaration à souscrire</span>
+          <button type="button" id="catTabOds" class="procurement-cat-pill" onclick="switchProcurementCategory('ods')" style="padding:7px 12px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; border:1px solid #cbd5e1; background:#f1f5f9; color:#475569; display:inline-flex; align-items:center; gap:6px;">
+            <i class="fas fa-bolt"></i> <span>أوامر الخدمة ODS (3)</span>
           </button>
-          <button type="button" id="docTabProbite" class="costing-subtab" onclick="switchProcurementDoc('declaration_probite')" style="text-align:center; padding:8px 4px; font-size:12px; display:flex; flex-direction:column; align-items:center; gap:3px;">
-            <i class="fas fa-shield-alt text-success" style="font-size:16px;"></i>
-            <span style="font-weight:700;">التصريح بالنزاهة</span>
-            <span style="font-size:10px; color:#64748b;">Déclaration de probité</span>
+          <button type="button" id="catTabAvenant" class="procurement-cat-pill" onclick="switchProcurementCategory('avenant')" style="padding:7px 12px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; border:1px solid #cbd5e1; background:#f1f5f9; color:#475569; display:inline-flex; align-items:center; gap:6px;">
+            <i class="fas fa-file-signature"></i> <span>الملاحق والتعديلات (3)</span>
           </button>
-          <button type="button" id="docTabCandidature" class="costing-subtab" onclick="switchProcurementDoc('declaration_candidature')" style="text-align:center; padding:8px 4px; font-size:12px; display:flex; flex-direction:column; align-items:center; gap:3px;">
-            <i class="fas fa-id-card text-purple" style="font-size:16px;"></i>
-            <span style="font-weight:700;">التصريح بالترشح</span>
-            <span style="font-size:10px; color:#64748b;">Déclaration candidature</span>
+          <button type="button" id="catTabReception" class="procurement-cat-pill" onclick="switchProcurementCategory('reception')" style="padding:7px 12px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; border:1px solid #cbd5e1; background:#f1f5f9; color:#475569; display:inline-flex; align-items:center; gap:6px;">
+            <i class="fas fa-check-double"></i> <span>الاستلام والتصفية DGD (3)</span>
           </button>
+          <button type="button" id="catTabCaution" class="procurement-cat-pill" onclick="switchProcurementCategory('caution')" style="padding:7px 12px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; border:1px solid #cbd5e1; background:#f1f5f9; color:#475569; display:inline-flex; align-items:center; gap:6px;">
+            <i class="fas fa-shield-alt"></i> <span>الإعذارات والضمانات (2)</span>
+          </button>
+        </div>
+
+        <!-- Sub-Document Selector Pills based on Active Category -->
+        <div id="procurementSubDocsList" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; background:#f1f5f9; padding:8px 10px; border-radius:8px;">
+          <!-- Rendered dynamically by updateSubDocsPills() -->
+        </div>
+
+        <!-- Dynamic Parameter Editor Form Panel (Collapsible) -->
+        <div id="docParamsEditorBox" class="doc-params-box" style="background:#fff; border:1px solid #cbd5e1; border-radius:10px; padding:14px 18px; margin-bottom:14px; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid #f1f5f9;">
+            <div style="font-weight:700; font-size:13px; color:#1e293b; display:flex; align-items:center; gap:6px;">
+              <i class="fas fa-edit text-primary"></i> <span>تحرير وتخصيص بيانات الوثيقة الحالية</span>
+              <span id="docEditingBadge" class="badge" style="background:#dbeafe; color:#1e40af; font-size:11px; padding:2px 8px; border-radius:10px;">رسالة التعهد</span>
+            </div>
+            <div style="font-size:11.5px; color:#64748b;">التعديلات تنعكس فورياً على نموذج المعاينة والطباعة</div>
+          </div>
+          <div id="docParamsFieldsGrid">
+            <!-- Dynamic Form Inputs -->
+          </div>
         </div>
 
         <!-- Printable Document Canvas Sheet -->
-        <div id="lettreDocumentSheet" class="lettre-sheet">
+        <div id="lettreDocumentSheet" class="lettre-sheet" style="background:white; border:1px solid #cbd5e1; border-radius:8px; padding:32px 36px; min-height:450px; max-height:55vh; overflow-y:auto;">
           <!-- Dynamically generated letterhead, legal formula, amounts in letters, signatures -->
         </div>
       </div>
-      <div class="modal-footer" style="display:flex; justify-content:space-between;">
+
+      <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center; padding:12px 20px; background:#f8fafc; border-top:1px solid #e2e8f0;">
         <button class="btn btn-secondary" onclick="closeLettreSoumissionModal()"><i class="fas fa-times"></i> <span data-en="Close" data-ar="إغلاق" data-fr="Fermer">إغلاق</span></button>
         <div style="display:flex; gap:8px;">
           <button class="btn btn-secondary" onclick="copyLettreToClipboard()"><i class="fas fa-copy"></i> <span data-en="Copy Text" data-ar="نسخ النص" data-fr="Copier">نسخ النص</span></button>
           <button class="btn btn-info" onclick="exportLettrePDF()"><i class="fas fa-file-pdf"></i> <span data-en="Export PDF" data-ar="تصدير PDF" data-fr="PDF">تصدير PDF</span></button>
-          <button class="btn btn-primary" onclick="printOfficialLettre()"><i class="fas fa-print"></i> <span data-en="Print Letter" data-ar="طباعة رسمية" data-fr="Imprimer">طباعة رسمية</span></button>
+          <button class="btn btn-primary" onclick="printOfficialLettre()"><i class="fas fa-print"></i> <span data-en="Print Official Sheet" data-ar="طباعة رسمية" data-fr="Imprimer">طباعة رسمية</span></button>
         </div>
       </div>
     </div>
@@ -3736,103 +3784,6 @@
     window.generateLettreFromCosting = generateLettreFromCosting;
 
     // ═════════════════════════════════════════════════════════════════
-    // ── OFFICIAL ALGERIAN "LETTRE DE SOUMISSION" GENERATOR ──
-    // ═════════════════════════════════════════════════════════════════
-    let _activeLettreTenderIdx = 0;
-    let _activeLettreLang = 'ar';
-
-    function openLettreSoumissionModal(tenderIdx){
-      const sel = document.getElementById('lettreTenderSelect');
-      if(sel){
-        sel.innerHTML = '';
-        tenders.forEach((t, i) => {
-          const opt = document.createElement('option');
-          opt.value = i;
-          opt.textContent = (t.reference || 'AO') + ' — ' + (t.title ? t.title.slice(0, 45) : 'Sans titre');
-          sel.appendChild(opt);
-        });
-      }
-
-      if(tenderIdx !== undefined && tenderIdx !== null && Number.isInteger(tenderIdx) && tenderIdx >= 0 && tenderIdx < tenders.length){
-        _activeLettreTenderIdx = tenderIdx;
-        if(sel) sel.value = tenderIdx;
-      } else if(tenders.length > 0){
-        _activeLettreTenderIdx = 0;
-        if(sel) sel.value = 0;
-      }
-
-      _activeLettreLang = getLang() === 'fr' ? 'fr' : 'ar';
-      updateLettreLangButtons();
-      renderLettreDocument();
-      openModal('lettreSoumissionModal');
-    }
-    window.openLettreSoumissionModal = openLettreSoumissionModal;
-
-    function closeLettreSoumissionModal(){
-      closeModal('lettreSoumissionModal');
-    }
-    window.closeLettreSoumissionModal = closeLettreSoumissionModal;
-
-    function onLettreTenderChange(){
-      const sel = document.getElementById('lettreTenderSelect');
-      _activeLettreTenderIdx = sel ? parseInt(sel.value, 10) : 0;
-      renderLettreDocument();
-    }
-    window.onLettreTenderChange = onLettreTenderChange;
-
-    function switchLettreLang(lang){
-      _activeLettreLang = lang;
-      updateLettreLangButtons();
-      renderLettreDocument();
-    }
-    window.switchLettreLang = switchLettreLang;
-
-    function copyLettreToClipboard(){
-      const sheet = document.getElementById('lettreDocumentSheet');
-      const text = sheet ? (sheet.innerText || sheet.textContent || '') : '';
-      if(!text.trim()){
-        if(typeof showToast === 'function') showToast('لا يوجد نص لنسخه.', 'warning');
-        return;
-      }
-      function _fallbackCopy(t){
-        const ta = document.createElement('textarea');
-        ta.value = t;
-        ta.style.position = 'fixed';
-        ta.style.opacity = '0';
-        document.body.appendChild(ta);
-        ta.select();
-        try {
-          document.execCommand('copy');
-          if(typeof showToast === 'function') showToast('تم نسخ نص الرسالة إلى الحافظة بنجاح.', 'success');
-        } catch(e) {
-          if(typeof showToast === 'function') showToast('تعذر النسخ تلقائياً.', 'danger');
-        }
-        document.body.removeChild(ta);
-      }
-      if(navigator.clipboard && navigator.clipboard.writeText){
-        navigator.clipboard.writeText(text).then(() => {
-          if(typeof showToast === 'function') showToast('تم نسخ نص الرسالة إلى الحافظة بنجاح.', 'success');
-        }).catch(() => {
-          _fallbackCopy(text);
-        });
-      } else {
-        _fallbackCopy(text);
-      }
-    }
-    window.copyLettreToClipboard = copyLettreToClipboard;
-
-    function updateLettreLangButtons(){
-      ['btnLettreAr', 'btnLettreFr', 'btnLettreDecl'].forEach(id => {
-        const btn = document.getElementById(id);
-        if(!btn) return;
-        if(id === 'btnLettreAr') btn.classList.toggle('active', _activeLettreLang === 'ar');
-        if(id === 'btnLettreFr') btn.classList.toggle('active', _activeLettreLang === 'fr');
-        if(id === 'btnLettreDecl') btn.classList.toggle('active', _activeLettreLang === 'decl');
-      });
-    }
-
-    
-    // ═════════════════════════════════════════════════════════════════
     // ── FEATURE 1 & 2: DIRECT CONVERSION HUB ENGINE ──
     // ═════════════════════════════════════════════════════════════════
     let _activeConvTarget = 'invoice'; // 'invoice' | 'delivery' | 'po'
@@ -4489,424 +4440,1718 @@
     }
     window.exportBpuCsv = exportBpuCsv;
 
+    
     // ═════════════════════════════════════════════════════════════════
-    // ── FEATURE 5: 4 STATUTORY DECREE 15-247 DOCUMENTS GENERATOR ──
+    // ── FEATURE 5: ALGERIAN PUBLIC PROCUREMENT STATUTORY SUITE (DECREE 15-247) ──
+    // ── 15 Legal Executive Documents: ODS, Avenants, Réceptions, DGD & Offres ──
     // ═════════════════════════════════════════════════════════════════
-    let _activeProcurementDocType = 'lettre_soumission'; // 'lettre_soumission' | 'declaration_souscrire' | 'declaration_probite' | 'declaration_candidature'
 
-    function switchProcurementDoc(docType){
-      _activeProcurementDocType = docType;
-      ['docTabSoumission', 'docTabSouscrire', 'docTabProbite', 'docTabCandidature'].forEach(id => {
+    var _activeProcurementCategory = window._activeProcurementCategory = 'dossier'; // 'dossier' | 'ods' | 'avenant' | 'reception' | 'caution'
+    var _activeProcurementDocType = window._activeProcurementDocType = 'lettre_soumission';
+    var _activeLettreTenderIdx = window._activeLettreTenderIdx = 0;
+    var _activeLettreLang = window._activeLettreLang = 'ar';
+    var _isDocParamsEditorOpen = window._isDocParamsEditorOpen = true;
+
+    // Document Categories Definition
+    var PROCUREMENT_CATEGORIES = window.PROCUREMENT_CATEGORIES = {
+      dossier: {
+        id: 'dossier',
+        nameAr: 'ملف الترشح والعرض (4)',
+        nameFr: 'Candidature & Offre (4)',
+        icon: 'fa-folder-open',
+        docs: [
+          { id: 'lettre_soumission', nameAr: 'رسالة التعهد بالعرض', nameFr: 'Lettre de soumission', icon: 'fa-file-signature', badge: 'Art. 67' },
+          { id: 'declaration_souscrire', nameAr: 'التصريح بالاكتتاب', nameFr: 'Déclaration à souscrire', icon: 'fa-pen-nib', badge: 'Art. 67' },
+          { id: 'declaration_probite', nameAr: 'التصريح بالنزاهة', nameFr: 'Déclaration de probité', icon: 'fa-shield-alt', badge: 'Art. 75' },
+          { id: 'declaration_candidature', nameAr: 'التصريح بالترشح', nameFr: 'Déclaration de candidature', icon: 'fa-id-card', badge: 'Art. 67' }
+        ]
+      },
+      ods: {
+        id: 'ods',
+        nameAr: 'أوامر الخدمة ODS (3)',
+        nameFr: 'Ordres de Service ODS (3)',
+        icon: 'fa-bolt',
+        docs: [
+          { id: 'ods_commencement', nameAr: 'أمر ببدء الأشغال / الخدمة', nameFr: 'ODS Commencement', icon: 'fa-play-circle', badge: 'Démarrage' },
+          { id: 'ods_arret', nameAr: 'أمر بتوقيف الأشغال', nameFr: "ODS d'Arrêt", icon: 'fa-pause-circle', badge: 'Suspension' },
+          { id: 'ods_reprise', nameAr: 'أمر باستئناف الأشغال', nameFr: 'ODS de Reprise', icon: 'fa-redo-alt', badge: 'Reprise' }
+        ]
+      },
+      avenant: {
+        id: 'avenant',
+        nameAr: 'الملاحق والتعديلات (3)',
+        nameFr: 'Avenants au Marché (3)',
+        icon: 'fa-file-signature',
+        docs: [
+          { id: 'avenant_delai', nameAr: 'ملحق تمديد الآجال', nameFr: 'Avenant de Délai', icon: 'fa-calendar-plus', badge: 'Art. 136' },
+          { id: 'avenant_montant', nameAr: 'ملحق زيادة المبلغ / أشغال إضافية', nameFr: 'Avenant de Montant', icon: 'fa-coins', badge: 'Art. 138' },
+          { id: 'avenant_cloture', nameAr: 'ملحق التصفية والغلق النهائي', nameFr: 'Avenant de Clôture', icon: 'fa-flag-checkered', badge: 'Liquidation' }
+        ]
+      },
+      reception: {
+        id: 'reception',
+        nameAr: 'الاستلام والتصفية DGD (3)',
+        nameFr: 'Réceptions & DGD (3)',
+        icon: 'fa-check-double',
+        docs: [
+          { id: 'reception_provisoire', nameAr: 'محضر الاستلام المؤقت', nameFr: 'PV Réception Provisoire', icon: 'fa-clipboard-check', badge: 'Art. 147' },
+          { id: 'reception_finale', nameAr: 'محضر الاستلام النهائي', nameFr: 'PV Réception Définitive', icon: 'fa-award', badge: 'Art. 148' },
+          { id: 'decompte_dgd', nameAr: 'كشف الحساب العام والنهائي (DGD)', nameFr: 'Décompte Général Définitif', icon: 'fa-calculator', badge: 'Art. 140' }
+        ]
+      },
+      caution: {
+        id: 'caution',
+        nameAr: 'الإعذارات والضمانات (2)',
+        nameFr: 'Mise en demeure & Cautions (2)',
+        icon: 'fa-shield-alt',
+        docs: [
+          { id: 'mise_en_demeure', nameAr: 'إعذار المتعامل المتعاقد', nameFr: 'Mise en Demeure', icon: 'fa-exclamation-triangle', badge: 'Art. 149' },
+          { id: 'mainlevee_caution', nameAr: 'رفع اليد عن الكفالة المصرفية', nameFr: 'Mainlevée de Caution', icon: 'fa-university', badge: 'Art. 130' }
+        ]
+      }
+    };
+
+    // State object holding all customizable parameters for document drafting
+    var _procurementDocParams = window._procurementDocParams = {
+      // Common
+      docDate: new Date().toISOString().slice(0, 10),
+      docRefNumber: '01/2026',
+      authoritySignatory: '',
+      contractorManager: '',
+      projectLocation: '',
+
+      // ODS
+      odsNumber: 'ODS N° 01/2026',
+      odsDate: new Date().toISOString().slice(0, 10),
+      odsDelay: '180 يوماً (06 أشهر)',
+      odsStartDate: new Date().toISOString().slice(0, 10),
+      odsStopDate: new Date().toISOString().slice(0, 10),
+      odsStopReason: 'سوء الأحوال الجوية وتراكم الأمطار المعيقة للآليات الثقيلة',
+      odsResumeDate: new Date().toISOString().slice(0, 10),
+      odsConsumedDays: 45,
+      odsRemainingDays: 135,
+      odsNewCompletionDate: '',
+
+      // Avenant
+      avNumber: '01',
+      avDate: new Date().toISOString().slice(0, 10),
+      avExtraDays: 45,
+      avExtraAmountHT: 1200000,
+      avPercent: 8.50,
+      avMotive: 'أشغال إضافية واستدراكية ضرورية ناجمة عن الطبيعة الجيوتقنية للأرضية وفق أحكام المادة 136 من المرسوم الرئاسي 15-247',
+      avNewEndDate: '',
+
+      // Réception
+      recDate: new Date().toISOString().slice(0, 10),
+      recCommission: 'ممثل المصلحة المتعاقدة، المهندس المعماري المشرف، رئيس مشروع مكتب الدراسات، وممثل المقاولة المتعاقدة',
+      recHasReservations: false,
+      recReservationsText: '1. استكمال ضبط وتشغيل مصابيح الإنارة الخارجية.\n2. إتمام تنظيف محيط الورشة وإخلاء بقايا الردم والأتربة.',
+      recReserveDeadline: '15 يوماً',
+      recWarrantyMonths: 12,
+
+      // DGD
+      dgdNumber: 'DGD N° 01/2026',
+      dgdInitialTTC: 0,
+      dgdAvenantsTTC: 0,
+      dgdTotalMarketTTC: 0,
+      dgdPaidCumulativeTTC: 0,
+      dgdPenaltiesDeducted: 0,
+      dgdRetentionGuaranty: 0,
+      dgdNetBalanceToPay: 0,
+
+      // Mise en Demeure
+      medDegree: '1', // '1' | '2'
+      medDate: new Date().toISOString().slice(0, 10),
+      medGraceDays: 8,
+      medBreaches: 'تسجيل بطء فادح في وتيرة إنجاز الأشغال، عدم تزويد الورشة باليد العاملة المؤهلة والمعدات الملتزم بها في العرض التقني، والتأخر في تدارك الرزنامة الزمنية.',
+
+      // Caution
+      cautType: 'bonne_execution', // 'bonne_execution' | 'retenue_garantie' | 'soumission'
+      cautDate: new Date().toISOString().slice(0, 10),
+      cautBank: 'البنك الوطني الجزائري (BNA) - وكالة زرالدة (624)',
+      cautNumber: 'CAUT-BNA-2026-8841',
+      cautAmount: 0
+    };
+
+    function initProcurementDocParams(tender) {
+      const t = tender || (typeof getTenderByIndex === 'function' ? getTenderByIndex(_activeLettreTenderIdx) : null) || {};
+      const comp = (typeof getActiveCompanyDetails === 'function') ? getActiveCompanyDetails() : {
+        name: 'SARL ZERALDA HIGH TECH',
+        manager: 'المسير القانوني',
+        address: 'زرالدة - الجزائر',
+        bank: 'البنك الوطني الجزائري (BNA)'
+      };
+
+      const amountHT = (t.costing && t.costing.financialHT) ? t.costing.financialHT : Number(t.amount || 5000000);
+      const amountTVA = (t.costing && t.costing.tvaVal) ? t.costing.tvaVal : Math.round(amountHT * 0.19);
+      const amountTTC = (t.costing && t.costing.financialTTC) ? t.costing.financialTTC : (amountHT + amountTVA);
+
+      const today = new Date().toISOString().slice(0, 10);
+      const year = new Date().getFullYear();
+
+      _procurementDocParams.docDate = today;
+      _procurementDocParams.docRefNumber = (t.reference ? String(t.reference).split('/').pop() : '01') + '/' + year;
+      _procurementDocParams.authoritySignatory = t.authority || 'مسؤول المصلحة المتعاقدة';
+      _procurementDocParams.contractorManager = comp.manager || 'المسير القانوني';
+      _procurementDocParams.projectLocation = t.wilayaName ? ('ولاية ' + t.wilayaName) : 'الجزائر العاصمة';
+
+      // ODS defaults
+      _procurementDocParams.odsNumber = 'ODS N° ' + _procurementDocParams.docRefNumber;
+      _procurementDocParams.odsDate = today;
+      _procurementDocParams.odsDelay = '180 يوماً (06 أشهر)';
+      _procurementDocParams.odsStartDate = today;
+      _procurementDocParams.odsStopDate = today;
+      _procurementDocParams.odsStopReason = 'سوء الأحوال الجوية وتراكم الأمطار المعيقة للآليات الثقيلة';
+      _procurementDocParams.odsResumeDate = today;
+      _procurementDocParams.odsConsumedDays = 45;
+      _procurementDocParams.odsRemainingDays = 135;
+      const newEnd = new Date(Date.now() + 135 * 86400000).toISOString().slice(0, 10);
+      _procurementDocParams.odsNewCompletionDate = newEnd;
+
+      // Avenant defaults
+      _procurementDocParams.avNumber = '01';
+      _procurementDocParams.avDate = today;
+      _procurementDocParams.avExtraDays = 45;
+      _procurementDocParams.avExtraAmountHT = Math.round(amountHT * 0.085);
+      _procurementDocParams.avPercent = 8.50;
+      _procurementDocParams.avMotive = 'أشغال إضافية واستدراكية ضرورية ناجمة عن الطبيعة الجيوتقنية للأرضية وفق أحكام المادة 136 من المرسوم الرئاسي 15-247';
+      _procurementDocParams.avNewEndDate = newEnd;
+
+      // Réception defaults
+      _procurementDocParams.recDate = today;
+      _procurementDocParams.recCommission = 'ممثل المصلحة المتعاقدة، المهندس المعماري المشرف، رئيس مشروع مكتب الدراسات، وممثل المقاولة المتعاقدة';
+      _procurementDocParams.recHasReservations = false;
+      _procurementDocParams.recReservationsText = '1. استكمال ضبط وتشغيل مصابيح الإنارة الخارجية.\n2. إتمام تنظيف محيط الورشة وإخلاء بقايا الردم والأتربة.';
+      _procurementDocParams.recReserveDeadline = '15 يوماً';
+      _procurementDocParams.recWarrantyMonths = 12;
+
+      // DGD defaults
+      _procurementDocParams.dgdNumber = 'DGD N° ' + _procurementDocParams.docRefNumber;
+      _procurementDocParams.dgdInitialTTC = amountTTC;
+      _procurementDocParams.dgdAvenantsTTC = Math.round(amountTTC * 0.085);
+      _procurementDocParams.dgdTotalMarketTTC = amountTTC + _procurementDocParams.dgdAvenantsTTC;
+      _procurementDocParams.dgdPaidCumulativeTTC = Math.round(amountTTC * 0.90);
+      _procurementDocParams.dgdPenaltiesDeducted = 0;
+      _procurementDocParams.dgdRetentionGuaranty = Math.round(amountTTC * 0.05);
+      _procurementDocParams.dgdNetBalanceToPay = _procurementDocParams.dgdTotalMarketTTC - _procurementDocParams.dgdPaidCumulativeTTC;
+
+      // Mise en Demeure defaults
+      _procurementDocParams.medDegree = '1';
+      _procurementDocParams.medDate = today;
+      _procurementDocParams.medGraceDays = 8;
+      _procurementDocParams.medBreaches = 'تسجيل بطء فادح في وتيرة إنجاز الأشغال، عدم تزويد الورشة باليد العاملة المؤهلة والمعدات الملتزم بها في العرض التقني، والتأخر في تدارك الرزنامة الزمنية.';
+
+      // Caution defaults
+      _procurementDocParams.cautType = 'bonne_execution';
+      _procurementDocParams.cautDate = today;
+      _procurementDocParams.cautBank = comp.bank || 'البنك الوطني الجزائري (BNA) - وكالة زرالدة (624)';
+      _procurementDocParams.cautNumber = 'CAUT-BNA-' + year + '-' + Math.floor(1000 + Math.random() * 9000);
+      _procurementDocParams.cautAmount = Math.round(amountTTC * 0.05);
+    }
+    window.initProcurementDocParams = initProcurementDocParams;
+
+
+    // ── Document Selector & Category Switching ──
+    function switchProcurementCategory(catId) {
+      if (!PROCUREMENT_CATEGORIES[catId]) return;
+      _activeProcurementCategory = catId;
+      
+      // Update category pill styles
+      ['catTabDossier', 'catTabOds', 'catTabAvenant', 'catTabReception', 'catTabCaution'].forEach(id => {
         const btn = document.getElementById(id);
-        if(!btn) return;
-        btn.classList.remove('active');
+        if (btn) btn.classList.remove('active');
       });
+      const activeBtn = document.getElementById('catTab' + catId.charAt(0).toUpperCase() + catId.slice(1));
+      if (activeBtn) activeBtn.classList.add('active');
 
-      if(docType === 'lettre_soumission' && document.getElementById('docTabSoumission')) document.getElementById('docTabSoumission').classList.add('active');
-      if(docType === 'declaration_souscrire' && document.getElementById('docTabSouscrire')) document.getElementById('docTabSouscrire').classList.add('active');
-      if(docType === 'declaration_probite' && document.getElementById('docTabProbite')) document.getElementById('docTabProbite').classList.add('active');
-      if(docType === 'declaration_candidature' && document.getElementById('docTabCandidature')) document.getElementById('docTabCandidature').classList.add('active');
+      // Select first document of this category
+      const firstDoc = PROCUREMENT_CATEGORIES[catId].docs[0];
+      _activeProcurementDocType = firstDoc.id;
 
+      updateSubDocsPills();
+      renderProcurementParamForm();
+      renderOfficialProcurementDoc();
+    }
+    window.switchProcurementCategory = switchProcurementCategory;
+
+    function switchProcurementDoc(docId) {
+      _activeProcurementDocType = docId;
+      // Find category of this doc
+      for (const [catId, cat] of Object.entries(PROCUREMENT_CATEGORIES)) {
+        if (cat.docs.some(d => d.id === docId)) {
+          _activeProcurementCategory = catId;
+          ['catTabDossier', 'catTabOds', 'catTabAvenant', 'catTabReception', 'catTabCaution'].forEach(id => {
+            const btn = document.getElementById(id);
+            if (btn) btn.classList.remove('active');
+          });
+          const activeBtn = document.getElementById('catTab' + catId.charAt(0).toUpperCase() + catId.slice(1));
+          if (activeBtn) activeBtn.classList.add('active');
+          break;
+        }
+      }
+
+      updateSubDocsPills();
+      renderProcurementParamForm();
       renderOfficialProcurementDoc();
     }
     window.switchProcurementDoc = switchProcurementDoc;
 
-    function renderLettreDocument() {
-      return renderOfficialProcurementDoc();
+    function updateSubDocsPills() {
+      const container = document.getElementById('procurementSubDocsList');
+      if (!container) return;
+      const isFr = _activeLettreLang === 'fr';
+      const cat = PROCUREMENT_CATEGORIES[_activeProcurementCategory] || PROCUREMENT_CATEGORIES.dossier;
+
+      container.innerHTML = cat.docs.map(doc => {
+        const isActive = doc.id === _activeProcurementDocType;
+        const name = isFr ? doc.nameFr : doc.nameAr;
+        return `
+          <button type="button" class="procurement-doc-pill ${isActive ? 'active' : ''}" onclick="switchProcurementDoc('${doc.id}')" style="display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; border:1px solid ${isActive ? '#0284c7' : '#cbd5e1'}; background:${isActive ? '#0284c7' : '#ffffff'}; color:${isActive ? '#ffffff' : '#334155'}; transition:all 0.2s;">
+            <i class="fas ${doc.icon}"></i>
+            <span>${escapeHtml(name)}</span>
+            <span style="font-size:10px; padding:1px 6px; border-radius:10px; background:${isActive ? 'rgba(255,255,255,0.25)' : '#e2e8f0'}; color:${isActive ? '#ffffff' : '#475569'};">${escapeHtml(doc.badge)}</span>
+          </button>
+        `;
+      }).join('');
+
+      // Update header badge
+      const badge = document.getElementById('docEditingBadge');
+      if (badge) {
+        let activeDocObj = null;
+        for (const cat of Object.values(PROCUREMENT_CATEGORIES)) {
+          const found = cat.docs.find(d => d.id === _activeProcurementDocType);
+          if (found) { activeDocObj = found; break; }
+        }
+        if (activeDocObj) {
+          badge.textContent = isFr ? activeDocObj.nameFr : activeDocObj.nameAr;
+        }
+      }
     }
-    window.renderLettreDocument = renderLettreDocument;
+    window.updateSubDocsPills = updateSubDocsPills;
 
-    function renderOfficialProcurementDoc(){
+    function toggleDocParamsEditor() {
+      _isDocParamsEditorOpen = !_isDocParamsEditorOpen;
+      const box = document.getElementById('docParamsEditorBox');
+      const lbl = document.getElementById('lblToggleDocEditor');
+      if (box) {
+        box.classList.toggle('collapsed', !_isDocParamsEditorOpen);
+      }
+      if (lbl) {
+        lbl.textContent = _isDocParamsEditorOpen ? 'إخفاء شريط التحرير' : 'تخصيص البيانات';
+      }
+    }
+    window.toggleDocParamsEditor = toggleDocParamsEditor;
+
+    function onProcurementParamChange(fieldName, value) {
+      if (fieldName in _procurementDocParams) {
+        _procurementDocParams[fieldName] = value;
+      }
+      renderOfficialProcurementDoc();
+    }
+    window.onProcurementParamChange = onProcurementParamChange;
+
+    function resetProcurementDocParams() {
+      const t = getTenderByIndex(_activeLettreTenderIdx);
+      initProcurementDocParams(t);
+      renderProcurementParamForm();
+      renderOfficialProcurementDoc();
+      if (typeof showToast === 'function') {
+        showToast(_activeLettreLang === 'fr' ? 'Paramètres réinitialisés avec succès.' : 'تمت استعادة القيم الافتراضية بنجاح.', 'info');
+      }
+    }
+    window.resetProcurementDocParams = resetProcurementDocParams;
+
+    // ── Dynamic Form Inputs based on Document Type ──
+    function renderProcurementParamForm() {
+      const container = document.getElementById('docParamsFieldsGrid');
+      if (!container) return;
+
+      const p = _procurementDocParams;
+      const docType = _activeProcurementDocType;
+      const isFr = _activeLettreLang === 'fr';
+
+      let fieldsHtml = '';
+
+      // Common Fields (Date & Signatory)
+      fieldsHtml += `
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:10px; margin-bottom:10px;">
+          <div>
+            <label style="font-size:11px; font-weight:700; color:#475569;">${isFr ? 'Date du document :' : 'تاريخ الوثيقة :'}</label>
+            <input type="date" class="form-input" style="padding:5px 8px; font-size:12px; width:100%;" value="${escapeHtml(p.docDate)}" onchange="onProcurementParamChange('docDate', this.value)">
+          </div>
+          <div>
+            <label style="font-size:11px; font-weight:700; color:#475569;">${isFr ? 'Réf / Numéro officiel :' : 'رقم المرجع / الأمر :'}</label>
+            <input type="text" class="form-input" style="padding:5px 8px; font-size:12px; width:100%;" value="${escapeHtml(p.docRefNumber)}" oninput="onProcurementParamChange('docRefNumber', this.value)">
+          </div>
+          <div>
+            <label style="font-size:11px; font-weight:700; color:#475569;">${isFr ? 'Signataire service contractant :' : 'مسؤول المصلحة المتعاقدة :'}</label>
+            <input type="text" class="form-input" style="padding:5px 8px; font-size:12px; width:100%;" value="${escapeHtml(p.authoritySignatory)}" oninput="onProcurementParamChange('authoritySignatory', this.value)">
+          </div>
+          <div>
+            <label style="font-size:11px; font-weight:700; color:#475569;">${isFr ? 'Gérant / Représentant titulaire :' : 'الممثل القانوني للمؤسسة :'}</label>
+            <input type="text" class="form-input" style="padding:5px 8px; font-size:12px; width:100%;" value="${escapeHtml(p.contractorManager)}" oninput="onProcurementParamChange('contractorManager', this.value)">
+          </div>
+        </div>
+      `;
+
+      // Specific Fields depending on Category/DocType
+      if (docType === 'ods_commencement') {
+        fieldsHtml += `
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:10px; background:#eff6ff; padding:10px; border-radius:8px; border:1px solid #bfdbfe;">
+            <div>
+              <label style="font-size:11px; font-weight:700; color:#1e40af;">${isFr ? "Délai d'exécution contractuel :" : 'الأجل التعاقدي للإنجاز :'}</label>
+              <input type="text" class="form-input" style="padding:5px 8px; font-size:12px; width:100%;" value="${escapeHtml(p.odsDelay)}" oninput="onProcurementParamChange('odsDelay', this.value)">
+            </div>
+            <div>
+              <label style="font-size:11px; font-weight:700; color:#1e40af;">${isFr ? 'Date de démarrage effectif :' : 'تاريخ الشروع الفعلي في العمل :'}</label>
+              <input type="date" class="form-input" style="padding:5px 8px; font-size:12px; width:100%;" value="${escapeHtml(p.odsStartDate)}" onchange="onProcurementParamChange('odsStartDate', this.value)">
+            </div>
+            <div>
+              <label style="font-size:11px; font-weight:700; color:#1e40af;">${isFr ? 'Lieu du chantier / Projet :' : 'موقع ورشة الإنجاز :'}</label>
+              <input type="text" class="form-input" style="padding:5px 8px; font-size:12px; width:100%;" value="${escapeHtml(p.projectLocation)}" oninput="onProcurementParamChange('projectLocation', this.value)">
+            </div>
+          </div>
+        `;
+      } else if (docType === 'ods_arret') {
+        fieldsHtml += `
+          <div style="background:#fffbeb; padding:10px; border-radius:8px; border:1px solid #fde68a;">
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:10px; margin-bottom:8px;">
+              <div>
+                <label style="font-size:11px; font-weight:700; color:#b45309;">${isFr ? "Date d'arrêt effectif :" : 'تاريخ التوقيف الفعلي :'}</label>
+                <input type="date" class="form-input" style="padding:5px 8px; font-size:12px; width:100%;" value="${escapeHtml(p.odsStopDate)}" onchange="onProcurementParamChange('odsStopDate', this.value)">
+              </div>
+              <div>
+                <label style="font-size:11px; font-weight:700; color:#b45309;">${isFr ? 'Jours consommés à la date d\'arrêt :' : 'الأيام المستهلكة حتى تاريخ التوقيف :'}</label>
+                <input type="number" class="form-input" style="padding:5px 8px; font-size:12px; width:100%;" value="${escapeHtml(p.odsConsumedDays)}" oninput="onProcurementParamChange('odsConsumedDays', this.value)">
+              </div>
+              <div>
+                <label style="font-size:11px; font-weight:700; color:#b45309;">${isFr ? 'Jours restants suspendus :' : 'الأيام المتبقية والمجمدة :'}</label>
+                <input type="number" class="form-input" style="padding:5px 8px; font-size:12px; width:100%;" value="${escapeHtml(p.odsRemainingDays)}" oninput="onProcurementParamChange('odsRemainingDays', this.value)">
+              </div>
+            </div>
+            <div>
+              <label style="font-size:11px; font-weight:700; color:#b45309;">${isFr ? "Motif circonstancié de l'arrêt (intempéries, contraintes techniques...) :" : 'أسباب التوقيف الفنية والقانونية (تقلبات جوية، عوائق تقنية...) :'}</label>
+              <input type="text" class="form-input" style="padding:5px 8px; font-size:12px; width:100%;" value="${escapeHtml(p.odsStopReason)}" oninput="onProcurementParamChange('odsStopReason', this.value)">
+            </div>
+          </div>
+        `;
+      } else if (docType === 'ods_reprise') {
+        fieldsHtml += `
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:10px; background:#ecfdf5; padding:10px; border-radius:8px; border:1px solid #a7f3d0;">
+            <div>
+              <label style="font-size:11px; font-weight:700; color:#065f46;">${isFr ? 'Date effective de reprise :' : 'تاريخ الاستئناف الفعلي :'}</label>
+              <input type="date" class="form-input" style="padding:5px 8px; font-size:12px; width:100%;" value="${escapeHtml(p.odsResumeDate)}" onchange="onProcurementParamChange('odsResumeDate', this.value)">
+            </div>
+            <div>
+              <label style="font-size:11px; font-weight:700; color:#065f46;">${isFr ? 'Délai contractuel restant (jours) :' : 'الآجال التعاقدية المتبقية (أيام) :'}</label>
+              <input type="number" class="form-input" style="padding:5px 8px; font-size:12px; width:100%;" value="${escapeHtml(p.odsRemainingDays)}" oninput="onProcurementParamChange('odsRemainingDays', this.value)">
+            </div>
+            <div>
+              <label style="font-size:11px; font-weight:700; color:#065f46;">${isFr ? "Nouvelle date limite d'achèvement :" : 'تاريخ الانتهاء التعاقدي الجديد :'}</label>
+              <input type="date" class="form-input" style="padding:5px 8px; font-size:12px; width:100%;" value="${escapeHtml(p.odsNewCompletionDate)}" onchange="onProcurementParamChange('odsNewCompletionDate', this.value)">
+            </div>
+          </div>
+        `;
+      } else if (docType === 'avenant_delai') {
+        fieldsHtml += `
+          <div style="background:#f5f3ff; padding:10px; border-radius:8px; border:1px solid #ddd6fe;">
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:10px; margin-bottom:8px;">
+              <div>
+                <label style="font-size:11px; font-weight:700; color:#5b21b6;">${isFr ? 'Numéro de l\'avenant :' : 'رقم الملحق :'}</label>
+                <input type="text" class="form-input" style="padding:5px 8px; font-size:12px; width:100%;" value="${escapeHtml(p.avNumber)}" oninput="onProcurementParamChange('avNumber', this.value)">
+              </div>
+              <div>
+                <label style="font-size:11px; font-weight:700; color:#5b21b6;">${isFr ? 'Prolongation accordée (jours) :' : 'مدة التمديد الإضافية (أيام) :'}</label>
+                <input type="number" class="form-input" style="padding:5px 8px; font-size:12px; width:100%;" value="${escapeHtml(p.avExtraDays)}" oninput="onProcurementParamChange('avExtraDays', this.value)">
+              </div>
+              <div>
+                <label style="font-size:11px; font-weight:700; color:#5b21b6;">${isFr ? "Nouvelle date d'achèvement :" : 'تاريخ الانتهاء الجديد :'}</label>
+                <input type="date" class="form-input" style="padding:5px 8px; font-size:12px; width:100%;" value="${escapeHtml(p.avNewEndDate)}" onchange="onProcurementParamChange('avNewEndDate', this.value)">
+              </div>
+            </div>
+            <div>
+              <label style="font-size:11px; font-weight:700; color:#5b21b6;">${isFr ? 'Justification circonstanciée (Art. 136 Décret 15-247) :' : 'المبررات القانونية والفنية للتمديد (المادة 136) :'}</label>
+              <input type="text" class="form-input" style="padding:5px 8px; font-size:12px; width:100%;" value="${escapeHtml(p.avMotive)}" oninput="onProcurementParamChange('avMotive', this.value)">
+            </div>
+          </div>
+        `;
+      } else if (docType === 'avenant_montant') {
+        fieldsHtml += `
+          <div style="background:#f5f3ff; padding:10px; border-radius:8px; border:1px solid #ddd6fe;">
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:10px; margin-bottom:8px;">
+              <div>
+                <label style="font-size:11px; font-weight:700; color:#5b21b6;">${isFr ? 'Numéro de l\'avenant :' : 'رقم الملحق :'}</label>
+                <input type="text" class="form-input" style="padding:5px 8px; font-size:12px; width:100%;" value="${escapeHtml(p.avNumber)}" oninput="onProcurementParamChange('avNumber', this.value)">
+              </div>
+              <div>
+                <label style="font-size:11px; font-weight:700; color:#5b21b6;">${isFr ? 'Montant supplémentaire HT (DZD) :' : 'مبلغ الزيادة والأشغال الإضافية HT :'}</label>
+                <input type="number" class="form-input" style="padding:5px 8px; font-size:12px; width:100%;" value="${escapeHtml(p.avExtraAmountHT)}" oninput="onProcurementParamChange('avExtraAmountHT', this.value)">
+              </div>
+              <div>
+                <label style="font-size:11px; font-weight:700; color:#5b21b6;">${isFr ? 'Taux de variation (%) :' : 'نسبة الزيادة المئوية (%) :'}</label>
+                <input type="number" step="0.01" class="form-input" style="padding:5px 8px; font-size:12px; width:100%;" value="${escapeHtml(p.avPercent)}" oninput="onProcurementParamChange('avPercent', this.value)">
+              </div>
+            </div>
+            <div>
+              <label style="font-size:11px; font-weight:700; color:#5b21b6;">${isFr ? 'Motif technique et légal (Art. 138-139 Décret 15-247) :' : 'السند الفني والتعاقدي للأشغال الإضافية :'}</label>
+              <input type="text" class="form-input" style="padding:5px 8px; font-size:12px; width:100%;" value="${escapeHtml(p.avMotive)}" oninput="onProcurementParamChange('avMotive', this.value)">
+            </div>
+          </div>
+        `;
+      } else if (docType === 'avenant_cloture') {
+        fieldsHtml += `
+          <div style="background:#f5f3ff; padding:10px; border-radius:8px; border:1px solid #ddd6fe;">
+            <div>
+              <label style="font-size:11px; font-weight:700; color:#5b21b6;">${isFr ? 'Motif de la clôture et de liquidation :' : 'أسباب وبيان التسوية والتصفية النهائية :'}</label>
+              <input type="text" class="form-input" style="padding:5px 8px; font-size:12px; width:100%;" value="${escapeHtml(p.avMotive)}" oninput="onProcurementParamChange('avMotive', this.value)">
+            </div>
+          </div>
+        `;
+      } else if (docType === 'reception_provisoire' || docType === 'reception_finale') {
+        fieldsHtml += `
+          <div style="background:#f0fdf4; padding:10px; border-radius:8px; border:1px solid #bbf7d0;">
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:10px; margin-bottom:8px;">
+              <div>
+                <label style="font-size:11px; font-weight:700; color:#166534;">${isFr ? 'Date de la commission :' : 'تاريخ اجتماع لجنة الاستلام :'}</label>
+                <input type="date" class="form-input" style="padding:5px 8px; font-size:12px; width:100%;" value="${escapeHtml(p.recDate)}" onchange="onProcurementParamChange('recDate', this.value)">
+              </div>
+              <div>
+                <label style="font-size:11px; font-weight:700; color:#166534;">${isFr ? 'Statut des réserves :' : 'حالة التحفظات :'}</label>
+                <select class="form-input" style="padding:5px 8px; font-size:12px; width:100%;" onchange="onProcurementParamChange('recHasReservations', this.value === 'true')">
+                  <option value="false" ${!p.recHasReservations ? 'selected' : ''}>${isFr ? 'Sans aucune réserve (Acceptation totale)' : 'استلام تام بدون أي تحفظ'}</option>
+                  <option value="true" ${p.recHasReservations ? 'selected' : ''}>${isFr ? 'Avec réserves consignées' : 'استلام مع تسجيل تحفظات'}</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size:11px; font-weight:700; color:#166534;">${isFr ? 'Délai de garantie contractuelle :' : 'مدة الضمان التعاقدي :'}</label>
+                <input type="number" class="form-input" style="padding:5px 8px; font-size:12px; width:100%;" value="${escapeHtml(p.recWarrantyMonths)}" oninput="onProcurementParamChange('recWarrantyMonths', this.value)">
+              </div>
+            </div>
+            ${p.recHasReservations ? `
+              <div style="margin-top:8px;">
+                <label style="font-size:11px; font-weight:700; color:#166534;">${isFr ? 'Liste des réserves et délai de levée :' : 'بيان التحفظات المسجلة وأجل رفعها :'}</label>
+                <textarea class="form-input" rows="2" style="padding:5px 8px; font-size:12px; width:100%;" oninput="onProcurementParamChange('recReservationsText', this.value)">${escapeHtml(p.recReservationsText)}</textarea>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      } else if (docType === 'decompte_dgd') {
+        fieldsHtml += `
+          <div style="background:#f8fafc; padding:10px; border-radius:8px; border:1px solid #cbd5e1;">
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:10px;">
+              <div>
+                <label style="font-size:11px; font-weight:700; color:#334155;">${isFr ? 'Cumul des acomptes réglés (TTC) :' : 'مجموع الدفعات المسددة سابقاً (TTC) :'}</label>
+                <input type="number" class="form-input" style="padding:5px 8px; font-size:12px; width:100%;" value="${escapeHtml(p.dgdPaidCumulativeTTC)}" oninput="onProcurementParamChange('dgdPaidCumulativeTTC', this.value); onProcurementParamChange('dgdNetBalanceToPay', Number(p.dgdTotalMarketTTC) - Number(this.value));">
+              </div>
+              <div>
+                <label style="font-size:11px; font-weight:700; color:#334155;">${isFr ? 'Pénalités de retard déduites :' : 'غرامات التأخير المقتطعة :'}</label>
+                <input type="number" class="form-input" style="padding:5px 8px; font-size:12px; width:100%;" value="${escapeHtml(p.dgdPenaltiesDeducted)}" oninput="onProcurementParamChange('dgdPenaltiesDeducted', this.value)">
+              </div>
+              <div>
+                <label style="font-size:11px; font-weight:700; color:#334155;">${isFr ? 'Solde net définitif à payer :' : 'الرصيد الصافي المتبقي للدفع :'}</label>
+                <input type="number" class="form-input" style="padding:5px 8px; font-size:12px; width:100%;" value="${escapeHtml(p.dgdNetBalanceToPay)}" oninput="onProcurementParamChange('dgdNetBalanceToPay', this.value)">
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (docType === 'mise_en_demeure') {
+        fieldsHtml += `
+          <div style="background:#fef2f2; padding:10px; border-radius:8px; border:1px solid #fecaca;">
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:10px; margin-bottom:8px;">
+              <div>
+                <label style="font-size:11px; font-weight:700; color:#991b1b;">${isFr ? 'Degré de la mise en demeure :' : 'درجة الإعذار :'}</label>
+                <select class="form-input" style="padding:5px 8px; font-size:12px; width:100%;" onchange="onProcurementParamChange('medDegree', this.value)">
+                  <option value="1" ${p.medDegree === '1' ? 'selected' : ''}>${isFr ? '1ère Mise en Demeure' : 'إعذار أول (1ère mise en demeure)'}</option>
+                  <option value="2" ${p.medDegree === '2' ? 'selected' : ''}>${isFr ? '2ème et dernière Mise en Demeure' : 'إعذار ثانٍ وأخير (2ème mise en demeure)'}</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size:11px; font-weight:700; color:#991b1b;">${isFr ? 'Délai accordé pour régularisation :' : 'المهلة القانونية الممنوحة (أيام) :'}</label>
+                <input type="number" class="form-input" style="padding:5px 8px; font-size:12px; width:100%;" value="${escapeHtml(p.medGraceDays)}" oninput="onProcurementParamChange('medGraceDays', this.value)">
+              </div>
+            </div>
+            <div>
+              <label style="font-size:11px; font-weight:700; color:#991b1b;">${isFr ? 'Manquements et retards constatés :' : 'بيان التقصير والمخالفات المسجلة :'}</label>
+              <textarea class="form-input" rows="2" style="padding:5px 8px; font-size:12px; width:100%;" oninput="onProcurementParamChange('medBreaches', this.value)">${escapeHtml(p.medBreaches)}</textarea>
+            </div>
+          </div>
+        `;
+      } else if (docType === 'mainlevee_caution') {
+        fieldsHtml += `
+          <div style="background:#eff6ff; padding:10px; border-radius:8px; border:1px solid #bfdbfe;">
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(210px, 1fr)); gap:10px;">
+              <div>
+                <label style="font-size:11px; font-weight:700; color:#1e40af;">${isFr ? 'Nature de la caution :' : 'نوع الكفالة المصرفية :'}</label>
+                <select class="form-input" style="padding:5px 8px; font-size:12px; width:100%;" onchange="onProcurementParamChange('cautType', this.value)">
+                  <option value="bonne_execution" ${p.cautType === 'bonne_execution' ? 'selected' : ''}>${isFr ? 'Caution de bonne exécution (5%)' : 'كفالة حسن التنفيذ (5%)'}</option>
+                  <option value="retenue_garantie" ${p.cautType === 'retenue_garantie' ? 'selected' : ''}>${isFr ? 'Retenue de garantie (5%)' : 'اقتطاع الضمان (5%)'}</option>
+                  <option value="soumission" ${p.cautType === 'soumission' ? 'selected' : ''}>${isFr ? 'Caution de soumission' : 'كفالة التعهد بالعرض'}</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size:11px; font-weight:700; color:#1e40af;">${isFr ? 'Banque et agence émettrice :' : 'البنك والوكالة المصرفية :'}</label>
+                <input type="text" class="form-input" style="padding:5px 8px; font-size:12px; width:100%;" value="${escapeHtml(p.cautBank)}" oninput="onProcurementParamChange('cautBank', this.value)">
+              </div>
+              <div>
+                <label style="font-size:11px; font-weight:700; color:#1e40af;">${isFr ? 'Numéro de caution :' : 'رقم الكفالة المصرفية :'}</label>
+                <input type="text" class="form-input" style="padding:5px 8px; font-size:12px; width:100%;" value="${escapeHtml(p.cautNumber)}" oninput="onProcurementParamChange('cautNumber', this.value)">
+              </div>
+              <div>
+                <label style="font-size:11px; font-weight:700; color:#1e40af;">${isFr ? 'Montant de la caution (DZD) :' : 'مبلغ الكفالة (دج) :'}</label>
+                <input type="number" class="form-input" style="padding:5px 8px; font-size:12px; width:100%;" value="${escapeHtml(p.cautAmount)}" oninput="onProcurementParamChange('cautAmount', this.value)">
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      container.innerHTML = fieldsHtml;
+    }
+    window.renderProcurementParamForm = renderProcurementParamForm;
+
+    // ═════════════════════════════════════════════════════════════════
+    // ── RENDER ENGINE FOR ALL 15 OFFICIAL STATUTORY DOCUMENTS ──
+    // ═════════════════════════════════════════════════════════════════
+    function renderOfficialProcurementDoc() {
       const sheet = document.getElementById('lettreDocumentSheet');
-      if(!sheet) return;
+      if (!sheet) return;
 
-      const t = getTenderByIndex(_activeLettreTenderIdx) || {
+      const t = (typeof getTenderByIndex === 'function' ? getTenderByIndex(_activeLettreTenderIdx) : null) || {
         reference: 'AO/2026/014',
-        title: 'صفقة اقتناء وتوريد تجهيزات ومعدات',
+        title: 'صفقة اقتناء وتوريد تجهيزات ومعدات تقنية',
         authority: 'مديرية الإدارة المحلية - ولاية الجزائر',
-        deadline: new Date().toISOString().slice(0,10),
-        amount: 5400000
+        deadline: new Date().toISOString().slice(0, 10),
+        amount: 5400000,
+        wilayaName: 'الجزائر'
       };
 
-      const comp = getActiveCompanyDetails();
-      const amountHT = (t.costing && t.costing.financialHT) ? t.costing.financialHT : Number(t.amount || 0);
+      const comp = (typeof getActiveCompanyDetails === 'function') ? getActiveCompanyDetails() : {
+        name: 'SARL ZERALDA HIGH TECH & ENGINEERING',
+        legalForm: 'شركة ذات مسؤولية محدودة (SARL)',
+        capital: '20,000,000',
+        address: 'المنطقة الصناعية رقم 14، زرالدة - الجزائر',
+        phone: '+213 (0) 23 88 12 34',
+        email: 'direction@zeralda-erp.dz',
+        rc: '16/00-0987654B20',
+        nif: '002016098765432',
+        nis: '002016098765432',
+        bank: 'البنك الوطني الجزائري (BNA) - وكالة زرالدة (624)',
+        rib: '001 00624 0200012345 67',
+        manager: 'عبد الرحمن بن ناصر'
+      };
+
+      const p = _procurementDocParams;
+      const docType = _activeProcurementDocType;
+      const isFr = _activeLettreLang === 'fr';
+
+      sheet.setAttribute('dir', isFr ? 'ltr' : 'rtl');
+
+      const amountHT = (t.costing && t.costing.financialHT) ? t.costing.financialHT : Number(t.amount || 5400000);
       const amountTVA = (t.costing && t.costing.tvaVal) ? t.costing.tvaVal : Math.round(amountHT * 0.19);
       const amountTTC = (t.costing && t.costing.financialTTC) ? t.costing.financialTTC : (amountHT + amountTVA);
 
-      const wordsArHT = numberToArabicWords(amountHT);
-      const wordsArTTC = numberToArabicWords(amountTTC);
-      const wordsFrHT = numberToFrenchWords(amountHT);
-      const wordsFrTTC = numberToFrenchWords(amountTTC);
+      const wordsArHT = (typeof numberToArabicWords === 'function') ? numberToArabicWords(amountHT) : (amountHT + ' دينار جزائري');
+      const wordsArTTC = (typeof numberToArabicWords === 'function') ? numberToArabicWords(amountTTC) : (amountTTC + ' دينار جزائري');
+      const wordsFrHT = (typeof numberToFrenchWords === 'function') ? numberToFrenchWords(amountHT) : (amountHT + ' Dinars');
+      const wordsFrTTC = (typeof numberToFrenchWords === 'function') ? numberToFrenchWords(amountTTC) : (amountTTC + ' Dinars');
 
-      const todayStrAr = new Date().toLocaleDateString('ar-DZ', { year: 'numeric', month: 'long', day: 'numeric' });
-      const todayStrFr = new Date().toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' });
+      const todayStrAr = new Date(p.docDate || Date.now()).toLocaleDateString('ar-DZ', { year: 'numeric', month: 'long', day: 'numeric' });
+      const todayStrFr = new Date(p.docDate || Date.now()).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' });
 
-      const isFr = _activeLettreLang === 'fr';
-      sheet.setAttribute('dir', isFr ? 'ltr' : 'rtl');
-
-      // Common Official Header
+      // Common Official Letterhead
       let headerHtml = '';
-      if(isFr){
+      if (isFr) {
         headerHtml = `
-          <div class="lettre-header">
-            <div>
-              <div style="font-size:16px; font-weight:800; color:#1e3a8a; text-transform:uppercase;">${escapeHtml(comp.name)}</div>
-              <div style="font-size:12px; color:#475569;">${escapeHtml(comp.legalForm)} au capital de ${escapeHtml(comp.capital)} DZD</div>
-              <div style="font-size:12px; color:#475569;">Siège social : ${escapeHtml(comp.address)}</div>
-              <div style="font-size:12px; color:#475569;">Tél : ${escapeHtml(comp.phone)} | Email : ${escapeHtml(comp.email)}</div>
-              <div style="font-size:11.5px; color:#64748b; margin-top:4px;">
+          <div class="lettre-header" style="border-bottom:2px solid #0f172a; padding-bottom:14px; margin-bottom:18px;">
+            <div style="flex:1;">
+              <div style="font-size:15px; font-weight:800; color:#1e3a8a; text-transform:uppercase;">${escapeHtml(comp.name)}</div>
+              <div style="font-size:11.5px; color:#475569;">${escapeHtml(comp.legalForm)} au capital de ${escapeHtml(comp.capital)} DZD</div>
+              <div style="font-size:11.5px; color:#475569;">Siège social : ${escapeHtml(comp.address)}</div>
+              <div style="font-size:11.5px; color:#475569;">Tél : ${escapeHtml(comp.phone)} | Email : ${escapeHtml(comp.email)}</div>
+              <div style="font-size:11px; color:#64748b; margin-top:3px;">
                 RC : <strong>${escapeHtml(comp.rc)}</strong> | NIF : <strong>${escapeHtml(comp.nif)}</strong> | NIS : <strong>${escapeHtml(comp.nis)}</strong>
               </div>
             </div>
-            <div style="text-align:right; font-size:12px; color:#334155;">
+            <div style="text-align:right; font-size:11.5px; color:#334155; flex:1;">
               <div style="font-weight:700; color:#0f172a;">RÉPUBLIQUE ALGÉRIENNE DÉMOCRATIQUE ET POPULAIRE</div>
-              <div style="margin-top:6px;">À l'attention de :</div>
-              <div style="font-weight:800; color:#1e40af; font-size:13.5px;">${escapeHtml(t.authority || 'Monsieur le Responsable du Service Contractant')}</div>
+              <div style="margin-top:4px;">Service Contractant :</div>
+              <div style="font-weight:800; color:#1e40af; font-size:13px;">${escapeHtml(t.authority || 'Monsieur le Responsable du Service Contractant')}</div>
+              <div style="font-size:11px; color:#64748b; margin-top:2px;">Projet : ${escapeHtml(t.title || 'Marché')}</div>
             </div>
           </div>
         `;
       } else {
         headerHtml = `
-          <div class="lettre-header">
-            <div>
-              <div style="font-size:17px; font-weight:900; color:#1e3a8a;">${escapeHtml(comp.name)}</div>
-              <div style="font-size:12px; color:#475569;">${escapeHtml(comp.legalForm)} برأسمال قدره: ${escapeHtml(comp.capital)} دج</div>
-              <div style="font-size:12px; color:#475569;">المقر الاجتماعي: ${escapeHtml(comp.address)}</div>
-              <div style="font-size:12px; color:#475569;">هاتف: ${escapeHtml(comp.phone)} | بريد: ${escapeHtml(comp.email)}</div>
-              <div style="font-size:11.5px; color:#64748b; margin-top:4px;">
+          <div class="lettre-header" style="border-bottom:2px solid #0f172a; padding-bottom:14px; margin-bottom:18px;">
+            <div style="flex:1;">
+              <div style="font-size:16px; font-weight:900; color:#1e3a8a;">${escapeHtml(comp.name)}</div>
+              <div style="font-size:11.5px; color:#475569;">${escapeHtml(comp.legalForm)} برأسمال قدره: ${escapeHtml(comp.capital)} دج</div>
+              <div style="font-size:11.5px; color:#475569;">المقر الاجتماعي: ${escapeHtml(comp.address)}</div>
+              <div style="font-size:11.5px; color:#475569;">هاتف: ${escapeHtml(comp.phone)} | بريد: ${escapeHtml(comp.email)}</div>
+              <div style="font-size:11px; color:#64748b; margin-top:3px;">
                 سجل تجاري: <strong>${escapeHtml(comp.rc)}</strong> | NIF: <strong>${escapeHtml(comp.nif)}</strong> | NIS: <strong>${escapeHtml(comp.nis)}</strong>
               </div>
             </div>
-            <div style="text-align:left; font-size:12px; color:#334155;">
+            <div style="text-align:left; font-size:11.5px; color:#334155; flex:1;">
               <div style="font-weight:800; color:#0f172a;">الجمهورية الجزائرية الديمقراطية الشعبية</div>
-              <div style="margin-top:6px;">إلى السيد:</div>
-              <div style="font-weight:800; color:#1e40af; font-size:13.5px;">${escapeHtml(t.authority || 'مسؤول المصلحة المتعاقدة')}</div>
+              <div style="margin-top:4px;">المصلحة المتعاقدة:</div>
+              <div style="font-weight:800; color:#1e40af; font-size:13px;">${escapeHtml(t.authority || 'مسؤول المصلحة المتعاقدة')}</div>
+              <div style="font-size:11px; color:#64748b; margin-top:2px;">المشروع: ${escapeHtml(t.title || 'الصفقة')}</div>
             </div>
           </div>
         `;
       }
 
-      // Stamp and Signature Block
-      let stampHtml = '';
-      if(isFr){
-        stampHtml = `
-          <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:24px;">
-            <div style="font-size:13px; color:#475569;">
-              <div>Fait à Alger, le ${todayStrFr}</div>
-              <div style="font-size:11px; color:#64748b; margin-top:4px;">Document établi conformément aux dispositions du Décret présidentiel n° 15-247.</div>
-            </div>
-            <div class="lettre-stamp-box">
-              <span style="font-weight:700; color:#1e293b;">Signature et Cachet du Soumissionnaire</span>
-              <span style="font-size:11px; margin-top:35px; color:#94a3b8;">(Nom, prénom, qualité et cachet humide)</span>
-            </div>
-          </div>
-        `;
-      } else {
-        stampHtml = `
-          <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:24px;">
-            <div style="font-size:13px; color:#475569;">
-              <div>حرر بالجزائر، في: ${todayStrAr}</div>
-              <div style="font-size:11px; color:#64748b; margin-top:4px;">محرر وفق أحكام المرسوم الرئاسي رقم 15-247 المتضمن تنظيم الصفقات العمومية.</div>
-            </div>
-            <div class="lettre-stamp-box">
-              <span style="font-weight:700; color:#1e293b;">توقيع وختم المتعهد</span>
-              <span style="font-size:11px; margin-top:35px; color:#94a3b8;">(الاسم، الصفة، الختم الرطب والتوقيع)</span>
-            </div>
-          </div>
-        `;
+      // Tripartite Signatures for Execution Docs (ODS, Avenants, Réception, DGD)
+      function renderSignatures(mode) {
+        if (isFr) {
+          if (mode === 'ods') {
+            return `
+              <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; margin-top:28px; text-align:center;">
+                <div class="lettre-stamp-box" style="border:1.5px dashed #94a3b8; border-radius:8px; padding:12px; min-height:100px;">
+                  <strong style="color:#1e3a8a; font-size:12px;">Le Service Contractant</strong>
+                  <div style="font-size:11px; color:#64748b; margin-top:4px;">(Date, visa, cachet et signature)</div>
+                </div>
+                <div class="lettre-stamp-box" style="border:1.5px dashed #94a3b8; border-radius:8px; padding:12px; min-height:100px;">
+                  <strong style="color:#0f766e; font-size:12px;">Le Maître de l'Œuvre</strong>
+                  <div style="font-size:11px; color:#64748b; margin-top:4px;">(Bureau d'études / Suivi)</div>
+                </div>
+                <div class="lettre-stamp-box" style="border:1.5px dashed #94a3b8; border-radius:8px; padding:12px; min-height:100px;">
+                  <strong style="color:#1e293b; font-size:12px;">L'Entreprise Titulaire</strong>
+                  <div style="font-size:11px; color:#64748b; margin-top:4px;">(Notifié et reçu copie le .... / .... / 2026)</div>
+                </div>
+              </div>
+            `;
+          } else if (mode === 'commission') {
+            return `
+              <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; margin-top:28px; text-align:center;">
+                <div class="lettre-stamp-box" style="border:1.5px dashed #94a3b8; border-radius:8px; padding:12px; min-height:100px;">
+                  <strong style="color:#1e3a8a; font-size:12px;">Président de la Commission</strong>
+                  <div style="font-size:11px; color:#64748b; margin-top:4px;">(Représentant Service Contractant)</div>
+                </div>
+                <div class="lettre-stamp-box" style="border:1.5px dashed #94a3b8; border-radius:8px; padding:12px; min-height:100px;">
+                  <strong style="color:#0f766e; font-size:12px;">Membres Techniques</strong>
+                  <div style="font-size:11px; color:#64748b; margin-top:4px;">(Architecte & Ingénieur de suivi)</div>
+                </div>
+                <div class="lettre-stamp-box" style="border:1.5px dashed #94a3b8; border-radius:8px; padding:12px; min-height:100px;">
+                  <strong style="color:#1e293b; font-size:12px;">Représentant Titulaire</strong>
+                  <div style="font-size:11px; color:#64748b; margin-top:4px;">(Cachet et signature)</div>
+                </div>
+              </div>
+            `;
+          } else if (mode === 'authority_only') {
+            return `
+              <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:24px;">
+                <div style="font-size:12px; color:#475569;">
+                  <div>Fait à Alger, le ${todayStrFr}</div>
+                  <div style="font-size:11px; color:#64748b; margin-top:4px;">En application du Décret présidentiel n° 15-247.</div>
+                </div>
+                <div class="lettre-stamp-box" style="border:1.5px dashed #94a3b8; border-radius:8px; padding:12px 24px; min-height:95px; text-align:center;">
+                  <span style="font-weight:700; color:#1e293b;">Signature et Cachet Officiel</span>
+                  <span style="font-size:11px; margin-top:35px; color:#94a3b8; display:block;">(Nom, qualité et sceau de l'administration)</span>
+                </div>
+              </div>
+            `;
+          } else {
+            return `
+              <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:24px;">
+                <div style="font-size:12px; color:#475569;">
+                  <div>Fait à Alger, le ${todayStrFr}</div>
+                  <div style="font-size:11px; color:#64748b; margin-top:4px;">Établi conformément au Décret présidentiel n° 15-247.</div>
+                </div>
+                <div class="lettre-stamp-box" style="border:1.5px dashed #94a3b8; border-radius:8px; padding:12px 24px; min-height:95px; text-align:center;">
+                  <span style="font-weight:700; color:#1e293b;">Signature et Cachet du Soumissionnaire</span>
+                  <span style="font-size:11px; margin-top:35px; color:#94a3b8; display:block;">(Nom, prénom, qualité et cachet humide)</span>
+                </div>
+              </div>
+            `;
+          }
+        } else {
+          // Arabic signatures
+          if (mode === 'ods') {
+            return `
+              <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; margin-top:28px; text-align:center;">
+                <div class="lettre-stamp-box" style="border:1.5px dashed #94a3b8; border-radius:8px; padding:12px; min-height:100px;">
+                  <strong style="color:#1e3a8a; font-size:12.5px;">المصلحة المتعاقدة</strong>
+                  <div style="font-size:11px; color:#64748b; margin-top:4px;">(التاريخ، التأشيرة، الختم والتوقيع)</div>
+                </div>
+                <div class="lettre-stamp-box" style="border:1.5px dashed #94a3b8; border-radius:8px; padding:12px; min-height:100px;">
+                  <strong style="color:#0f766e; font-size:12.5px;">المشرف على المتابعة</strong>
+                  <div style="font-size:11px; color:#64748b; margin-top:4px;">(مكتب الدراسات والمهندس المعماري)</div>
+                </div>
+                <div class="lettre-stamp-box" style="border:1.5px dashed #94a3b8; border-radius:8px; padding:12px; min-height:100px;">
+                  <strong style="color:#1e293b; font-size:12.5px;">المتعامل المتعاقد (المقاولة)</strong>
+                  <div style="font-size:11px; color:#64748b; margin-top:4px;">(استلمت نسخة مطابقة في: .... / .... / 2026)</div>
+                </div>
+              </div>
+            `;
+          } else if (mode === 'commission') {
+            return `
+              <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; margin-top:28px; text-align:center;">
+                <div class="lettre-stamp-box" style="border:1.5px dashed #94a3b8; border-radius:8px; padding:12px; min-height:100px;">
+                  <strong style="color:#1e3a8a; font-size:12.5px;">رئيس لجنة المعاينة والاستلام</strong>
+                  <div style="font-size:11px; color:#64748b; margin-top:4px;">(ممثل المصلحة المتعاقدة)</div>
+                </div>
+                <div class="lettre-stamp-box" style="border:1.5px dashed #94a3b8; border-radius:8px; padding:12px; min-height:100px;">
+                  <strong style="color:#0f766e; font-size:12.5px;">الأعضاء التقنيون</strong>
+                  <div style="font-size:11px; color:#64748b; margin-top:4px;">(المهندس المعماري ومهندس المتابعة)</div>
+                </div>
+                <div class="lettre-stamp-box" style="border:1.5px dashed #94a3b8; border-radius:8px; padding:12px; min-height:100px;">
+                  <strong style="color:#1e293b; font-size:12.5px;">ممثل المتعامل المتعاقد</strong>
+                  <div style="font-size:11px; color:#64748b; margin-top:4px;">(الختم الرطب والتوقيع)</div>
+                </div>
+              </div>
+            `;
+          } else if (mode === 'authority_only') {
+            return `
+              <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:24px;">
+                <div style="font-size:12.5px; color:#475569;">
+                  <div>حرر بالجزائر، في: ${todayStrAr}</div>
+                  <div style="font-size:11px; color:#64748b; margin-top:4px;">محرر وفق أحكام المرسوم الرئاسي رقم 15-247 المتضمن تنظيم الصفقات العمومية.</div>
+                </div>
+                <div class="lettre-stamp-box" style="border:1.5px dashed #94a3b8; border-radius:8px; padding:12px 24px; min-height:95px; text-align:center;">
+                  <span style="font-weight:700; color:#1e293b;">توقيع وختم المصلحة المتعاقدة</span>
+                  <span style="font-size:11px; margin-top:35px; color:#94a3b8; display:block;">(الاسم، الصفة، والختم الرسمي للإدارة)</span>
+                </div>
+              </div>
+            `;
+          } else {
+            return `
+              <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:24px;">
+                <div style="font-size:12.5px; color:#475569;">
+                  <div>حرر بالجزائر، في: ${todayStrAr}</div>
+                  <div style="font-size:11px; color:#64748b; margin-top:4px;">محرر وفق أحكام المرسوم الرئاسي رقم 15-247 المتضمن تنظيم الصفقات العمومية.</div>
+                </div>
+                <div class="lettre-stamp-box" style="border:1.5px dashed #94a3b8; border-radius:8px; padding:12px 24px; min-height:95px; text-align:center;">
+                  <span style="font-weight:700; color:#1e293b;">توقيع وختم المتعهد</span>
+                  <span style="font-size:11px; margin-top:35px; color:#94a3b8; display:block;">(الاسم، الصفة، الختم الرطب والتوقيع)</span>
+                </div>
+              </div>
+            `;
+          }
+        }
       }
 
-      // Render based on selected Document Type
-      if(_activeProcurementDocType === 'lettre_soumission'){
-        if(isFr){
+      // ─────────────────────────────────────────────────────────────
+      // TEMPLATES 1 TO 4: DOSSIER DE CANDIDATURE & OFFRE
+      // ─────────────────────────────────────────────────────────────
+      if (docType === 'lettre_soumission') {
+        if (isFr) {
           sheet.innerHTML = headerHtml + `
-            <div style="text-align:center; margin:22px 0 16px;">
-              <h2 style="font-size:18px; font-weight:900; color:#1e293b; text-decoration:underline; text-underline-offset:6px;">LETTRE DE SOUMISSION</h2>
-              <div style="font-size:12px; color:#64748b; margin-top:4px;">(Établie en application de l'article 67 du Décret présidentiel n° 15-247 du 16 septembre 2015)</div>
+            <div style="text-align:center; margin:18px 0 14px;">
+              <h2 style="font-size:18px; font-weight:900; color:#1e293b; text-decoration:underline; text-underline-offset:5px;">LETTRE DE SOUMISSION</h2>
+              <div style="font-size:11.5px; color:#64748b; margin-top:4px;">(Établie en application de l'article 67 du Décret présidentiel n° 15-247 du 16 septembre 2015)</div>
             </div>
 
-            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 16px; margin-bottom:18px; font-size:13px;">
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 16px; margin-bottom:16px; font-size:12.5px;">
               <div><strong>Appel d'Offres n° :</strong> ${escapeHtml(t.reference || 'AO')}</div>
               <div style="margin-top:3px;"><strong>Objet du Marché :</strong> ${escapeHtml(t.title || 'Prestations et fournitures')}</div>
             </div>
 
-            <p style="margin-bottom:12px;">Je soussigné(e), <strong>${escapeHtml(comp.manager)}</strong>, agissant en qualité de Gérant et représentant légal dûment habilité de la société <strong>${escapeHtml(comp.name)}</strong>,</p>
-            <p style="margin-bottom:12px;">Après avoir pris pleine et entière connaissance de toutes les pièces constitutives du dossier d'appel d'offres susmentionné, et après avoir apprécié la nature, la consistance et l'étendue des prestations à exécuter :</p>
-            <p style="margin-bottom:14px;"><strong>M'ENGAGE SUR L'HONNEUR</strong> à exécuter et achever l'ensemble des prestations conformément aux clauses, spécifications techniques et conditions du cahier des charges, moyennant les prix que j'ai moi-même établis, s'élevant à :</p>
+            <p style="margin-bottom:10px;">Je soussigné(e), <strong>${escapeHtml(p.contractorManager || comp.manager)}</strong>, agissant en qualité de Gérant et représentant légal de la société <strong>${escapeHtml(comp.name)}</strong>,</p>
+            <p style="margin-bottom:10px;">Après avoir pris pleine et entière connaissance de toutes les pièces constitutives du dossier d'appel d'offres susmentionné, et après avoir apprécié la nature et l'étendue des prestations :</p>
+            <p style="margin-bottom:12px;"><strong>M'ENGAGE SUR L'HONNEUR</strong> à exécuter et achever l'ensemble des prestations conformément aux clauses et conditions du cahier des charges, moyennant les prix que j'ai moi-même établis, s'élevant à :</p>
 
-            <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:14px 18px; margin-bottom:16px; line-height:1.9;">
-              <div>• <strong>Montant Total Hors Taxes (HT) :</strong> <span style="font-size:16px; font-weight:800; color:#1e40af;">${formatMoney(amountHT)}</span></div>
-              <div style="font-size:12.5px; color:#3b82f6;"><em>(${escapeHtml(wordsFrHT)})</em></div>
-              <div style="margin-top:6px;">• <strong>Montant de la TVA (19%) :</strong> <strong>${formatMoney(amountTVA)}</strong></div>
-              <div style="margin-top:6px; border-top:1px dashed #93c5fd; padding-top:6px;">• <strong>Montant Total Toutes Taxes Comprises (TTC) :</strong> <span style="font-size:17px; font-weight:900; color:#1e3a8a;">${formatMoney(amountTTC)}</span></div>
-              <div style="font-size:12.5px; color:#1e40af;"><em>(${escapeHtml(wordsFrTTC)})</em></div>
+            <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:12px 16px; margin-bottom:14px; line-height:1.8;">
+              <div>• <strong>Montant Total Hors Taxes (HT) :</strong> <span style="font-size:15px; font-weight:800; color:#1e40af;">${formatMoney(amountHT)}</span></div>
+              <div style="font-size:12px; color:#3b82f6;"><em>(${escapeHtml(wordsFrHT)})</em></div>
+              <div style="margin-top:4px;">• <strong>Montant de la TVA (19%) :</strong> <strong>${formatMoney(amountTVA)}</strong></div>
+              <div style="margin-top:4px; border-top:1px dashed #93c5fd; padding-top:4px;">• <strong>Montant Total Toutes Taxes Comprises (TTC) :</strong> <span style="font-size:16px; font-weight:900; color:#1e3a8a;">${formatMoney(amountTTC)}</span></div>
+              <div style="font-size:12px; color:#1e40af;"><em>(${escapeHtml(wordsFrTTC)})</em></div>
             </div>
 
-            <p style="margin-bottom:8px;">Le paiement des prestations sera effectué au compte bancaire (RIB) n° : <strong>${escapeHtml(comp.rib)}</strong> ouvert auprès de la banque : <strong>${escapeHtml(comp.bank)}</strong>.</p>
-            <p style="margin-bottom:8px;">Je m'engage à maintenir la présente offre valable pendant un délai de <strong>90 jours</strong> à compter de la date limite de dépôt des offres.</p>
-            <p style="margin-bottom:18px;">Je m'engage à entamer et livrer les prestations dans les délais prévus par le cahier des charges dès notification de l'approbation du marché.</p>
-          ` + stampHtml;
+            <p style="margin-bottom:6px;">Le paiement des prestations sera effectué au compte bancaire (RIB) n° : <strong>${escapeHtml(comp.rib)}</strong> ouvert auprès de : <strong>${escapeHtml(comp.bank)}</strong>.</p>
+            <p style="margin-bottom:6px;">Je m'engage à maintenir la présente offre valable pendant un délai de <strong>90 jours</strong> à compter de la date limite de dépôt des offres.</p>
+            <p style="margin-bottom:14px;">Je m'engage à entamer et livrer les prestations dans les délais prévus par le cahier des charges dès notification de l'approbation du marché.</p>
+          ` + renderSignatures('bidder');
         } else {
           sheet.innerHTML = headerHtml + `
-            <div style="text-align:center; margin:22px 0 16px;">
-              <h2 style="font-size:19px; font-weight:900; color:#1e293b; text-decoration:underline; text-underline-offset:6px;">رسالة التعهد بالعرض (LETTRE DE SOUMISSION)</h2>
-              <div style="font-size:12px; color:#64748b; margin-top:4px;">(محررة وفق أحكام المادة 67 من المرسوم الرئاسي رقم 15-247 المؤرخ في 16 سبتمبر 2015 المتضمن تنظيم الصفقات العمومية)</div>
-            </div>
-
-            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 16px; margin-bottom:18px; font-size:13.5px;">
-              <div><strong>مرجع إعلان المناقصة / الاستشارة:</strong> ${escapeHtml(t.reference || 'AO')}</div>
-              <div style="margin-top:4px;"><strong>موضوع الصفقة:</strong> ${escapeHtml(t.title || 'مشروع الصفقة')}</div>
-            </div>
-
-            <p style="margin-bottom:12px;">أنا الموقع أدناه، السيد(ة): <strong>${escapeHtml(comp.manager)}</strong>، بصفتي المسير والممثل القانوني المخول لشركة <strong>${escapeHtml(comp.name)}</strong>،</p>
-            <p style="margin-bottom:12px;">بعد اطلاعي الكامل والدقيق على جميع وثائق ومستندات ملف المناقصة المذكور أعلاه، وبعد تقديري تحت مسؤوليتي لطبيعة وحجم الصعوبات والالتزامات الواجبة لتنفيذ موضوع الصفقة:</p>
-            <p style="margin-bottom:14px;"><strong>ألتزم على شرفي</strong> بتنفيذ وإتمام كافة الخدمات والأشغال موضوع الصفقة طبقاً للشروط والمواصفات الواردة في دفتر الشروط، وذلك مقابل الأسعار التي حددتها بنفسي، والبالغة إجمالياً ما يلي:</p>
-
-            <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:14px 18px; margin-bottom:16px; line-height:2;">
-              <div>• <strong>المبلغ الإجمالي بدون رسوم (HT):</strong> <span style="font-size:17px; font-weight:800; color:#1e40af;">${formatMoney(amountHT)}</span></div>
-              <div style="font-size:12.5px; color:#3b82f6;"><em>(${escapeHtml(wordsArHT)})</em></div>
-              <div style="margin-top:6px;">• <strong>مبلغ الرسم على القيمة المضافة (TVA 19%):</strong> <strong>${formatMoney(amountTVA)}</strong></div>
-              <div style="margin-top:6px; border-top:1px dashed #93c5fd; padding-top:6px;">• <strong>المبلغ الإجمالي بكل الرسوم (TTC):</strong> <span style="font-size:18px; font-weight:900; color:#1e3a8a;">${formatMoney(amountTTC)}</span></div>
-              <div style="font-size:13px; color:#1e40af;"><em>(${escapeHtml(wordsArTTC)})</em></div>
-            </div>
-
-            <p style="margin-bottom:8px;">يتم دفع المبالغ المستحقة بموجب الصفقة في الحساب المصرفي (RIB) رقم: <strong>${escapeHtml(comp.rib)}</strong> المفتوح لدى: <strong>${escapeHtml(comp.bank)}</strong>.</p>
-            <p style="margin-bottom:8px;">ألتزم بإبقاء هذا التعهد سارياً وملزماً لمؤسستنا لمدة <strong>90 يوماً</strong> كاملة ابتداءً من التاريخ المحدد لإيداع العروض.</p>
-            <p style="margin-bottom:18px;">كما ألتزم بتنفيذ الصفقة والبدء في الأشغال فور تلقي إشعار الترسية المؤقتة والنهائية من المصلحة المتعاقدة.</p>
-          ` + stampHtml;
-        }
-
-      } else if(_activeProcurementDocType === 'declaration_souscrire'){
-        if(isFr){
-          sheet.innerHTML = headerHtml + `
-            <div style="text-align:center; margin:20px 0 16px;">
-              <h2 style="font-size:18px; font-weight:900; color:#1e293b; text-decoration:underline;">DÉCLARATION À SOUSCRIRE</h2>
-              <div style="font-size:12px; color:#64748b; margin-top:4px;">(Établie en application de l'article 67 du Décret présidentiel n° 15-247 du 16 septembre 2015)</div>
-            </div>
-
-            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 16px; margin-bottom:16px; font-size:13px; line-height:1.8;">
-              <div><strong>1. Dénomination de la société :</strong> ${escapeHtml(comp.name)} (${escapeHtml(comp.legalForm)})</div>
-              <div><strong>2. Siège social :</strong> ${escapeHtml(comp.address)}</div>
-              <div><strong>3. Registre de Commerce :</strong> n° ${escapeHtml(comp.rc)} | <strong>NIF :</strong> ${escapeHtml(comp.nif)} | <strong>NIS :</strong> ${escapeHtml(comp.nis)}</div>
-              <div><strong>4. Nom et prénom du représentant légal :</strong> ${escapeHtml(comp.manager)}</div>
-            </div>
-
-            <p style="margin-bottom:12px;">Le soussigné déclare sur l'honneur que la société dispose des capacités juridiques, économiques, financières et techniques nécessaires à la bonne exécution des prestations objet du marché : <strong>${escapeHtml(t.reference || 'AO')} — ${escapeHtml(t.title || '')}</strong>.</p>
-            <p style="margin-bottom:12px;">S'engage à respecter scrupuleusement l'ensemble des clauses techniques et administratives stipulées dans le cahier des charges et à ne sous-traiter aucune partie sans accord préalable du service contractant.</p>
-            <p style="margin-bottom:14px;">Atteste que la société n'est pas en état de faillite, de liquidation judiciaire ou sous le coup d'une interdiction de soumissionner aux marchés publics en vertu de l'article 75 du décret présidentiel n° 15-247.</p>
-            <p style="margin-bottom:14px;">Indique le compte bancaire suivant pour le règlement des droits contractuels : <strong>${escapeHtml(comp.rib)}</strong> auprès de <strong>${escapeHtml(comp.bank)}</strong>.</p>
-          ` + stampHtml;
-        } else {
-          sheet.innerHTML = headerHtml + `
-            <div style="text-align:center; margin:20px 0 16px;">
-              <h2 style="font-size:18px; font-weight:900; color:#1e293b; text-decoration:underline;">التصريح بالاكتتاب (DÉCLARATION À SOUSCRIRE)</h2>
-              <div style="font-size:12px; color:#64748b; margin-top:4px;">(طبقاً لأحكام المادة 67 من المرسوم الرئاسي 15-247 المتعلق بتنظيم الصفقات العمومية)</div>
-            </div>
-
-            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 16px; margin-bottom:16px; font-size:13.5px; line-height:1.9;">
-              <div><strong>1. تسمية المؤسسة أو الشركة:</strong> ${escapeHtml(comp.name)} (${escapeHtml(comp.legalForm)})</div>
-              <div><strong>2. عنوان المقر الاجتماعي:</strong> ${escapeHtml(comp.address)}</div>
-              <div><strong>3. رقم السجل التجاري:</strong> ${escapeHtml(comp.rc)} | <strong>رقم التعريف الجبائي (NIF):</strong> ${escapeHtml(comp.nif)}</div>
-              <div><strong>4. اسم ولقب وصفة الممثل القانوني:</strong> ${escapeHtml(comp.manager)}</div>
-            </div>
-
-            <p style="margin-bottom:12px;">يصرح الموقع أدناه على شرفه أن المؤسسة تتمتع بكافة المؤهلات القانونية، التقنية والمالية الضرورية لحسن إنجاز الصفقة موضوع الإعلان رقم: <strong>${escapeHtml(t.reference || 'AO')}</strong> المتعلق بـ: <strong>${escapeHtml(t.title || '')}</strong>.</p>
-            <p style="margin-bottom:12px;">يلتزم بتنفيذ الأشغال والتوريدات موضوع الصفقة طبقاً للشروط والمواصفات المحددة في دفتر الشروط ووفقاً للأسعار المقترحة في العرض المالي.</p>
-            <p style="margin-bottom:12px;">يشهد أن المؤسسة ليست في حالة إفلاس أو تصفية قضائية وليست تحت طائلة المنع أو الإقصاء من المشاركة في الصفقات العمومية وفق أحكام التشريع المعمول به.</p>
-            <p style="margin-bottom:14px;">يحدد الحساب البنكي المعتمد لتسديد مستحقات الصفقة: <strong>${escapeHtml(comp.rib)}</strong> المفتوح لدى: <strong>${escapeHtml(comp.bank)}</strong>.</p>
-          ` + stampHtml;
-        }
-
-      } else if(_activeProcurementDocType === 'declaration_probite'){
-        if(isFr){
-          sheet.innerHTML = headerHtml + `
-            <div style="text-align:center; margin:20px 0 16px;">
-              <h2 style="font-size:18px; font-weight:900; color:#1e293b; text-decoration:underline;">DÉCLARATION DE PROBITÉ</h2>
-              <div style="font-size:12px; color:#64748b; margin-top:4px;">(Établie en application de l'article 75 du Décret présidentiel n° 15-247 du 16 septembre 2015)</div>
+            <div style="text-align:center; margin:18px 0 14px;">
+              <h2 style="font-size:18px; font-weight:900; color:#1e293b; text-decoration:underline; text-underline-offset:5px;">رسالة التعهد بالعرض (LETTRE DE SOUMISSION)</h2>
+              <div style="font-size:11.5px; color:#64748b; margin-top:4px;">(محررة وفق أحكام المادة 67 من المرسوم الرئاسي رقم 15-247 المؤرخ في 16 سبتمبر 2015 المتضمن تنظيم الصفقات العمومية)</div>
             </div>
 
             <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 16px; margin-bottom:16px; font-size:13px;">
-              <div><strong>Appel d'Offres n° :</strong> ${escapeHtml(t.reference || 'AO')}</div>
-              <div><strong>Objet :</strong> ${escapeHtml(t.title || 'Marché public')}</div>
-              <div><strong>Soumissionnaire :</strong> ${escapeHtml(comp.name)} représenté par ${escapeHtml(comp.manager)}</div>
+              <div><strong>مرجع إعلان المناقصة / الاستشارة:</strong> ${escapeHtml(t.reference || 'AO')}</div>
+              <div style="margin-top:3px;"><strong>موضوع الصفقة:</strong> ${escapeHtml(t.title || 'مشروع الصفقة')}</div>
             </div>
 
-            <p style="margin-bottom:12px;">Je soussigné(e), <strong>${escapeHtml(comp.manager)}</strong>, agissant au nom et pour le compte de l'entreprise <strong>${escapeHtml(comp.name)}</strong>,</p>
-            <p style="margin-bottom:12px;"><strong>DÉCLARE SUR L'HONNEUR :</strong></p>
-            <ul style="margin-bottom:14px; line-height:1.9; padding-left:20px;">
+            <p style="margin-bottom:10px;">أنا الموقع أدناه، السيد(ة): <strong>${escapeHtml(p.contractorManager || comp.manager)}</strong>، بصفتي المسير والممثل القانوني المخول لشركة <strong>${escapeHtml(comp.name)}</strong>،</p>
+            <p style="margin-bottom:10px;">بعد اطلاعي الكامل والدقيق على جميع وثائق ومستندات ملف المناقصة المذكور أعلاه، وبعد تقديري تحت مسؤوليتي لطبيعة وحجم الصعوبات والالتزامات الواجبة لتنفيذ موضوع الصفقة:</p>
+            <p style="margin-bottom:12px;"><strong>ألتزم على شرفي</strong> بتنفيذ وإتمام كافة الخدمات والأشغال موضوع الصفقة طبقاً للشروط والمواصفات الواردة في دفتر الشروط، مقابل الأسعار المحددة في عرضي، والبالغة إجمالياً ما يلي:</p>
+
+            <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:12px 16px; margin-bottom:14px; line-height:1.9;">
+              <div>• <strong>المبلغ الإجمالي بدون رسوم (HT):</strong> <span style="font-size:16px; font-weight:800; color:#1e40af;">${formatMoney(amountHT)}</span></div>
+              <div style="font-size:12px; color:#3b82f6;"><em>(${escapeHtml(wordsArHT)})</em></div>
+              <div style="margin-top:4px;">• <strong>مبلغ الرسم على القيمة المضافة (TVA 19%):</strong> <strong>${formatMoney(amountTVA)}</strong></div>
+              <div style="margin-top:4px; border-top:1px dashed #93c5fd; padding-top:4px;">• <strong>المبلغ الإجمالي بكل الرسوم (TTC):</strong> <span style="font-size:17px; font-weight:900; color:#1e3a8a;">${formatMoney(amountTTC)}</span></div>
+              <div style="font-size:12.5px; color:#1e40af;"><em>(${escapeHtml(wordsArTTC)})</em></div>
+            </div>
+
+            <p style="margin-bottom:6px;">يتم دفع المبالغ المستحقة بموجب الصفقة في الحساب المصرفي (RIB) رقم: <strong>${escapeHtml(comp.rib)}</strong> المفتوح لدى: <strong>${escapeHtml(comp.bank)}</strong>.</p>
+            <p style="margin-bottom:6px;">ألتزم بإبقاء هذا التعهد سارياً وملزماً لمؤسستنا لمدة <strong>90 يوماً</strong> كاملة ابتداءً من التاريخ المحدد لإيداع العروض.</p>
+            <p style="margin-bottom:14px;">كما ألتزم بتنفيذ الصفقة والبدء في الأشغال فور تلقي إشعار الترسية والمصادقة النهائية من المصلحة المتعاقدة.</p>
+          ` + renderSignatures('bidder');
+        }
+
+      } else if (docType === 'declaration_souscrire') {
+        if (isFr) {
+          sheet.innerHTML = headerHtml + `
+            <div style="text-align:center; margin:18px 0 14px;">
+              <h2 style="font-size:18px; font-weight:900; color:#1e293b; text-decoration:underline;">DÉCLARATION À SOUSCRIRE</h2>
+              <div style="font-size:11.5px; color:#64748b; margin-top:4px;">(Établie en application de l'article 67 du Décret présidentiel n° 15-247)</div>
+            </div>
+
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 16px; margin-bottom:14px; font-size:12.5px; line-height:1.7;">
+              <div><strong>1. Dénomination de la société :</strong> ${escapeHtml(comp.name)} (${escapeHtml(comp.legalForm)})</div>
+              <div><strong>2. Siège social :</strong> ${escapeHtml(comp.address)}</div>
+              <div><strong>3. Registre de Commerce :</strong> n° ${escapeHtml(comp.rc)} | <strong>NIF :</strong> ${escapeHtml(comp.nif)} | <strong>NIS :</strong> ${escapeHtml(comp.nis)}</div>
+              <div><strong>4. Nom et prénom du représentant légal :</strong> ${escapeHtml(p.contractorManager || comp.manager)}</div>
+            </div>
+
+            <p style="margin-bottom:10px;">Le soussigné déclare sur l'honneur que la société dispose des capacités juridiques, économiques, financières et techniques nécessaires à la bonne exécution des prestations objet du marché : <strong>${escapeHtml(t.reference || 'AO')} — ${escapeHtml(t.title || '')}</strong>.</p>
+            <p style="margin-bottom:10px;">S'engage à respecter scrupuleusement l'ensemble des clauses techniques et administratives stipulées dans le cahier des charges et à ne sous-traiter aucune partie sans accord préalable du service contractant.</p>
+            <p style="margin-bottom:10px;">Atteste que la société n'est pas en état de faillite, de liquidation judiciaire ou sous le coup d'une interdiction de soumissionner aux marchés publics en vertu de l'article 75 du décret présidentiel n° 15-247.</p>
+            <p style="margin-bottom:14px;">Indique le compte bancaire suivant pour le règlement des droits contractuels : <strong>${escapeHtml(comp.rib)}</strong> auprès de <strong>${escapeHtml(comp.bank)}</strong>.</p>
+          ` + renderSignatures('bidder');
+        } else {
+          sheet.innerHTML = headerHtml + `
+            <div style="text-align:center; margin:18px 0 14px;">
+              <h2 style="font-size:18px; font-weight:900; color:#1e293b; text-decoration:underline;">التصريح بالاكتتاب (DÉCLARATION À SOUSCRIRE)</h2>
+              <div style="font-size:11.5px; color:#64748b; margin-top:4px;">(طبقاً لأحكام المادة 67 من المرسوم الرئاسي 15-247 المتعلق بتنظيم الصفقات العمومية)</div>
+            </div>
+
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 16px; margin-bottom:14px; font-size:13px; line-height:1.8;">
+              <div><strong>1. تسمية المؤسسة أو الشركة:</strong> ${escapeHtml(comp.name)} (${escapeHtml(comp.legalForm)})</div>
+              <div><strong>2. عنوان المقر الاجتماعي:</strong> ${escapeHtml(comp.address)}</div>
+              <div><strong>3. رقم السجل التجاري:</strong> ${escapeHtml(comp.rc)} | <strong>رقم التعريف الجبائي (NIF):</strong> ${escapeHtml(comp.nif)}</div>
+              <div><strong>4. اسم ولقب وصفة الممثل القانوني:</strong> ${escapeHtml(p.contractorManager || comp.manager)}</div>
+            </div>
+
+            <p style="margin-bottom:10px;">يصرح الموقع أدناه على شرفه أن المؤسسة تتمتع بكافة المؤهلات القانونية، التقنية والمالية الضرورية لحسن إنجاز الصفقة موضوع الإعلان رقم: <strong>${escapeHtml(t.reference || 'AO')}</strong> المتعلق بـ: <strong>${escapeHtml(t.title || '')}</strong>.</p>
+            <p style="margin-bottom:10px;">يلتزم بتنفيذ الأشغال والتوريدات موضوع الصفقة طبقاً للشروط والمواصفات المحددة في دفتر الشروط ووفقاً للأسعار المقترحة في العرض المالي.</p>
+            <p style="margin-bottom:10px;">يشهد أن المؤسسة ليست في حالة إفلاس أو تصفية قضائية وليست تحت طائلة المنع أو الإقصاء من المشاركة في الصفقات العمومية وفق أحكام التشريع المعمول به.</p>
+            <p style="margin-bottom:14px;">يحدد الحساب البنكي المعتمد لتسديد مستحقات الصفقة: <strong>${escapeHtml(comp.rib)}</strong> المفتوح لدى: <strong>${escapeHtml(comp.bank)}</strong>.</p>
+          ` + renderSignatures('bidder');
+        }
+
+      } else if (docType === 'declaration_probite') {
+        if (isFr) {
+          sheet.innerHTML = headerHtml + `
+            <div style="text-align:center; margin:18px 0 14px;">
+              <h2 style="font-size:18px; font-weight:900; color:#1e293b; text-decoration:underline;">DÉCLARATION DE PROBITÉ</h2>
+              <div style="font-size:11.5px; color:#64748b; margin-top:4px;">(Établie en application de l'article 75 du Décret présidentiel n° 15-247)</div>
+            </div>
+
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 16px; margin-bottom:14px; font-size:12.5px;">
+              <div><strong>Appel d'Offres n° :</strong> ${escapeHtml(t.reference || 'AO')}</div>
+              <div><strong>Objet :</strong> ${escapeHtml(t.title || 'Marché public')}</div>
+              <div><strong>Soumissionnaire :</strong> ${escapeHtml(comp.name)} représenté par ${escapeHtml(p.contractorManager || comp.manager)}</div>
+            </div>
+
+            <p style="margin-bottom:10px;">Je soussigné(e), <strong>${escapeHtml(p.contractorManager || comp.manager)}</strong>, agissant au nom et pour le compte de l'entreprise <strong>${escapeHtml(comp.name)}</strong>, déclare sur l'honneur :</p>
+            <ul style="margin-bottom:12px; line-height:1.8; padding-left:20px; font-size:12.5px;">
               <li>Ne pas faire l'objet d'un jugement ayant autorité de la chose jugée pour infraction affectant la probité professionnelle.</li>
               <li>Ne pas avoir fait l'objet d'une condamnation pour corruption, trafic d'influence ou fausse déclaration dans le cadre des marchés publics.</li>
               <li>M'engager à ne pas verser, proposer, solliciter ou accepter directement ou indirectement des avantages illicites de quelque nature que ce soit afin d'influer sur la passation ou l'exécution du présent marché.</li>
               <li>Déclarer qu'aucun membre de l'entreprise n'est en situation de conflit d'intérêts direct ou indirect avec le service contractant <strong>${escapeHtml(t.authority || '')}</strong>.</li>
-              <li>Garantir la stricte sincérité et exactitude de l'ensemble des renseignements et pièces constitutives du dossier de candidature et des offres technique et financière.</li>
             </ul>
-            <p style="margin-bottom:16px;">Je reconnais qu'en cas d'inexactitude de la présente déclaration, l'entreprise encourt la résiliation de plein droit du marché à ses torts exclusifs et son inscription sur la liste des opérateurs exclus de la commande publique.</p>
-          ` + stampHtml;
+            <p style="margin-bottom:14px;">Je reconnais qu'en cas d'inexactitude de la présente déclaration, l'entreprise encourt la résiliation de plein droit du marché à ses torts exclusifs et son exclusion de la commande publique.</p>
+          ` + renderSignatures('bidder');
         } else {
           sheet.innerHTML = headerHtml + `
-            <div style="text-align:center; margin:20px 0 16px;">
+            <div style="text-align:center; margin:18px 0 14px;">
               <h2 style="font-size:18px; font-weight:900; color:#1e293b; text-decoration:underline;">التصريح بالنزاهة (DÉCLARATION DE PROBITÉ)</h2>
-              <div style="font-size:12px; color:#64748b; margin-top:4px;">(محرر طبقاً لأحكام المادة 75 من المرسوم الرئاسي رقم 15-247 المؤرخ في 16 سبتمبر 2015 المتضمن تنظيم الصفقات العمومية)</div>
+              <div style="font-size:11.5px; color:#64748b; margin-top:4px;">(محرر طبقاً لأحكام المادة 75 من المرسوم الرئاسي رقم 15-247 المؤرخ في 16 سبتمبر 2015 المتضمن تنظيم الصفقات العمومية)</div>
             </div>
 
-            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 16px; margin-bottom:16px; font-size:13.5px;">
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 16px; margin-bottom:14px; font-size:13px;">
               <div><strong>مرجع المناقصة / الاستشارة:</strong> ${escapeHtml(t.reference || 'AO')}</div>
               <div><strong>موضوع الصفقة:</strong> ${escapeHtml(t.title || 'مشروع الصفقة')}</div>
-              <div><strong>المتعهد:</strong> ${escapeHtml(comp.name)} ممثلة بالسيد: ${escapeHtml(comp.manager)}</div>
+              <div><strong>المتعهد:</strong> ${escapeHtml(comp.name)} ممثلة بالسيد: ${escapeHtml(p.contractorManager || comp.manager)}</div>
             </div>
 
-            <p style="margin-bottom:12px;">أنا الموقع أدناه، السيد(ة): <strong>${escapeHtml(comp.manager)}</strong>، بصفتي الممثل القانوني لشركة <strong>${escapeHtml(comp.name)}</strong>،</p>
-            <p style="margin-bottom:12px;"><strong>أصرح على شرفي بما يلي:</strong></p>
-            <ul style="margin-bottom:14px; line-height:2; padding-right:20px;">
+            <p style="margin-bottom:10px;">أنا الموقع أدناه، السيد(ة): <strong>${escapeHtml(p.contractorManager || comp.manager)}</strong>، بصفتي الممثل القانوني لشركة <strong>${escapeHtml(comp.name)}</strong>، أصرح على شرفي بما يلي:</p>
+            <ul style="margin-bottom:12px; line-height:1.9; padding-right:20px; font-size:12.5px;">
               <li>عدم الوقوع تحت طائلة أي حكم قضائي حائز لقوة الشيء المقضي به بسبب مخالفة تمس بالنزاهة المهنية.</li>
               <li>عدم الخضوع لأي إدانة تتعلق بالرشوة أو استغلال النفوذ أو الإدلاء بإقرارات كاذبة في إطار الصفقات العمومية.</li>
-              <li>الالتزام التام بعدم تقديم أو اقتراح أو التماس أو قبول، بصفة مباشرة أو غير مباشرة، أي ميزة غير مشروعة مهما كانت طبيعتها للتأثير على إجراءات إبرام أو تنفيذ هذه الصفقة.</li>
+              <li>الالتزام التام بعدم تقديم أو اقتراح أو التماس أو قبول أي ميزة غير مشروعة للتأثير على إجراءات إبرام أو تنفيذ هذه الصفقة.</li>
               <li>التأكيد على عدم وجود أي حالة تضارب للمصالح مباشرة أو غير مباشرة مع المصلحة المتعاقدة: <strong>${escapeHtml(t.authority || '')}</strong> أو مسؤوليها.</li>
-              <li>الضمان الكامل لصحة ومصداقية ومطابقة كافة الوثائق والبيانات المقدمة في ملف الترشح والعرضين التقني والمالي.</li>
             </ul>
-            <p style="margin-bottom:16px;">أقر وأعلم أنه في حال ثبوت عدم صحة هذا التصريح، تتعرض مؤسستنا لفسخ الصفقة فوراً على عاتقها الحصري مع إدراجها ضمن القائمة الوطنية للمتعاملين الممنوعين من المشاركة في الصفقات العمومية.</p>
-          ` + stampHtml;
+            <p style="margin-bottom:14px;">أقر وأعلم أنه في حال ثبوت عدم صحة هذا التصريح، تتعرض المؤسسة لفسخ الصفقة فوراً على عاتقها الحصري مع إدراجها ضمن القائمة الوطنية للمتعاملين الممنوعين من الصفقات العمومية.</p>
+          ` + renderSignatures('bidder');
         }
 
-      } else {
-        // Déclaration de candidature
-        if(isFr){
+      } else if (docType === 'declaration_candidature') {
+        if (isFr) {
           sheet.innerHTML = headerHtml + `
-            <div style="text-align:center; margin:20px 0 16px;">
+            <div style="text-align:center; margin:18px 0 14px;">
               <h2 style="font-size:18px; font-weight:900; color:#1e293b; text-decoration:underline;">DÉCLARATION DE CANDIDATURE</h2>
-              <div style="font-size:12px; color:#64748b; margin-top:4px;">(Établie en application de l'article 67 du Décret présidentiel n° 15-247 du 16 septembre 2015)</div>
+              <div style="font-size:11.5px; color:#64748b; margin-top:4px;">(Établie en application de l'article 67 du Décret présidentiel n° 15-247)</div>
             </div>
 
-            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 16px; margin-bottom:16px; font-size:13px; line-height:1.8;">
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 16px; margin-bottom:14px; font-size:12.5px;">
               <div><strong>Appel d'Offres n° :</strong> ${escapeHtml(t.reference || 'AO')}</div>
               <div><strong>Service Contractant :</strong> ${escapeHtml(t.authority || 'Service Contractant')}</div>
               <div><strong>Candidat :</strong> ${escapeHtml(comp.name)} | <strong>Capital :</strong> ${escapeHtml(comp.capital)} DZD</div>
             </div>
 
-            <p style="margin-bottom:12px;">Je soussigné(e), <strong>${escapeHtml(comp.manager)}</strong>, agissant en qualité de Gérant représentant légal,</p>
-            <p style="margin-bottom:12px;">Atteste sur l'honneur que la société <strong>${escapeHtml(comp.name)}</strong> :</p>
-            <ul style="margin-bottom:14px; line-height:1.9; padding-left:20px;">
+            <p style="margin-bottom:10px;">Je soussigné(e), <strong>${escapeHtml(p.contractorManager || comp.manager)}</strong>, agissant en qualité de Gérant représentant légal,</p>
+            <p style="margin-bottom:10px;">Atteste sur l'honneur que la société <strong>${escapeHtml(comp.name)}</strong> :</p>
+            <ul style="margin-bottom:12px; line-height:1.8; padding-left:20px; font-size:12.5px;">
               <li>Est régulièrement inscrite au registre du commerce sous le n° <strong>${escapeHtml(comp.rc)}</strong>.</li>
-              <li>Est en situation fiscale régulière et en possession d'un extrait de rôle apuré ou avec échéancier respecté.</li>
+              <li>Est en situation fiscale régulière et en possession d'un extrait de rôle apuré.</li>
               <li>Est en situation régulière vis-à-vis des organismes de sécurité sociale (CNAS et CASNOS) et à jour de ses cotisations.</li>
-              <li>Dispose des moyens matériels, équipements, personnels d'encadrement et qualifications requises par le cahier des charges.</li>
-              <li>Ne fait l'objet d'aucune mesure d'exclusion ou d'interdiction de participer aux marchés publics en Algérie.</li>
+              <li>Dispose des moyens matériels, équipements, personnels d'encadrement et qualifications requis par le cahier des charges.</li>
             </ul>
-            <p style="margin-bottom:16px;">Certifie l'exactitude des informations fournies et m'engage à fournir toute justification complémentaire à la demande du service contractant.</p>
-          ` + stampHtml;
+            <p style="margin-bottom:14px;">Certifie l'exactitude des informations fournies et m'engage à fournir toute justification complémentaire sur demande du service contractant.</p>
+          ` + renderSignatures('bidder');
         } else {
           sheet.innerHTML = headerHtml + `
-            <div style="text-align:center; margin:20px 0 16px;">
+            <div style="text-align:center; margin:18px 0 14px;">
               <h2 style="font-size:18px; font-weight:900; color:#1e293b; text-decoration:underline;">التصريح بالترشح (DÉCLARATION DE CANDIDATURE)</h2>
-              <div style="font-size:12px; color:#64748b; margin-top:4px;">(محرر طبقاً لأحكام المادة 67 من المرسوم الرئاسي رقم 15-247 المتعلق بالصفقات العمومية)</div>
+              <div style="font-size:11.5px; color:#64748b; margin-top:4px;">(محرر طبقاً لأحكام المادة 67 من المرسوم الرئاسي رقم 15-247 المتعلق بالصفقات العمومية)</div>
             </div>
 
-            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 16px; margin-bottom:16px; font-size:13.5px; line-height:1.9;">
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 16px; margin-bottom:14px; font-size:13px;">
               <div><strong>مرجع المناقصة:</strong> ${escapeHtml(t.reference || 'AO')}</div>
               <div><strong>المصلحة المتعاقدة:</strong> ${escapeHtml(t.authority || 'المصلحة المتعاقدة')}</div>
               <div><strong>المترشح:</strong> ${escapeHtml(comp.name)} | <strong>رأس المال:</strong> ${escapeHtml(comp.capital)} دج</div>
             </div>
 
-            <p style="margin-bottom:12px;">أنا الموقع أدناه، السيد(ة): <strong>${escapeHtml(comp.manager)}</strong>، بصفتي المسير والممثل القانوني المخول،</p>
-            <p style="margin-bottom:12px;">أشهد على شرفي بأن مؤسسة <strong>${escapeHtml(comp.name)}</strong> مستوفية لكافة الشروط القانونية والمهنية المقررة للمشاركة في الصفقات العمومية:</p>
-            <ul style="margin-bottom:14px; line-height:2; padding-right:20px;">
+            <p style="margin-bottom:10px;">أنا الموقع أدناه، السيد(ة): <strong>${escapeHtml(p.contractorManager || comp.manager)}</strong>، بصفتي المسير والممثل القانوني المخول،</p>
+            <p style="margin-bottom:10px;">أشهد على شرفي بأن مؤسسة <strong>${escapeHtml(comp.name)}</strong> مستوفية لكافة الشروط القانونية والمهنية المقررة للمشاركة في الصفقات العمومية:</p>
+            <ul style="margin-bottom:12px; line-height:1.9; padding-right:20px; font-size:12.5px;">
               <li>مسجلة بصفة نظامية في السجل التجاري تحت رقم: <strong>${escapeHtml(comp.rc)}</strong>.</li>
               <li>في وضعية جبائية قانونية ومصفاة وحاملة لمستخرج ضرائب ساري المفعول (Extrait de rôle apuré).</li>
               <li>في وضعية نظامية وقانونية تجاه هيئات الضمان الاجتماعي للعمال الأجراء وغير الأجراء (CNAS و CASNOS).</li>
               <li>تتوفر على الوسائل المادية والبشرية والكفاءات المهنية وشهادات حسن الإنجاز المطابقة لدفتر الشروط.</li>
-              <li>ليست تحت طائلة أي إجراء حظر أو إقصاء من المشاركة في الصفقات العمومية في الجمهورية الجزائرية.</li>
             </ul>
-            <p style="margin-bottom:16px;">أشهد بصدق ودقة كافة المعلومات المدلى بها وألتزم بتقديم كافة الإثباتات والوثائق الأصلية عند أول طلب من المصلحة المتعاقدة.</p>
-          ` + stampHtml;
+            <p style="margin-bottom:14px;">أشهد بصدق ودقة كافة المعلومات المدلى بها وألتزم بتقديم كافة الإثباتات والوثائق الأصلية عند أول طلب من المصلحة المتعاقدة.</p>
+          ` + renderSignatures('bidder');
+        }
+
+      // ─────────────────────────────────────────────────────────────
+      // TEMPLATES 5 TO 7: ORDRES DE SERVICE (ODS)
+      // ─────────────────────────────────────────────────────────────
+      } else if (docType === 'ods_commencement') {
+        if (isFr) {
+          sheet.innerHTML = headerHtml + `
+            <div style="text-align:center; margin:18px 0 14px;">
+              <h2 style="font-size:18px; font-weight:900; color:#1e3a8a; text-decoration:underline;">ORDRE DE SERVICE DE COMMENCEMENT</h2>
+              <div style="font-size:13px; font-weight:700; color:#0f172a; margin-top:4px;">${escapeHtml(p.odsNumber || 'ODS N° 01/2026')}</div>
+              <div style="font-size:11.5px; color:#64748b; margin-top:2px;">(Établi en exécution du Marché n° ${escapeHtml(t.reference || 'AO')} et du CCAG)</div>
+            </div>
+
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 16px; margin-bottom:14px; font-size:12.5px; line-height:1.8;">
+              <div>• <strong>Marché n° :</strong> ${escapeHtml(t.reference || 'AO')} portant sur : <strong>${escapeHtml(t.title || '')}</strong></div>
+              <div>• <strong>Titulaire du Marché :</strong> ${escapeHtml(comp.name)} représentée par M. ${escapeHtml(p.contractorManager || comp.manager)}</div>
+              <div>• <strong>Lieu d'implantation / Chantier :</strong> ${escapeHtml(p.projectLocation || 'Conforme au cahier des charges')}</div>
+              <div>• <strong>Délai contractuel d'exécution :</strong> <span style="font-weight:800; color:#1e40af;">${escapeHtml(p.odsDelay || '180 Jours')}</span></div>
+            </div>
+
+            <p style="margin-bottom:10px;">Il est expressément prescrit au titulaire du marché de <strong>commencer immédiatement l'exécution des travaux et prestations</strong> objet du marché susvisé à compter du : <strong>${escapeHtml(p.odsStartDate || todayStrFr)}</strong>.</p>
+            <p style="margin-bottom:10px;">Le délai d'exécution contractuel commence à courir de plein droit à compter de la date de notification du présent ordre de service.</p>
+            <p style="margin-bottom:10px;">L'entreprise titulaire est tenue de déployer l'intégralité des moyens humains qualifiés, des engins et des matériels prévus dans son mémoire technique et d'installer le panneau de chantier réglementaire.</p>
+            <p style="margin-bottom:14px;">Les travaux devront être menés en stricte conformité avec les règles de l'art, les prescriptions techniques et les normes algériennes de sécurité et d'hygiène.</p>
+          ` + renderSignatures('ods');
+        } else {
+          sheet.innerHTML = headerHtml + `
+            <div style="text-align:center; margin:18px 0 14px;">
+              <h2 style="font-size:18px; font-weight:900; color:#1e3a8a; text-decoration:underline;">أمر خدمة يقضي ببدء الأشغال / الخدمات (ODS DE COMMENCEMENT)</h2>
+              <div style="font-size:13.5px; font-weight:800; color:#0f172a; margin-top:4px;">${escapeHtml(p.odsNumber || 'أمر خدمة رقم 01/2026')}</div>
+              <div style="font-size:11.5px; color:#64748b; margin-top:2px;">(محرر تنفيذاً للصفقة رقم: ${escapeHtml(t.reference || 'AO')} وطبقاً لأحكام المرسوم الرئاسي 15-247 ودفتر الشروط العام CCAG)</div>
+            </div>
+
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 16px; margin-bottom:14px; font-size:13px; line-height:1.8;">
+              <div>• <strong>الصفقة رقم:</strong> ${escapeHtml(t.reference || 'AO')} الخاصة بـ: <strong>${escapeHtml(t.title || '')}</strong></div>
+              <div>• <strong>المتعامل المتعاقد:</strong> ${escapeHtml(comp.name)} ممثلة بالمسير: ${escapeHtml(p.contractorManager || comp.manager)}</div>
+              <div>• <strong>موقع الورشة والمشروع:</strong> ${escapeHtml(p.projectLocation || 'محدد في دفتر الشروط')}</div>
+              <div>• <strong>الأجل التعاقدي للإنجاز:</strong> <span style="font-weight:800; color:#1e40af;">${escapeHtml(p.odsDelay || '180 يوماً')}</span></div>
+            </div>
+
+            <p style="margin-bottom:10px;">يؤمر المتعامل المتعاقد رسمياً <strong>بالشروع الفوري في تنفيذ الأشغال والخدمات</strong> موضوع الصفقة المذكورة أعلاه ابتداءً من تاريخ: <strong>${escapeHtml(p.odsStartDate || todayStrAr)}</strong>.</p>
+            <p style="margin-bottom:10px;">يسري سريان الأجل التعاقدي المحدد للإنجاز قانوناً وبصفة نافذة ابتداءً من تاريخ تبليغ هذا الأمر.</p>
+            <p style="margin-bottom:10px;">تلتزم المقاولة بتسخير وتجنيد كافة الوسائل البشرية والعتاد والمعدات المنصوص عليها في العرض التقني مع وضع لافتة الورشة القانونية وتأمين محيط العمل.</p>
+            <p style="margin-bottom:14px;">يتعين إنجاز سائر بنود الصفقة طبقاً لقواعد الفن، الدفاتر التقنية والشروط العامة للسلامة والأمن المعمول بها في الصفقات العمومية.</p>
+          ` + renderSignatures('ods');
+        }
+
+      } else if (docType === 'ods_arret') {
+        if (isFr) {
+          sheet.innerHTML = headerHtml + `
+            <div style="text-align:center; margin:18px 0 14px;">
+              <h2 style="font-size:18px; font-weight:900; color:#b45309; text-decoration:underline;">ORDRE DE SERVICE D'ARRÊT DES TRAVAUX</h2>
+              <div style="font-size:13px; font-weight:700; color:#0f172a; margin-top:4px;">${escapeHtml(p.odsNumber || 'ODS N° 02/2026 (Arrêt)')}</div>
+              <div style="font-size:11.5px; color:#64748b; margin-top:2px;">(Suspension contractuelle des travaux conformément au CCAG des marchés publics)</div>
+            </div>
+
+            <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:12px 16px; margin-bottom:14px; font-size:12.5px; line-height:1.8;">
+              <div>• <strong>Marché n° :</strong> ${escapeHtml(t.reference || 'AO')} — <strong>${escapeHtml(t.title || '')}</strong></div>
+              <div>• <strong>Titulaire :</strong> ${escapeHtml(comp.name)}</div>
+              <div>• <strong>Motif circonstancié de la suspension :</strong> <span style="font-weight:700; color:#b45309;">${escapeHtml(p.odsStopReason || 'Intempéries majeures')}</span></div>
+            </div>
+
+            <p style="margin-bottom:10px;">Considérant les constats de chantier établis contradictoirement par les services techniques et le maître d'œuvre, il est ordonné à l'entreprise d'<strong>interrompre momentanément les travaux</strong> à compter du : <strong>${escapeHtml(p.odsStopDate || todayStrFr)}</strong>.</p>
+
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 16px; margin-bottom:14px; font-size:12.5px; line-height:1.8;">
+              <div style="font-weight:700; color:#0f172a; margin-bottom:4px;">Situation du décompte des délais à la date d'arrêt :</div>
+              <div>• Délai initial d'exécution : <strong>${escapeHtml(p.odsDelay || '180 Jours')}</strong></div>
+              <div>• Nombre de jours calendaires consommés : <strong style="color:#b45309;">${escapeHtml(p.odsConsumedDays || '45')} jours</strong></div>
+              <div>• Reliquat du délai contractuel restant à courir : <strong style="color:#1e40af;">${escapeHtml(p.odsRemainingDays || '135')} jours</strong></div>
+            </div>
+
+            <p style="margin-bottom:10px;">Le cours du délai contractuel d'exécution est légalement suspendu à compter de la date d'effet du présent ordre de service.</p>
+            <p style="margin-bottom:14px;">La reprise des prestations fera l'objet d'un ordre de service de reprise qui sera notifié dès que les motifs ayant entraîné cette suspension auront cessé.</p>
+          ` + renderSignatures('ods');
+        } else {
+          sheet.innerHTML = headerHtml + `
+            <div style="text-align:center; margin:18px 0 14px;">
+              <h2 style="font-size:18px; font-weight:900; color:#b45309; text-decoration:underline;">أمر خدمة يقضي بالتوقيف المؤقت للأشغال (ODS D'ARRÊT)</h2>
+              <div style="font-size:13.5px; font-weight:800; color:#0f172a; margin-top:4px;">${escapeHtml(p.odsNumber || 'أمر خدمة رقم 02/2026 (توقيف)')}</div>
+              <div style="font-size:11.5px; color:#64748b; margin-top:2px;">(تعليق سريان الآجال التعاقدية طبقاً لأحكام دفتر الشروط العام CCAG والمرسوم الرئاسي 15-247)</div>
+            </div>
+
+            <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:12px 16px; margin-bottom:14px; font-size:13px; line-height:1.8;">
+              <div>• <strong>الصفقة رقم:</strong> ${escapeHtml(t.reference || 'AO')} — <strong>${escapeHtml(t.title || '')}</strong></div>
+              <div>• <strong>المتعامل المتعاقد:</strong> ${escapeHtml(comp.name)}</div>
+              <div>• <strong>السبب الفني والقانوني المبرر للتوقيف:</strong> <span style="font-weight:800; color:#b45309;">${escapeHtml(p.odsStopReason || 'تقلبات جوية قاهرة')}</span></div>
+            </div>
+
+            <p style="margin-bottom:10px;">بناءً على المعاينات الميدانية ومحاضر الورشة المشتركة المنجزة بالتنسيق مع مكتب الدراسات المشرف، يؤمر المتعامل المتعاقد <strong>بالتوقيف المؤقت لكافة الأشغال</strong> ابتداءً من تاريخ: <strong>${escapeHtml(p.odsStopDate || todayStrAr)}</strong>.</p>
+
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 16px; margin-bottom:14px; font-size:13px; line-height:1.8;">
+              <div style="font-weight:800; color:#0f172a; margin-bottom:4px;">الحصيلة الزمنية للآجال التعاقدية إلى غاية تاريخ التوقيف:</div>
+              <div>• الأجل التعاقدي الأصلي للصفقة: <strong>${escapeHtml(p.odsDelay || '180 يوماً')}</strong></div>
+              <div>• رصيد الأيام المستهلكة فعلياً حتى تاريخ التوقيف: <strong style="color:#b45309;">${escapeHtml(p.odsConsumedDays || '45')} يوماً</strong></div>
+              <div>• رصيد الأيام التعاقدية المتبقية والمجمدة: <strong style="color:#1e40af;">${escapeHtml(p.odsRemainingDays || '135')} يوماً</strong></div>
+            </div>
+
+            <p style="margin-bottom:10px;">يعلق سريان الآجال التعاقدية قانوناً ولا تحسب مدة التوقف ضمن مدة الإنجاز الفعلية طيلة فترة سريان هذا الأمر.</p>
+            <p style="margin-bottom:14px;">يتم استئناف الأشغال بموجب أمر خدمة بالاستئناف يصدر فور زوال الموانع والأسباب التي فرضت التوقيف.</p>
+          ` + renderSignatures('ods');
+        }
+
+      } else if (docType === 'ods_reprise') {
+        if (isFr) {
+          sheet.innerHTML = headerHtml + `
+            <div style="text-align:center; margin:18px 0 14px;">
+              <h2 style="font-size:18px; font-weight:900; color:#065f46; text-decoration:underline;">ORDRE DE SERVICE DE REPRISE DES TRAVAUX</h2>
+              <div style="font-size:13px; font-weight:700; color:#0f172a; margin-top:4px;">${escapeHtml(p.odsNumber || 'ODS N° 03/2026 (Reprise)')}</div>
+              <div style="font-size:11.5px; color:#64748b; margin-top:2px;">(Reprise officielle des délais d'exécution du Marché n° ${escapeHtml(t.reference || 'AO')})</div>
+            </div>
+
+            <div style="background:#ecfdf5; border:1px solid #a7f3d0; border-radius:8px; padding:12px 16px; margin-bottom:14px; font-size:12.5px; line-height:1.8;">
+              <div>• <strong>Marché n° :</strong> ${escapeHtml(t.reference || 'AO')} — <strong>${escapeHtml(t.title || '')}</strong></div>
+              <div>• <strong>Titulaire :</strong> ${escapeHtml(comp.name)}</div>
+              <div>• <strong>Date effective de reprise :</strong> <strong style="color:#065f46;">${escapeHtml(p.odsResumeDate || todayStrFr)}</strong></div>
+            </div>
+
+            <p style="margin-bottom:10px;">Vu l'ordre de service d'arrêt des travaux notifié le ${escapeHtml(p.odsStopDate || '')}, et après constatation contradictoire de la levée définitive des contraintes et obstacles ayant justifié la suspension :</p>
+            <p style="margin-bottom:10px;">Il est expressément enjoint à l'entreprise titulaire de <strong>reprendre immédiatement l'exécution des travaux</strong> sur l'ensemble des ateliers du chantier.</p>
+
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 16px; margin-bottom:14px; font-size:12.5px; line-height:1.8;">
+              <div style="font-weight:700; color:#0f172a; margin-bottom:4px;">Mise à jour du calendrier et des délais contractuels :</div>
+              <div>• Reliquat du délai contractuel à courir : <strong style="color:#065f46;">${escapeHtml(p.odsRemainingDays || '135')} jours calendaires</strong></div>
+              <div>• Nouvelle date contractuelle limite d'achèvement des travaux : <strong style="color:#1e40af;">${escapeHtml(p.odsNewCompletionDate || 'Selon planning actualisé')}</strong></div>
+            </div>
+
+            <p style="margin-bottom:14px;">L'entreprise doit renforcer ses équipes et mobiliser les moyens adéquats pour respecter scrupuleusement la nouvelle échéance contractuelle fixée.</p>
+          ` + renderSignatures('ods');
+        } else {
+          sheet.innerHTML = headerHtml + `
+            <div style="text-align:center; margin:18px 0 14px;">
+              <h2 style="font-size:18px; font-weight:900; color:#065f46; text-decoration:underline;">أمر خدمة يقضي باستئناف الأشغال (ODS DE REPRISE)</h2>
+              <div style="font-size:13.5px; font-weight:800; color:#0f172a; margin-top:4px;">${escapeHtml(p.odsNumber || 'أمر خدمة رقم 03/2026 (استئناف)')}</div>
+              <div style="font-size:11.5px; color:#64748b; margin-top:2px;">(استئناف سريان الآجال التعاقدية للصفقة رقم: ${escapeHtml(t.reference || 'AO')})</div>
+            </div>
+
+            <div style="background:#ecfdf5; border:1px solid #a7f3d0; border-radius:8px; padding:12px 16px; margin-bottom:14px; font-size:13px; line-height:1.8;">
+              <div>• <strong>الصفقة رقم:</strong> ${escapeHtml(t.reference || 'AO')} — <strong>${escapeHtml(t.title || '')}</strong></div>
+              <div>• <strong>المتعامل المتعاقد:</strong> ${escapeHtml(comp.name)}</div>
+              <div>• <strong>تاريخ الاستئناف الفعلي للأشغال:</strong> <strong style="color:#065f46;">${escapeHtml(p.odsResumeDate || todayStrAr)}</strong></div>
+            </div>
+
+            <p style="margin-bottom:10px;">نظراً لأمر التوقيف المؤقت للأشغال المبلغ بتاريخ: ${escapeHtml(p.odsStopDate || '')}، وبعد المعاينة الميدانية المشتركة التي أثبتت الزوال التام للأسباب والعوائق التي أملت توقيف الورشة :</p>
+            <p style="margin-bottom:10px;">يؤمر المتعامل المتعاقد <strong>باستئناف العمل فوراً وبكامل طاقته في كافة ورشات المشروع</strong> ابتداءً من التاريخ المحدد أعلاه.</p>
+
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 16px; margin-bottom:14px; font-size:13px; line-height:1.8;">
+              <div style="font-weight:800; color:#0f172a; margin-bottom:4px;">التسوية الزمنية للآجال التعاقدية:</div>
+              <div>• رصيد الآجال التعاقدية المتبقية للتنفيذ: <strong style="color:#065f46;">${escapeHtml(p.odsRemainingDays || '135')} يوماً</strong></div>
+              <div>• التاريخ النهائي الجديد المحدد لانتهاء الأشغال وتسليم المشروع: <strong style="color:#1e40af;">${escapeHtml(p.odsNewCompletionDate || 'طبقاً للرزنامة المحينة')}</strong></div>
+            </div>
+
+            <p style="margin-bottom:14px;">يتعين على المقاولة مضاعفة الفرق والعتاد لتعويض أي بطء وضمان تسليم المشروع في الموعد النهائي المحدد أعلاه.</p>
+          ` + renderSignatures('ods');
+        }
+
+      // ─────────────────────────────────────────────────────────────
+      // TEMPLATES 8 TO 10: AVENANTS AU MARCHÉ
+      // ─────────────────────────────────────────────────────────────
+      } else if (docType === 'avenant_delai') {
+        if (isFr) {
+          sheet.innerHTML = headerHtml + `
+            <div style="text-align:center; margin:18px 0 14px;">
+              <h2 style="font-size:18px; font-weight:900; color:#5b21b6; text-decoration:underline;">AVENANT DE PROROGATION DE DÉLAI</h2>
+              <div style="font-size:13px; font-weight:700; color:#0f172a; margin-top:4px;">Avenant n° ${escapeHtml(p.avNumber || '01')} au Marché n° ${escapeHtml(t.reference || 'AO')}</div>
+              <div style="font-size:11.5px; color:#64748b; margin-top:2px;">(Conformément aux dispositions de l'article 136 du Décret présidentiel n° 15-247)</div>
+            </div>
+
+            <div style="background:#f5f3ff; border:1px solid #ddd6fe; border-radius:8px; padding:12px 16px; margin-bottom:14px; font-size:12.5px; line-height:1.8;">
+              <div>• <strong>Entre :</strong> ${escapeHtml(t.authority || 'Le Service Contractant')}, d'une part,</div>
+              <div>• <strong>Et :</strong> ${escapeHtml(comp.name)}, représentée par ${escapeHtml(p.contractorManager || comp.manager)}, d'autre part.</div>
+              <div>• <strong>Motif de l'avenant :</strong> ${escapeHtml(p.avMotive || 'Prorogation pour sujétions techniques imprévues')}</div>
+            </div>
+
+            <div style="margin-bottom:14px; font-size:13px; line-height:1.8;">
+              <p><strong>Article 1 (Objet de l'Avenant) :</strong> Le présent avenant a pour objet de proroger le délai contractuel d'exécution des travaux objet du marché initial.</p>
+              <p><strong>Article 2 (Prorogation accordée) :</strong> Il est accordé à l'entreprise un délai supplémentaire de <strong>${escapeHtml(p.avExtraDays || '45')} jours calendaires</strong>. Le nouveau délai contractuel global est porté à l'échéance du <strong>${escapeHtml(p.avNewEndDate || 'selon calendrier')}</strong>.</p>
+              <p><strong>Article 3 (Incidence financière) :</strong> Le présent avenant n'emporte aucune incidence financière sur le montant contractuel initial qui demeure inchangé à <strong>${formatMoney(amountTTC)}</strong>.</p>
+              <p><strong>Article 4 (Maintien des clauses) :</strong> Toutes les autres clauses et stipulations du marché initial non expressément modifiées par le présent avenant demeurent de plein effet.</p>
+            </div>
+          ` + renderSignatures('commission');
+        } else {
+          sheet.innerHTML = headerHtml + `
+            <div style="text-align:center; margin:18px 0 14px;">
+              <h2 style="font-size:18px; font-weight:900; color:#5b21b6; text-decoration:underline;">ملحق تمديد الآجال التعاقدية (AVENANT DE DÉLAI)</h2>
+              <div style="font-size:13.5px; font-weight:800; color:#0f172a; margin-top:4px;">ملحق رقم ${escapeHtml(p.avNumber || '01')} للصفقة رقم ${escapeHtml(t.reference || 'AO')}</div>
+              <div style="font-size:11.5px; color:#64748b; margin-top:2px;">(محرر طبقاً لأحكام المادة 136 من المرسوم الرئاسي رقم 15-247 المتضمن تنظيم الصفقات العمومية)</div>
+            </div>
+
+            <div style="background:#f5f3ff; border:1px solid #ddd6fe; border-radius:8px; padding:12px 16px; margin-bottom:14px; font-size:13px; line-height:1.8;">
+              <div>• <strong>بين:</strong> ${escapeHtml(t.authority || 'المصلحة المتعاقدة')}، بصفتها الطرف الأول،</div>
+              <div>• <strong>و:</strong> مؤسسة ${escapeHtml(comp.name)}، ممثلة بالمسير ${escapeHtml(p.contractorManager || comp.manager)}، بصفتها الطرف الثاني.</div>
+              <div>• <strong>مبررات إبرام الملحق:</strong> ${escapeHtml(p.avMotive || 'تمديد الآجال نظراً لظروف طارئة وأشغال استدراكية مثبتة بمحاضر رسمية')}</div>
+            </div>
+
+            <div style="margin-bottom:14px; font-size:13px; line-height:1.9;">
+              <p><strong>المادة الأولى (موضوع الملحق):</strong> يهدف هذا الملحق إلى تمديد الأجل التعاقدي المحدد لإنجاز موضوع الصفقة الأصلية.</p>
+              <p><strong>المادة الثانية (المدة الممنوحة):</strong> تمنح للمتعامل المتعاقد مدة إضافية قدرها <strong>${escapeHtml(p.avExtraDays || '45')} يوماً</strong>. وعليه يحدد التاريخ النهائي الجديد لتسليم المشروع بتاريخ <strong>${escapeHtml(p.avNewEndDate || 'المحدد في الرزنامة المحينة')}</strong>.</p>
+              <p><strong>المادة الثالثة (الأثر المالي):</strong> لا يترتب على هذا الملحق أي تغيير أو زيادة في المبلغ المالي الإجمالي للصفقة الأصلية والبالغ <strong>${formatMoney(amountTTC)}</strong>.</p>
+              <p><strong>المادة الرابعة (سريان الشروط):</strong> تبقى سائر بنود ومواد دفتر شروط الصفقة الأصلية سارية المفعول وملزمة للطرفين دون أي تغيير.</p>
+            </div>
+          ` + renderSignatures('commission');
+        }
+
+      } else if (docType === 'avenant_montant') {
+        const extraHT = Number(p.avExtraAmountHT || 0);
+        const extraTVA = Math.round(extraHT * 0.19);
+        const extraTTC = extraHT + extraTVA;
+        const newTotalHT = amountHT + extraHT;
+        const newTotalTTC = amountTTC + extraTTC;
+        const wordsNewAr = (typeof numberToArabicWords === 'function') ? numberToArabicWords(newTotalTTC) : (newTotalTTC + ' دج');
+        const wordsNewFr = (typeof numberToFrenchWords === 'function') ? numberToFrenchWords(newTotalTTC) : (newTotalTTC + ' DZD');
+
+        if (isFr) {
+          sheet.innerHTML = headerHtml + `
+            <div style="text-align:center; margin:18px 0 14px;">
+              <h2 style="font-size:18px; font-weight:900; color:#5b21b6; text-decoration:underline;">AVENANT D'AUGMENTATION DE MONTANT ET TRAVAUX MODIFICATIFS</h2>
+              <div style="font-size:13px; font-weight:700; color:#0f172a; margin-top:4px;">Avenant n° ${escapeHtml(p.avNumber || '01')} au Marché n° ${escapeHtml(t.reference || 'AO')}</div>
+              <div style="font-size:11.5px; color:#64748b; margin-top:2px;">(Conformément aux articles 136, 138 et 139 du Décret présidentiel n° 15-247)</div>
+            </div>
+
+            <p style="margin-bottom:10px; font-size:12.5px;">Il est convenu de modifier le montant contractuel initial pour intégrer les prestations et travaux supplémentaires imprévisibles décrits ci-dessous :</p>
+
+            <table style="width:100%; border-collapse:collapse; margin-bottom:14px; font-size:12px; text-align:left;">
+              <thead>
+                <tr style="background:#ede9fe; color:#4c1d95;">
+                  <th style="padding:6px 10px; border:1px solid #c4b5fd;">Désignation financière</th>
+                  <th style="padding:6px 10px; border:1px solid #c4b5fd;">Montant HT</th>
+                  <th style="padding:6px 10px; border:1px solid #c4b5fd;">TVA (19%)</th>
+                  <th style="padding:6px 10px; border:1px solid #c4b5fd;">Montant TTC</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="padding:6px 10px; border:1px solid #e2e8f0;">Marché Initial</td>
+                  <td style="padding:6px 10px; border:1px solid #e2e8f0;">${formatMoney(amountHT)}</td>
+                  <td style="padding:6px 10px; border:1px solid #e2e8f0;">${formatMoney(amountTVA)}</td>
+                  <td style="padding:6px 10px; border:1px solid #e2e8f0; font-weight:700;">${formatMoney(amountTTC)}</td>
+                </tr>
+                <tr style="background:#f5f3ff;">
+                  <td style="padding:6px 10px; border:1px solid #ddd6fe; font-weight:700; color:#5b21b6;">Avenant n° ${escapeHtml(p.avNumber || '01')} (+${escapeHtml(p.avPercent || '8.5')}%)</td>
+                  <td style="padding:6px 10px; border:1px solid #ddd6fe; color:#5b21b6;">+${formatMoney(extraHT)}</td>
+                  <td style="padding:6px 10px; border:1px solid #ddd6fe; color:#5b21b6;">+${formatMoney(extraTVA)}</td>
+                  <td style="padding:6px 10px; border:1px solid #ddd6fe; font-weight:800; color:#5b21b6;">+${formatMoney(extraTTC)}</td>
+                </tr>
+                <tr style="background:#ede9fe; font-weight:900;">
+                  <td style="padding:8px 10px; border:1px solid #c4b5fd;">NOUVEAU MONTANT GLOBAL</td>
+                  <td style="padding:8px 10px; border:1px solid #c4b5fd;">${formatMoney(newTotalHT)}</td>
+                  <td style="padding:8px 10px; border:1px solid #c4b5fd;">${formatMoney(amountTVA + extraTVA)}</td>
+                  <td style="padding:8px 10px; border:1px solid #c4b5fd; color:#1e3a8a; font-size:13px;">${formatMoney(newTotalTTC)}</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:10px 14px; margin-bottom:12px; font-size:12.5px;">
+              <strong>Arrêté en toutes lettres :</strong> <em>${escapeHtml(wordsNewFr)}</em>
+            </div>
+
+            <p style="margin-bottom:14px; font-size:12px; color:#475569;">Le présent avenant respecte le plafond légal de variation prescrit par le décret 15-247 et prend effet dès son approbation par la commission des marchés publics compétente.</p>
+          ` + renderSignatures('commission');
+        } else {
+          sheet.innerHTML = headerHtml + `
+            <div style="text-align:center; margin:18px 0 14px;">
+              <h2 style="font-size:18px; font-weight:900; color:#5b21b6; text-decoration:underline;">ملحق تعديل مبلغ الصفقة وأشغال إضافية (AVENANT DE MONTANT)</h2>
+              <div style="font-size:13.5px; font-weight:800; color:#0f172a; margin-top:4px;">ملحق رقم ${escapeHtml(p.avNumber || '01')} للصفقة رقم ${escapeHtml(t.reference || 'AO')}</div>
+              <div style="font-size:11.5px; color:#64748b; margin-top:2px;">(محرر طبقاً للمواد 136 إلى 139 من المرسوم الرئاسي رقم 15-247 المتضمن تنظيم الصفقات العمومية)</div>
+            </div>
+
+            <p style="margin-bottom:10px; font-size:13px;">تم الاتفاق والتراضي بين الطرفين على تعديل المبلغ المالي الإجمالي للصفقة لإدراج الأشغال الإضافية والكميات المعدلة التالية:</p>
+
+            <table style="width:100%; border-collapse:collapse; margin-bottom:14px; font-size:12.5px; text-align:right;">
+              <thead>
+                <tr style="background:#ede9fe; color:#4c1d95;">
+                  <th style="padding:6px 10px; border:1px solid #c4b5fd;">البيان المالي</th>
+                  <th style="padding:6px 10px; border:1px solid #c4b5fd;">المبلغ بدون رسوم (HT)</th>
+                  <th style="padding:6px 10px; border:1px solid #c4b5fd;">الرسم TVA (19%)</th>
+                  <th style="padding:6px 10px; border:1px solid #c4b5fd;">المبلغ بكل الرسوم (TTC)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="padding:6px 10px; border:1px solid #e2e8f0;">مبلغ الصفقة الأصلي</td>
+                  <td style="padding:6px 10px; border:1px solid #e2e8f0;">${formatMoney(amountHT)}</td>
+                  <td style="padding:6px 10px; border:1px solid #e2e8f0;">${formatMoney(amountTVA)}</td>
+                  <td style="padding:6px 10px; border:1px solid #e2e8f0; font-weight:700;">${formatMoney(amountTTC)}</td>
+                </tr>
+                <tr style="background:#f5f3ff;">
+                  <td style="padding:6px 10px; border:1px solid #ddd6fe; font-weight:700; color:#5b21b6;">مبلغ الملحق رقم ${escapeHtml(p.avNumber || '01')} (+${escapeHtml(p.avPercent || '8.5')}%)</td>
+                  <td style="padding:6px 10px; border:1px solid #ddd6fe; color:#5b21b6;">+${formatMoney(extraHT)}</td>
+                  <td style="padding:6px 10px; border:1px solid #ddd6fe; color:#5b21b6;">+${formatMoney(extraTVA)}</td>
+                  <td style="padding:6px 10px; border:1px solid #ddd6fe; font-weight:800; color:#5b21b6;">+${formatMoney(extraTTC)}</td>
+                </tr>
+                <tr style="background:#ede9fe; font-weight:900;">
+                  <td style="padding:8px 10px; border:1px solid #c4b5fd;">المبلغ الإجمالي الجديد للصفقة</td>
+                  <td style="padding:8px 10px; border:1px solid #c4b5fd;">${formatMoney(newTotalHT)}</td>
+                  <td style="padding:8px 10px; border:1px solid #c4b5fd;">${formatMoney(amountTVA + extraTVA)}</td>
+                  <td style="padding:8px 10px; border:1px solid #c4b5fd; color:#1e3a8a; font-size:13.5px;">${formatMoney(newTotalTTC)}</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:10px 14px; margin-bottom:12px; font-size:13px;">
+              <strong>المبلغ الإجمالي كتابة بالحروف:</strong> <em>${escapeHtml(wordsNewAr)}</em>
+            </div>
+
+            <p style="margin-bottom:14px; font-size:12px; color:#475569;">يخضع هذا الملحق للتأشيرة القانونية من لجنة الصفقات العمومية المختصة والمصادقة الصريحة للجهة الوصية قبل سريان مفعوله وصرف مستحقاته.</p>
+          ` + renderSignatures('commission');
+        }
+
+      } else if (docType === 'avenant_cloture') {
+        if (isFr) {
+          sheet.innerHTML = headerHtml + `
+            <div style="text-align:center; margin:18px 0 14px;">
+              <h2 style="font-size:18px; font-weight:900; color:#5b21b6; text-decoration:underline;">AVENANT DE CLÔTURE ET DE LIQUIDATION DÉFINITIVE</h2>
+              <div style="font-size:13px; font-weight:700; color:#0f172a; margin-top:4px;">Avenant de Clôture au Marché n° ${escapeHtml(t.reference || 'AO')}</div>
+              <div style="font-size:11.5px; color:#64748b; margin-top:2px;">(Arrêté définitif des quantités et liquidation des engagements contractuels)</div>
+            </div>
+
+            <p style="margin-bottom:10px; font-size:12.5px;">Le présent avenant a pour objet de constater l'achèvement complet et définitif de toutes les prestations et de procéder à l'arrêté contradictoire des comptes.</p>
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 16px; margin-bottom:14px; font-size:12.5px; line-height:1.8;">
+              <div>• Montant initial TTC : <strong>${formatMoney(amountTTC)}</strong></div>
+              <div>• Montant définitif arrêté et liquidé TTC : <strong style="color:#1e3a8a;">${formatMoney(amountTTC)}</strong></div>
+              <div>• Constat : Conformité des prestations réalisées avec le cahier des charges et apurement des créances.</div>
+            </div>
+            <p style="margin-bottom:14px; font-size:12.5px;">Par cet acte, les parties déclarent la clôture technique et comptable définitive du marché sous réserve des garanties légales.</p>
+          ` + renderSignatures('commission');
+        } else {
+          sheet.innerHTML = headerHtml + `
+            <div style="text-align:center; margin:18px 0 14px;">
+              <h2 style="font-size:18px; font-weight:900; color:#5b21b6; text-decoration:underline;">ملحق الغلق والتسوية النهائية (AVENANT DE CLÔTURE)</h2>
+              <div style="font-size:13.5px; font-weight:800; color:#0f172a; margin-top:4px;">ملحق تصفية وغلق الصفقة رقم ${escapeHtml(t.reference || 'AO')}</div>
+              <div style="font-size:11.5px; color:#64748b; margin-top:2px;">(حصر الكميات المنفذة نهائياً وتصفية التعهدات المالية للمشروع)</div>
+            </div>
+
+            <p style="margin-bottom:10px; font-size:13px;">يهدف هذا الملحق إلى الإقرار المشترك والنهائي بإتمام كافة الأشغال والخدمات موضوع الصفقة، وحصر المستحقات المالية القطعية.</p>
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 16px; margin-bottom:14px; font-size:13px; line-height:1.8;">
+              <div>• مبلغ الصفقة الأصلي بكل الرسوم: <strong>${formatMoney(amountTTC)}</strong></div>
+              <div>• المبلغ النهائي المحصور والمصفى بكل الرسوم: <strong style="color:#1e3a8a;">${formatMoney(amountTTC)}</strong></div>
+              <div>• المعاينة: إنجاز كامل الالتزامات التعاقدية طبقاً للمخططات ودفتر الشروط.</div>
+            </div>
+            <p style="margin-bottom:14px; font-size:13px;">يعتبر هذا الملحق غلقاً محاسبياً وتقنياً نهائياً للصفقة، مع حفظ حقوق الضمان القانوني المعمول به.</p>
+          ` + renderSignatures('commission');
+        }
+
+      // ─────────────────────────────────────────────────────────────
+      // TEMPLATES 11 TO 13: RÉCEPTIONS & DGD
+      // ─────────────────────────────────────────────────────────────
+      } else if (docType === 'reception_provisoire') {
+        const hasRes = Boolean(p.recHasReservations);
+        if (isFr) {
+          sheet.innerHTML = headerHtml + `
+            <div style="text-align:center; margin:18px 0 14px;">
+              <h2 style="font-size:18px; font-weight:900; color:#15803d; text-decoration:underline;">PROCÈS-VERBAL DE RÉCEPTION PROVISOIRE</h2>
+              <div style="font-size:13px; font-weight:700; color:#0f172a; margin-top:4px;">Marché n° ${escapeHtml(t.reference || 'AO')} — ${escapeHtml(t.title || '')}</div>
+              <div style="font-size:11.5px; color:#64748b; margin-top:2px;">(Établi en application de l'article 147 du Décret présidentiel n° 15-247)</div>
+            </div>
+
+            <p style="margin-bottom:10px; font-size:12.5px;">L'an <strong>${new Date(p.recDate || Date.now()).getFullYear()}</strong>, le <strong>${todayStrFr}</strong>, la commission de réception s'est réunie sur les lieux du chantier afin de procéder aux opérations de réception provisoire des ouvrages exécutés par l'entreprise <strong>${escapeHtml(comp.name)}</strong>.</p>
+
+            <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:12px 16px; margin-bottom:14px; font-size:12.5px; line-height:1.8;">
+              <div>• <strong>Commission :</strong> ${escapeHtml(p.recCommission)}</div>
+              <div>• <strong>Décision de la commission :</strong> <strong style="color:#15803d; font-size:13px;">${hasRes ? 'RÉCEPTION PROVISOIRE AVEC RÉSERVES' : 'RÉCEPTION PROVISOIRE SANS AUCUNE RÉSERVE'}</strong></div>
+              <div>• <strong>Délai de garantie contractuelle :</strong> <strong>${escapeHtml(p.recWarrantyMonths || '12')} Mois</strong> à compter de la présente date.</div>
+            </div>
+
+            ${hasRes ? `
+              <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:8px; padding:12px 16px; margin-bottom:14px; font-size:12.5px;">
+                <strong style="color:#991b1b;">Liste des réserves consignées à lever sous délai de ${escapeHtml(p.recReserveDeadline || '15 jours')} :</strong>
+                <pre style="white-space:pre-wrap; font-family:inherit; margin:6px 0 0; color:#7f1d1d; font-size:12px;">${escapeHtml(p.recReservationsText)}</pre>
+              </div>
+            ` : `
+              <p style="margin-bottom:10px; font-size:12.5px;">La commission a constaté la parfaite conformité des travaux et fournitures avec les règles de l'art, les spécifications techniques et les clauses contractuelles. Les ouvrages sont déclarés reçus provisoirement en l'état sans réserve.</p>
+            `}
+
+            <p style="margin-bottom:14px; font-size:12px; color:#64748b;">Le délai de garantie légale prend effet à compter de la date du présent procès-verbal.</p>
+          ` + renderSignatures('commission');
+        } else {
+          sheet.innerHTML = headerHtml + `
+            <div style="text-align:center; margin:18px 0 14px;">
+              <h2 style="font-size:18px; font-weight:900; color:#15803d; text-decoration:underline;">محضر الاستلام المؤقت (RÉCEPTION PROVISOIRE)</h2>
+              <div style="font-size:13.5px; font-weight:800; color:#0f172a; margin-top:4px;">الصفقة رقم ${escapeHtml(t.reference || 'AO')} — ${escapeHtml(t.title || '')}</div>
+              <div style="font-size:11.5px; color:#64748b; margin-top:2px;">(محرر طبقاً لأحكام المادة 147 من المرسوم الرئاسي رقم 15-247 المتضمن تنظيم الصفقات العمومية)</div>
+            </div>
+
+            <p style="margin-bottom:10px; font-size:13px;">في عام <strong>${new Date(p.recDate || Date.now()).getFullYear()}</strong>، وبتاريخ: <strong>${todayStrAr}</strong>، اجتمعت لجنة الاستلام بمقر ورشة المشروع لمعاينة الأشغال والتجهيزات المنجزة من طرف مؤسسة <strong>${escapeHtml(comp.name)}</strong>.</p>
+
+            <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:12px 16px; margin-bottom:14px; font-size:13px; line-height:1.8;">
+              <div>• <strong>تشكيلة اللجنة:</strong> ${escapeHtml(p.recCommission)}</div>
+              <div>• <strong>قرار اللجنة:</strong> <strong style="color:#15803d; font-size:14px;">${hasRes ? 'الاستلام المؤقت مع تسجيل تحفظات' : 'الاستلام المؤقت التام بدون أي تحفظ (Acceptation Sans Réserve)'}</strong></div>
+              <div>• <strong>مدة الضمان التعاقدي:</strong> <strong>${escapeHtml(p.recWarrantyMonths || '12')} شهراً</strong> ابتداءً من تاريخ هذا المحضر.</div>
+            </div>
+
+            ${hasRes ? `
+              <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:8px; padding:12px 16px; margin-bottom:14px; font-size:13px;">
+                <strong style="color:#991b1b;">بيان التحفظات المسجلة الواجب رفعها في أجل أقصاه ${escapeHtml(p.recReserveDeadline || '15 يوماً')} :</strong>
+                <pre style="white-space:pre-wrap; font-family:inherit; margin:6px 0 0; color:#7f1d1d; font-size:12.5px;">${escapeHtml(p.recReservationsText)}</pre>
+              </div>
+            ` : `
+              <p style="margin-bottom:10px; font-size:13px;">بعد المعاينة الدقيقة، صرحت اللجنة بمطابقة كافة الأشغال للمواصفات الفنية وقواعد الفن والمهنة، وأقرت الاستلام المؤقت التام للأشغال دون أي تحفظ.</p>
+            `}
+
+            <p style="margin-bottom:14px; font-size:12px; color:#64748b;">تسري مدة الضمان القانونية ابتداءً من تاريخ توقيع هذا المحضر طبقاً للتشريع الساري.</p>
+          ` + renderSignatures('commission');
+        }
+
+      } else if (docType === 'reception_finale') {
+        if (isFr) {
+          sheet.innerHTML = headerHtml + `
+            <div style="text-align:center; margin:18px 0 14px;">
+              <h2 style="font-size:18px; font-weight:900; color:#1e40af; text-decoration:underline;">PROCÈS-VERBAL DE RÉCEPTION DÉFINITIVE</h2>
+              <div style="font-size:13px; font-weight:700; color:#0f172a; margin-top:4px;">Marché n° ${escapeHtml(t.reference || 'AO')} — Clôture Définitve</div>
+              <div style="font-size:11.5px; color:#64748b; margin-top:2px;">(Établi en application de l'article 148 du Décret présidentiel n° 15-247)</div>
+            </div>
+
+            <p style="margin-bottom:10px; font-size:12.5px;">Vu le procès-verbal de réception provisoire prononcé le ${todayStrFr}, et après expiration de la période de garantie contractuelle de 12 mois :</p>
+            <p style="margin-bottom:10px; font-size:12.5px;">La commission réunie ce jour constate que l'entreprise <strong>${escapeHtml(comp.name)}</strong> a satisfait à l'ensemble de ses obligations, qu'aucune dégradation n'est apparue et que toutes les réserves éventuelles ont été intégralement levées.</p>
+
+            <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:12px 16px; margin-bottom:14px; font-size:12.5px; line-height:1.8;">
+              <div style="font-weight:800; color:#1e40af; font-size:14px;">DÉCISION : RÉCEPTION DÉFINITIVE PRONONCÉE SANS RÉSERVE</div>
+              <div style="margin-top:4px;">• Libération et mainlevée des cautions de bonne exécution et de la retenue de garantie.</div>
+              <div>• Décharge entière et définitive de l'entreprise au titre du présent marché.</div>
+            </div>
+
+            <p style="margin-bottom:14px; font-size:12px; color:#64748b;">Le présent procès-verbal autorise la clôture comptable et financière finale du dossier.</p>
+          ` + renderSignatures('commission');
+        } else {
+          sheet.innerHTML = headerHtml + `
+            <div style="text-align:center; margin:18px 0 14px;">
+              <h2 style="font-size:18px; font-weight:900; color:#1e40af; text-decoration:underline;">محضر الاستلام النهائي (PROCÈS-VERBAL DE RÉCEPTION DÉFINITIVE)</h2>
+              <div style="font-size:13.5px; font-weight:800; color:#0f172a; margin-top:4px;">الصفقة رقم ${escapeHtml(t.reference || 'AO')} — الغلق النهائي</div>
+              <div style="font-size:11.5px; color:#64748b; margin-top:2px;">(محرر طبقاً لأحكام المادة 148 من المرسوم الرئاسي رقم 15-247 المتضمن تنظيم الصفقات العمومية)</div>
+            </div>
+
+            <p style="margin-bottom:10px; font-size:13px;">بناءً على محضر الاستلام المؤقت للأشغال، وبعد انقضاء مدة الضمان التعاقدي المحددة بسنة كاملة (12 شهراً):</p>
+            <p style="margin-bottom:10px; font-size:13px;">عاينت اللجنة المجتمعة بتاريخ اليوم سلامة المنشآت وحسن أدائها، وثبوت رفع كافة التحفظات السابقة وعدم ظهور أي عيب خفي يقع تحت طائلة مسؤولية مؤسسة <strong>${escapeHtml(comp.name)}</strong>.</p>
+
+            <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:12px 16px; margin-bottom:14px; font-size:13px; line-height:1.8;">
+              <div style="font-weight:800; color:#1e40af; font-size:14.5px;">قرار اللجنة: إعلان الاستلام النهائي والقطعي للصفقة دون أي تحفظ</div>
+              <div style="margin-top:4px;">• الإفراج التام ورفع اليد عن كفالة حسن التنفيذ واقتطاع الضمان المحجوز.</div>
+              <div>• إبراء ذمة المتعامل المتعاقد إبراءً تاماً ونهائياً من كافة الالتزامات التعاقدية.</div>
+            </div>
+
+            <p style="margin-bottom:14px; font-size:12px; color:#64748b;">يرخص هذا المحضر للأطراف المعنية بالشروع في التصفية الحسابية النهائية وإعداد كشف الحساب العام والنهائي (DGD).</p>
+          ` + renderSignatures('commission');
+        }
+
+      } else if (docType === 'decompte_dgd') {
+        const dgdTot = Number(p.dgdTotalMarketTTC || amountTTC);
+        const dgdPaid = Number(p.dgdPaidCumulativeTTC || Math.round(dgdTot * 0.9));
+        const dgdPen = Number(p.dgdPenaltiesDeducted || 0);
+        const dgdNet = Math.max(0, dgdTot - dgdPaid - dgdPen);
+        const dgdNetAr = (typeof numberToArabicWords === 'function') ? numberToArabicWords(dgdNet) : (dgdNet + ' دج');
+        const dgdNetFr = (typeof numberToFrenchWords === 'function') ? numberToFrenchWords(dgdNet) : (dgdNet + ' DZD');
+
+        if (isFr) {
+          sheet.innerHTML = headerHtml + `
+            <div style="text-align:center; margin:18px 0 14px;">
+              <h2 style="font-size:18px; font-weight:900; color:#0f172a; text-decoration:underline;">DÉCOMPTE GÉNÉRAL ET DÉFINITIF (DGD)</h2>
+              <div style="font-size:13px; font-weight:700; color:#1e40af; margin-top:4px;">${escapeHtml(p.dgdNumber || 'DGD N° 01/2026')} — Marché n° ${escapeHtml(t.reference || 'AO')}</div>
+              <div style="font-size:11.5px; color:#64748b; margin-top:2px;">(Arrêté financier final en application de l'article 140 du Décret présidentiel n° 15-247)</div>
+            </div>
+
+            <table style="width:100%; border-collapse:collapse; margin-bottom:14px; font-size:12px; text-align:left;">
+              <thead>
+                <tr style="background:#f1f5f9; color:#0f172a;">
+                  <th style="padding:7px 10px; border:1px solid #cbd5e1;">Élément de Décompte et de Liquidation</th>
+                  <th style="padding:7px 10px; border:1px solid #cbd5e1; width:220px; text-align:right;">Montant TTC (DZD)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="padding:6px 10px; border:1px solid #e2e8f0;">1. Montant initial du Marché</td>
+                  <td style="padding:6px 10px; border:1px solid #e2e8f0; text-align:right;">${formatMoney(amountTTC)}</td>
+                </tr>
+                <tr>
+                  <td style="padding:6px 10px; border:1px solid #e2e8f0;">2. Cumul des Avenants approuvés</td>
+                  <td style="padding:6px 10px; border:1px solid #e2e8f0; text-align:right;">+${formatMoney(p.dgdAvenantsTTC || 0)}</td>
+                </tr>
+                <tr style="background:#f8fafc; font-weight:700;">
+                  <td style="padding:6px 10px; border:1px solid #e2e8f0;">3. Montant global définitif des travaux réalisés</td>
+                  <td style="padding:6px 10px; border:1px solid #e2e8f0; text-align:right; color:#1e40af;">${formatMoney(dgdTot)}</td>
+                </tr>
+                <tr>
+                  <td style="padding:6px 10px; border:1px solid #e2e8f0;">4. Cumul des acomptes et situations provisoires déjà réglés</td>
+                  <td style="padding:6px 10px; border:1px solid #e2e8f0; text-align:right; color:#047857;">-${formatMoney(dgdPaid)}</td>
+                </tr>
+                <tr>
+                  <td style="padding:6px 10px; border:1px solid #e2e8f0;">5. Pénalités de retard ou réfractions déduites</td>
+                  <td style="padding:6px 10px; border:1px solid #e2e8f0; text-align:right; color:#b91c1c;">-${formatMoney(dgdPen)}</td>
+                </tr>
+                <tr style="background:#eff6ff; font-weight:900; font-size:13.5px;">
+                  <td style="padding:8px 10px; border:2px solid #bfdbfe; color:#1e3a8a;">SOLDE NET DÉFINITIF À PAYER À L'ENTREPRISE</td>
+                  <td style="padding:8px 10px; border:2px solid #bfdbfe; text-align:right; color:#1e3a8a;">${formatMoney(dgdNet)}</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px 14px; margin-bottom:14px; font-size:12.5px;">
+              <strong>Arrêté le présent décompte à la somme nette de :</strong> <em>${escapeHtml(dgdNetFr)}</em>
+            </div>
+          ` + renderSignatures('commission');
+        } else {
+          sheet.innerHTML = headerHtml + `
+            <div style="text-align:center; margin:18px 0 14px;">
+              <h2 style="font-size:18px; font-weight:900; color:#0f172a; text-decoration:underline;">كشف الحساب العام والنهائي (DÉCOMPTE DGD)</h2>
+              <div style="font-size:13.5px; font-weight:800; color:#1e40af; margin-top:4px;">${escapeHtml(p.dgdNumber || 'DGD رقم 01/2026')} — الصفقة رقم ${escapeHtml(t.reference || 'AO')}</div>
+              <div style="font-size:11.5px; color:#64748b; margin-top:2px;">(التصفية المالية النهائية طبقاً لأحكام المادة 140 من المرسوم الرئاسي رقم 15-247)</div>
+            </div>
+
+            <table style="width:100%; border-collapse:collapse; margin-bottom:14px; font-size:12.5px; text-align:right;">
+              <thead>
+                <tr style="background:#f1f5f9; color:#0f172a;">
+                  <th style="padding:7px 10px; border:1px solid #cbd5e1;">عناصر التصفية وكشف الحساب المالي</th>
+                  <th style="padding:7px 10px; border:1px solid #cbd5e1; width:220px; text-align:left;">المبلغ بكل الرسوم (دج)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="padding:6px 10px; border:1px solid #e2e8f0;">1. مبلغ الصفقة الأولي</td>
+                  <td style="padding:6px 10px; border:1px solid #e2e8f0; text-align:left;">${formatMoney(amountTTC)}</td>
+                </tr>
+                <tr>
+                  <td style="padding:6px 10px; border:1px solid #e2e8f0;">2. مجموع مبالغ الملاحق المعتمدة</td>
+                  <td style="padding:6px 10px; border:1px solid #e2e8f0; text-align:left;">+${formatMoney(p.dgdAvenantsTTC || 0)}</td>
+                </tr>
+                <tr style="background:#f8fafc; font-weight:700;">
+                  <td style="padding:6px 10px; border:1px solid #e2e8f0;">3. المبلغ الإجمالي القطعي للأشغال المنجزة</td>
+                  <td style="padding:6px 10px; border:1px solid #e2e8f0; text-align:left; color:#1e40af;">${formatMoney(dgdTot)}</td>
+                </tr>
+                <tr>
+                  <td style="padding:6px 10px; border:1px solid #e2e8f0;">4. مجموع الكشوف المؤقتة والدفعات المسددة سابقاً</td>
+                  <td style="padding:6px 10px; border:1px solid #e2e8f0; text-align:left; color:#047857;">-${formatMoney(dgdPaid)}</td>
+                </tr>
+                <tr>
+                  <td style="padding:6px 10px; border:1px solid #e2e8f0;">5. غرامات التأخير أو الاقتطاعات المطبقة</td>
+                  <td style="padding:6px 10px; border:1px solid #e2e8f0; text-align:left; color:#b91c1c;">-${formatMoney(dgdPen)}</td>
+                </tr>
+                <tr style="background:#eff6ff; font-weight:900; font-size:14px;">
+                  <td style="padding:8px 10px; border:2px solid #bfdbfe; color:#1e3a8a;">الرصيد الصافي النهائي المتبقي للدفع للمقاولة</td>
+                  <td style="padding:8px 10px; border:2px solid #bfdbfe; text-align:left; color:#1e3a8a;">${formatMoney(dgdNet)}</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px 14px; margin-bottom:14px; font-size:13px;">
+              <strong>حصر هذا الكشف نهائياً عند الرصيد الصافي قدره:</strong> <em>${escapeHtml(dgdNetAr)}</em>
+            </div>
+          ` + renderSignatures('commission');
+        }
+
+      // ─────────────────────────────────────────────────────────────
+      // TEMPLATES 14 & 15: MISE EN DEMEURE & MAINLEVÉE DE CAUTION
+      // ─────────────────────────────────────────────────────────────
+      } else if (docType === 'mise_en_demeure') {
+        const degreeStrFr = p.medDegree === '2' ? '2ÈME ET DERNIÈRE MISE EN DEMEURE' : '1ÈRE MISE EN DEMEURE';
+        const degreeStrAr = p.medDegree === '2' ? 'إعذار ثانٍ وأخير' : 'إعذار أول (1ère Mise en Demeure)';
+
+        if (isFr) {
+          sheet.innerHTML = headerHtml + `
+            <div style="text-align:center; margin:18px 0 14px;">
+              <h2 style="font-size:18px; font-weight:900; color:#dc2626; text-decoration:underline;">${escapeHtml(degreeStrFr)}</h2>
+              <div style="font-size:13px; font-weight:700; color:#0f172a; margin-top:4px;">Marché n° ${escapeHtml(t.reference || 'AO')} — ${escapeHtml(t.title || '')}</div>
+              <div style="font-size:11.5px; color:#64748b; margin-top:2px;">(Notification solennelle en vertu de l'article 149 du Décret présidentiel n° 15-247)</div>
+            </div>
+
+            <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:8px; padding:12px 16px; margin-bottom:14px; font-size:12.5px; line-height:1.8;">
+              <div>• <strong>Destinataire :</strong> Société <strong>${escapeHtml(comp.name)}</strong>, représentée par M. ${escapeHtml(p.contractorManager || comp.manager)}</div>
+              <div>• <strong>Délai impératif accordé :</strong> <strong style="color:#b91c1c;">${escapeHtml(p.medGraceDays || '8')} JOURS CALENDAIRES</strong> à compter de la notification.</div>
+            </div>
+
+            <p style="margin-bottom:10px; font-size:12.5px;">Considérant les retards constatés dans l'avancement des travaux et les manquements répétés de votre entreprise à ses engagements contractuels :</p>
+            <div style="background:#fff; border:1px dashed #fca5a5; border-radius:8px; padding:10px 14px; margin-bottom:12px; font-size:12px; color:#7f1d1d;">
+              <strong>Manquements constatés :</strong> ${escapeHtml(p.medBreaches || 'Retard d\'exécution')}
+            </div>
+
+            <p style="margin-bottom:10px; font-size:12.5px;">Votre entreprise est <strong>formellement mise en demeure</strong> de redresser la situation et de renforcer immédiatement le chantier en personnels et matériels sous le délai imparti ci-dessus.</p>
+            <p style="margin-bottom:14px; font-size:12.5px; color:#991b1b; font-weight:600;">Faute par vous de vous conformer aux prescriptions de la présente mise en demeure dans le délai imparti, il sera fait application immédiate des mesures coercitives prévues à l'article 149 du Décret 15-247, notamment la résiliation du marché à vos torts exclusifs et la confiscation des garanties.</p>
+          ` + renderSignatures('authority_only');
+        } else {
+          sheet.innerHTML = headerHtml + `
+            <div style="text-align:center; margin:18px 0 14px;">
+              <h2 style="font-size:18px; font-weight:900; color:#dc2626; text-decoration:underline;">${escapeHtml(degreeStrAr)}</h2>
+              <div style="font-size:13.5px; font-weight:800; color:#0f172a; margin-top:4px;">الصفقة رقم ${escapeHtml(t.reference || 'AO')} — ${escapeHtml(t.title || '')}</div>
+              <div style="font-size:11.5px; color:#64748b; margin-top:2px;">(إعذار رسمي صادر وفق أحكام المادة 149 من المرسوم الرئاسي رقم 15-247 المتضمن تنظيم الصفقات العمومية)</div>
+            </div>
+
+            <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:8px; padding:12px 16px; margin-bottom:14px; font-size:13px; line-height:1.8;">
+              <div>• <strong>الموجه إليه:</strong> شركة <strong>${escapeHtml(comp.name)}</strong>، ممثلة بالمسير ${escapeHtml(p.contractorManager || comp.manager)}</div>
+              <div>• <strong>المهلة القانونية الإلزامية للامتثال:</strong> <strong style="color:#b91c1c;">${escapeHtml(p.medGraceDays || '8')} أيام كاملة</strong> ابتداءً من تاريخ التبليغ.</div>
+            </div>
+
+            <p style="margin-bottom:10px; font-size:13px;">نظراً للتقارير والمعاينات الميدانية التي أثبتت التقصير الفادح في احترام الرزنامة الزمنية لتنفيذ الأشغال، ومخالفة الالتزامات التعاقدية :</p>
+            <div style="background:#fff; border:1px dashed #fca5a5; border-radius:8px; padding:10px 14px; margin-bottom:12px; font-size:12.5px; color:#7f1d1d;">
+              <strong>التقصير والمخالفات المسجلة:</strong> ${escapeHtml(p.medBreaches || 'تسجيل بطء فادح في وتيرة الإنجاز وعدم تدعيم الورشة بالوسائل الضرورية')}
+            </div>
+
+            <p style="margin-bottom:10px; font-size:13px;"><strong>يُنذر المتعامل المتعاقد رسمياً ويُعذر</strong> لتدارك هذا التأخر وتدعيم الورشة باليد العاملة والمعدات الكافية واستئناف النسق الطبيعي للعمل في أجل أقصاه المهلة المحددة أعلاه.</p>
+            <p style="margin-bottom:14px; font-size:13px; color:#991b1b; font-weight:700;">وفي حال عدم الامتثال التام لمقتضيات هذا الإعذار بعد انقضاء هذه المهلة، ستقوم المصلحة المتعاقدة فوراً بتطبيق التدابير الردعية المنصوص عليها في المادة 149 من المرسوم الرئاسي 15-247، لاسيما فسخ الصفقة على عاتق المؤسسة الحصري، مصادرة الكفالات ومتابعتها بالتعويض عن الأضرار.</p>
+          ` + renderSignatures('authority_only');
+        }
+
+      } else if (docType === 'mainlevee_caution') {
+        const cautAmountVal = Number(p.cautAmount || Math.round(amountTTC * 0.05));
+        const cautAmountAr = (typeof numberToArabicWords === 'function') ? numberToArabicWords(cautAmountVal) : (cautAmountVal + ' دج');
+        const cautAmountFr = (typeof numberToFrenchWords === 'function') ? numberToFrenchWords(cautAmountVal) : (cautAmountVal + ' DZD');
+
+        if (isFr) {
+          sheet.innerHTML = headerHtml + `
+            <div style="text-align:center; margin:18px 0 14px;">
+              <h2 style="font-size:18px; font-weight:900; color:#1e40af; text-decoration:underline;">CERTIFICAT DE MAINLEVÉE DE CAUTION BANCAIRE</h2>
+              <div style="font-size:13px; font-weight:700; color:#0f172a; margin-top:4px;">Mainlevée de Caution — Marché n° ${escapeHtml(t.reference || 'AO')}</div>
+              <div style="font-size:11.5px; color:#64748b; margin-top:2px;">(Établi conformément aux articles 130 à 135 du Décret présidentiel n° 15-247)</div>
+            </div>
+
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 16px; margin-bottom:14px; font-size:12.5px; line-height:1.8;">
+              <div>• <strong>À l'attention de :</strong> Monsieur le Directeur de l'Agence Bancaire : <strong>${escapeHtml(p.cautBank || comp.bank)}</strong></div>
+              <div>• <strong>Titulaire du compte :</strong> ${escapeHtml(comp.name)}</div>
+              <div>• <strong>Référence caution :</strong> n° <strong>${escapeHtml(p.cautNumber || 'CAUT-01')}</strong> d'un montant de : <strong>${formatMoney(cautAmountVal)}</strong></div>
+            </div>
+
+            <p style="margin-bottom:10px; font-size:12.5px;">Le soussigné, représentant légal du service contractant <strong>${escapeHtml(t.authority || 'Service Contractant')}</strong>, atteste par la présente :</p>
+            <p style="margin-bottom:10px; font-size:12.5px;">Que l'entreprise <strong>${escapeHtml(comp.name)}</strong> a mené à bien l'intégralité de ses engagements contractuels et que la réception définitive du marché a été régulièrement prononcée sans aucune réserve.</p>
+            <p style="margin-bottom:12px; font-size:13px; font-weight:700; color:#1e40af;">En conséquence, j'accorde pleine, entière et définitive mainlevée de l'engagement de caution bancaire susvisé et autorise sa restitution immédiate au titulaire.</p>
+            <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:8px 12px; margin-bottom:14px; font-size:12px;">
+              Montant libéré : <em>${escapeHtml(cautAmountFr)}</em>
+            </div>
+          ` + renderSignatures('authority_only');
+        } else {
+          sheet.innerHTML = headerHtml + `
+            <div style="text-align:center; margin:18px 0 14px;">
+              <h2 style="font-size:18px; font-weight:900; color:#1e40af; text-decoration:underline;">شهادة ورخصة رفع اليد عن كفالة مصرفية (MAINLEVÉE DE CAUTION)</h2>
+              <div style="font-size:13.5px; font-weight:800; color:#0f172a; margin-top:4px;">رفع يد عن الكفالة البنكية — الصفقة رقم ${escapeHtml(t.reference || 'AO')}</div>
+              <div style="font-size:11.5px; color:#64748b; margin-top:2px;">(محررة طبقاً لأحكام المواد 130 إلى 135 من المرسوم الرئاسي رقم 15-247 المتضمن تنظيم الصفقات العمومية)</div>
+            </div>
+
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 16px; margin-bottom:14px; font-size:13px; line-height:1.8;">
+              <div>• <strong>إلى السيد مدير وكالة البنك:</strong> <strong>${escapeHtml(p.cautBank || comp.bank)}</strong></div>
+              <div>• <strong>المتعامل المكتتب:</strong> مؤسسة ${escapeHtml(comp.name)}</div>
+              <div>• <strong>مرجع الكفالة المصرفية:</strong> رقم <strong>${escapeHtml(p.cautNumber || 'CAUT-01')}</strong> بقيمة: <strong>${formatMoney(cautAmountVal)}</strong></div>
+            </div>
+
+            <p style="margin-bottom:10px; font-size:13px;">يشهد الموقع أدناه، بصفته مسؤول المصلحة المتعاقدة <strong>${escapeHtml(t.authority || 'المصلحة المتعاقدة')}</strong>، بما يلي:</p>
+            <p style="margin-bottom:10px; font-size:13px;">أن مؤسسة <strong>${escapeHtml(comp.name)}</strong> قد أنجزت وأتمت كافة التزاماتها التعاقدية موضوع الصفقة، وصدر في حقها محضر الاستلام النهائي دون أي تحفظ أو اقتطاع متبقٍ في ذمتها.</p>
+            <p style="margin-bottom:12px; font-size:13.5px; font-weight:800; color:#1e40af;">وعليه، يرخص لسيادتكم برفع اليد التام والنهائي عن الكفالة المصرفية المذكورة أعلاه، وإبراء ذمة المؤسسة والبنك من أي قيد أو التزام يتعلق بها.</p>
+            <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:8px 12px; margin-bottom:14px; font-size:12.5px;">
+              المبلغ المرفوع اليد عنه كتابة: <em>${escapeHtml(cautAmountAr)}</em>
+            </div>
+          ` + renderSignatures('authority_only');
         }
       }
     }
     window.renderOfficialProcurementDoc = renderOfficialProcurementDoc;
-
-    // Alias renderLettreDocument to renderOfficialProcurementDoc for backward compatibility
     window.renderLettreDocument = renderOfficialProcurementDoc;
 
-    function switchLettreLang(lang){
+    // ── Open, Switch, Copy, Print Helpers ──
+    function openLettreSoumissionModal(tenderIdx, docType) {
+      const sel = document.getElementById('lettreTenderSelect');
+      if (sel && typeof tenders !== 'undefined' && Array.isArray(tenders)) {
+        sel.innerHTML = '';
+        tenders.forEach((t, i) => {
+          const opt = document.createElement('option');
+          opt.value = i;
+          opt.textContent = (t.reference || 'AO') + ' — ' + (t.title ? t.title.slice(0, 45) : 'Sans titre');
+          sel.appendChild(opt);
+        });
+      }
+
+      if (tenderIdx !== undefined && tenderIdx !== null && Number.isInteger(tenderIdx) && tenderIdx >= 0 && tenderIdx < (tenders ? tenders.length : 0)) {
+        _activeLettreTenderIdx = tenderIdx;
+        if (sel) sel.value = tenderIdx;
+      } else if (typeof tenders !== 'undefined' && tenders.length > 0) {
+        _activeLettreTenderIdx = 0;
+        if (sel) sel.value = 0;
+      }
+
+      const tender = (typeof getTenderByIndex === 'function' ? getTenderByIndex(_activeLettreTenderIdx) : null);
+      initProcurementDocParams(tender);
+
+      _activeLettreLang = (typeof getLang === 'function' && getLang() === 'fr') ? 'fr' : 'ar';
+      updateLettreLangButtons();
+
+      if (docType) {
+        switchProcurementDoc(docType);
+      } else {
+        switchProcurementCategory(_activeProcurementCategory || 'dossier');
+      }
+
+      openModal('lettreSoumissionModal');
+    }
+    window.openLettreSoumissionModal = openLettreSoumissionModal;
+
+    function closeLettreSoumissionModal() {
+      closeModal('lettreSoumissionModal');
+    }
+    window.closeLettreSoumissionModal = closeLettreSoumissionModal;
+
+    function onLettreTenderChange() {
+      const sel = document.getElementById('lettreTenderSelect');
+      _activeLettreTenderIdx = sel ? parseInt(sel.value, 10) : 0;
+      const t = (typeof getTenderByIndex === 'function' ? getTenderByIndex(_activeLettreTenderIdx) : null);
+      initProcurementDocParams(t);
+      renderProcurementParamForm();
+      renderOfficialProcurementDoc();
+    }
+    window.onLettreTenderChange = onLettreTenderChange;
+
+    function switchLettreLang(lang) {
       _activeLettreLang = lang;
-      const btnAr = document.getElementById('btnLettreLangAr');
-      const btnFr = document.getElementById('btnLettreLangFr');
-      if(btnAr) btnAr.classList.toggle('active', lang === 'ar');
-      if(btnFr) btnFr.classList.toggle('active', lang === 'fr');
+      updateLettreLangButtons();
+      updateSubDocsPills();
+      renderProcurementParamForm();
       renderOfficialProcurementDoc();
     }
     window.switchLettreLang = switchLettreLang;
 
-    function copyLettreToClipboard(){
-      const sheet = document.getElementById('lettreDocumentSheet');
-      const text = sheet ? (sheet.innerText || sheet.textContent || '') : '';
-      if(!text.trim()){
-        if(typeof showToast === 'function') showToast('لا يوجد نص لنسخه.', 'warning');
-        return;
-      }
-      function _fallbackCopy(t){
-        const ta = document.createElement('textarea');
-        ta.value = t;
-        ta.style.position = 'fixed';
-        ta.style.opacity = '0';
-        document.body.appendChild(ta);
-        ta.select();
-        try {
-          document.execCommand('copy');
-          if(typeof showToast === 'function') showToast('تم نسخ نص الرسالة إلى الحافظة بنجاح.', 'success');
-        } catch(e) {
-          if(typeof showToast === 'function') showToast('تعذر النسخ تلقائياً.', 'danger');
-        }
-        document.body.removeChild(ta);
-      }
-      if(navigator.clipboard && navigator.clipboard.writeText){
-        navigator.clipboard.writeText(text).then(() => {
-          if(typeof showToast === 'function') showToast('تم نسخ نص الرسالة إلى الحافظة بنجاح.', 'success');
-        }).catch(() => {
-          _fallbackCopy(text);
-        });
-      } else {
-        _fallbackCopy(text);
-      }
+    function updateLettreLangButtons() {
+      const btnAr = document.getElementById('btnLettreLangAr');
+      const btnFr = document.getElementById('btnLettreLangFr');
+      if (btnAr) btnAr.classList.toggle('active', _activeLettreLang === 'ar');
+      if (btnFr) btnFr.classList.toggle('active', _activeLettreLang === 'fr');
     }
-    window.copyLettreToClipboard = copyLettreToClipboard;
+    window.updateLettreLangButtons = updateLettreLangButtons;
 
-    function printOfficialLettre(){
-      document.body.classList.add('printing-lettre');
-      window.print();
-      setTimeout(() => {
-        document.body.classList.remove('printing-lettre');
-      }, 500);
-    }
-    window.printOfficialLettre = printOfficialLettre;
-
-    function exportLettrePDF(){
-      const t = getTenderByIndex(_activeLettreTenderIdx);
-      const ref = String((t && t.reference) || 'Tender').replace(/[^a-zA-Z0-9_-]/g, '_');
-      if(window.jspdf && window.jspdf.jsPDF){
-        const doc = new window.jspdf.jsPDF({ unit: 'pt', format: 'a4' });
-        const sheet = document.getElementById('lettreDocumentSheet');
-        const text = sheet ? (sheet.innerText || '') : '';
-        doc.setFillColor(30, 58, 138);
-        doc.rect(0, 0, 595, 45, 'F');
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(14);
-        doc.text('Lettre de Soumission - Zeralda ERP', 40, 28);
-        doc.setTextColor(30, 41, 59);
-        doc.setFontSize(10.5);
-        const lines = doc.splitTextToSize(text, 515);
-        let y = 70;
-        lines.forEach(l => {
-          doc.text(l, 40, y);
-          y += 16;
-          if(y > 780){ doc.addPage(); y = 40; }
-        });
-        doc.save('Lettre_Soumission_' + ref + '.pdf');
-        showToast('تم تصدير ملف PDF بنجاح.', 'success');
-        return;
-      }
-      printOfficialLettre();
-    }
-    window.exportLettrePDF = exportLettrePDF;
 
     // Modal Helpers
     function openModal(id){
@@ -4932,11 +6177,35 @@
     }
 
     // ── Init on Cache Ready ──
+    function checkUrlProcurementParams(){
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const docRef = urlParams.get('docRef');
+        const docType = urlParams.get('docType');
+        const docIdx = urlParams.get('docIdx');
+        if (docRef || docIdx !== null || docType) {
+          let targetIdx = 0;
+          if (docRef && Array.isArray(tenders)) {
+            const foundIdx = tenders.findIndex(t => String(t.reference || '').trim() === String(docRef).trim());
+            if (foundIdx >= 0) targetIdx = foundIdx;
+          } else if (docIdx !== null && !isNaN(parseInt(docIdx, 10))) {
+            targetIdx = parseInt(docIdx, 10);
+          }
+          setTimeout(() => {
+            if (typeof openLettreSoumissionModal === 'function') {
+              openLettreSoumissionModal(targetIdx, docType);
+            }
+          }, 400);
+        }
+      } catch(e) {}
+    }
+
     function initModule(){
       loadData();
       loadLanguage();
       renderAll();
       startCompanyScopeWatcher();
+      checkUrlProcurementParams();
     }
 
     if(window.ZDB && typeof window.ZDB.cacheReady === 'function'){

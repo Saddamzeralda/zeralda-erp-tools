@@ -61982,7 +61982,8 @@
 
 
 
-          <button class="btn btn-primary" id="btnDetailImport" type="button" onclick="importCurrentModalTender()"><i class="fas fa-tasks"></i> <span data-en="Import into ERP" data-ar="استيراد لمناقصاتي في النظام (ERP)" data-fr="Importer dans l'ERP">استيراد لمناقصاتي في النظام (ERP)</span></button>
+          <button class="btn btn-warning" id="btnDetailDocs" type="button" onclick="openPortalTenderDocuments()" style="background:#f59e0b; border-color:#d97706; color:white; font-weight:700; display:inline-flex; align-items:center; gap:6px;"><i class="fas fa-file-contract"></i> <span data-ar="تحرير وثائق الصفقة (ODS, Avenant, الاستلام...)" data-fr="Rédiger les documents (ODS, Avenants, PV...)" data-en="Draft Documents (ODS, Avenants, PV...)">تحرير وثائق الصفقة (ODS, Avenant, الاستلام...)</span></button>
+        <button class="btn btn-primary" id="btnDetailImport" type="button" onclick="importCurrentModalTender()"><i class="fas fa-tasks"></i> <span data-en="Import into ERP" data-ar="استيراد لمناقصاتي في النظام (ERP)" data-fr="Importer dans l'ERP">استيراد لمناقصاتي في النظام (ERP)</span></button>
 
 
 
@@ -460300,7 +460301,17 @@
 
 
 
-    window.importCurrentModalTender = importCurrentModalTender;
+    window.importCurrentModalTender = importCurrentModalTender;
+
+    function openPortalTenderDocuments(){
+      if (!currentModalTender) return;
+      try {
+        importTenderToERP(currentModalTender.id);
+      } catch(e) {}
+      const ref = encodeURIComponent(currentModalTender.reference || '');
+      window.location.href = 'modules/consulting/consulting_tenders_management.html?docRef=' + ref;
+    }
+    window.openPortalTenderDocuments = openPortalTenderDocuments;
 
 
 
