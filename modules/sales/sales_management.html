@@ -3342,6 +3342,18 @@ function getActiveCompanyFromSettings(targetCompanyId){
 window.getActiveCompanyFromSettings = getActiveCompanyFromSettings;
 window.getActiveCompanyProfile = function(cid) { return getActiveCompanyFromSettings(cid); };
 
+function isCustomUploadedLogo(val) {
+  if (!val || typeof val !== 'string') return false;
+  var s = val.trim();
+  if (!s) return false;
+  if (s.indexOf('data:image/') === 0 || s.indexOf('blob:') === 0) return true;
+  var clean = s.replace(/^https?:\/\/(?:127\.0\.0\.1|localhost)(?::\d+)?\//i, '/');
+  if (clean === 'logo.png' || clean === '/logo.png' || clean === '../../logo.png' || clean === '../logo.png' || clean.endsWith('/logo.png')) {
+    return false;
+  }
+  return true;
+}
+
 function buildCompanyInfoHTML(){
   const c = getActiveCompanyFromSettings();
   const name = c && c.name ? c.name : tr('company_default', 'Company');
@@ -3361,10 +3373,13 @@ function buildCompanyInfoHTML(){
   const bankName = c && c.bankName ? c.bankName : "";
   const bankAccount = c && c.bankAccount ? c.bankAccount : "";
   const rib = c && c.rib ? c.rib : "";
-  let logo = c && (c.logoDataUrl || c.logo) ? (c.logoDataUrl || c.logo) : "logo.png";
-  if (typeof logo === 'string') {
-    logo = logo.replace(/^https?:\/\/(?:127\.0\.0\.1|localhost)(?::\d+)?\//i, '/');
+  const capital = c && (c.capital || c.shareCapital) ? (c.capital || c.shareCapital) : "";
+  let rawLogo = c && (c.logoDataUrl || c.logo) ? (c.logoDataUrl || c.logo) : "";
+  let logo = "";
+  if (isCustomUploadedLogo(rawLogo)) {
+    logo = rawLogo.replace(/^https?:\/\/(?:127\.0\.0\.1|localhost)(?::\d+)?\//i, '/');
   }
+  let lines = "";
   if(address) lines += '<div style="font-size:12px;color:#1f2937;">' + escapeHTML(address) + "</div>";
   if(phone) lines += '<div style="font-size:12px;color:#1f2937;">' + escapeHTML(tr('tel_label','Tel')) + ': ' + escapeHTML(phone) + "</div>";
   if(email) lines += '<div style="font-size:12px;color:#1f2937;">' + escapeHTML(tr('email','Email')) + ': ' + escapeHTML(email) + "</div>";
@@ -3382,10 +3397,10 @@ function buildCompanyInfoHTML(){
   if(bankName) lines += '<div style="font-size:12px;color:#1f2937;">' + escapeHTML(tr('bank_label','Bank')) + ': ' + escapeHTML(bankName) + "</div>";
   if(bankAccount) lines += '<div style="font-size:12px;color:#1f2937;">' + escapeHTML(tr('bank_account_label','Bank Account')) + ': ' + escapeHTML(bankAccount) + "</div>";
   if(rib) lines += '<div style="font-size:12px;color:#1f2937;">' + escapeHTML(tr('rib_label','RIB')) + ': ' + escapeHTML(rib) + "</div>";
-  const logoHtml = '<img src="' + logo + '" alt="' + escapeHTML(tr('company_logo_alt','Company Logo')) + '" style="height:48px;width:auto;object-fit:contain;border-radius:6px;border:1px solid #e5e7eb;padding:4px;background:#fff;">';
+  const logoHtml = logo ? ('<div><img src="' + logo + '" alt="' + escapeHTML(tr('company_logo_alt','Company Logo')) + '" style="height:48px;width:auto;object-fit:contain;border-radius:6px;border:1px solid #e5e7eb;padding:4px;background:#fff;"></div>') : '';
   const details = lines || '<div style="font-size:12px;color:#374151;">' + escapeHTML(tr('set_company_info','Set company info in Settings')) + '</div>';
   return '<div style="display:flex;align-items:flex-start;gap:12px;">' +
-         '<div>' + logoHtml + '</div>' +
+         logoHtml +
          '<div><div style="font-weight:700;">' + escapeHTML(name) + '</div>' + details + '</div></div>';
 }
 
@@ -6085,11 +6100,11 @@ function buildFactureHTML(opts){
   var compRib = company.rib || company.bankAccount || '';
   var compCapital = company.capital || '';
 
-  // Fix relative logo path from modules/sales/
-  var compLogo = company.logoDataUrl || company.logo || '../../logo.png';
-  if (typeof compLogo === 'string') {
-    compLogo = compLogo.replace(/^https?:\/\/(?:127\.0\.0\.1|localhost)(?::\d+)?\//i, '../../');
-    if (compLogo === 'logo.png') compLogo = '../../logo.png';
+  // Only use company logo if explicitly uploaded in settings (never fallback to default logo)
+  var rawCompLogo = company.logoDataUrl || company.logo || '';
+  var compLogo = '';
+  if (isCustomUploadedLogo(rawCompLogo)) {
+    compLogo = rawCompLogo.replace(/^https?:\/\/(?:127\.0\.0\.1|localhost)(?::\d+)?\//i, '../../');
   }
 
   var _previewProducts = productsData;

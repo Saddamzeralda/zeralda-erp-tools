@@ -322,8 +322,12 @@
     // --- Header Section ---
     html += '  <div class="doc-header-grid">';
     html += '    <div class="company-brand-col">';
-    if (company.logo) {
-      html += '      <img src="' + esc(company.logo) + '" alt="Logo" class="company-logo" />';
+    var compLogo = company.logo || '';
+    if (compLogo === 'logo.png' || compLogo === '../../logo.png' || (typeof compLogo === 'string' && compLogo.endsWith('/logo.png'))) {
+      compLogo = '';
+    }
+    if (compLogo) {
+      html += '      <img src="' + esc(compLogo) + '" alt="Logo" class="company-logo" />';
     }
     html += '      <h1 class="company-name">' + esc(company.name) + '</h1>';
     html += '      <p class="company-sub">' + esc(company.address) + '</p>';
