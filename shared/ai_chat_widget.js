@@ -170,7 +170,8 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
         modeWebShort: { en: 'Web', ar: 'ويب', fr: 'Web' },
         modeSearchShort: { en: 'Data', ar: 'بيانات', fr: 'Donnees' },
         tabHistory: { en: 'Chat History', ar: 'سجل المحادثات', fr: 'Historique des conversations' },
-        toggleSidebar: { en: 'Toggle Sidebar', ar: 'القائمة الجانبية', fr: 'Menu latéral' }
+        toggleSidebar: { en: 'Chat History', ar: 'سجل المحادثات', fr: 'Historique des conversations' },
+        drawerClose: { en: 'Close drawer', ar: 'إغلاق الدرج', fr: 'Fermer le tiroir' }
     };
 
     function getLang() {
@@ -328,6 +329,40 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
         _renderSessionsList();
     }
 
+    function openHistoryDrawer() {
+        var panel = document.getElementById('ai-chat-panel');
+        if (!panel) return;
+        var sidebar = panel.querySelector('.ai-chat-sidebar');
+        var backdrop = panel.querySelector('#ai-drawer-backdrop');
+        var btn = panel.querySelector('#ai-chat-sidebar-toggle-btn');
+        if (sidebar) sidebar.classList.add('drawer-open');
+        if (backdrop) backdrop.classList.add('active');
+        if (btn) btn.classList.add('active');
+        _renderSessionsList();
+    }
+
+    function closeHistoryDrawer() {
+        var panel = document.getElementById('ai-chat-panel');
+        if (!panel) return;
+        var sidebar = panel.querySelector('.ai-chat-sidebar');
+        var backdrop = panel.querySelector('#ai-drawer-backdrop');
+        var btn = panel.querySelector('#ai-chat-sidebar-toggle-btn');
+        if (sidebar) sidebar.classList.remove('drawer-open');
+        if (backdrop) backdrop.classList.remove('active');
+        if (btn) btn.classList.remove('active');
+    }
+
+    function toggleHistoryDrawer() {
+        var panel = document.getElementById('ai-chat-panel');
+        if (!panel) return;
+        var sidebar = panel.querySelector('.ai-chat-sidebar');
+        if (sidebar && sidebar.classList.contains('drawer-open')) {
+            closeHistoryDrawer();
+        } else {
+            openHistoryDrawer();
+        }
+    }
+
     function _switchToSession(id) {
         var sessions = _loadSessions();
         for (var i = 0; i < sessions.length; i++) {
@@ -407,7 +442,7 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
                     var msg = getLang() === 'ar' ? 'حذف هذه المحادثة؟' : 'Delete this conversation?';
                     if (window.confirm(msg)) _deleteSession(sid);
                 });
-                item.addEventListener('click', function () { _switchToSession(sid); });
+                item.addEventListener('click', function () { _switchToSession(sid); closeHistoryDrawer(); });
             }(sess.id));
             info.appendChild(titleEl); info.appendChild(dateEl);
             item.appendChild(icon); item.appendChild(info); item.appendChild(delBtn);
@@ -474,7 +509,10 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
             /* HEADER */
             '<div class="ai-chat-header">' +
             '  <div class="ai-chat-header-left">' +
-            '    <button id="ai-chat-sidebar-toggle-btn" class="ai-sidebar-toggle-btn" type="button" title=""><i class="fas fa-bars-staggered"></i></button>' +
+            '    <button id="ai-chat-sidebar-toggle-btn" class="ai-history-drawer-btn" type="button" title="">' +
+            '      <i class="fas fa-clock-rotate-left"></i>' +
+            '      <span class="ai-history-btn-text"></span>' +
+            '    </button>' +
             '    <div class="ai-chat-header-icon"><i class="fas fa-robot"></i></div>' +
             '    <div>' +
             '      <div class="ai-chat-title"></div>' +
@@ -506,14 +544,19 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
             '</div>' +
             /* BODY */
             '<div class="ai-chat-body">' +
-            /* SIDEBAR (سجل المحادثات) */
-            '  <aside class="ai-chat-sidebar">' +
+            /* DRAWER BACKDROP */
+            '  <div class="ai-drawer-backdrop" id="ai-drawer-backdrop"></div>' +
+            /* SESSIONS DRAWER (درج سجل المحادثات) */
+            '  <aside class="ai-chat-sidebar" id="ai-chat-sidebar">' +
             '    <div class="ai-sessions-header">' +
             '      <div class="ai-sessions-header-left">' +
             '        <i class="fas fa-clock-rotate-left"></i>' +
             '        <span class="ai-sessions-label" id="ai-sessions-label"></span>' +
             '      </div>' +
-            '      <button class="ai-sessions-new-btn" id="ai-sessions-new-btn" title=""><i class="fas fa-pen-to-square"></i></button>' +
+            '      <div class="ai-sessions-header-actions">' +
+            '        <button class="ai-sessions-new-btn" id="ai-sessions-new-btn" title=""><i class="fas fa-pen-to-square"></i></button>' +
+            '        <button class="ai-drawer-close-btn" id="ai-drawer-close-btn" title=""><i class="fas fa-xmark"></i></button>' +
+            '      </div>' +
             '    </div>' +
             '    <div class="ai-sessions-list" id="ai-sessions-list"></div>' +
             '  </aside>' +
@@ -567,19 +610,24 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
             btn.addEventListener('click', function () { setMode(btn.dataset.mode); });
         });
 
-        /* ── Sidebar toggle & navigation tabs ── */
+        /* ── Sidebar drawer toggle & listeners ── */
         var sidebarToggleBtn = panel.querySelector('#ai-chat-sidebar-toggle-btn');
         if (sidebarToggleBtn) {
             sidebarToggleBtn.title = t('toggleSidebar');
-            sidebarToggleBtn.addEventListener('click', function () {
-                var sidebar = panel.querySelector('.ai-chat-sidebar');
-                if (sidebar) {
-                    sidebar.classList.toggle('collapsed');
-                    try {
-                        localStorage.setItem('ai_sidebar_collapsed', sidebar.classList.contains('collapsed') ? '1' : '0');
-                    } catch (e) {}
-                }
-            });
+            var btnText = sidebarToggleBtn.querySelector('.ai-history-btn-text');
+            if (btnText) btnText.textContent = (getLang() === 'ar') ? 'سجل المحادثات' : (getLang() === 'fr' ? 'Historique' : 'History');
+            sidebarToggleBtn.addEventListener('click', toggleHistoryDrawer);
+        }
+
+        var drawerBackdrop = panel.querySelector('#ai-drawer-backdrop');
+        if (drawerBackdrop) {
+            drawerBackdrop.addEventListener('click', closeHistoryDrawer);
+        }
+
+        var drawerCloseBtn = panel.querySelector('#ai-drawer-close-btn');
+        if (drawerCloseBtn) {
+            drawerCloseBtn.title = t('drawerClose');
+            drawerCloseBtn.addEventListener('click', closeHistoryDrawer);
         }
 
         var sessionsLabel = panel.querySelector('#ai-sessions-label');
@@ -587,8 +635,23 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
         var newSessBtn = panel.querySelector('#ai-sessions-new-btn');
         if (newSessBtn) {
             newSessBtn.title = (getLang() === 'ar') ? 'محادثة جديدة' : (getLang() === 'fr' ? 'Nouvelle conversation' : 'New chat');
-            newSessBtn.addEventListener('click', clearChat);
+            newSessBtn.addEventListener('click', function () {
+                clearChat();
+                closeHistoryDrawer();
+            });
         }
+
+        /* Escape key closes drawer if open */
+        window.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && _open) {
+                var sb = panel.querySelector('.ai-chat-sidebar');
+                if (sb && sb.classList.contains('drawer-open')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    closeHistoryDrawer();
+                }
+            }
+        });
 
         /* ── Header buttons ── */
         panel.querySelector('#ai-chat-close-btn').addEventListener('click', closePanel);
@@ -1400,7 +1463,10 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
         var newSessBtn = document.getElementById('ai-sessions-new-btn');
         if (newSessBtn) {
             newSessBtn.title = getLang() === 'ar' ? 'محادثة جديدة' : (getLang() === 'fr' ? 'Nouvelle conversation' : 'New chat');
-            newSessBtn.onclick = clearChat;
+            newSessBtn.onclick = function () {
+                clearChat();
+                closeHistoryDrawer();
+            };
         }
 
         var savedMode = ZS.getItem(CHAT_MODE_KEY()) || 'chat';
@@ -1414,6 +1480,7 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
 
     function closePanel() {
         _open = false;
+        closeHistoryDrawer();
         document.getElementById('ai-chat-panel').classList.add('hidden');
         var modal = document.getElementById('ai-settings-modal');
         if (modal) modal.classList.add('hidden');
@@ -4621,7 +4688,13 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
         var hintEl = panel.querySelector('#ai-hint-text');
         if (hintEl) hintEl.textContent = (getLang() === 'ar') ? 'Enter للإرسال، Shift+Enter لسطر جديد' : 'Enter to send, Shift+Enter for new line';
         var sidebarToggleBtn = panel.querySelector('#ai-chat-sidebar-toggle-btn');
-        if (sidebarToggleBtn) sidebarToggleBtn.title = t('toggleSidebar');
+        if (sidebarToggleBtn) {
+            sidebarToggleBtn.title = t('toggleSidebar');
+            var btnText = sidebarToggleBtn.querySelector('.ai-history-btn-text');
+            if (btnText) btnText.textContent = (getLang() === 'ar') ? 'سجل المحادثات' : (getLang() === 'fr' ? 'Historique' : 'History');
+        }
+        var drawerCloseBtn = panel.querySelector('#ai-drawer-close-btn');
+        if (drawerCloseBtn) drawerCloseBtn.title = t('drawerClose');
         var sessionsLabel = panel.querySelector('#ai-sessions-label');
         if (sessionsLabel) sessionsLabel.textContent = (getLang() === 'ar') ? 'سجل المحادثات' : (getLang() === 'fr' ? 'Historique des conversations' : 'Chat History');
         var newSessBtn = panel.querySelector('#ai-sessions-new-btn');
