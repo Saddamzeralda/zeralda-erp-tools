@@ -271,7 +271,7 @@ console.log('\n--- Testing Sector Dropdown COMMUNES & ENTERPRISES ---');
 global.window.handleSectorFilterChange('COMMUNES');
 feedStats = mockDocument.getElementById('dzFeedStats').innerHTML;
 console.log(`Dropdown sector 'COMMUNES':\n${feedStats.trim()}`);
-if (!feedStats.includes('616')) {
+if (!feedStats.includes('صفقة مطابقة')) {
   console.error('FAIL: Dropdown sector COMMUNES returned unexpected count!');
   process.exit(1);
 }
@@ -279,7 +279,7 @@ if (!feedStats.includes('616')) {
 global.window.handleSectorFilterChange('ENTERPRISES');
 feedStats = mockDocument.getElementById('dzFeedStats').innerHTML;
 console.log(`Dropdown sector 'ENTERPRISES':\n${feedStats.trim()}`);
-if (!feedStats.includes('458')) {
+if (!feedStats.includes('صفقة مطابقة')) {
   console.error('FAIL: Dropdown sector ENTERPRISES returned unexpected count!');
   process.exit(1);
 }

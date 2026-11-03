@@ -54,8 +54,8 @@ def main():
     # 3. Update TENDERS_VERSION_KEY and cache loading check
     old_ver_match = re.search(r"const TENDERS_VERSION_KEY = 'DZ_TENDERS_VER_[^']+';", content)
     assert old_ver_match, "TENDERS_VERSION_KEY not found"
-    content = content[:old_ver_match.start()] + "const TENDERS_VERSION_KEY = 'DZ_TENDERS_VER_20261102_2200';" + content[old_ver_match.end():]
-    print("Updated TENDERS_VERSION_KEY to DZ_TENDERS_VER_20261102_2200")
+    content = content[:old_ver_match.start()] + "const TENDERS_VERSION_KEY = 'DZ_TENDERS_VER_20261103_2200_FIXED';" + content[old_ver_match.end():]
+    print("Updated TENDERS_VERSION_KEY to DZ_TENDERS_VER_20261103_2200_FIXED")
 
     # Update cache refresh condition: check for < 2100 items
     content = content.replace("allDzTenders.length < 1300", "allDzTenders.length < 2100")
