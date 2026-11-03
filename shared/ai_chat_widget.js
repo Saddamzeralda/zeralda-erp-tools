@@ -168,7 +168,10 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
         modeSearch: { en: 'Company data', ar: 'بيانات الشركة', fr: 'Donnees societe' },
         modeChatShort: { en: 'Chat', ar: 'دردشة', fr: 'Chat' },
         modeWebShort: { en: 'Web', ar: 'ويب', fr: 'Web' },
-        modeSearchShort: { en: 'Data', ar: 'بيانات', fr: 'Donnees' }
+        modeSearchShort: { en: 'Data', ar: 'بيانات', fr: 'Donnees' },
+        tabTools: { en: 'Quick Tools', ar: 'الأدوات السريعة', fr: 'Outils Rapides' },
+        tabHistory: { en: 'Chat History', ar: 'سجل المحادثات', fr: 'Historique' },
+        toggleSidebar: { en: 'Toggle Sidebar', ar: 'القائمة الجانبية', fr: 'Menu latéral' }
     };
 
     function getLang() {
@@ -472,6 +475,7 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
             /* HEADER */
             '<div class="ai-chat-header">' +
             '  <div class="ai-chat-header-left">' +
+            '    <button id="ai-chat-sidebar-toggle-btn" class="ai-sidebar-toggle-btn" type="button" title=""><i class="fas fa-bars-staggered"></i></button>' +
             '    <div class="ai-chat-header-icon"><i class="fas fa-robot"></i></div>' +
             '    <div>' +
             '      <div class="ai-chat-title"></div>' +
@@ -505,12 +509,26 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
             '<div class="ai-chat-body">' +
             /* SIDEBAR */
             '  <aside class="ai-chat-sidebar">' +
-            '    <div class="ai-sessions-header">' +
-            '      <span class="ai-sessions-label" id="ai-sessions-label"></span>' +
-            '      <button class="ai-sessions-new-btn" id="ai-sessions-new-btn" title=""><i class="fas fa-pen-to-square"></i></button>' +
+            '    <div class="ai-sidebar-nav-tabs">' +
+            '      <button type="button" class="ai-snav-tab active" data-tab="tools" id="ai-tab-btn-tools">' +
+            '        <i class="fas fa-bolt"></i><span class="ai-tab-title"></span>' +
+            '      </button>' +
+            '      <button type="button" class="ai-snav-tab" data-tab="history" id="ai-tab-btn-history">' +
+            '        <i class="fas fa-clock-rotate-left"></i><span class="ai-tab-title"></span>' +
+            '      </button>' +
             '    </div>' +
-            '    <div class="ai-sessions-list" id="ai-sessions-list"></div>' +
-            '    <div class="ai-tools-bar" id="ai-tools-bar"></div>' +
+            '    <div class="ai-sidebar-panes">' +
+            '      <div class="ai-sidebar-pane active" id="ai-pane-tools">' +
+            '        <div class="ai-tools-bar" id="ai-tools-bar"></div>' +
+            '      </div>' +
+            '      <div class="ai-sidebar-pane" id="ai-pane-history">' +
+            '        <div class="ai-sessions-header">' +
+            '          <span class="ai-sessions-label" id="ai-sessions-label"></span>' +
+            '          <button class="ai-sessions-new-btn" id="ai-sessions-new-btn" title=""><i class="fas fa-pen-to-square"></i></button>' +
+            '        </div>' +
+            '        <div class="ai-sessions-list" id="ai-sessions-list"></div>' +
+            '      </div>' +
+            '    </div>' +
             '  </aside>' +
             /* MAIN */
             '  <div class="ai-chat-main">' +
@@ -561,6 +579,47 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
         panel.querySelectorAll('.ai-mode-tab').forEach(function (btn) {
             btn.addEventListener('click', function () { setMode(btn.dataset.mode); });
         });
+
+        /* ── Sidebar toggle & navigation tabs ── */
+        var sidebarToggleBtn = panel.querySelector('#ai-chat-sidebar-toggle-btn');
+        if (sidebarToggleBtn) {
+            sidebarToggleBtn.title = t('toggleSidebar');
+            sidebarToggleBtn.addEventListener('click', function () {
+                var sidebar = panel.querySelector('.ai-chat-sidebar');
+                if (sidebar) {
+                    sidebar.classList.toggle('collapsed');
+                    try {
+                        localStorage.setItem('ai_sidebar_collapsed', sidebar.classList.contains('collapsed') ? '1' : '0');
+                    } catch (e) {}
+                }
+            });
+        }
+
+        var tabToolsBtn = panel.querySelector('#ai-tab-btn-tools');
+        var tabHistoryBtn = panel.querySelector('#ai-tab-btn-history');
+        if (tabToolsBtn) tabToolsBtn.querySelector('.ai-tab-title').textContent = t('tabTools');
+        if (tabHistoryBtn) tabHistoryBtn.querySelector('.ai-tab-title').textContent = t('tabHistory');
+
+        panel.querySelectorAll('.ai-snav-tab').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var targetTab = btn.getAttribute('data-tab');
+                panel.querySelectorAll('.ai-snav-tab').forEach(function (b) {
+                    b.classList.toggle('active', b === btn);
+                });
+                var paneTools = panel.querySelector('#ai-pane-tools');
+                var paneHistory = panel.querySelector('#ai-pane-history');
+                if (paneTools) paneTools.classList.toggle('active', targetTab === 'tools');
+                if (paneHistory) paneHistory.classList.toggle('active', targetTab === 'history');
+            });
+        });
+
+        var sessionsLabel = panel.querySelector('#ai-sessions-label');
+        if (sessionsLabel) sessionsLabel.textContent = (getLang() === 'ar') ? 'المحادثات السابقة' : (getLang() === 'fr' ? 'Conversations' : 'Previous Chats');
+        var newSessBtn = panel.querySelector('#ai-sessions-new-btn');
+        if (newSessBtn) {
+            newSessBtn.title = (getLang() === 'ar') ? 'محادثة جديدة' : (getLang() === 'fr' ? 'Nouvelle conversation' : 'New chat');
+            newSessBtn.addEventListener('click', clearChat);
+        }
 
         /* ── Header buttons ── */
         panel.querySelector('#ai-chat-close-btn').addEventListener('click', closePanel);
@@ -1342,23 +1401,36 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
         if (fab) document.body.appendChild(fab);
         if (panel) document.body.appendChild(panel);
         panel.classList.remove('hidden');
+        panel.classList.remove('ai-boot-active');
+
+        var header = panel.querySelector('.ai-chat-header');
+        var sidebar = panel.querySelector('.ai-chat-sidebar');
+        if (header) header.style.display = '';
+        if (sidebar) sidebar.style.display = '';
+
         document.getElementById('ai-fab-badge').style.display = 'none';
 
-        /* ── إضافة أزرار تحكم عائمة (إغلاق + محادثة جديدة + إعدادات) ── */
+        /* Clean up any legacy floating boot controls */
         _injectBootControls();
 
+        try {
+            if (localStorage.getItem('ai_sidebar_collapsed') === '1' && window.innerWidth > 768) {
+                if (sidebar) sidebar.classList.add('collapsed');
+            }
+        } catch (e) {}
+
         // Always start with a fresh welcome screen (new chat) when opening
-        // the panel, so the AI BOOT layout is shown every time.
         _messages = [];
         _currentSessionId = null;
         showWelcome();
 
         _renderSessionsList();
+        _buildToolsBar();
         var labelEl = document.getElementById('ai-sessions-label');
-        if (labelEl) labelEl.textContent = getLang() === 'ar' ? 'المحادثات' : 'Chats';
+        if (labelEl) labelEl.textContent = getLang() === 'ar' ? 'المحادثات السابقة' : (getLang() === 'fr' ? 'Conversations' : 'Previous Chats');
         var newSessBtn = document.getElementById('ai-sessions-new-btn');
         if (newSessBtn) {
-            newSessBtn.title = getLang() === 'ar' ? 'محادثة جديدة' : 'New chat';
+            newSessBtn.title = getLang() === 'ar' ? 'محادثة جديدة' : (getLang() === 'fr' ? 'Nouvelle conversation' : 'New chat');
             newSessBtn.onclick = clearChat;
         }
 
@@ -1419,54 +1491,12 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
         }
     }
 
-    /* ── أزرار تحكم عائمة بدلاً من الشريط العلوي ── */
+    /* ── تنظيف أزرار التحكم العائمة القديمة إن وجدت ── */
     function _injectBootControls() {
-        /* إزالة القديم إن وجد */
         var oldClose = document.getElementById('ai-boot-close');
         var oldCtrls = document.getElementById('ai-boot-controls');
         if (oldClose) oldClose.remove();
         if (oldCtrls) oldCtrls.remove();
-
-        var lang = getLang();
-        var isAr = lang === 'ar';
-
-        /* زر الإغلاق — أعلى اليمين */
-        var closeBtn = document.createElement('button');
-        closeBtn.id = 'ai-boot-close';
-        closeBtn.className = 'ai-boot-close';
-        closeBtn.title = isAr ? 'إغلاق' : 'Close';
-        closeBtn.innerHTML = '<i class="fas fa-xmark"></i>';
-        closeBtn.addEventListener('click', closePanel);
-        document.body.appendChild(closeBtn);
-
-        /* أزرار: محادثة جديدة + إعدادات — أعلى اليسار */
-        var controls = document.createElement('div');
-        controls.id = 'ai-boot-controls';
-        controls.className = 'ai-boot-controls';
-
-        var newBtn = document.createElement('button');
-        newBtn.className = 'ai-boot-ctrl-btn';
-        newBtn.title = isAr ? 'محادثة جديدة' : 'New chat';
-        newBtn.innerHTML = '<i class="fas fa-pen-to-square"></i>';
-        newBtn.addEventListener('click', clearChat);
-        controls.appendChild(newBtn);
-
-        var settingsBtn = document.createElement('button');
-        settingsBtn.className = 'ai-boot-ctrl-btn';
-        settingsBtn.title = isAr ? 'الإعدادات' : 'Settings';
-        settingsBtn.innerHTML = '<i class="fas fa-cog"></i>';
-        settingsBtn.addEventListener('click', toggleSettings);
-        controls.appendChild(settingsBtn);
-
-        /* زر أرشيف الدردشات */
-        var archiveBtn = document.createElement('button');
-        archiveBtn.className = 'ai-boot-ctrl-btn';
-        archiveBtn.title = isAr ? 'أرشيف الدردشات' : 'Chat archive';
-        archiveBtn.innerHTML = '<i class="fas fa-clock-rotate-left"></i>';
-        archiveBtn.addEventListener('click', _toggleArchive);
-        controls.appendChild(archiveBtn);
-
-        document.body.appendChild(controls);
     }
 
     /* ── نافذة أرشيف الدردشات ── */
@@ -1601,14 +1631,13 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
         if (!container) return;
         container.innerHTML = '';
 
-        /* ── إخفاء الشريط العلوي والشريط الجانبي عند عرض شاشة AI BOOT ── */
+        /* ── الحفاظ على الشريط العلوي والشريط الجانبي مرئيين ومنظمين ── */
         var panel = document.getElementById('ai-chat-panel');
         var header = panel && panel.querySelector('.ai-chat-header');
         var sidebar = panel && panel.querySelector('.ai-chat-sidebar');
-        if (header) header.style.display = 'none';
-        if (sidebar) sidebar.style.display = 'none';
-        /* جعل منطقة الرسائل تأخذ كامل المساحة */
-        if (panel) panel.classList.add('ai-boot-active');
+        if (header) header.style.display = '';
+        if (sidebar) sidebar.style.display = '';
+        if (panel) panel.classList.remove('ai-boot-active');
 
         var lang = getLang();
         var isAr = lang === 'ar';
@@ -1732,6 +1761,11 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
     function _renderMessage(role, content, isSearch, timeStr, fromHistory, badgeText) {
         var container = document.getElementById('ai-chat-messages');
         if (!container) return;
+
+        var welcome = container.querySelector('.ai-boot-screen, .ai-welcome-screen');
+        if (welcome) {
+            welcome.remove();
+        }
 
         var now = timeStr || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
@@ -1895,6 +1929,10 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
     function showTyping(label) {
         var container = document.getElementById('ai-chat-messages');
         if (!container) return;
+        var welcome = container.querySelector('.ai-boot-screen, .ai-welcome-screen');
+        if (welcome) {
+            welcome.remove();
+        }
         var existing = document.getElementById('ai-typing-indicator');
         if (existing) existing.remove();
         _typingLabel = label || t('thinking');
@@ -4613,6 +4651,17 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
         panel.querySelector('#ai-chat-close-btn').title = t('close');
         var hintEl = panel.querySelector('#ai-hint-text');
         if (hintEl) hintEl.textContent = (getLang() === 'ar') ? 'Enter للإرسال، Shift+Enter لسطر جديد' : 'Enter to send, Shift+Enter for new line';
+        var tabToolsBtn = panel.querySelector('#ai-tab-btn-tools');
+        var tabHistoryBtn = panel.querySelector('#ai-tab-btn-history');
+        if (tabToolsBtn) tabToolsBtn.querySelector('.ai-tab-title').textContent = t('tabTools');
+        if (tabHistoryBtn) tabHistoryBtn.querySelector('.ai-tab-title').textContent = t('tabHistory');
+        var sidebarToggleBtn = panel.querySelector('#ai-chat-sidebar-toggle-btn');
+        if (sidebarToggleBtn) sidebarToggleBtn.title = t('toggleSidebar');
+        var sessionsLabel = panel.querySelector('#ai-sessions-label');
+        if (sessionsLabel) sessionsLabel.textContent = (getLang() === 'ar') ? 'المحادثات السابقة' : (getLang() === 'fr' ? 'Conversations' : 'Previous Chats');
+        var newSessBtn = panel.querySelector('#ai-sessions-new-btn');
+        if (newSessBtn) newSessBtn.title = (getLang() === 'ar') ? 'محادثة جديدة' : (getLang() === 'fr' ? 'Nouvelle conversation' : 'New chat');
+
         _buildChips();
         _buildToolsBar();
         _updateContextStrip();
