@@ -285,14 +285,98 @@ if (!feedStats.includes('صفقة مطابقة')) {
 }
 
 // Test Source Quick Chip: Sonelgaz
-console.log('\n--- Testing Quick Chip source-Sonelgaz ---');
-global.window.setQuickChip('source-Sonelgaz');
-feedStats = mockDocument.getElementById('dzFeedStats').innerHTML;
-console.log(`Quick chip 'source-Sonelgaz':\n${feedStats.trim()}`);
-if (!feedStats.includes('صفقة مطابقة')) {
-  console.error('FAIL: Quick chip source-Sonelgaz failed!');
+console.log('\n--- Testing All 11 Source Quick Chips & Purity ---');
+const sourceQuickChips = [
+  'source-BOMOP', 'source-BAOSEM', 'source-GovPortal', 'source-Press',
+  'source-TelecomPost', 'source-Sonelgaz', 'source-WaterSector',
+  'source-RailwayTransport', 'source-FinancialBanks', 'source-HealthPharma',
+  'source-MaritimePorts', 'urgent', 'sector-BTPH', 'sector-IT', 'sector-Medical', 'sector-Energy'
+];
+sourceQuickChips.forEach(chip => {
+  global.window.setQuickChip(chip);
+  const stats = mockDocument.getElementById('dzFeedStats').innerHTML;
+  const m = stats.match(/class="badge-count">(\d+)<\/strong>/);
+  const count = m ? parseInt(m[1], 10) : 0;
+  console.log(`  Chip '${chip}': ${count} matching active tenders`);
+  if (count <= 0) {
+    console.error(`FAIL: Quick chip '${chip}' returned 0 results!`);
+    process.exit(1);
+  }
+});
+
+// Verify all Sector Dropdown options return > 0 results
+console.log('\n--- Testing All Sector Dropdown Options ---');
+global.window.clearAllMultiFilters();
+const allSectors = ['COMMUNES', 'ENTERPRISES', 'BTPH', 'MEDICAL', 'IT', 'ENERGY', 'TRANSPORT', 'SERVICES', 'FURNITURE', 'STUDIES', 'AGRICULTURE'];
+allSectors.forEach(sec => {
+  mockDocument.getElementById('dzFilterSector').value = sec;
+  global.window.handleSectorFilterChange(sec);
+  const stats = mockDocument.getElementById('dzFeedStats').innerHTML;
+  const m = stats.match(/class="badge-count">(\d+)<\/strong>/);
+  const count = m ? parseInt(m[1], 10) : 0;
+  console.log(`  Sector '${sec}': ${count} matching active tenders`);
+  if (count <= 0) {
+    console.error(`FAIL: Sector '${sec}' returned 0 results!`);
+    process.exit(1);
+  }
+});
+global.window.clearAllMultiFilters();
+
+// Verify all Notice Type options return > 0 results
+console.log('\n--- Testing All Notice Type Options ---');
+const allNoticeTypes = ['appel_offres', 'consultation', 'attribution', 'prorogation', 'concours', 'infructueux', 'annulation'];
+allNoticeTypes.forEach(nt => {
+  global.window.selectAllNoticeTypes(false);
+  global.window.toggleNoticeTypeSelection(nt, true);
+  const stats = mockDocument.getElementById('dzFeedStats').innerHTML;
+  const m = stats.match(/class="badge-count">(\d+)<\/strong>/);
+  const count = m ? parseInt(m[1], 10) : 0;
+  console.log(`  Notice Type '${nt}': ${count} matching tenders`);
+  if (count <= 0) {
+    console.error(`FAIL: Notice Type '${nt}' returned 0 results!`);
+    process.exit(1);
+  }
+});
+global.window.clearAllMultiFilters();
+
+// Verify filterBySource() works across all entity categories (including UNIV_ALGER1, ADE_DG, SH_EP, and all 1,540 sources!)
+console.log('\n--- Testing filterBySource() Across Entity Categories & All 1,540 Official Sources ---');
+['ALGERIE_POSTE', 'SH_EP', 'SONATRACH', 'UNIV_ALGER1', 'ADE_DG', 'CHU_MUSTAPHA', 'APC_ALGER_CENTRE', 'Wilaya_16', 'DTP_16'].forEach(srcKey => {
+  global.window.filterBySource(srcKey);
+  const stats = mockDocument.getElementById('dzFeedStats').innerHTML;
+  const m = stats.match(/class="badge-count">(\d+)<\/strong>/);
+  const count = m ? parseInt(m[1], 10) : 0;
+  console.log(`  filterBySource('${srcKey}'): ${count} matching active tenders`);
+  if (count <= 0) {
+    console.error(`FAIL: filterBySource('${srcKey}') returned 0 results!`);
+    process.exit(1);
+  }
+});
+
+// Verify every single one of the 1,540 sources in ALGERIAN_PROCUREMENT_SOURCES has >= 1 active tender via matchesSourceFilter
+let zeroActiveSources = 0;
+sources.forEach(s => {
+  global.window.filterBySource(s.key);
+  const stats = mockDocument.getElementById('dzFeedStats').innerHTML;
+  const m = stats.match(/class="badge-count">(\d+)<\/strong>/);
+  const count = m ? parseInt(m[1], 10) : 0;
+  if (count <= 0) {
+    console.error(`  Zero active tenders for source: ${s.key} (${s.nameAr})`);
+    zeroActiveSources++;
+  }
+});
+if (zeroActiveSources > 0) {
+  console.error(`FAIL: ${zeroActiveSources} sources returned 0 active tenders on filterBySource!`);
   process.exit(1);
 }
+console.log(`  ✅ All ${sources.length} official sources return >= 1 active tender on filterBySource(s.key)!`);
+
+// Verify localStorage does NOT store the 4.11MB static tenders key
+if (mockWindow.localStorage.getItem('tender-dz-portal-data-v2') !== null) {
+  console.error('FAIL: Static tenders were written to localStorage!');
+  process.exit(1);
+}
+console.log('\nVerified: localStorage does NOT bloat with static 4.11MB tenders.');
 
 // Test Clear All
 console.log('\n--- Testing clearAllMultiFilters() ---');
