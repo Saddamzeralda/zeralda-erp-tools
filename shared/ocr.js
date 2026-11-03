@@ -1458,13 +1458,46 @@
           });
         }
       } else {
-        rawItems = Array.isArray(payload.lineItems) ? payload.lineItems : (Array.isArray(payload.analysis && payload.analysis.line_items) ? payload.analysis.line_items : []);
+        rawItems = (Array.isArray(payload.lineItems) && payload.lineItems.length ? payload.lineItems : null) ||
+                   (Array.isArray(payload.items) && payload.items.length ? payload.items : null) ||
+                   (Array.isArray(payload.line_items) && payload.line_items.length ? payload.line_items : null) ||
+                   (Array.isArray(payload.articles) && payload.articles.length ? payload.articles : null) ||
+                   (Array.isArray(payload.products) && payload.products.length ? payload.products : null) ||
+                   (payload.analysis && Array.isArray(payload.analysis.line_items) && payload.analysis.line_items.length ? payload.analysis.line_items : null) ||
+                   (payload.analysis && Array.isArray(payload.analysis.lineItems) && payload.analysis.lineItems.length ? payload.analysis.lineItems : null) ||
+                   (payload.analysis && Array.isArray(payload.analysis.items) && payload.analysis.items.length ? payload.analysis.items : null) ||
+                   (payload.data && Array.isArray(payload.data.lineItems) && payload.data.lineItems.length ? payload.data.lineItems : null) ||
+                   (payload.data && Array.isArray(payload.data.items) && payload.data.items.length ? payload.data.items : null) ||
+                   [];
+
         if (!rawItems.length && raw) {
           var lines = raw.split(/\r?\n/);
           for (var li = 0; li < lines.length; li++) {
             var lineTrim = lines[li].trim();
-            if (!lineTrim || lineTrim.length < 5) continue;
-            if (/(?:total|tva|sous-total|net\s*a\s*payer|remise|montant\s*total|المجموع|الضريبة|الإجمالي|facture|client|date|page|merci)/i.test(lineTrim)) continue;
+            if (!lineTrim || lineTrim.length < 4) continue;
+            if (/(?:total|tva|sous-total|net\s*a\s*payer|remise|montant\s*total|المجموع|الضريبة|الإجمالي|facture|client|date|page|merci|banque|rib|rc|nif|nis|art|tel|email|adresse)/i.test(lineTrim)) continue;
+
+            // 1. Pipe-delimited or tab-delimited tabular line
+            if (lineTrim.indexOf('|') !== -1 || lineTrim.indexOf('\t') !== -1) {
+              var cells = lineTrim.split(/[|\t]/).map(function(c){ return c.trim(); }).filter(Boolean);
+              if (cells.length >= 3) {
+                var lastNum = cleanOcrNum(cells[cells.length - 1]);
+                var prevNum = cleanOcrNum(cells[cells.length - 2]);
+                var qtyNum = (cells.length >= 4) ? cleanOcrNum(cells[cells.length - 3]) : 1;
+                var descCell = cells.slice(0, cells.length >= 4 ? cells.length - 3 : cells.length - 2).join(' ').replace(/^[0-9]{1,3}\s*[\.\-\/:]\s*/, '').trim();
+                if (descCell.length >= 2 && (lastNum > 0 || prevNum > 0)) {
+                  rawItems.push({
+                    description: descCell,
+                    quantity: qtyNum > 0 ? qtyNum : 1,
+                    unit_price: prevNum > 0 ? prevNum : (lastNum / (qtyNum || 1)),
+                    total: lastNum > 0 ? lastNum : (qtyNum * prevNum)
+                  });
+                  continue;
+                }
+              }
+            }
+
+            // 2. Trailing numeric groups (qty + price [+ total])
             var mEnd = lineTrim.match(/(\d[\d\s.,]*\d|\d+)\s+(\d[\d\s.,]*\d|\d+)(?:\s+(\d[\d\s.,]*\d|\d+))?\s*(?:DA|DZD|EUR|€|\$)?\s*$/i);
             if (mEnd) {
               var descPart = lineTrim.slice(0, mEnd.index).trim();
@@ -1480,6 +1513,30 @@
                   qVal = v1; pVal = v2; tVal = v1 * v2;
                 }
                 rawItems.push({ description: descPart, quantity: qVal, unit_price: pVal, total: tVal });
+                continue;
+              }
+            }
+
+            // 3. Line with 'x' multiplication: "Article Name 2 x 1500 = 3000"
+            var mX = lineTrim.match(/(.+?)\s+(\d+)\s*[xX*]\s*(\d[\d\s.,]*\d|\d+)(?:\s*=\s*(\d[\d\s.,]*\d|\d+))?/);
+            if (mX) {
+              var xDesc = mX[1].replace(/^[0-9]{1,3}\s*[\.\-\/:]\s*/, '').trim();
+              var xQty = cleanOcrNum(mX[2]);
+              var xPrc = cleanOcrNum(mX[3]);
+              var xTot = mX[4] ? cleanOcrNum(mX[4]) : (xQty * xPrc);
+              if (xDesc.length >= 2 && xPrc > 0) {
+                rawItems.push({ description: xDesc, quantity: xQty || 1, unit_price: xPrc, total: xTot });
+                continue;
+              }
+            }
+
+            // 4. Line with single amount: "Désignation article 4500.00 DA"
+            var mSingle = lineTrim.match(/(.+?)\s+(\d[\d\s.,]*\d|\d+)\s*(?:DA|DZD|EUR|€|\$)\s*$/i);
+            if (mSingle) {
+              var sDesc = mSingle[1].replace(/^[0-9]{1,3}\s*[\.\-\/:]\s*/, '').trim();
+              var sTot = cleanOcrNum(mSingle[2]);
+              if (sDesc.length >= 3 && sTot > 0 && !/(?:total|tva|timbre|remise)/i.test(sDesc)) {
+                rawItems.push({ description: sDesc, quantity: 1, unit_price: sTot, total: sTot });
               }
             }
           }
@@ -1822,49 +1879,68 @@
         html += '</div>';
       }
 
-      // 2. Line Items Table (if any)
-      if (data.items && data.items.length) {
-        html += '<div class="ocr-table-wrap">' +
+      // 2. Line Items Table (Always visible and prominent for Scan Copilote IA)
+      var hasItems = Array.isArray(data.items) && data.items.length > 0;
+      var curSym = (typeof window !== 'undefined' && typeof window.getCurrencySymbol === 'function') ? window.getCurrencySymbol() : 'DA';
+
+      html += '<div class="ocr-table-section">' +
+        '<div class="ocr-table-title-row" style="display:flex;align-items:center;justify-content:space-between;margin:6px 0 10px 0;">' +
+          '<div style="font-weight:700;font-size:13.5px;color:var(--ocr-text-main);display:flex;align-items:center;gap:7px;">' +
+            '<i class="fas fa-boxes-stacked" style="color:var(--ocr-primary);"></i> ' +
+            '<span>' + this.t('itemsExtracted') + ' (' + (hasItems ? data.items.length : 0) + ')</span>' +
+          '</div>' +
+          '<button type="button" id="ocrAddManualItemBtn" class="btn btn-sm" style="padding:4px 12px;font-size:12px;font-weight:600;border-radius:8px;border:1px solid var(--ocr-primary);background:rgba(var(--ocr-primary-rgb),0.08);color:var(--ocr-primary);cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all 0.15s;">' +
+            '<i class="fas fa-plus"></i> <span>' + (this.getLang() === 'fr' ? 'Ajouter un article' : (this.getLang() === 'ar' ? 'إضافة بند يدوي' : 'Add line item')) + '</span>' +
+          '</button>' +
+        '</div>' +
+        '<div class="ocr-table-wrap">' +
           '<table class="ocr-items-table">' +
             '<thead>' +
               '<tr>' +
-                '<th style="width:36px;text-align:center;"><input type="checkbox" id="ocrToggleAllItems" checked></th>' +
-                '<th>' + this.t('itemDesc') + '</th>' +
-                '<th style="text-align:center;width:60px;">' + this.t('qty') + '</th>' +
-                '<th style="text-align:center;width:90px;">' + this.t('price') + '</th>' +
-                '<th style="text-align:center;width:90px;">' + this.t('total') + '</th>' +
+                '<th style="width:38px;text-align:center;"><input type="checkbox" id="ocrToggleAllItems" ' + (hasItems ? 'checked' : '') + '></th>' +
+                '<th style="min-width:260px;text-align:start;">' + this.t('itemDesc') + '</th>' +
+                '<th style="text-align:center;width:70px;">' + this.t('qty') + '</th>' +
+                '<th style="text-align:end;width:110px;">' + this.t('price') + '</th>' +
+                '<th style="text-align:end;width:120px;">' + this.t('total') + '</th>' +
               '</tr>' +
             '</thead>' +
-            '<tbody>';
+            '<tbody id="ocrItemsTableBody">';
 
+      if (hasItems) {
         data.items.forEach(function(it, idx) {
           html += '<tr>' +
-            '<td style="text-align:center;"><input type="checkbox" class="ocr-item-check" data-idx="' + idx + '" ' + (it.selected ? 'checked' : '') + '></td>' +
-            '<td><strong class="ocr-item-desc" style="color:var(--ocr-text-main);font-weight:700;">' + ZeraldaOCR.escapeHtml(it.description) + '</strong></td>' +
-            '<td style="text-align:center;font-weight:600;color:var(--ocr-text-main);">' + it.quantity + '</td>' +
-            '<td style="text-align:center;font-weight:600;color:var(--ocr-text-main);">' + (it.unitPrice > 0 ? it.unitPrice.toFixed(2) : '-') + '</td>' +
-            '<td style="text-align:center;font-weight:800;color:var(--ocr-primary);">' + (it.total > 0 ? it.total.toFixed(2) : '-') + '</td>' +
+            '<td style="text-align:center;"><input type="checkbox" class="ocr-item-check" data-idx="' + idx + '" ' + (it.selected !== false ? 'checked' : '') + '></td>' +
+            '<td><strong class="ocr-item-desc">' + ZeraldaOCR.escapeHtml(it.description || '') + '</strong></td>' +
+            '<td style="text-align:center;font-weight:600;">' + (it.quantity || 1) + '</td>' +
+            '<td style="text-align:end;font-weight:600;">' + (it.unitPrice > 0 ? it.unitPrice.toFixed(2) : '-') + '</td>' +
+            '<td style="text-align:end;font-weight:800;color:var(--ocr-primary);">' + (it.total > 0 ? it.total.toFixed(2) : '-') + '</td>' +
           '</tr>';
         });
+      } else {
+        html += '<tr class="ocr-no-items-row">' +
+          '<td colspan="5" style="text-align:center;padding:26px 14px;color:var(--ocr-text-muted);font-style:italic;">' +
+            '<i class="fas fa-box-open" style="font-size:24px;display:block;margin-bottom:8px;opacity:0.6;"></i>' +
+            '<span>' + (this.getLang() === 'fr' ? 'Aucun article détecté automatiquement. Cliquez sur « Ajouter un article » ci-dessus.' : (this.getLang() === 'ar' ? 'لم يتم العثور على بنود مفصلة تلقائياً. يمكنك الضغط على «إضافة بند يدوي» أعلاه.' : 'No line items detected automatically. Click «Add line item» above.')) + '</span>' +
+          '</td>' +
+        '</tr>';
+      }
 
-        html += '</tbody></table></div>';
+      html += '</tbody></table></div></div>';
 
-        // Totals Strip
-        if (data.totals && (data.totals.total > 0 || data.totals.subtotal > 0)) {
-          var curSym = (typeof window !== 'undefined' && typeof window.getCurrencySymbol === 'function') ? window.getCurrencySymbol() : 'DA';
-          html += '<div class="ocr-totals-strip">';
-          if (data.totals.subtotal > 0) {
-            html += '<div class="ocr-total-badge" style="background:rgba(59,130,246,0.1);color:#2563eb;border-color:rgba(59,130,246,0.25);">' + this.t('subtotal') + ': <strong>' + data.totals.subtotal.toFixed(2) + ' ' + curSym + '</strong></div>';
-          }
-          if (data.totals.vat > 0) {
-            html += '<div class="ocr-total-badge" style="background:rgba(234,179,8,0.1);color:#ca8a04;border-color:rgba(234,179,8,0.25);">' + this.t('vat') + ': <strong>' + data.totals.vat.toFixed(2) + ' ' + curSym + '</strong></div>';
-          }
-          if (data.totals.timbre > 0) {
-            html += '<div class="ocr-total-badge" style="background:rgba(168,85,247,0.1);color:#9333ea;border-color:rgba(168,85,247,0.25);">' + this.t('timbre') + ': <strong>' + data.totals.timbre.toFixed(2) + ' ' + curSym + '</strong></div>';
-          }
-          html += '<div class="ocr-total-badge">' + this.t('totalAmount') + ': <strong>' + (data.totals.total || data.totals.subtotal).toFixed(2) + ' ' + curSym + '</strong></div>' +
-          '</div>';
+      // Totals Strip
+      if (data.totals && (data.totals.total > 0 || data.totals.subtotal > 0)) {
+        html += '<div class="ocr-totals-strip">';
+        if (data.totals.subtotal > 0) {
+          html += '<div class="ocr-total-badge" style="background:rgba(59,130,246,0.1);color:#2563eb;border-color:rgba(59,130,246,0.25);">' + this.t('subtotal') + ': <strong>' + data.totals.subtotal.toFixed(2) + ' ' + curSym + '</strong></div>';
         }
+        if (data.totals.vat > 0) {
+          html += '<div class="ocr-total-badge" style="background:rgba(234,179,8,0.1);color:#ca8a04;border-color:rgba(234,179,8,0.25);">' + this.t('vat') + ': <strong>' + data.totals.vat.toFixed(2) + ' ' + curSym + '</strong></div>';
+        }
+        if (data.totals.timbre > 0) {
+          html += '<div class="ocr-total-badge" style="background:rgba(168,85,247,0.1);color:#9333ea;border-color:rgba(168,85,247,0.25);">' + this.t('timbre') + ': <strong>' + data.totals.timbre.toFixed(2) + ' ' + curSym + '</strong></div>';
+        }
+        html += '<div class="ocr-total-badge">' + this.t('totalAmount') + ': <strong>' + (data.totals.total || data.totals.subtotal).toFixed(2) + ' ' + curSym + '</strong></div>' +
+        '</div>';
       }
 
       p.innerHTML = html;
@@ -1879,8 +1955,35 @@
           itemChecks.forEach(function(cb) {
             cb.checked = checked;
             var idx = parseInt(cb.getAttribute('data-idx'), 10);
-            if (data.items[idx]) data.items[idx].selected = checked;
+            if (data.items && data.items[idx]) data.items[idx].selected = checked;
           });
+        };
+      }
+
+      var addManualBtn = p.querySelector('#ocrAddManualItemBtn');
+      if (addManualBtn) {
+        var selfObj = this;
+        addManualBtn.onclick = function() {
+          var promptDesc = selfObj.getLang() === 'fr' ? 'Désignation de l\'article :' : (selfObj.getLang() === 'ar' ? 'تعيين / وصف البند :' : 'Item description:');
+          var desc = window.prompt(promptDesc, '');
+          if (!desc || !desc.trim()) return;
+          var promptPrice = selfObj.getLang() === 'fr' ? 'Prix unitaire (HT) :' : (selfObj.getLang() === 'ar' ? 'سعر الوحدة :' : 'Unit price:');
+          var prcStr = window.prompt(promptPrice, '0');
+          var prc = parseFloat(prcStr) || 0;
+          var promptQty = selfObj.getLang() === 'fr' ? 'Quantité :' : (selfObj.getLang() === 'ar' ? 'الكمية :' : 'Quantity:');
+          var qtyStr = window.prompt(promptQty, '1');
+          var qty = parseFloat(qtyStr) || 1;
+          if (!Array.isArray(data.items)) data.items = [];
+          data.items.push({
+            id: data.items.length,
+            description: desc.trim(),
+            quantity: qty,
+            unitPrice: prc,
+            total: qty * prc,
+            unit: 'piece',
+            selected: true
+          });
+          selfObj.renderPreview(modal, data);
         };
       }
       itemChecks.forEach(function(cb) {

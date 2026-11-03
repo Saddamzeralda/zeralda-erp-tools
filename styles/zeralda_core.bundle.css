@@ -3914,13 +3914,11 @@ body.dark-theme .ocr-status-box.tone-error,
   display: none;
   flex-direction: column;
   gap: 14px;
-  max-height: 420px;
-  overflow-y: auto;
+  max-height: none !important;
   padding: 16px;
   background: var(--ocr-bg);
   border: 1px solid var(--ocr-border);
   border-radius: 14px;
-  -webkit-overflow-scrolling: touch;
 }
 
 .ocr-preview-panel.is-active {
@@ -3995,36 +3993,46 @@ body.dark-theme .ocr-status-box.tone-error,
 /* ── Extracted Items Table ────────────────────────────────────── */
 .ocr-table-wrap {
   overflow-x: auto;
+  max-height: 440px;
+  overflow-y: auto;
   border: 1px solid var(--ocr-border);
   border-radius: 12px;
   background: var(--ocr-card-bg);
   -webkit-overflow-scrolling: touch;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
 }
 
 .ocr-items-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 12.5px;
+  font-size: 13px;
   text-align: left;
 }
 
 [dir="rtl"] .ocr-items-table,
-body[dir="rtl"] .ocr-items-table {
+body[dir="rtl"] .ocr-items-table,
+body.rtl .ocr-items-table {
   text-align: right;
+}
+
+.ocr-items-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 5;
 }
 
 .ocr-items-table th {
   background: #f1f5f9 !important;
-  padding: 10px 14px !important;
+  padding: 11px 14px !important;
   font-weight: 800 !important;
   color: #0f172a !important;
   border-bottom: 2px solid #cbd5e1 !important;
-  font-size: 12.5px !important;
+  font-size: 13px !important;
   white-space: nowrap;
 }
 
 .ocr-items-table td {
-  padding: 10px 14px !important;
+  padding: 11px 14px !important;
   border-bottom: 1px solid #e2e8f0 !important;
   color: #0f172a !important;
   font-weight: 600 !important;
@@ -4032,12 +4040,49 @@ body[dir="rtl"] .ocr-items-table {
   vertical-align: middle;
 }
 
+.ocr-item-desc {
+  display: block;
+  min-width: 240px;
+  word-break: break-word;
+  line-height: 1.45;
+  color: #0f172a !important;
+  font-weight: 700;
+}
+
 .ocr-items-table tbody tr:last-child td {
   border-bottom: none;
 }
 
 .ocr-items-table tbody tr:hover {
-  background: rgba(var(--ocr-primary-rgb), 0.03);
+  background: rgba(79, 70, 229, 0.05);
+}
+
+/* ── Dark Mode Overrides for OCR Items Table ── */
+body.dark-mode .ocr-items-table th,
+body.dark-theme .ocr-items-table th,
+[data-theme="dark"] .ocr-items-table th {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+  border-bottom: 2px solid #334155 !important;
+}
+
+body.dark-mode .ocr-items-table td,
+body.dark-theme .ocr-items-table td,
+[data-theme="dark"] .ocr-items-table td {
+  border-bottom: 1px solid #334155 !important;
+  color: #f1f5f9 !important;
+}
+
+body.dark-mode .ocr-item-desc,
+body.dark-theme .ocr-item-desc,
+[data-theme="dark"] .ocr-item-desc {
+  color: #f8fafc !important;
+}
+
+body.dark-mode .ocr-items-table tbody tr:hover,
+body.dark-theme .ocr-items-table tbody tr:hover,
+[data-theme="dark"] .ocr-items-table tbody tr:hover {
+  background: rgba(99, 102, 241, 0.12) !important;
 }
 
 /* ── Totals Strip ─────────────────────────────────────────────── */

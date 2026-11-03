@@ -4845,6 +4845,12 @@ function upsertProductFromOcrDraft(productDraft){
 
 function appendOcrItemsToSales(type, payload){
   let items = Array.isArray(payload && payload.lineItems) ? payload.lineItems.slice() : [];
+  if (!items.length && Array.isArray(payload && payload.items)) {
+    items = payload.items.slice();
+  }
+  if (!items.length && Array.isArray(payload && payload.articles)) {
+    items = payload.articles.slice();
+  }
   if (!items.length && payload && payload.text) {
     const rawLines = String(payload.text).split(/\r?\n/);
     for (let li = 0; li < rawLines.length; li++) {
@@ -4965,6 +4971,9 @@ function appendOcrItemsToSales(type, payload){
       }
     }
   });
+
+  const emptyEl = document.getElementById(type === 'proforma' ? 'proformaItemsEmpty' : 'invoiceItemsEmpty');
+  if (emptyEl) emptyEl.style.display = validItems.length ? 'none' : 'block';
 
   if(type === 'proforma') calculateProformaTotal();
   else calculateInvoiceTotal();
