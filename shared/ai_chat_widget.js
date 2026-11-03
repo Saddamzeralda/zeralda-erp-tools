@@ -1713,6 +1713,9 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
         html = html.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
         html = html.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
         html = html.replace(/\*([^*\n]+)\*/g, '<em>$1</em>');
+        html = html.replace(/^(✅\s*[^\n]+)$/gm, '<div class="ai-success-callout">$1</div>');
+        html = html.replace(/^[-\u2022]\s+([^:\n]{1,35}):\s*(.+)$/gm, '<div class="ai-kv-row"><span class="ai-kv-key">$1:</span> <span class="ai-kv-val">$2</span></div>');
+        html = html.replace(/^(\d+)\.\s+(.+)$/gm, '<div class="ai-extracted-num-row"><span class="ai-num-badge">$1</span> <span class="ai-num-text">$2</span></div>');
         html = html.replace(/^[-\u2022]\s+(.+)$/gm, '<span class="ai-list-item">• $1</span>');
         return html;
     }
@@ -2374,13 +2377,83 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
         };
         var map = labels[action.action] || { ar: action.action, en: action.action };
         var lbl = map[lang] || map.en;
-        var argSummary = '';
         var args = action.args || {};
         var rec = args.record || action.record || action.data || {};
-        // Try a prioritized list of identifying fields — different modules use
-        // different field names for their "primary" label (invoices have no
-        // `name`, suppliers use `company`, etc.). Without this, most extracted
-        // records only show the generic module name in the confirmation card.
+        var mod = String(args.module || action.module || args.key || '').toLowerCase();
+        var isAr = lang === 'ar';
+        var isFr = lang === 'fr';
+
+        // ── 1. DEDICATED HIGH-CONTRAST INVOICE CARD ──
+        if (mod === 'invoices' || mod === 'invoice' || mod === 'factures' || mod === 'facture' || mod.indexOf('invoices') >= 0) {
+            var invNum = rec.invoiceNumber || rec.number || rec.reference || '—';
+            var custName = typeof rec.customer === 'string' ? rec.customer : ((rec.customer && rec.customer.name) || rec.customerName || rec.client || '');
+            var invDate = rec.date || rec.invoice_date || '';
+            var invTotal = rec.total !== undefined ? rec.total : (rec.amount !== undefined ? rec.amount : (rec.total_ttc || 0));
+            var invCurr = rec.currency || 'DZD';
+            var itemsList = Array.isArray(rec.items) ? rec.items : (Array.isArray(rec.lineItems) ? rec.lineItems : []);
+            var itemsCount = itemsList.length;
+
+            var card = '<div class="ai-extracted-inv-card">' +
+                '<div class="ai-extracted-inv-header">' +
+                    '<span class="ai-inv-badge"><i class="fas fa-file-invoice-dollar"></i> ' + (isAr ? 'فاتورة مستخرجة' : (isFr ? 'Facture extraite' : 'Extracted Invoice')) + '</span>' +
+                    '<span class="ai-inv-ref">#' + escapeHtml(String(invNum)) + '</span>' +
+                    '<span class="ai-inv-total-pill"><i class="fas fa-coins"></i> ' + escapeHtml(String(invTotal)) + ' ' + escapeHtml(invCurr) + '</span>' +
+                '</div>' +
+                '<div class="ai-extracted-inv-details">' +
+                    (custName ? '<span class="ai-inv-detail"><i class="fas fa-user-tie"></i> <strong>' + (isAr ? 'العميل: ' : (isFr ? 'Client: ' : 'Customer: ')) + '</strong>' + escapeHtml(custName) + '</span>' : '') +
+                    (invDate ? '<span class="ai-inv-detail"><i class="fas fa-calendar-alt"></i> <strong>' + (isAr ? 'التاريخ: ' : 'Date: ') + '</strong>' + escapeHtml(invDate) + '</span>' : '') +
+                    (itemsCount > 0 ? '<span class="ai-inv-detail ai-inv-items-count"><i class="fas fa-boxes-stacked"></i> <strong>' + (isAr ? 'عدد البنود: ' : (isFr ? 'Articles: ' : 'Items: ')) + '</strong>' + itemsCount + ' ' + (isAr ? 'بند' : 'articles') + '</span>' : '') +
+                '</div>';
+
+            if (itemsCount > 0) {
+                card += '<div class="ai-extracted-inv-items-mini">' +
+                    '<div class="ai-items-mini-title"><i class="fas fa-list-check"></i> ' + (isAr ? 'قائمة البنود والمنتجات المستخرجة من الفاتورة:' : (isFr ? 'Articles extraits de la facture :' : 'Extracted line items from invoice:')) + '</div>' +
+                    '<table class="ai-items-mini-table">' +
+                        '<thead><tr>' +
+                            '<th>' + (isAr ? 'البند / التعيين' : (isFr ? 'Article / Désignation' : 'Item Description')) + '</th>' +
+                            '<th style="text-align:center;width:55px;">' + (isAr ? 'الكمية' : (isFr ? 'Qté' : 'Qty')) + '</th>' +
+                            '<th style="text-align:right;width:85px;">' + (isAr ? 'السعر (HT)' : (isFr ? 'P.U' : 'Price')) + '</th>' +
+                            '<th style="text-align:right;width:95px;">' + (isAr ? 'المجموع' : 'Total') + '</th>' +
+                        '</tr></thead>' +
+                        '<tbody>';
+                itemsList.slice(0, 15).forEach(function(it) {
+                    var desc = it.name || it.description || it.designation || '—';
+                    var qty = it.quantity !== undefined ? it.quantity : (it.qty !== undefined ? it.qty : 1);
+                    var prc = it.unitPrice !== undefined ? it.unitPrice : (it.price !== undefined ? it.price : (it.unit_price || 0));
+                    var tot = it.total !== undefined ? it.total : (qty * prc);
+                    card += '<tr>' +
+                        '<td><strong class="ai-item-name">' + escapeHtml(String(desc)) + '</strong></td>' +
+                        '<td style="text-align:center;" class="ai-item-qty">' + escapeHtml(String(qty)) + '</td>' +
+                        '<td style="text-align:right;" class="ai-item-price">' + escapeHtml(String(prc)) + '</td>' +
+                        '<td style="text-align:right;" class="ai-item-total"><strong>' + escapeHtml(String(tot)) + ' ' + escapeHtml(invCurr) + '</strong></td>' +
+                    '</tr>';
+                });
+                if (itemsCount > 15) {
+                    card += '<tr><td colspan="4" style="text-align:center;font-style:italic;color:#64748b;padding:6px;">+ ' + (itemsCount - 15) + ' ' + (isAr ? 'بنود إضافية...' : 'additional items...') + '</td></tr>';
+                }
+                card += '</tbody></table></div>';
+            }
+            card += '</div>';
+            return card;
+        }
+
+        // ── 2. DEDICATED HIGH-CONTRAST PRODUCT CARD ──
+        if (mod === 'products' || mod === 'product' || mod === 'products-data') {
+            var prodName = rec.name || rec.description || rec.title || '—';
+            var prodCode = rec.code || '—';
+            var prodPrice = rec.price || 0;
+            var prodQty = rec.quantity !== undefined ? rec.quantity : 1;
+            return '<div class="ai-extracted-prod-card">' +
+                '<span class="ai-prod-badge"><i class="fas fa-box"></i> ' + (isAr ? 'إضافة للمخزون' : (isFr ? 'Stock' : 'Inventory')) + '</span>' +
+                '<strong class="ai-prod-name">' + escapeHtml(String(prodName)) + '</strong>' +
+                (prodCode && prodCode !== '—' ? '<code class="ai-prod-code">' + escapeHtml(String(prodCode)) + '</code>' : '') +
+                '<span class="ai-prod-price"><i class="fas fa-coins"></i> ' + escapeHtml(String(prodPrice)) + ' DZD</span>' +
+                '<span class="ai-prod-qty"><i class="fas fa-hashtag"></i> x' + escapeHtml(String(prodQty)) + '</span>' +
+            '</div>';
+        }
+
+        // ── 3. STANDARD HIGH-CONTRAST FALLBACK ──
+        var argSummary = '';
         var primary = rec.name || rec.company || rec.fullName ||
             (rec.customer && (typeof rec.customer === 'string' ? rec.customer : rec.customer.name)) ||
             rec.invoiceNumber || rec.number || rec.title || rec.designation ||
@@ -2404,7 +2477,8 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
         else if (action.module) argSummary += ' • ' + action.module;
         if (args.id)    argSummary += ' # ' + args.id;
         else if (action.id) argSummary += ' # ' + action.id;
-        return '<strong>' + escapeHtml(lbl) + '</strong>' + (argSummary ? '<span style="color:#6b7280;font-size:12px;">' + escapeHtml(argSummary) + '</span>' : '');
+        return '<strong class="ai-action-main-lbl">' + escapeHtml(lbl) + '</strong>' +
+            (argSummary ? '<span class="ai-action-arg-summary">' + escapeHtml(argSummary) + '</span>' : '');
     }
 
     function _executeSrvAction(action, onResult) {
@@ -2939,8 +3013,9 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
         var lang = getLang();
         var block = document.createElement('div');
         block.className = 'ai-action-block';
-        block.style.borderColor = '#7c3aed';
-        block.style.background = 'linear-gradient(135deg,#faf5ff,#ede9fe)';
+        if (_requireConfirmExtraction) {
+            block.classList.add('ai-action-block-extraction');
+        }
 
         // Check for duplicates among extraction actions
         var _dupCount = 0;
@@ -2958,14 +3033,22 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
 
         var title = document.createElement('div');
         title.className = 'ai-action-block-title';
+        var invCount = actions.filter(function(a) {
+            var m = String((a.args && a.args.module) || a.module || '').toLowerCase();
+            return m.indexOf('invoice') >= 0 || m.indexOf('facture') >= 0;
+        }).length;
         if (_requireConfirmExtraction) {
-            title.innerHTML = '<i class="fas fa-file-import" style="color:#7c3aed"></i>' +
-                (lang === 'ar' ? 'بيانات مستخرجة من ملف — بانتظار تأكيدك' : 'Extracted Data — Awaiting Your Confirmation');
+            if (invCount > 0) {
+                title.innerHTML = '<i class="fas fa-file-invoice-dollar" style="color:#7c3aed"></i> ' +
+                    (lang === 'ar' ? 'قائمة الفواتير والبيانات المستخرجة (' + invCount + ') — بانتظار تأكيد الحفظ' : 'Extracted Invoices & Data (' + invCount + ') — Awaiting Confirmation');
+            } else {
+                title.innerHTML = '<i class="fas fa-file-import" style="color:#7c3aed"></i> ' +
+                    (lang === 'ar' ? 'بيانات مستخرجة من ملف — بانتظار تأكيدك' : 'Extracted Data — Awaiting Your Confirmation');
+            }
         } else {
-            title.innerHTML = '<i class="fas fa-server" style="color:#7c3aed"></i>' +
+            title.innerHTML = '<i class="fas fa-server" style="color:#7c3aed"></i> ' +
                 (lang === 'ar' ? 'أوامر نظام — تم التنفيذ تلقائياً' : 'System Commands — Auto-Executed');
         }
-        title.style.color = '#7c3aed';
         block.appendChild(title);
 
         // Show duplicate warning if any
@@ -3039,18 +3122,17 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
         var _cancelAllBtn = null;
         if (_requireConfirmExtraction && actions.length > 1) {
             var allRow = document.createElement('div');
-            allRow.className = 'ai-action-btns-row';
-            allRow.style.cssText = 'margin-top:10px;padding:8px;background:#fff;border-radius:6px;';
+            allRow.className = 'ai-action-btns-row ai-action-bulk-row';
 
             _confirmAllBtn = document.createElement('button');
-            _confirmAllBtn.className = 'ai-action-confirm-btn';
-            _confirmAllBtn.style.background = '#16a34a';
-            _confirmAllBtn.innerHTML = '<i class="fas fa-check-double"></i>' + (lang === 'ar' ? 'تأكيد وحفظ الكل' : 'Confirm & Save All');
+            _confirmAllBtn.className = 'ai-action-confirm-btn ai-action-confirm-all';
+            _confirmAllBtn.style.background = 'linear-gradient(135deg, #16a34a, #15803d)';
+            _confirmAllBtn.innerHTML = '<i class="fas fa-check-double"></i> ' +
+                (lang === 'ar' ? (invCount > 1 ? 'تأكيد وحفظ جميع الفواتير المستخرجة (' + invCount + ')' : 'تأكيد وحفظ الكل (' + actions.length + ')') : 'Confirm & Save All (' + actions.length + ')');
 
             _cancelAllBtn = document.createElement('button');
-            _cancelAllBtn.className = 'ai-action-cancel-btn';
-            _cancelAllBtn.style.background = '#6b7280';
-            _cancelAllBtn.innerHTML = '<i class="fas fa-xmark"></i>' + (lang === 'ar' ? 'إلغاء الكل' : 'Cancel All');
+            _cancelAllBtn.className = 'ai-action-cancel-btn ai-action-cancel-all';
+            _cancelAllBtn.innerHTML = '<i class="fas fa-xmark"></i> ' + (lang === 'ar' ? 'إلغاء الكل' : 'Cancel All');
 
             allRow.appendChild(_confirmAllBtn);
             allRow.appendChild(_cancelAllBtn);
@@ -3065,12 +3147,21 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
             if (!needsConfirm) _autoActions++;
             var desc = document.createElement('div');
             desc.className = 'ai-action-desc';
-            var _dupIcon = action._isDuplicate ? ' <i class="fas fa-copy" style="color:#f59e0b;margin-right:4px" title="' + (lang === 'ar' ? 'مكرر' : 'Duplicate') + '"></i>' : '';
-            desc.innerHTML = (needsConfirm ? '<i class="fas fa-triangle-exclamation" style="color:#dc2626;margin-right:4px"></i>' : '<i class="fas fa-check-circle" style="color:#16a34a;margin-right:4px"></i>') +
-                _dupIcon + _srvActionLabel(action);
+            var m = String((action.args && action.args.module) || action.module || '').toLowerCase();
+            if (m.indexOf('invoice') >= 0 || m.indexOf('facture') >= 0) {
+                desc.classList.add('ai-action-desc-invoice');
+            } else if (m.indexOf('product') >= 0) {
+                desc.classList.add('ai-action-desc-product');
+            }
+            var _dupIcon = action._isDuplicate ? ' <span class="ai-dup-tag"><i class="fas fa-copy"></i> ' + (lang === 'ar' ? 'مكرر' : 'Duplicate') + '</span>' : '';
+            var _actionTypeTag = needsConfirm
+                ? (isDestructive
+                    ? '<span class="ai-tag-destructive"><i class="fas fa-triangle-exclamation"></i> ' + (lang === 'ar' ? 'حرج' : 'Critical') + '</span>'
+                    : '<span class="ai-tag-extract"><i class="fas fa-file-circle-check"></i> ' + (lang === 'ar' ? 'تأكيد الحفظ' : 'Confirm') + '</span>')
+                : '<span class="ai-tag-auto"><i class="fas fa-check-circle"></i> ' + (lang === 'ar' ? 'تلقائي' : 'Auto') + '</span>';
+            desc.innerHTML = _actionTypeTag + _dupIcon + _srvActionLabel(action);
             if (action._isDuplicate) {
-                desc.style.background = '#fef3c7';
-                desc.style.borderLeft = '3px solid #f59e0b';
+                desc.classList.add('is-duplicate');
             }
             block.appendChild(desc);
 
@@ -3081,26 +3172,35 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
 
                 var confirmBtn = document.createElement('button');
                 confirmBtn.className = 'ai-action-confirm-btn';
-                confirmBtn.style.background = '#dc2626';
-                confirmBtn.innerHTML = '<i class="fas fa-bolt"></i>' + (lang === 'ar' ? 'تنفيذ' : 'Execute');
+                if (isDestructive) {
+                    confirmBtn.style.background = '#dc2626';
+                    confirmBtn.innerHTML = '<i class="fas fa-bolt"></i> ' + (lang === 'ar' ? 'تنفيذ الإجراء' : 'Execute');
+                } else {
+                    confirmBtn.style.background = 'linear-gradient(135deg, #16a34a, #15803d)';
+                    var isInv = m.indexOf('invoice') >= 0 || m.indexOf('facture') >= 0;
+                    confirmBtn.innerHTML = '<i class="fas fa-check"></i> ' + (lang === 'ar' ? (isInv ? 'تأكيد وحفظ الفاتورة' : 'تأكيد وحفظ') : 'Confirm & Save');
+                }
 
                 var cancelBtn = document.createElement('button');
                 cancelBtn.className = 'ai-action-cancel-btn';
-                cancelBtn.innerHTML = '<i class="fas fa-xmark"></i>' + (lang === 'ar' ? 'إلغاء' : 'Cancel');
-                cancelBtn.addEventListener('click', function() { row.remove(); desc.style.opacity = '0.4'; });
+                cancelBtn.innerHTML = '<i class="fas fa-xmark"></i> ' + (lang === 'ar' ? 'إلغاء' : 'Cancel');
+                cancelBtn.addEventListener('click', function() {
+                    row.remove();
+                    desc.classList.add('is-cancelled');
+                });
 
                 confirmBtn.addEventListener('click', function() {
                     confirmBtn.disabled = true;
                     cancelBtn.disabled = true;
-                    confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>' + (lang === 'ar' ? 'جارٍ التنفيذ...' : 'Executing...');
+                    confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + (lang === 'ar' ? 'جارٍ التنفيذ...' : 'Executing...');
                     _executeSrvAction(action, function(result) {
                         if (result.ok) {
                             confirmBtn.classList.add('done');
-                            confirmBtn.innerHTML = '<i class="fas fa-check-double"></i>' + (lang === 'ar' ? 'تم' : 'Done!');
+                            confirmBtn.innerHTML = '<i class="fas fa-check-double"></i> ' + (lang === 'ar' ? 'تم الحفظ' : 'Done!');
                             cancelBtn.style.display = 'none';
                         } else {
                             confirmBtn.classList.add('failed');
-                            confirmBtn.innerHTML = '<i class="fas fa-times"></i>' + (lang === 'ar' ? 'فشل' : 'Failed');
+                            confirmBtn.innerHTML = '<i class="fas fa-times"></i> ' + (lang === 'ar' ? 'فشل' : 'Failed');
                             cancelBtn.disabled = false;
                         }
                         renderResult(action, result);
@@ -3135,19 +3235,19 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
             _confirmAllBtn.addEventListener('click', function() {
                 _confirmAllBtn.disabled = true;
                 _cancelAllBtn.disabled = true;
-                _confirmAllBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>' + (lang === 'ar' ? 'جارٍ الحفظ...' : 'Saving...');
+                _confirmAllBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + (lang === 'ar' ? 'جارٍ الحفظ...' : 'Saving...');
                 _pendingActions.forEach(function(pa) {
                     if (!pa.confirmBtn.disabled) pa.confirmBtn.click();
                 });
                 setTimeout(function() {
-                    _confirmAllBtn.innerHTML = '<i class="fas fa-check-double"></i>' + (lang === 'ar' ? 'تم حفظ الكل' : 'All Saved');
+                    _confirmAllBtn.innerHTML = '<i class="fas fa-check-double"></i> ' + (lang === 'ar' ? 'تم حفظ الكل بنجاح' : 'All Saved');
                     _cancelAllBtn.style.display = 'none';
                 }, 2000);
             });
             _cancelAllBtn.addEventListener('click', function() {
                 _pendingActions.forEach(function(pa) {
                     pa.row.remove();
-                    pa.desc.style.opacity = '0.4';
+                    pa.desc.classList.add('is-cancelled');
                 });
                 _confirmAllBtn.style.display = 'none';
                 _cancelAllBtn.style.display = 'none';

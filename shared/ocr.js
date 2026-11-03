@@ -1840,10 +1840,10 @@
         data.items.forEach(function(it, idx) {
           html += '<tr>' +
             '<td style="text-align:center;"><input type="checkbox" class="ocr-item-check" data-idx="' + idx + '" ' + (it.selected ? 'checked' : '') + '></td>' +
-            '<td><strong>' + ZeraldaOCR.escapeHtml(it.description) + '</strong></td>' +
-            '<td style="text-align:center;">' + it.quantity + '</td>' +
-            '<td style="text-align:center;">' + (it.unitPrice > 0 ? it.unitPrice.toFixed(2) : '-') + '</td>' +
-            '<td style="text-align:center;">' + (it.total > 0 ? it.total.toFixed(2) : '-') + '</td>' +
+            '<td><strong class="ocr-item-desc" style="color:var(--ocr-text-main);font-weight:700;">' + ZeraldaOCR.escapeHtml(it.description) + '</strong></td>' +
+            '<td style="text-align:center;font-weight:600;color:var(--ocr-text-main);">' + it.quantity + '</td>' +
+            '<td style="text-align:center;font-weight:600;color:var(--ocr-text-main);">' + (it.unitPrice > 0 ? it.unitPrice.toFixed(2) : '-') + '</td>' +
+            '<td style="text-align:center;font-weight:800;color:var(--ocr-primary);">' + (it.total > 0 ? it.total.toFixed(2) : '-') + '</td>' +
           '</tr>';
         });
 
