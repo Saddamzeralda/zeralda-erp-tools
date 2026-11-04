@@ -5920,11 +5920,64 @@ body.dark-mode .sidebar-mobile-header {
     color: #cbd5e1;
 }
 
+.sidebar-mobile-company-bar {
+    display: none;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 14px;
+    border-bottom: 1px solid #e2e8f0;
+    background: #f1f5f9;
+}
+
+[data-theme="dark"] .sidebar-mobile-company-bar,
+body.dark-mode .sidebar-mobile-company-bar {
+    background: #1e293b;
+    border-bottom-color: #334155;
+}
+
+.sidebar-mobile-company-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #334155;
+}
+
+[data-theme="dark"] .sidebar-mobile-company-label,
+body.dark-mode .sidebar-mobile-company-label {
+    color: #cbd5e1;
+}
+
+.sidebar-mobile-company-select {
+    width: 100%;
+    min-height: 36px !important;
+    height: 36px !important;
+    padding: 4px 10px !important;
+    border-radius: 8px !important;
+    border: 1px solid #cbd5e1 !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    outline: none !important;
+}
+
+[data-theme="dark"] .sidebar-mobile-company-select,
+body.dark-mode .sidebar-mobile-company-select {
+    background: #0f172a !important;
+    border-color: #475569 !important;
+    color: #f8fafc !important;
+}
+
 @media (max-width: 768px) {
     .mobile-bottom-nav {
         display: flex !important;
     }
     .sidebar-mobile-header {
+        display: flex !important;
+    }
+    .sidebar-mobile-company-bar {
         display: flex !important;
     }
     body {
@@ -5934,16 +5987,18 @@ body.dark-mode .sidebar-mobile-header {
         padding-bottom: calc(75px + env(safe-area-inset-bottom, 0px)) !important;
     }
     
-    /* Header optimization on mobile */
+    /* Header optimization on mobile (2-tier: top row + company/language row) */
     body > .header {
         height: auto !important;
-        min-height: 52px !important;
+        min-height: 76px !important;
     }
     body > .header .header-top {
-        padding: 6px 10px !important;
-        gap: 6px !important;
+        padding: 4px 10px !important;
+        gap: 4px !important;
     }
-    body > .header .sidebar-toggle-btn,
+    body > .header .sidebar-toggle-btn {
+        display: none !important;
+    }
     body > .header .mobile-menu-btn {
         display: inline-flex !important;
         width: 34px !important;
@@ -5974,18 +6029,68 @@ body.dark-mode .sidebar-mobile-header {
         display: none !important;
     }
     body > .header .header-middle {
-        display: none !important;
+        order: 3 !important;
+        flex: 1 0 100% !important;
+        width: 100% !important;
+        min-height: 34px !important;
+        height: auto !important;
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 6px !important;
+        margin: 2px 0 0 0 !important;
+        padding: 4px 0 2px 0 !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
+        box-sizing: border-box !important;
+        overflow: visible !important;
+    }
+    body > .header .company-switcher {
+        display: inline-flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        flex: 1 1 auto !important;
+        width: 100% !important;
+        min-height: 28px !important;
+        height: 28px !important;
+        padding: 2px 8px !important;
+        border-radius: 8px !important;
+        background: rgba(255, 255, 255, 0.22) !important;
+        align-items: center !important;
+        gap: 6px !important;
+    }
+    body > .header .company-switcher select,
+    body > .header #companySwitcher {
+        display: block !important;
+        width: 100% !important;
+        min-height: 24px !important;
+        height: 24px !important;
+        font-size: 12px !important;
+        font-weight: 700 !important;
+        padding: 0 4px !important;
+        color: #ffffff !important;
+        background: transparent !important;
+        border: none !important;
+        outline: none !important;
+    }
+    body > .header .language-indicator select,
+    body > .header #headerLanguageSelect,
+    body > .header #headerUserSwitcher {
+        min-height: 24px !important;
+        height: 24px !important;
+        font-size: 11px !important;
+        padding: 0 4px !important;
     }
 
     /* Notification dropdown centered on mobile screen */
     .header-notif-dropdown {
         position: fixed !important;
-        top: 56px !important;
+        top: 84px !important;
         left: 10px !important;
         right: 10px !important;
         width: calc(100vw - 20px) !important;
         max-width: calc(100vw - 20px) !important;
-        max-height: calc(100vh - 120px) !important;
+        max-height: calc(100vh - 140px) !important;
     }
 
     /* Sidebar as clean full-height off-canvas drawer */
@@ -6025,7 +6130,7 @@ body.dark-mode .sidebar-mobile-header {
     input[type="email"],
     input[type="password"],
     input[type="date"],
-    select,
+    select:not(#companySwitcher):not(#headerLanguageSelect):not(#headerUserSwitcher):not(#mobileCompanySwitcher),
     textarea {
         font-size: 16px !important;
         min-height: 40px !important;

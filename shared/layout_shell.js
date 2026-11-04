@@ -32,7 +32,7 @@
     }
     var hideStyle = document.createElement('style');
     hideStyle.id = 'zeralda-kill-sync-pill-style';
-    hideStyle.textContent = '#zcpHeaderTriggerBtn, #headerQuickSearchBtn, #headerUniversalScanBtn, #zeraldaSyncPill, #zeraldaSyncHubModal, #zeraldaAlertsHubWrapper, #zeraldaAlertsButton, #zeraldaAlertsDropdown, #zeraldaAlertsBadge, #zeraldaMobileNotifBanner, .zeralda-sync-pill, .alerts-hub-wrapper, .proactive-alerts-hub { display:none !important; visibility:hidden !important; pointer-events:none !important; opacity:0 !important; width:0 !important; height:0 !important; position:absolute !important; left:-99999px !important; top:-99999px !important; }';
+    hideStyle.textContent = '#zcpHeaderTriggerBtn, #headerQuickSearchBtn, #headerUniversalScanBtn, #zeraldaSyncPill, #zeraldaSyncHubModal, #zeraldaAlertsHubWrapper, #zeraldaAlertsButton, #zeraldaAlertsDropdown, #zeraldaAlertsBadge, #zeraldaMobileNotifBanner, .zeralda-sync-pill, .alerts-hub-wrapper, .proactive-alerts-hub { display:none !important; visibility:hidden !important; pointer-events:none !important; opacity:0 !important; width:0 !important; height:0 !important; position:absolute !important; left:-99999px !important; top:-99999px !important; } @media (max-width: 768px) { body > .header .header-middle { display:flex !important; order:3 !important; flex:1 0 100% !important; width:100% !important; min-height:34px !important; height:auto !important; flex-direction:row !important; align-items:center !important; justify-content:space-between !important; gap:6px !important; margin:2px 0 0 0 !important; padding:4px 0 2px 0 !important; border-top:1px solid rgba(255,255,255,0.2) !important; } body > .header .company-switcher { display:inline-flex !important; visibility:visible !important; opacity:1 !important; flex:1 1 auto !important; width:100% !important; min-height:28px !important; height:28px !important; padding:2px 8px !important; } body > .header .company-switcher select, body > .header #companySwitcher { display:block !important; width:100% !important; min-height:24px !important; height:24px !important; font-size:12px !important; font-weight:700 !important; padding:0 4px !important; } .sidebar-mobile-company-bar { display:flex !important; } }';
     (document.head || document.documentElement).appendChild(hideStyle);
 
     function __purgeFloatingWidgets() {
@@ -608,19 +608,23 @@
     document.documentElement.style.setProperty('--header-height', headerHeight + 'px');
     document.documentElement.style.setProperty('--sidebar-width', sidebarWidth + 'px');
 
-    sidebar.style.setProperty('top', headerHeight + 'px', 'important');
-    sidebar.style.setProperty('height', 'calc(100vh - ' + headerHeight + 'px)', 'important');
     main.style.setProperty('margin-top', headerHeight + 'px', 'important');
 
     if (isMobile) {
+      sidebar.style.setProperty('top', '0px', 'important');
+      sidebar.style.setProperty('height', '100vh', 'important');
       main.style.setProperty('margin-left', '0', 'important');
       main.style.setProperty('margin-right', '0', 'important');
       main.style.setProperty('width', '100%', 'important');
     } else if (isRtl) {
+      sidebar.style.setProperty('top', headerHeight + 'px', 'important');
+      sidebar.style.setProperty('height', 'calc(100vh - ' + headerHeight + 'px)', 'important');
       main.style.setProperty('margin-left', '0', 'important');
       main.style.setProperty('margin-right', sidebarWidth + 'px', 'important');
       main.style.setProperty('width', 'calc(100% - ' + sidebarWidth + 'px)', 'important');
     } else {
+      sidebar.style.setProperty('top', headerHeight + 'px', 'important');
+      sidebar.style.setProperty('height', 'calc(100vh - ' + headerHeight + 'px)', 'important');
       main.style.setProperty('margin-left', sidebarWidth + 'px', 'important');
       main.style.setProperty('margin-right', '0', 'important');
       main.style.setProperty('width', 'calc(100% - ' + sidebarWidth + 'px)', 'important');
@@ -813,7 +817,7 @@
 
   /* ── Load Shared Layout via fetch ────────────────────── */
   // Cache the layout HTML in sessionStorage (tab-local only; never pollute server kv_store).
-  var _layoutCacheVersion = '20261030_v4';
+  var _layoutCacheVersion = '20261104_v5';
   var _cachedLayoutHTML = null;
   try {
     // Purge legacy server-synced layout shell key from ZS so stale menu links never return
@@ -841,7 +845,7 @@
     // Use cached HTML if available (avoids fetch on every page navigation)
     var fetchPromise = _cachedLayoutHTML
       ? Promise.resolve(_cachedLayoutHTML)
-      : fetch('shared/layout_shell.html?v=20261030_v1')
+      : fetch('shared/layout_shell.html?v=20261104_v5')
           .then(function (res) {
             if (!res.ok) throw new Error('Failed to load layout_shell.html: ' + res.status);
             return res.text();
@@ -1315,9 +1319,11 @@
 
   function renderCompanySwitcher() {
     const switcher = document.getElementById('companySwitcher');
-    if (!switcher) return;
+    const mobileSwitcher = document.getElementById('mobileCompanySwitcher');
+    const selects = [switcher, mobileSwitcher].filter(Boolean);
+    if (!selects.length) return;
 
-    const wrap = switcher.closest('.company-switcher');
+    const wrap = switcher ? switcher.closest('.company-switcher') : null;
     const settings = getSettings();
     const state = normalizeActive(settings);
 
@@ -1328,13 +1334,16 @@
     }
 
     if (!state.companies.length) {
-      switcher.innerHTML = '';
-      const opt = document.createElement('option');
-      opt.value = '';
       var currentLang = (typeof getLanguage === 'function') ? getLanguage() : 'ar';
-      opt.textContent = currentLang === 'fr' ? 'Chargement en cours...' : (currentLang === 'en' ? 'Loading...' : 'جاري التحميل...');
-      switcher.appendChild(opt);
-      switcher.disabled = true;
+      var loadingText = currentLang === 'fr' ? 'Chargement en cours...' : (currentLang === 'en' ? 'Loading...' : 'جاري التحميل...');
+      selects.forEach(function (sel) {
+        sel.innerHTML = '';
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = loadingText;
+        sel.appendChild(opt);
+        sel.disabled = true;
+      });
       // Do NOT hide the wrap on mobile! Keep it visible so layout remains stable
       if (wrap) {
         wrap.style.display = 'inline-flex';
@@ -1347,25 +1356,26 @@
       wrap.style.display = 'inline-flex';
       wrap.style.opacity = '1';
     }
-    switcher.disabled = false;
 
-    // Avoid DOM thrashing if the list of options has not changed
-    var currentOpts = Array.from(switcher.options).map(function (o) { return o.value; }).join(',');
     var newOpts = state.companies.filter(function (c) { return c && c.id; }).map(function (c) { return c.id; }).join(',');
-    if (currentOpts !== newOpts) {
-      switcher.innerHTML = '';
-      state.companies.forEach(function (company) {
-        if (!company || !company.id) return;
-        const opt = document.createElement('option');
-        opt.value = company.id;
-        opt.textContent = company.name || 'Company';
-        switcher.appendChild(opt);
-      });
-    }
-
-    if (state.activeId && switcher.value !== state.activeId) {
-      switcher.value = state.activeId;
-    }
+    selects.forEach(function (sel) {
+      sel.disabled = false;
+      // Avoid DOM thrashing if the list of options has not changed
+      var currentOpts = Array.from(sel.options).map(function (o) { return o.value; }).join(',');
+      if (currentOpts !== newOpts) {
+        sel.innerHTML = '';
+        state.companies.forEach(function (company) {
+          if (!company || !company.id) return;
+          const opt = document.createElement('option');
+          opt.value = company.id;
+          opt.textContent = company.name || 'Company';
+          sel.appendChild(opt);
+        });
+      }
+      if (state.activeId && sel.value !== state.activeId) {
+        sel.value = state.activeId;
+      }
+    });
 
     if (typeof window.applyLayoutGeometry === 'function') {
       try { window.applyLayoutGeometry(); } catch (_) {}
@@ -1416,6 +1426,8 @@
       setTimeout(function () {
         var sw = document.getElementById('companySwitcher');
         if (sw) sw.disabled = false;
+        var msw = document.getElementById('mobileCompanySwitcher');
+        if (msw) msw.disabled = false;
         var existingOverlay = document.getElementById('company-switch-overlay');
         if (existingOverlay && existingOverlay.parentNode) {
           try { existingOverlay.parentNode.removeChild(existingOverlay); } catch (_) {}
@@ -1437,6 +1449,17 @@
       // Immediately disable switcher to prevent duplicate clicks while switching
       const switcher = document.getElementById('companySwitcher');
       if (switcher) switcher.disabled = true;
+      const mobileSwitcher = document.getElementById('mobileCompanySwitcher');
+      if (mobileSwitcher) mobileSwitcher.disabled = true;
+
+      // Close mobile sidebar drawer if open so switch overlay is clearly visible
+      try {
+        var sb = document.getElementById('sidebar');
+        var bd = document.getElementById('sidebarBackdrop');
+        if (sb && sb.classList.contains('active')) sb.classList.remove('active');
+        if (bd && bd.classList.contains('active')) bd.classList.remove('active');
+        document.body.classList.remove('sidebar-open');
+      } catch (_) {}
 
       // Show visual transition overlay immediately for instant feedback
       try {
