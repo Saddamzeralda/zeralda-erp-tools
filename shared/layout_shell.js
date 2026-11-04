@@ -1021,7 +1021,7 @@
         document.head.appendChild(gsi);
       }
       var s = document.createElement('script');
-      s.src = 'shared/google_sync.js?v=20261030_v3';
+      s.src = 'shared/google_sync.js?v=20261104_v5';
       s.defer = true;
       s.onload = function () {
         runSync();

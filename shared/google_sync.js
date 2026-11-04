@@ -1893,7 +1893,8 @@
         if (onProgress && prepared.encrypted) onProgress('encrypting');
 
         var fileContent = JSON.stringify(prepared.payload, null, 2);
-        var expectedSize = fileContent.length;
+        var contentBlob = new Blob([fileContent], { type: 'application/json' });
+        var expectedSize = contentBlob.size || fileContent.length;
 
         // إذا لدينا fileId مُخزّن وصالح، استخدمه مباشرة
         if (cachedFileId) {
@@ -1907,11 +1908,10 @@
             .catch(function (e) { console.warn('[google_sync] Version copy failed (non-fatal):', e); });
 
           return copyPromise.then(function () {
-            var blob = new Blob([fileContent], { type: 'application/json' });
             return gFetch('https://www.googleapis.com/upload/drive/v3/files/' + cachedFileId + '?uploadType=media', {
               method: 'PATCH',
               headers: { 'Content-Type': 'application/json' },
-              body: blob
+              body: contentBlob
             }).then(function (r) { return r.json(); });
           }).then(function (result) {
             // إصلاح: تحقق من الرفع
@@ -1927,7 +1927,7 @@
         return gFetch('https://www.googleapis.com/drive/v3/files?q=' + encodeURIComponent(q) + '&fields=files(id)')
         .then(function (r) { return r.json(); })
         .then(function (res) {
-          var blob = new Blob([fileContent], { type: 'application/json' });
+          var blob = contentBlob;
 
           if (res.files && res.files.length > 0) {
             var fileId = res.files[0].id;

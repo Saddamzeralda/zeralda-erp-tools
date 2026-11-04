@@ -1857,9 +1857,11 @@ window.MODULE_KEY_MAP = window.MODULE_KEY_MAP || {
                 }
             });
             actions = _kept;
-            console.log('[AI] Raw response:', content.substring(0, 500));
-            console.log('[AI] Parsed EXEC actions:', actions.length, actions);
-            console.log('[AI] Parsed SRVEXEC actions:', srvActions.length, srvActions);
+            if (!fromHistory) {
+                console.log('[AI] Raw response:', content.substring(0, 500));
+                console.log('[AI] Parsed EXEC actions:', actions.length, actions);
+                console.log('[AI] Parsed SRVEXEC actions:', srvActions.length, srvActions);
+            }
         }
         var displayContent = content;
         if (actions.length)    displayContent = _stripActionTags(displayContent);

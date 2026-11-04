@@ -1137,7 +1137,9 @@
                     <div id="tgConfigFields" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; margin-bottom:12px;">
                         <div>
                             <label class="form-label" style="font-size:12px; font-weight:600;">Telegram Bot Token:</label>
-                            <input id="notifTgBotToken" class="form-input" type="password" placeholder="مثال: 123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ">
+                            <form onsubmit="return false;" style="display:contents;" autocomplete="off">
+                                <input id="notifTgBotToken" class="form-input" type="password" autocomplete="new-password" placeholder="مثال: 123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ">
+                            </form>
                             <small style="color:#94a3b8; font-size:11px;">احصل عليه مجاناً عبر محادثة @BotFather</small>
                         </div>
                         <div>
@@ -1241,7 +1243,9 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">رمز الوصول (Token):</label>
-                        <input type="password" id="waUltraToken" class="form-input" placeholder="••••••••">
+                        <form onsubmit="return false;" style="display:contents;" autocomplete="off">
+                            <input type="password" id="waUltraToken" class="form-input" autocomplete="new-password" placeholder="••••••••">
+                        </form>
                     </div>
                 </div>
             </div>
@@ -1259,7 +1263,9 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Access Token (Permanent or System User Token):</label>
-                        <input type="password" id="waMetaToken" class="form-input" placeholder="EAAX••••••••">
+                        <form onsubmit="return false;" style="display:contents;" autocomplete="off">
+                            <input type="password" id="waMetaToken" class="form-input" autocomplete="new-password" placeholder="EAAX••••••••">
+                        </form>
                     </div>
                     <div class="form-group">
                         <label class="form-label">WhatsApp Business Account ID (WABA ID - اختياري):</label>
@@ -1281,7 +1287,9 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">apiTokenInstance:</label>
-                        <input type="password" id="waGreenApiToken" class="form-input" placeholder="••••••••">
+                        <form onsubmit="return false;" style="display:contents;" autocomplete="off">
+                            <input type="password" id="waGreenApiToken" class="form-input" autocomplete="new-password" placeholder="••••••••">
+                        </form>
                     </div>
                 </div>
             </div>
@@ -1296,7 +1304,9 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">مفتاح الحماية (API Key / Bearer Token - اختياري):</label>
-                        <input type="password" id="waCustomApiKey" class="form-input" placeholder="••••••••">
+                        <form onsubmit="return false;" style="display:contents;" autocomplete="off">
+                            <input type="password" id="waCustomApiKey" class="form-input" autocomplete="new-password" placeholder="••••••••">
+                        </form>
                     </div>
                 </div>
             </div>
@@ -1809,7 +1819,9 @@
                     <div class="form-group" style="margin-bottom:0;">
                         <label class="form-label" style="font-weight:600;"><span data-en="Backup Encryption Passphrase (Optional)" data-ar="عبارة مرور تشفير النسخ الاحتياطي (اختياري)" data-fr="Phrase de passe de chiffrement (Optionnel)">عبارة مرور تشفير النسخ الاحتياطي (اختياري)</span></label>
                         <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                            <input id="googleBackupPassphraseInput" class="form-input" type="password" placeholder="عيّن عبارة مرور لتشفير النسخ الاحتياطي في Google Drive" style="flex:1; min-width:260px;">
+                            <form onsubmit="return false;" style="display:contents;" autocomplete="off">
+                                <input id="googleBackupPassphraseInput" class="form-input" type="password" autocomplete="new-password" placeholder="عيّن عبارة مرور لتشفير النسخ الاحتياطي في Google Drive" style="flex:1; min-width:260px;">
+                            </form>
                             <button class="btn btn-primary" type="button" onclick="saveGoogleBackupPassphrase()"><i class="fas fa-shield-alt"></i> <span data-en="Save Passphrase" data-ar="حفظ العبارة" data-fr="Enregistrer">حفظ العبارة</span></button>
                         </div>
                         <small style="color:#6b7280;">عند تعيينها، تُشفَّر نسخ Google الاحتياطية بـ AES-GCM قبل الرفع لحماية قصوى.</small>
@@ -4560,7 +4572,7 @@
     })();
         </script>
 
-        <script src="shared/google_sync.js?v=20261030_v3" defer></script>
+        <script src="shared/google_sync.js?v=20261104_v5" defer></script>
 <script>
         // Global toast helper used throughout settings page
         function showToast(msg, type, duration) {
@@ -4732,7 +4744,10 @@
             }
 
             __googleAutoBackupTimer = setInterval(function () {
-                window.doGoogleBackup({ silent: true, source: 'auto' });
+                var runner = window.requestIdleCallback || function (fn) { return setTimeout(fn, 10); };
+                runner(function () {
+                    window.doGoogleBackup({ silent: true, source: 'auto' });
+                });
             }, intervalMinutes * 60 * 1000);
         }
 
