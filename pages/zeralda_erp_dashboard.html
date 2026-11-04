@@ -900,8 +900,8 @@
         </div>
     </div>
 
-    <script src="shared/zeralda_db.js?v=20261017_v10"></script>
-    <script src="shared/layout_shell.js?v=20261104_v5" defer></script>
+    <script src="shared/zeralda_db.js?v=20261104_v6"></script>
+    <script src="shared/layout_shell.js?v=20261104_v6" defer></script>
     <script src="shared/ai_chat_widget.js?v=20261104_v5" defer></script>
 <script src="shared/demo_seed_data.js?v=20261017_v10" defer></script>
     <script src="shared/session_timeout.js" defer></script>
@@ -912,7 +912,7 @@
 <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="shared/google_sync.js?v=20261104_v5" defer></script>
     <script>
-        // FIX: Guard against zeralda_db.js failing to load
+        // FIX: Guard against zeralda_db.js?v=20261104_v6 failing to load
         if (typeof ZS === 'undefined') {
           var _zsFallback = {};
           window.ZS = {
@@ -972,7 +972,7 @@
             if (currentLang) currentLang.textContent = translations[savedLang].currentLang;
         }
 
-        // FIX: toggleSidebar is defined in layout_shell.js with more complete logic.
+        // FIX: toggleSidebar is defined in layout_shell.js?v=20261104_v6 with more complete logic.
         // Removed duplicate inline definition to avoid confusion.
 
         function updateDateTime(){

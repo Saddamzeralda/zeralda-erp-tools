@@ -231,8 +231,8 @@ def create_app() -> FastAPI:
             response.headers["Pragma"] = "no-cache"
             response.headers["Expires"] = "0"
         elif path.endswith((".js", ".css")):
-            # Scripts & Styles: no-cache enables instant live updates with 304 ETag revalidation
-            response.headers["Cache-Control"] = "no-cache, must-revalidate"
+            # Scripts & Styles: cache in browser memory during navigation; ?v= query strings bust cache on updates
+            response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=86400"
             if "pragma" in response.headers: del response.headers["pragma"]
             if "expires" in response.headers: del response.headers["expires"]
         elif path.endswith((".png", ".jpg", ".jpeg", ".ico", ".svg", ".woff", ".woff2", ".ttf")):
@@ -240,10 +240,10 @@ def create_app() -> FastAPI:
             if "pragma" in response.headers: del response.headers["pragma"]
             if "expires" in response.headers: del response.headers["expires"]
         elif path.endswith(".html") or path == "/":
-            # HTML pages: force fresh validation so stale cached pages never reference removed assets
-            response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
-            response.headers["Pragma"] = "no-cache"
-            response.headers["Expires"] = "0"
+            # HTML pages: use no-cache (not no-store) so browser validates ETag and gets instant 304 Not Modified
+            response.headers["Cache-Control"] = "no-cache, must-revalidate"
+            if "pragma" in response.headers: del response.headers["pragma"]
+            if "expires" in response.headers: del response.headers["expires"]
         return response
 
     # ── CSRF protection middleware ──────────────────────────────────────

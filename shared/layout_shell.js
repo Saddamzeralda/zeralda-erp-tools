@@ -817,13 +817,13 @@
 
   /* ── Load Shared Layout via fetch ────────────────────── */
   // Cache the layout HTML in sessionStorage (tab-local only; never pollute server kv_store).
-  var _layoutCacheVersion = '20261104_v5';
+  var _layoutCacheVersion = '20261104_v6';
   var _cachedLayoutHTML = null;
   try {
     // Purge legacy server-synced layout shell key from ZS so stale menu links never return
-    if (typeof ZS !== 'undefined' && ZS.removeItem) {
-      ZS.removeItem('zeralda-layout-shell-html');
-      ZS.removeItem('zeralda-layout-shell-version');
+    if (typeof ZS !== 'undefined' && ZS.hasItem && ZS.removeItem) {
+      if (ZS.hasItem('zeralda-layout-shell-html')) ZS.removeItem('zeralda-layout-shell-html');
+      if (ZS.hasItem('zeralda-layout-shell-version')) ZS.removeItem('zeralda-layout-shell-version');
     }
     var cachedVersion = sessionStorage.getItem('zeralda-layout-shell-version');
     if (cachedVersion === _layoutCacheVersion) {
@@ -845,7 +845,7 @@
     // Use cached HTML if available (avoids fetch on every page navigation)
     var fetchPromise = _cachedLayoutHTML
       ? Promise.resolve(_cachedLayoutHTML)
-      : fetch('shared/layout_shell.html?v=20261104_v5')
+      : fetch('shared/layout_shell.html?v=20261104_v6')
           .then(function (res) {
             if (!res.ok) throw new Error('Failed to load layout_shell.html: ' + res.status);
             return res.text();
@@ -1040,13 +1040,15 @@
 
   /* ── Auto-initialise on DOMContentLoaded ─────────────── */
   function init() {
-    ensureShareSyncHub();
-    ensureGoogleDriveSync();
-    installExportDisableGuards();
-    initNumberInputDigitFix();
     if (document.getElementById('sharedLayoutMount')) {
       loadSharedLayout();
     }
+    installExportDisableGuards();
+    initNumberInputDigitFix();
+    setTimeout(function () {
+      ensureShareSyncHub();
+      ensureGoogleDriveSync();
+    }, 1500);
   }
 
   // Wait for ZDB (IndexedDB cache) to be ready before init
@@ -1202,11 +1204,7 @@
     }
   };
 
-  if (window.ZDB && window.ZDB.ready) {
-    window.ZDB.ready().then(startInit).catch(startInit);
-  } else {
-    startInit();
-  }
+  startInit();
 })();
 
 
@@ -1731,11 +1729,7 @@
   }
 
   // Wait for ZDB (IndexedDB cache) to be ready
-  if (window.ZDB && window.ZDB.ready) {
-    window.ZDB.ready().then(startInit).catch(startInit);
-  } else {
-    startInit();
-  }
+  startInit();
 
   // Re-init when shared layout is loaded asynchronously
   document.addEventListener('sharedLayoutLoaded', initLanguageSwitcher);

@@ -936,14 +936,21 @@
      * بدء مؤقت النسخ الاحتياطي التلقائي
      */
     function startAutoBackupTimer() {
-        // Initial backup
-        createAutoBackup();
+        // Initial backup (throttled to once every 15 minutes across page navigations)
+        setTimeout(function () {
+            try {
+                var lastAutoTs = parseInt(sessionStorage.getItem('__zeralda_settings_autobackup_ts') || '0', 10);
+                if (Date.now() - lastAutoTs < 900000) return;
+                sessionStorage.setItem('__zeralda_settings_autobackup_ts', String(Date.now()));
+            } catch (_) {}
+            createAutoBackup();
+        }, 5000);
         
         // Periodic backup
-        setInterval(createAutoBackup, BACKUP_INTERVAL);
-        
-        // Backup on page unload
-        window.addEventListener('beforeunload', createAutoBackup);
+        setInterval(function () {
+            try { sessionStorage.setItem('__zeralda_settings_autobackup_ts', String(Date.now())); } catch (_) {}
+            createAutoBackup();
+        }, BACKUP_INTERVAL);
     }
 
     // ==========================================

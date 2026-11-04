@@ -179,11 +179,12 @@
                 cursorReq.onsuccess = function (event) {
                     var cursor = event.target.result;
                     if (cursor) {
-                        _cache[cursor.key] = cursor.value;
+                        if (!_cache.hasOwnProperty(cursor.key)) {
+                            _cache[cursor.key] = cursor.value;
+                        }
                         count++;
                         cursor.continue();
                     } else {
-                        console.log('[ZDB] Loaded', count, 'keys into cache');
                         resolve();
                     }
                 };
@@ -602,6 +603,7 @@
      * refresh), use cacheReady() instead.
      */
     function ready() {
+        if (_memReady) return Promise.resolve();
         return _initPromise || _openDB();
     }
 
@@ -614,6 +616,7 @@
      * because the cache is still empty.
      */
     function cacheReady() {
+        if (_memReady) return Promise.resolve();
         if (_cacheReadyPromise) return _cacheReadyPromise;
         // If _openDB hasn't been called yet, call it then wait for cache
         return _openDB().then(function () {
@@ -972,6 +975,11 @@
                     } else {
                         _cache[msg.key] = remoteVal;
                     }
+                    if (_memStore && typeof _memStore === 'object') {
+                        _memStore[msg.key] = _cache[msg.key];
+                        if (_memKeys && _memKeys.indexOf(msg.key) === -1) _memKeys.push(msg.key);
+                        if (typeof _scheduleNavCacheSave === 'function') _scheduleNavCacheSave();
+                    }
                     _keysCache = null;
                     _remoteWrites[msg.key] = Date.now();
                     // إشعار app_sync لإعادة المزامنة
@@ -984,11 +992,25 @@
                     } catch (_) {}
                 } else if (msg.type === 'remove') {
                     delete _cache[msg.key];
+                    if (_memStore && typeof _memStore === 'object') {
+                        delete _memStore[msg.key];
+                        if (_memKeys) {
+                            var rIdx = _memKeys.indexOf(msg.key);
+                            if (rIdx >= 0) _memKeys.splice(rIdx, 1);
+                        }
+                        if (typeof _scheduleNavCacheSave === 'function') _scheduleNavCacheSave();
+                    }
                     _keysCache = null;
                 } else if (msg.type === 'clear-all') {
                     // Another tab triggered a factory reset — wipe local data
                     console.warn('[ZDB] Received clear-all from tab', msg.tabId);
                     _cache = {};
+                    _memStore = {};
+                    _memKeys = [];
+                    try {
+                        sessionStorage.removeItem('__zs_nav_cache_v1');
+                        sessionStorage.removeItem('__zs_nav_cache_ts_v1');
+                    } catch (_) {}
                     _keysCache = null;
                     if (_db) {
                         try {
@@ -1163,12 +1185,64 @@
         return false;
     }
 
-    // تحميل كل البيانات من الخادم إلى الذاكرة (متزامن — sync XHR)
-    // الخادم محلي (127.0.0.1) فالتحميل المتزامن فوري (~10ms)
+    var _NAV_CACHE_KEY = '__zs_nav_cache_v1';
+    var _NAV_CACHE_TS_KEY = '__zs_nav_cache_ts_v1';
+    var _NAV_CACHE_TTL_MS = 60000; // 60s fast tab-local cache across page navigations
+    var _navSaveTimer = null;
+
+    function _saveNavCacheSync() {
+        if (_navSaveTimer) { clearTimeout(_navSaveTimer); _navSaveTimer = null; }
+        if (!_memReady) return;
+        try {
+            sessionStorage.setItem(_NAV_CACHE_KEY, JSON.stringify(_memStore));
+            sessionStorage.setItem(_NAV_CACHE_TS_KEY, String(Date.now()));
+        } catch (_) {}
+    }
+
+    function _scheduleNavCacheSave() {
+        if (_navSaveTimer) return;
+        _navSaveTimer = setTimeout(_saveNavCacheSync, 25);
+    }
+
+    // تحميل كل البيانات من الخادم إلى الذاكرة (مع كاش تنقل فوري في sessionStorage)
     function _loadFromServerSync() {
+        // 1. Fast path: hydrate from tab-local sessionStorage in ~1ms during page-to-page navigation
+        try {
+            var navTs = parseInt(sessionStorage.getItem(_NAV_CACHE_TS_KEY) || '0', 10);
+            if (navTs && (Date.now() - navTs) < _NAV_CACHE_TTL_MS) {
+                var rawNav = sessionStorage.getItem(_NAV_CACHE_KEY);
+                if (rawNav && rawNav.length > 2) {
+                    var parsedNav = JSON.parse(rawNav);
+                    if (parsedNav && typeof parsedNav === 'object') {
+                        _memStore = {};
+                        _memKeys = [];
+                        var navKeys = Object.keys(parsedNav);
+                        if (navKeys.length > 0) {
+                            for (var ni = 0; ni < navKeys.length; ni++) {
+                                var nk = navKeys[ni];
+                                if (_isLocalOnly(nk)) continue;
+                                var nv = parsedNav[nk];
+                                _memStore[nk] = nv;
+                                _memKeys.push(nk);
+                                _cache[nk] = nv;
+                            }
+                            _keysCache = null;
+                            _memReady = true;
+                            // Refresh asynchronously in background after page render so server stays authoritative
+                            setTimeout(function () {
+                                _loadFromServer().catch(function () {});
+                            }, 120);
+                            return _memKeys.length;
+                        }
+                    }
+                }
+            }
+        } catch (_) {}
+
+        // 2. Cold tab path: fetch fast store snapshot from local server
         try {
             var xhr = new XMLHttpRequest();
-            xhr.open('GET', _serverApi(), false);  // false = متزامن
+            xhr.open('GET', _serverApi() + '?fast=1', false);  // false = متزامن
             xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
             var token = _getServerToken();
             if (token) {
@@ -1197,6 +1271,7 @@
             });
             _keysCache = null; // ألغِ تخزين المفاتيح المؤقت
             _memReady = true;
+            _saveNavCacheSync();
             console.log('[ZS] Sync-loaded ' + _memKeys.length + ' keys from server (cache populated too)');
             return _memKeys.length;
         } catch(e) {
@@ -1207,7 +1282,7 @@
 
     // تحميل كل البيانات من الخادم إلى الذاكرة (غير متزامن — async)
     function _loadFromServer() {
-        return fetch(_serverApi(), {
+        return fetch(_serverApi() + '?fast=1', {
             method: 'GET',
             cache: 'no-store',
             headers: _buildHeaders()
@@ -1235,7 +1310,7 @@
             });
             _keysCache = null; // ألغِ تخزين المفاتيح المؤقت
             _memReady = true;
-            console.log('[ZS] Async-loaded ' + _memKeys.length + ' keys from server (cache populated too)');
+            _scheduleNavCacheSave();
             return _memKeys.length;
         }).catch(function(err) {
             console.warn('[ZS] Failed to load from server:', err.message);
@@ -1299,40 +1374,46 @@
         _dispatchSyncStatus('syncing', { flushingCount: keys.length });
 
         var flushed = 0;
-        keys.forEach(function(k) {
-            try {
-                var queuedVal = _offlineServerQueue[k];
-                // حماية: لا ترسل مصفوفة فارغة من طابور قديم إذا كانت الذاكرة الحالية تحتوي على بيانات
-                if (_isCriticalArrayKey(k)) {
-                    try {
-                        var qArr = typeof queuedVal === 'string' ? JSON.parse(queuedVal) : queuedVal;
-                        var mArr = _memStore[k] ? JSON.parse(_memStore[k]) : null;
-                        if (Array.isArray(qArr) && qArr.length === 0 && Array.isArray(mArr) && mArr.length > 0) {
-                            console.warn('[ZS] Discarded stale empty offline queue entry for', k);
-                            delete _offlineServerQueue[k];
-                            return;
-                        }
-                    } catch(_) {}
-                }
-                var xhr = new XMLHttpRequest();
-                xhr.open('POST', _serverApi(), false);
-                xhr.setRequestHeader('Content-Type', 'application/json');
-                xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-                xhr.setRequestHeader('Authorization', 'Bearer ' + token);
-                xhr.setRequestHeader('X-Session-Token', token);
-                xhr.send(JSON.stringify({ key: k, value: queuedVal }));
-                if (xhr.status === 200) {
+        var promises = keys.map(function(k) {
+            var queuedVal = _offlineServerQueue[k];
+            // حماية: لا ترسل مصفوفة فارغة من طابور قديم إذا كانت الذاكرة الحالية تحتوي على بيانات
+            if (_isCriticalArrayKey(k)) {
+                try {
+                    var qArr = typeof queuedVal === 'string' ? JSON.parse(queuedVal) : queuedVal;
+                    var mArr = _memStore[k] ? JSON.parse(_memStore[k]) : null;
+                    if (Array.isArray(qArr) && qArr.length === 0 && Array.isArray(mArr) && mArr.length > 0) {
+                        console.warn('[ZS] Discarded stale empty offline queue entry for', k);
+                        delete _offlineServerQueue[k];
+                        return Promise.resolve();
+                    }
+                } catch(_) {}
+            }
+            var bodyStr = JSON.stringify({ key: k, value: queuedVal });
+            return fetch(_serverApi(), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Authorization': 'Bearer ' + token,
+                    'X-Session-Token': token
+                },
+                body: bodyStr,
+                keepalive: bodyStr.length < 60000
+            }).then(function(res) {
+                if (res && res.ok) {
                     delete _offlineServerQueue[k];
                     flushed++;
                 }
-            } catch(e) {}
+            }).catch(function() {});
         });
 
-        _saveOfflineQueue();
-        _isFlushingOffline = false;
-        _lastSyncTime = Date.now();
-        var remaining = Object.keys(_offlineServerQueue).length;
-        _dispatchSyncStatus(remaining === 0 ? 'synced' : 'offline', { remaining: remaining, flushed: flushed });
+        Promise.all(promises).then(function() {
+            _saveOfflineQueue();
+            _isFlushingOffline = false;
+            _lastSyncTime = Date.now();
+            var remaining = Object.keys(_offlineServerQueue).length;
+            _dispatchSyncStatus(remaining === 0 ? 'synced' : 'offline', { remaining: remaining, flushed: flushed });
+        });
     }
 
     window.addEventListener('online', function() {
@@ -1343,11 +1424,17 @@
 
     var _isPageDismissing = false;
     if (typeof window !== 'undefined') {
-        window.addEventListener('beforeunload', function() { _isPageDismissing = true; });
-        window.addEventListener('pagehide', function() { _isPageDismissing = true; });
+        window.addEventListener('beforeunload', function() {
+            _isPageDismissing = true;
+            _saveNavCacheSync();
+        });
+        window.addEventListener('pagehide', function() {
+            _isPageDismissing = true;
+            _saveNavCacheSync();
+        });
     }
 
-    // إرسال متزامن للخادم (sync XHR — الخادم محلي فالحفظ فوري) مع طابور أوفلاين
+    // إرسال غير متزامن فوري للخادم (بدون تجميد واجهة المستخدم أو إبطاء التنقل بين الصفحات) مع طابور أوفلاين
     function _pushToServer(key, value, opts) {
         // لا ترسل للخادم إذا لم يكن الـ token متاحاً (مثل صفحة login)
         var token = _getServerToken();
@@ -1368,87 +1455,61 @@
         }
         var payloadStr = JSON.stringify(payloadObj);
 
-        // If page is dismissing/unloading, modern browsers prohibit synchronous XHR.
-        // Use fetch with keepalive: true (W3C standard for background delivery during page dismissal)
-        if (_isPageDismissing) {
-            try {
-                fetch(_serverApi(), {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Authorization': 'Bearer ' + token,
-                        'X-Session-Token': token
-                    },
-                    body: payloadStr,
-                    keepalive: true
-                }).catch(function() {});
-            } catch(e) {}
-            return;
-        }
-
         try {
-            var xhr = new XMLHttpRequest();
-            xhr.open('POST', _serverApi(), false);  // false = متزامن
-            xhr.setRequestHeader('Content-Type', 'application/json');
-            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-            xhr.setRequestHeader('Authorization', 'Bearer ' + token);
-            xhr.setRequestHeader('X-Session-Token', token);
-            xhr.send(payloadStr);
-            if (xhr.status === 200) {
-                if (_offlineServerQueue[key]) {
-                    delete _offlineServerQueue[key];
+            fetch(_serverApi(), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Authorization': 'Bearer ' + token,
+                    'X-Session-Token': token
+                },
+                body: payloadStr,
+                keepalive: payloadStr.length < 60000
+            }).then(function(res) {
+                if (res && res.ok) {
+                    if (_offlineServerQueue[key]) {
+                        delete _offlineServerQueue[key];
+                        _saveOfflineQueue();
+                    }
+                    _lastSyncTime = Date.now();
+                    _dispatchSyncStatus('synced');
+                } else {
+                    var st = res ? res.status : 0;
+                    if (st === 401) {
+                        console.warn('[ZS] Server token invalid or expired (401). Clearing stale token.');
+                        try {
+                            document.cookie = "zeralda-auth-token=; path=/; max-age=0";
+                            localStorage.removeItem('zeralda-auth-token');
+                            localStorage.removeItem('zeralda-session-token');
+                            delete _memStore['zeralda-auth-token'];
+                            delete _memStore['zeralda-session-token'];
+                        } catch(_) {}
+                    }
+                    if (!_isPageDismissing) {
+                        console.warn('[ZS] Server write failed for', key, st);
+                    }
+                    _offlineServerQueue[key] = value;
                     _saveOfflineQueue();
+                    _dispatchSyncStatus('offline', { key: key, status: st });
                 }
-                _lastSyncTime = Date.now();
-                _dispatchSyncStatus('synced');
-            } else {
-                if (xhr.status === 401) {
-                    console.warn('[ZS] Server token invalid or expired (401). Clearing stale token.');
-                    try {
-                        document.cookie = "zeralda-auth-token=; path=/; max-age=0";
-                        localStorage.removeItem('zeralda-auth-token');
-                        localStorage.removeItem('zeralda-session-token');
-                        delete _memStore['zeralda-auth-token'];
-                        delete _memStore['zeralda-session-token'];
-                    } catch(_) {}
+            }).catch(function(err) {
+                if (!_isPageDismissing) {
+                    var msg = String(err && err.message || '');
+                    console.warn('[ZS] Async write error for', key, msg);
                 }
-                console.warn('[ZS] Server write failed for', key, xhr.status);
                 _offlineServerQueue[key] = value;
                 _saveOfflineQueue();
-                _dispatchSyncStatus('offline', { key: key, status: xhr.status });
-            }
+                _dispatchSyncStatus('offline', { key: key });
+            });
         } catch(e) {
-            var msg = String(e && e.message || '');
-            if (msg.indexOf('page dismissal') !== -1 || msg.indexOf('Synchronous XHR') !== -1) {
-                // Browser prohibited sync XHR during page unload — deliver via fetch keepalive
-                _isPageDismissing = true;
-                try {
-                    fetch(_serverApi(), {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'Authorization': 'Bearer ' + token,
-                            'X-Session-Token': token
-                        },
-                        body: payloadStr,
-                        keepalive: true
-                    }).catch(function() {});
-                } catch(_) {}
-            } else {
-                console.warn('[ZS] Sync write error for', key, msg);
-                _offlineServerQueue[key] = value;
-                _saveOfflineQueue();
-                _dispatchSyncStatus('offline', { key: key, error: msg });
-            }
+            _offlineServerQueue[key] = value;
+            _saveOfflineQueue();
+            _dispatchSyncStatus('offline', { key: key });
         }
     }
 
-    // إرسال غير متزامن (fallback)
-    
-
-    // حذف متزامن من الخادم
+    // حذف غير متزامن من الخادم (بدون تجميد المتصفح)
     function _deleteFromServer(key) {
         var token = _getServerToken();
         if (!token) {
@@ -1462,58 +1523,21 @@
             return;
         }
 
-        if (_isPageDismissing) {
-            try {
-                fetch(_serverApi() + '?key=' + encodeURIComponent(key), {
-                    method: 'DELETE',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Authorization': 'Bearer ' + token,
-                        'X-Session-Token': token
-                    },
-                    keepalive: true
-                }).catch(function() {});
-            } catch(e) {}
-            return;
-        }
-
         try {
-            var xhr = new XMLHttpRequest();
-            xhr.open('DELETE', _serverApi() + '?key=' + encodeURIComponent(key), false);
-            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-            xhr.setRequestHeader('Authorization', 'Bearer ' + token);
-            xhr.setRequestHeader('X-Session-Token', token);
-            xhr.send();
-            if (xhr.status !== 200) {
-                console.warn('[ZS] Server delete failed for', key, xhr.status);
-            }
-        } catch(e) {
-            var delMsg = String(e && e.message || '');
-            if (delMsg.indexOf('page dismissal') !== -1 || delMsg.indexOf('Synchronous XHR') !== -1) {
-                _isPageDismissing = true;
-                try {
-                    fetch(_serverApi() + '?key=' + encodeURIComponent(key), {
-                        method: 'DELETE',
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'Authorization': 'Bearer ' + token,
-                            'X-Session-Token': token
-                        },
-                        keepalive: true
-                    }).catch(function() {});
-                } catch(_) {}
-            } else {
-                console.warn('[ZS] Sync delete error for', key, delMsg);
-                // fallback async
-                try {
-                    fetch(_serverApi() + '?key=' + encodeURIComponent(key), {
-                        method: 'DELETE',
-                        cache: 'no-store',
-                        headers: _buildHeaders()
-                    }).catch(function() {});
-                } catch(_) {}
-            }
-        }
+            fetch(_serverApi() + '?key=' + encodeURIComponent(key), {
+                method: 'DELETE',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Authorization': 'Bearer ' + token,
+                    'X-Session-Token': token
+                },
+                keepalive: true
+            }).then(function(res) {
+                if (res && !res.ok && !_isPageDismissing) {
+                    console.warn('[ZS] Server delete failed for', key, res.status);
+                }
+            }).catch(function() {});
+        } catch(e) {}
     }
 
     // تهيئة — تحميل متزامن فوري (الخادم محلي ~10ms)
@@ -1667,6 +1691,7 @@
                     }
                 } catch(e) {}
             }
+            var unchanged = (_memStore.hasOwnProperty(sk) && _memStore[sk] === value && !_offlineServerQueue[sk]);
             _memStore[sk] = value;
             _cache[sk] = value; // إبقاء ZDB و DataGuard متزامنين مع ZS
             if (_memKeys.indexOf(sk) === -1) _memKeys.push(sk);
@@ -1682,11 +1707,15 @@
             }
             // المفاتيح المحلية فقط: لا ترسل للخادم
             if (_isLocalOnly(sk)) return;
-            _pushToServer(sk, value, { allowShrink: allowShrink });  // إرسال فوري للخادم
+            _scheduleNavCacheSave();
+            if (unchanged) return;
+            _pushToServer(sk, value, { allowShrink: allowShrink });  // إرسال غير متزامن للخادم
         },
         removeItem: function (key) {
             var sk = _scopeKey(key);
+            var wasInMem = _memStore.hasOwnProperty(sk);
             delete _memStore[sk];
+            delete _cache[sk];
             var idx = _memKeys.indexOf(sk);
             if (idx >= 0) _memKeys.splice(idx, 1);
             // الـ token: احذف من cookie و localStorage و sessionStorage
@@ -1709,11 +1738,15 @@
                 try {
                     sessionStorage.removeItem('zeralda-auth-token');
                     sessionStorage.removeItem('zeralda-session-token');
+                    sessionStorage.removeItem(_NAV_CACHE_KEY);
+                    sessionStorage.removeItem(_NAV_CACHE_TS_KEY);
                 } catch(e) {}
                 return;
             }
             if (_isLocalOnly(sk)) return;
-            _deleteFromServer(sk);  // حذف فوري من الخادم
+            if (!wasInMem) return;
+            _scheduleNavCacheSave();
+            _deleteFromServer(sk);  // حذف غير متزامن من الخادم
         },
         clear: function () {
             _memStore = {};

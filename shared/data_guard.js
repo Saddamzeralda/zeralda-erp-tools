@@ -543,19 +543,21 @@
    */
   function init() {
     _openGuardDB().then(function () {
-      // إنشاء نسخة عند بدء التشغيل
+      // إنشاء نسخة عند بدء التشغيل (بحد أقصى مرة كل 10 دقائق لتجنب إبطاء التنقل بين الصفحات)
       setTimeout(function () {
+        try {
+          var lastSnapTs = parseInt(sessionStorage.getItem('__zeralda_last_guard_snap_ts') || '0', 10);
+          if (Date.now() - lastSnapTs < 600000) return;
+          sessionStorage.setItem('__zeralda_last_guard_snap_ts', String(Date.now()));
+        } catch (_) {}
         createSnapshot('startup');
-      }, 3000);
+      }, 6000);
       // نسخ دوري
       if (_autoBackupTimer) clearInterval(_autoBackupTimer);
       _autoBackupTimer = setInterval(function () {
+        try { sessionStorage.setItem('__zeralda_last_guard_snap_ts', String(Date.now())); } catch (_) {}
         createSnapshot('auto-periodic');
       }, AUTO_BACKUP_INTERVAL);
-      // نسخة قبل إغلاق الصفحة
-      window.addEventListener('beforeunload', function () {
-        try { createSnapshot('page-unload'); } catch (e) {}
-      });
     });
   }
 

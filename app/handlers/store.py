@@ -263,7 +263,7 @@ def sanitize_settings_for_user(settings_val: Any, user: Dict[str, Any]) -> Any:
 
 
 @router.get("")
-async def get_store(request: Request, key: Optional[str] = None):
+async def get_store(request: Request, key: Optional[str] = None, fast: Optional[int] = None):
     user = _user_or_raise(request, "read")
 
     # Fast single-key path: do NOT load or copy the entire 1.35MB store + history
@@ -277,9 +277,10 @@ async def get_store(request: Request, key: Optional[str] = None):
             val = sanitize_settings_for_user(val, user)
         return {"ok": True, "value": val, "version": version}
 
+    is_fast = bool(fast)
     with storage._lock:
         store = storage.read_store()
-        hist = storage.read_history()
+        hist = None if is_fast else storage.read_history()
 
     active_cid = _extract_active_company(request, user, store)
 
@@ -290,16 +291,18 @@ async def get_store(request: Request, key: Optional[str] = None):
     for k, v in store.items():
         if k in LOCAL_SESSION_KEYS or any(k.startswith(p + "::") for p in LOCAL_SESSION_KEYS):
             continue
+        if is_fast and (k.startswith("zeralda-auto-backup") or k.startswith("inventory-backups")):
+            continue
         if is_admin or is_key_permitted_for_user(k, user, action="read", active_company_id=active_cid):
             if k == "zeralda-settings":
                 v = sanitize_settings_for_user(v, user)
             filtered_store[k] = v
 
-    versions = storage.all_key_versions(filtered_store, hist)
-
-    log_structured("INFO", "Storage read", action="store_read",
-                   user=user.get("email"), role=user.get("role"),
-                   keys_returned=len(filtered_store), status="success")
+    if not is_fast and hist is not None:
+        versions = storage.all_key_versions(filtered_store, hist)
+        log_structured("INFO", "Storage read", action="store_read",
+                       user=user.get("email"), role=user.get("role"),
+                       keys_returned=len(filtered_store), status="success")
     return {"ok": True, "data": filtered_store, "versions": versions}
 
 
