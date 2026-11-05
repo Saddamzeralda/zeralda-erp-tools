@@ -18,17 +18,17 @@
 
   <link rel="stylesheet" href="styles/zeralda_core.bundle.css?v=20261104_v5">
 
-  <script src="shared/zeralda_db.js?v=20261017_v10"></script>
+  <script src="shared/zeralda_db.js?v=20261105_bis2"></script>
 
-  <script src="shared/layout_shell.js?v=20261104_v5" defer></script>
+  <script src="shared/layout_shell.js?v=20261105_bis2" defer></script>
 
-  <script src="shared/ai_chat_widget.js?v=20261104_v5" defer></script>
+  <script src="shared/ai_chat_widget.js?v=20261105_bis2" defer></script>
 
-  <script src="shared/session_timeout.js" defer></script>
+  <script src="shared/session_timeout.js?v=20261105_bis2" defer></script>
 
-  <script src="shared/company_storage.js?v=20261017_v10"></script>
+  <script src="shared/company_storage.js?v=20261105_bis2"></script>
 
-  <script src="shared/unified_i18n.js?v=20261020_hotfix5"></script>
+  <script src="shared/unified_i18n.js?v=20261105_bis2"></script>
 
   <script src="shared/app_sync.js?v=20261017_v10" defer></script>
 
@@ -3102,23 +3102,23 @@
 
               <i class="fas fa-search"></i>
 
-              <input type="text" class="ms-search-input" id="msWilayaSearch" placeholder="ابحث بالاسم أو الرقم (16, وهران...)" oninput="filterMultiSelectWilayas(this.value)">
+              <input type="text" class="ms-search-input" id="msWilayaSearch" placeholder="ابحث بالاسم أو الرقم (16, وهران...)" data-ar-placeholder="ابحث بالاسم أو الرقم (16, وهران...)" data-fr-placeholder="Rechercher par nom ou code (16, Oran...)" data-en-placeholder="Search by name or code (16, Oran...)" oninput="filterMultiSelectWilayas(this.value)">
 
             </div>
 
             <div class="ms-actions-bar">
 
-              <button type="button" class="btn-ms-action" onclick="selectAllWilayas(true)">الكل</button>
+              <button type="button" class="btn-ms-action" onclick="selectAllWilayas(true)" data-ar="الكل" data-fr="Tous" data-en="All">الكل</button>
 
-              <button type="button" class="btn-ms-action" onclick="selectAllWilayas(false)">مسح</button>
+              <button type="button" class="btn-ms-action" onclick="selectAllWilayas(false)" data-ar="مسح" data-fr="Effacer" data-en="Clear">مسح</button>
 
-              <button type="button" class="btn-ms-action" onclick="selectRegionWilayas('centre')">الوسط (8)</button>
+              <button type="button" class="btn-ms-action" onclick="selectRegionWilayas('centre')" data-ar="الوسط (8)" data-fr="Centre (8)" data-en="Center (8)">الوسط (8)</button>
 
-              <button type="button" class="btn-ms-action" onclick="selectRegionWilayas('est')">الشرق (14)</button>
+              <button type="button" class="btn-ms-action" onclick="selectRegionWilayas('est')" data-ar="الشرق (14)" data-fr="Est (14)" data-en="East (14)">الشرق (14)</button>
 
-              <button type="button" class="btn-ms-action" onclick="selectRegionWilayas('ouest')">الغرب (11)</button>
+              <button type="button" class="btn-ms-action" onclick="selectRegionWilayas('ouest')" data-ar="الغرب (11)" data-fr="Ouest (11)" data-en="West (11)">الغرب (11)</button>
 
-              <button type="button" class="btn-ms-action" onclick="selectRegionWilayas('sud')">الجنوب (25)</button>
+              <button type="button" class="btn-ms-action" onclick="selectRegionWilayas('sud')" data-ar="الجنوب (25)" data-fr="Sud (25)" data-en="South (25)">الجنوب (25)</button>
 
             </div>
 
@@ -3130,9 +3130,9 @@
 
             <div class="ms-footer-bar">
 
-              <span id="msWilayasCountLabel" style="font-size:11.5px; color:#64748b;">جميع الولايات</span>
+              <span id="msWilayasCountLabel" style="font-size:11.5px; color:#64748b;" data-ar="جميع الولايات" data-fr="Toutes les wilayas" data-en="All Wilayas">جميع الولايات</span>
 
-              <button type="button" class="btn btn-primary btn-sm" onclick="closeAllMultiSelects()">تطبيق</button>
+              <button type="button" class="btn btn-primary btn-sm" onclick="closeAllMultiSelects()" data-ar="تطبيق" data-fr="Appliquer" data-en="Apply">تطبيق</button>
 
             </div>
 
@@ -3190,9 +3190,9 @@
 
             <div class="ms-actions-bar">
 
-              <button type="button" class="btn-ms-action" onclick="selectAllNoticeTypes(true)">تحديد الكل</button>
+              <button type="button" class="btn-ms-action" onclick="selectAllNoticeTypes(true)" data-ar="تحديد الكل" data-fr="Tout sélectionner" data-en="Select All">تحديد الكل</button>
 
-              <button type="button" class="btn-ms-action" onclick="selectAllNoticeTypes(false)">مسح التحديد</button>
+              <button type="button" class="btn-ms-action" onclick="selectAllNoticeTypes(false)" data-ar="مسح التحديد" data-fr="Désélectionner" data-en="Clear">مسح التحديد</button>
 
             </div>
 
@@ -3204,9 +3204,9 @@
 
             <div class="ms-footer-bar">
 
-              <span id="msTypesCountLabel" style="font-size:11.5px; color:#64748b;">جميع الأنواع</span>
+              <span id="msTypesCountLabel" style="font-size:11.5px; color:#64748b;" data-ar="جميع الأنواع" data-fr="Tous les types" data-en="All Types">جميع الأنواع</span>
 
-              <button type="button" class="btn btn-primary btn-sm" onclick="closeAllMultiSelects()">تطبيق</button>
+              <button type="button" class="btn btn-primary btn-sm" onclick="closeAllMultiSelects()" data-ar="تطبيق" data-fr="Appliquer" data-en="Apply">تطبيق</button>
 
             </div>
 
@@ -3302,11 +3302,11 @@
 
       <div id="activeFilterPillsBar" class="active-pills-bar" style="display:none;">
 
-        <span class="pills-bar-title"><i class="fas fa-filter text-primary"></i> <span data-ar="الفلاتر النشطة:" data-fr="Filtres actifs :">الفلاتر النشطة:</span></span>
+        <span class="pills-bar-title"><i class="fas fa-filter text-primary"></i> <span data-ar="الفلاتر النشطة:" data-fr="Filtres actifs :" data-en="Active Filters:">الفلاتر النشطة:</span></span>
 
         <div id="activePillsContainer" style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;"></div>
 
-        <button type="button" class="btn-clear-all-pills" onclick="clearAllMultiFilters()"><i class="fas fa-times-circle"></i> <span data-ar="مسح التحديد" data-fr="Effacer">مسح التحديد</span></button>
+        <button type="button" class="btn-clear-all-pills" onclick="clearAllMultiFilters()"><i class="fas fa-times-circle"></i> <span data-ar="مسح التحديد" data-fr="Effacer" data-en="Clear">مسح التحديد</span></button>
 
       </div>
 
@@ -3324,19 +3324,19 @@
 
           <i class="fas fa-th-list text-primary"></i>
 
-          <span><span data-ar="عرض الصفقات من" data-fr="Affichage">عرض الصفقات من</span> <strong id="feedStartNum">1</strong> <span data-ar="إلى" data-fr="à">إلى</span> <strong id="feedEndNum">12</strong> <span data-ar="من إجمالي" data-fr="sur un total de">من إجمالي</span> <strong id="feedTotalNum" class="badge-count">151</strong></span>
+          <span><span data-ar="عرض الصفقات من" data-fr="Affichage" data-en="Showing">عرض الصفقات من</span> <strong id="feedStartNum">1</strong> <span data-ar="إلى" data-fr="à" data-en="to">إلى</span> <strong id="feedEndNum">12</strong> <span data-ar="من إجمالي" data-fr="sur un total de" data-en="of">من إجمالي</span> <strong id="feedTotalNum" class="badge-count">151</strong></span>
 
         </div>
 
         <div class="feed-toolbar-actions">
 
-          <button type="button" class="btn-toolbar-fold" onclick="collapseAllCards()"><i class="fas fa-compress-arrows-alt"></i> <span data-ar="طي الكل" data-fr="Tout replier">طي الكل</span></button>
+          <button type="button" class="btn-toolbar-fold" onclick="collapseAllCards()"><i class="fas fa-compress-arrows-alt"></i> <span data-ar="طي الكل" data-fr="Tout replier" data-en="Collapse All">طي الكل</span></button>
 
-          <button type="button" class="btn-toolbar-fold" onclick="expandAllCards()"><i class="fas fa-expand-arrows-alt"></i> <span data-ar="توسيع الكل" data-fr="Tout déplier">توسيع الكل</span></button>
+          <button type="button" class="btn-toolbar-fold" onclick="expandAllCards()"><i class="fas fa-expand-arrows-alt"></i> <span data-ar="توسيع الكل" data-fr="Tout déplier" data-en="Expand All">توسيع الكل</span></button>
 
           <div class="page-size-selector">
 
-            <span data-ar="في الصفحة:" data-fr="Par page :">في الصفحة:</span>
+            <span data-ar="في الصفحة:" data-fr="Par page :" data-en="Per page:">في الصفحة:</span>
 
             <select id="feedPageSizeSelect" class="page-size-select" onchange="changeFeedPageSize(this.value)">
 
@@ -3348,7 +3348,7 @@
 
               <option value="48">48</option>
 
-              <option value="all">الكل</option>
+              <option value="all" data-ar="الكل" data-fr="Tous" data-en="All">الكل</option>
 
             </select>
 
@@ -3358,19 +3358,19 @@
 
             <i class="fas fa-sort-amount-down text-primary" style="font-size:12px;"></i>
 
-            <span data-ar="الترتيب:" data-fr="Trier par :">الترتيب:</span>
+            <span data-ar="الترتيب:" data-fr="Trier par :" data-en="Sort by:">الترتيب:</span>
 
             <select id="dzSortSelect" class="page-size-select" style="min-width:145px;" onchange="filterAndRenderTenders()">
 
-              <option value="date_desc" selected>الأحدث نشراً</option>
+              <option value="date_desc" selected data-ar="الأحدث نشراً" data-fr="Plus récents" data-en="Newest First">الأحدث نشراً</option>
 
-              <option value="deadline_asc">الأقرب انتهاءً</option>
+              <option value="deadline_asc" data-ar="الأقرب انتهاءً" data-fr="Échéance proche" data-en="Nearest Deadline">الأقرب انتهاءً</option>
 
-              <option value="amount_desc">الأعلى قيمة تقديرية</option>
+              <option value="amount_desc" data-ar="الأعلى قيمة تقديرية" data-fr="Montant décroissant" data-en="Highest Amount">الأعلى قيمة تقديرية</option>
 
-              <option value="amount_asc">الأقل قيمة تقديرية</option>
+              <option value="amount_asc" data-ar="الأقل قيمة تقديرية" data-fr="Montant croissant" data-en="Lowest Amount">الأقل قيمة تقديرية</option>
 
-              <option value="cahier_asc">ثمن دفتر الشروط</option>
+              <option value="cahier_asc" data-ar="ثمن دفتر الشروط" data-fr="Prix cahier croissant" data-en="Lowest Specs Fee">ثمن دفتر الشروط</option>
 
             </select>
 
@@ -4138,21 +4138,35 @@
 
     ];
 
-    function getLang(){
+    function getLang(preferred){
+
+      if(preferred && (preferred === 'ar' || preferred === 'fr' || preferred === 'en')) return preferred;
 
       try {
 
+        if(window.UnifiedI18N && typeof window.UnifiedI18N.getCurrentLang === 'function'){
+
+          var ul = window.UnifiedI18N.getCurrentLang();
+
+          if(ul === 'ar' || ul === 'fr' || ul === 'en') return ul;
+
+        }
+
         if(window.ZS && typeof window.ZS.getItem === 'function'){
 
-          var l = window.ZS.getItem('preferred-language');
+          var l = window.ZS.getItem('preferred-language') || window.ZS.getItem('language');
 
-          if(l) return l.toLowerCase();
+          if(l && (l === 'ar' || l === 'fr' || l === 'en')) return l.toLowerCase();
 
         }
 
         var loc = localStorage.getItem('preferred-language') || localStorage.getItem('language');
 
-        if(loc) return loc.toLowerCase();
+        if(loc && (loc === 'ar' || loc === 'fr' || loc === 'en')) return loc.toLowerCase();
+
+        var match = document.cookie.match(/(?:^|;\s*)preferred-language=([^;]+)/);
+
+        if(match && (match[1] === 'ar' || match[1] === 'fr' || match[1] === 'en')) return match[1].toLowerCase();
 
       } catch(_){}
 
@@ -4286,7 +4300,65 @@
 
       detailModalDefaultTitle: { ar: 'تفاصيل الإعلان ودفتر الشروط', fr: "Détails de l'avis et cahier des charges", en: 'Notice Details & Specifications' },
 
-      validBadgeText: { ar: '10 أيام (ساري)', fr: '10 jours (valide)', en: '10 days (active)' }
+      validBadgeText: { ar: '10 أيام (ساري)', fr: '10 jours (valide)', en: '10 days (active)' },
+
+      syncStatusActive: { ar: 'تحديث القوائم: كل 12 ساعة (نشط)', fr: 'Mise à jour : toutes les 12h (Actif)', en: 'Feed update: every 12h (Active)' },
+
+      unspecified: { ar: 'غير مصرح', fr: 'Non précisé', en: 'Not specified' },
+
+      lotsAndTranches: { ar: 'الحصص والمقاطع:', fr: 'Lots et tranches :', en: 'Lots & Tranches:' },
+
+      qualification: { ar: 'التأهيل', fr: 'Qualification', en: 'Qualification' },
+
+      depositPlace: { ar: 'مكان إيداع العروض:', fr: 'Lieu de dépôt :', en: 'Bid Submission Place:' },
+
+      showDetails: { ar: 'عرض التفاصيل', fr: 'Détails', en: 'View Details' },
+
+      collapse: { ar: 'طي', fr: 'Replier', en: 'Collapse' },
+
+      collapseAll: { ar: 'طي الكل', fr: 'Tout replier', en: 'Collapse All' },
+
+      expandAll: { ar: 'توسيع الكل', fr: 'Tout déplier', en: 'Expand All' },
+
+      perPage: { ar: 'في الصفحة:', fr: 'Par page :', en: 'Per page:' },
+
+      all: { ar: 'الكل', fr: 'Tous', en: 'All' },
+
+      sortBy: { ar: 'الترتيب:', fr: 'Trier par :', en: 'Sort by:' },
+
+      sortNewest: { ar: 'الأحدث نشراً', fr: 'Plus récents', en: 'Newest First' },
+
+      sortDeadline: { ar: 'الأقرب انتهاءً', fr: 'Échéance proche', en: 'Nearest Deadline' },
+
+      sortAmountDesc: { ar: 'الأعلى قيمة تقديرية', fr: 'Montant décroissant', en: 'Highest Amount' },
+
+      sortAmountAsc: { ar: 'الأقل قيمة تقديرية', fr: 'Montant croissant', en: 'Lowest Amount' },
+
+      sortCahier: { ar: 'ثمن دفتر الشروط', fr: 'Prix cahier croissant', en: 'Lowest Specs Fee' },
+
+      activeFilters: { ar: 'الفلاتر النشطة:', fr: 'Filtres actifs :', en: 'Active Filters:' },
+
+      clearFilters: { ar: 'مسح التحديد', fr: 'Effacer', en: 'Clear' },
+
+      wilayasSelectAll: { ar: 'الكل', fr: 'Tous', en: 'All' },
+
+      wilayasClear: { ar: 'مسح', fr: 'Effacer', en: 'Clear' },
+
+      regionCentre: { ar: 'الوسط (8)', fr: 'Centre (8)', en: 'Center (8)' },
+
+      regionEst: { ar: 'الشرق (14)', fr: 'Est (14)', en: 'East (14)' },
+
+      regionOuest: { ar: 'الغرب (11)', fr: 'Ouest (11)', en: 'West (11)' },
+
+      regionSud: { ar: 'الجنوب (25)', fr: 'Sud (25)', en: 'South (25)' },
+
+      apply: { ar: 'تطبيق', fr: 'Appliquer', en: 'Apply' },
+
+      searchWilayaPlaceholder: { ar: 'ابحث بالاسم أو الرقم (16, وهران...)', fr: 'Rechercher par nom ou code (16, Oran...)', en: 'Search by name or code (16, Oran...)' },
+
+      typesSelectAll: { ar: 'تحديد الكل', fr: 'Tout sélectionner', en: 'Select All' },
+
+      typesClear: { ar: 'مسح التحديد', fr: 'Désélectionner', en: 'Clear Selection' }
 
     };
 
@@ -4354,9 +4426,9 @@
 
     }
 
-    function loadLanguage() {
+    function loadLanguage(targetLang) {
 
-      var lang = getLang();
+      var lang = getLang(targetLang);
 
       var html = document.documentElement;
 
@@ -4364,232 +4436,210 @@
 
       if (lang === 'ar') {
 
-        body.classList.add('rtl');
+        if (body) body.classList.add('rtl');
 
-        html.setAttribute('dir', 'rtl');
-
-        html.setAttribute('lang', 'ar');
+        if (html) { html.setAttribute('dir', 'rtl'); html.setAttribute('lang', 'ar'); }
 
       } else {
 
-        body.classList.remove('rtl');
+        if (body) body.classList.remove('rtl');
 
-        html.setAttribute('dir', 'ltr');
-
-        html.setAttribute('lang', lang);
+        if (html) { html.setAttribute('dir', 'ltr'); html.setAttribute('lang', lang); }
 
       }
 
-      // Update static text elements
+      // Run UnifiedI18N DOM translations if available
+      if (window.UnifiedI18N && typeof window.UnifiedI18N.applyTranslations === 'function' && !window._insideUnifiedI18nApply) {
+        try {
+          window._insideUnifiedI18nApply = true;
+          window.UnifiedI18N.applyTranslations(lang);
+        } catch(_) {}
+        finally {
+          window._insideUnifiedI18nApply = false;
+        }
+      }
 
+      // Update static text elements preserving child icons
       document.querySelectorAll('[data-' + lang + ']').forEach(function(el) {
-
-        el.textContent = el.getAttribute('data-' + lang);
-
+        var v = el.getAttribute('data-' + lang);
+        if (v !== null) {
+          var hasIcon = el.querySelector('i, svg');
+          if (hasIcon) {
+            var textNode = null;
+            for (var i = 0; i < el.childNodes.length; i++) {
+              if (el.childNodes[i].nodeType === 3 && el.childNodes[i].nodeValue.trim().length > 0) {
+                textNode = el.childNodes[i];
+                break;
+              }
+            }
+            if (textNode) {
+              textNode.nodeValue = ' ' + v;
+            } else {
+              var spanChild = el.querySelector('span:not(.badge):not(.pos-badge)');
+              if (spanChild) spanChild.textContent = v;
+              else el.appendChild(document.createTextNode(' ' + v));
+            }
+          } else {
+            el.textContent = v;
+          }
+        }
       });
 
       // Update placeholders
-
       document.querySelectorAll('[data-' + lang + '-placeholder]').forEach(function(el) {
-
-        el.placeholder = el.getAttribute('data-' + lang + '-placeholder');
-
+        var v = el.getAttribute('data-' + lang + '-placeholder');
+        if (v !== null) el.placeholder = v;
       });
 
       // Update titles
-
       document.querySelectorAll('[data-' + lang + '-title]').forEach(function(el) {
-
-        el.title = el.getAttribute('data-' + lang + '-title');
-
+        var v = el.getAttribute('data-' + lang + '-title');
+        if (v !== null) el.title = v;
       });
 
-      // Update Wilaya Select
+      // Update Multi-Select Wilayas UI & Search Placeholder
+      var msWilayaSearch = document.getElementById('msWilayaSearch');
+      if (msWilayaSearch) {
+        msWilayaSearch.placeholder = i18n('searchWilayaPlaceholder', 'ابحث بالاسم أو الرقم (16, وهران...)');
+      }
+      if (typeof renderMultiSelectWilayasOptions === 'function') {
+        renderMultiSelectWilayasOptions(msWilayaSearch ? msWilayaSearch.value : '');
+      }
 
+      // Update Multi-Select Notice Types UI
+      if (typeof renderMultiSelectTypesOptions === 'function') {
+        renderMultiSelectTypesOptions();
+      }
+
+      // Update Multi-Select Labels & Count
+      if (typeof updateMultiSelectLabels === 'function') {
+        updateMultiSelectLabels();
+      }
+
+      // Update Active Filter Pills
+      if (typeof updateActiveFilterPills === 'function') {
+        updateActiveFilterPills();
+      }
+
+      // Update Wilaya Select (compatibility fallback)
       var wilayaSelect = document.getElementById('dzFilterWilaya');
-
       if (wilayaSelect) {
-
         var currentWilayaVal = wilayaSelect.value;
-
         wilayaSelect.innerHTML = '<option value="">' + escapeHtml(i18n('allWilayas')) + '</option>';
-
         ALGERIAN_WILAYAS.forEach(function(w) {
-
           var opt = document.createElement('option');
-
           opt.value = w.code;
-
           var parts = w.name.split(' - ');
-
           opt.textContent = w.code + ' - ' + (lang === 'ar' ? parts[0] : (parts[1] || parts[0]));
-
           wilayaSelect.appendChild(opt);
-
         });
-
         wilayaSelect.value = currentWilayaVal;
-
       }
 
       // Update Sector Select
-
       var sectorSelect = document.getElementById('dzFilterSector');
-
       if (sectorSelect) {
-
         var currentSectorVal = sectorSelect.value;
-
         sectorSelect.innerHTML = '<option value="">' + escapeHtml(i18n('allSectors')) + '</option>';
-
         Object.keys(SECTOR_LABELS).forEach(function(secKey) {
-
           var opt = document.createElement('option');
-
           opt.value = secKey;
-
           opt.textContent = getSectorLabel(secKey);
-
           sectorSelect.appendChild(opt);
-
         });
-
         sectorSelect.value = currentSectorVal;
-
       }
 
       // Update Notice Type Select
-
       var noticeSelect = document.getElementById('dzFilterNoticeType');
-
       if (noticeSelect) {
-
         var currentNoticeVal = noticeSelect.value;
-
         noticeSelect.innerHTML = '<option value="">' + escapeHtml(i18n('allNoticeTypes')) + '</option>';
-
         Object.keys(NOTICE_TYPE_LABELS).forEach(function(typeKey) {
-
           var opt = document.createElement('option');
-
           opt.value = typeKey;
-
           opt.textContent = getNoticeTypeLabel(typeKey);
-
           noticeSelect.appendChild(opt);
-
         });
-
         noticeSelect.value = currentNoticeVal;
+      }
 
+      // Update Sort Dropdown (#dzSortSelect)
+      var sortSelect = document.getElementById('dzSortSelect');
+      if (sortSelect) {
+        var curSort = sortSelect.value || 'date_desc';
+        sortSelect.innerHTML = `
+          <option value="date_desc">${escapeHtml(i18n('sortNewest', 'الأحدث نشراً'))}</option>
+          <option value="deadline_asc">${escapeHtml(i18n('sortDeadline', 'الأقرب انتهاءً'))}</option>
+          <option value="amount_desc">${escapeHtml(i18n('sortAmountDesc', 'الأعلى قيمة تقديرية'))}</option>
+          <option value="amount_asc">${escapeHtml(i18n('sortAmountAsc', 'الأقل قيمة تقديرية'))}</option>
+          <option value="cahier_asc">${escapeHtml(i18n('sortCahier', 'ثمن دفتر الشروط'))}</option>
+        `;
+        sortSelect.value = curSort;
+      }
+
+      // Update Page Size Dropdown (#feedPageSizeSelect)
+      var pageSizeSelect = document.getElementById('feedPageSizeSelect');
+      if (pageSizeSelect) {
+        var allOpt = pageSizeSelect.querySelector('option[value="all"]');
+        if (allOpt) allOpt.textContent = i18n('all', 'الكل');
       }
 
       // Update Publish Modal Wilayas
-
       var pubWilayaSelect = document.getElementById('pubWilaya');
-
-      if (pubWilayaSelect) {
-
+      if (pubWilayaSelect && typeof ALGERIAN_WILAYAS !== 'undefined') {
         var curPubW = pubWilayaSelect.value;
-
         pubWilayaSelect.innerHTML = '';
-
         ALGERIAN_WILAYAS.forEach(function(w) {
-
           var opt = document.createElement('option');
-
           opt.value = w.code;
-
           var parts = w.name.split(' - ');
-
           opt.textContent = w.code + ' - ' + (lang === 'ar' ? parts[0] : (parts[1] || parts[0]));
-
           pubWilayaSelect.appendChild(opt);
-
         });
-
         if (curPubW) pubWilayaSelect.value = curPubW;
-
       }
 
       // Update Publish Modal Sectors
-
       var pubSectorSelect = document.getElementById('pubSector');
-
       if (pubSectorSelect) {
-
         var curPubS = pubSectorSelect.value;
-
         pubSectorSelect.innerHTML = '';
-
         Object.keys(SECTOR_LABELS).filter(function(k){ return k !== 'COMMUNES' && k !== 'ENTERPRISES'; }).forEach(function(secKey) {
-
           var opt = document.createElement('option');
-
           opt.value = secKey;
-
           opt.textContent = getSectorLabel(secKey);
-
           pubSectorSelect.appendChild(opt);
-
         });
-
         if (curPubS) pubSectorSelect.value = curPubS;
-
       }
 
       // Update Publish Modal Notice Types
-
       var pubTypeSelect = document.getElementById('pubType');
-
       if (pubTypeSelect) {
-
         var curPubT = pubTypeSelect.value;
-
         pubTypeSelect.innerHTML = '';
-
         ['appel_offres', 'consultation', 'concours'].forEach(function(typeKey) {
-
           var opt = document.createElement('option');
-
           opt.value = typeKey;
-
           opt.textContent = getNoticeTypeLabel(typeKey);
-
           pubTypeSelect.appendChild(opt);
-
         });
-
         if (curPubT) pubTypeSelect.value = curPubT;
-
       }
 
-      // Update Sources Dropdowns in Filter and Publish Modal
-
       // Helper to populate source selects with rich optgroups
-
       function populateGroupedSourceSelect(selectEl, defaultLabel) {
-
         if (!selectEl || typeof ALGERIAN_PROCUREMENT_SOURCES === 'undefined') return;
-
         var curVal = selectEl.value;
-
         selectEl.innerHTML = '';
-
         if (defaultLabel) {
-
           var optDefault = document.createElement('option');
-
           optDefault.value = '';
-
           optDefault.textContent = defaultLabel;
-
           selectEl.appendChild(optDefault);
-
         }
-
-        var isAr = getLang() === 'ar';
-
+        var isAr = lang === 'ar';
         var quickGroup = document.createElement('optgroup');
         quickGroup.label = isAr ? 'قنوات النشر السريعة والتجمعات الكبرى' : 'Canaux de Publication Rapides & Grands Groupes';
         var quickFilters = [
@@ -4621,174 +4671,85 @@
         selectEl.appendChild(quickGroup);
 
         var groups = [
-
           { key: 'official', labelAr: 'الوزارات والهيئات الوطنية العليا', labelFr: 'Ministères & Organismes Nationaux', test: function(s){ return s.sectorGroup === 'official' || s.key === 'BOMOP' || s.key === 'BAOSEM' || s.key.startsWith('MIN_'); } },
-
           { key: 'apc', labelAr: 'المجالس الشعبية البلدية والبلديات (360+ بلدية)', labelFr: 'Communes & APC (360+ Communes)', test: function(s){ return s.sectorGroup === 'apc' || s.key.startsWith('APC_') || String(s.category||'').includes('بلدي') || String(s.nameAr||'').includes('بلدية'); } },
-
           { key: 'companies', labelAr: 'الشركات والمؤسسات العمومية (سوناطراك، سونلغاز، كوسيدار، مياه، موانئ...)', labelFr: 'Entreprises Publiques (Sonatrach, Sonelgaz, Cosider, ADE...)', test: function(s){ return s.sectorGroup === 'companies' || s.sectorGroup === 'energy' || s.sectorGroup === 'transport' || s.sectorGroup === 'finance' || (!s.key.startsWith('APC_') && !s.key.startsWith('Wilaya_') && !s.key.startsWith('MIN_') && !s.key.startsWith('DTP_') && !s.key.startsWith('DRE_') && !s.key.startsWith('DEP_') && !s.key.startsWith('DUC_') && !s.key.startsWith('DSP_') && !s.key.startsWith('DE_') && !s.key.startsWith('DSA_') && !s.key.startsWith('DEM_') && !s.key.startsWith('DCPE_') && s.sectorGroup !== 'univ' && s.sectorGroup !== 'health'); } },
-
           { key: 'wilayas', labelAr: 'الولايات الـ 58', labelFr: 'Wilayas (58 Wilayas)', test: function(s){ return s.sectorGroup === 'wilayas' || s.key.startsWith('Wilaya_'); } },
-
           { key: 'directorates', labelAr: 'المديريات التنفيذية للولايات (DTP, DUC, DRE, DEP, DSA...)', labelFr: 'Directions Exécutives de Wilaya', test: function(s){ return s.sectorGroup === 'directorates' || s.key.startsWith('DTP_') || s.key.startsWith('DUC_') || s.key.startsWith('DRE_') || s.key.startsWith('DEP_') || s.key.startsWith('DSA_') || s.key.startsWith('DEM_') || s.key.startsWith('DCPE_') || s.key.startsWith('DE_'); } },
-
           { key: 'health', labelAr: 'المراكز الاستشفائية والمستشفيات (CHU, EPH, EPSP)', labelFr: 'Secteur Hospitalier & Santé', test: function(s){ return s.sectorGroup === 'health' || s.key.startsWith('CHU_') || s.key.startsWith('EPH_') || s.key.startsWith('DSP_'); } },
-
           { key: 'univ', labelAr: 'التعليم العالي، الجامعات والمدارس العليا', labelFr: 'Universités & Écoles Supérieures', test: function(s){ return s.sectorGroup === 'univ' || s.key.startsWith('UNIV_') || s.key.startsWith('ESI_') || s.key.startsWith('ENP_'); } }
-
         ];
 
         groups.forEach(function(g) {
-
           var matched = ALGERIAN_PROCUREMENT_SOURCES.filter(function(s){
-
             if (used.has(s.key)) return false;
-
             if (g.test(s)) {
-
               used.add(s.key);
-
               return true;
-
             }
-
             return false;
-
           });
-
           if (matched.length > 0) {
-
             var grp = document.createElement('optgroup');
-
-            grp.label = (isAr ? g.labelAr : g.labelFr) + ' (' + matched.length + ')';
-
-            matched.forEach(function(src){
-
+            grp.label = isAr ? (g.labelAr + ' (' + matched.length + ')') : (g.labelFr + ' (' + matched.length + ')');
+            matched.forEach(function(s){
               var opt = document.createElement('option');
-
-              opt.value = src.key;
-
-              opt.textContent = isAr ? (src.key + ' - ' + src.nameAr) : (src.key + ' - ' + (src.nameFr || src.nameAr));
-
+              opt.value = s.key;
+              var name = isAr ? s.nameAr : (s.nameFr || s.nameAr);
+              opt.textContent = name;
               grp.appendChild(opt);
-
             });
-
             selectEl.appendChild(grp);
-
           }
-
         });
-
-        var remaining = ALGERIAN_PROCUREMENT_SOURCES.filter(function(s){ return !used.has(s.key); });
-
-        if (remaining.length > 0) {
-
-          var otherGrp = document.createElement('optgroup');
-
-          otherGrp.label = isAr ? ('هيئات ومصادر أخرى (' + remaining.length + ')') : ('Autres Sources (' + remaining.length + ')');
-
-          remaining.forEach(function(src){
-
-            var opt = document.createElement('option');
-
-            opt.value = src.key;
-
-            opt.textContent = isAr ? (src.key + ' - ' + src.nameAr) : (src.key + ' - ' + (src.nameFr || src.nameAr));
-
-            otherGrp.appendChild(opt);
-
-          });
-
-          selectEl.appendChild(otherGrp);
-
-        }
 
         if (curVal) selectEl.value = curVal;
-
-      }
-
-      // Populate Wilaya filter in Sources tab
-
-      var srcWilayaSel = document.getElementById('sourceFilterWilaya');
-
-      if (srcWilayaSel && typeof ALGERIAN_WILAYAS !== 'undefined') {
-
-        srcWilayaSel.innerHTML = '<option value="">جميع الولايات (58 ولاية)</option>';
-
-        ALGERIAN_WILAYAS.forEach(function(w) {
-
-          var opt = document.createElement('option');
-
-          opt.value = w.code;
-
-          opt.textContent = w.code + ' - ' + w.name;
-
-          srcWilayaSel.appendChild(opt);
-
-        });
-
-      }
-
-      var dzFiltWil = document.getElementById('dzFilterWilaya');
-
-      if (dzFiltWil && typeof ALGERIAN_WILAYAS !== 'undefined' && (!dzFiltWil.options || dzFiltWil.options.length <= 1)) {
-
-        dzFiltWil.innerHTML = '<option value="">جميع الولايات (58 ولاية)</option>';
-
-        ALGERIAN_WILAYAS.forEach(function(w) {
-
-          var opt = document.createElement('option');
-
-          opt.value = w.code;
-
-          opt.textContent = w.code + ' - ' + w.name;
-
-          dzFiltWil.appendChild(opt);
-
-        });
-
       }
 
       // Populate filter dropdowns with optgroups
-
       var filterSourceSelect = document.getElementById('dzFilterSource');
-
-      if (filterSourceSelect) {
-
+      if (filterSourceSelect && typeof ALGERIAN_PROCUREMENT_SOURCES !== 'undefined') {
         var defaultLabel = lang === 'ar' ? ('جميع المصادر والبوابات الرسمية (' + ALGERIAN_PROCUREMENT_SOURCES.length + ' مصدراً)') : ('Toutes les sources officielles (' + ALGERIAN_PROCUREMENT_SOURCES.length + ')');
-
         populateGroupedSourceSelect(filterSourceSelect, defaultLabel);
-
       }
 
       var pubSourceSelect = document.getElementById('pubSource');
-
-      if (pubSourceSelect) {
-
+      if (pubSourceSelect && typeof ALGERIAN_PROCUREMENT_SOURCES !== 'undefined') {
         populateGroupedSourceSelect(pubSourceSelect, null);
-
       }
 
       // Re-render Attributions table
-
-      renderAttributionsTable();
-
-      filterAndRenderTenders();
-
-      if (typeof activePortalTab !== 'undefined' && activePortalTab === 'sources' && typeof renderSourcesDirectory === 'function') {
-
-        renderSourcesDirectory();
-
+      if (typeof renderAttributionsTable === 'function') {
+        try { renderAttributionsTable(); } catch(_) {}
       }
 
-      updatePortalKPIs();
+      if (typeof filterAndRenderTenders === 'function') {
+        try { filterAndRenderTenders(false); } catch(_) {}
+      }
 
-      if(typeof updateSyncCountdownDisplay === 'function') updateSyncCountdownDisplay();
+      if (typeof activePortalTab !== 'undefined' && activePortalTab === 'sources' && typeof renderSourcesDirectory === 'function') {
+        try { renderSourcesDirectory(); } catch(_) {}
+      }
 
+      if (typeof updatePortalKPIs === 'function') {
+        try { updatePortalKPIs(); } catch(_) {}
+      }
+
+      if (typeof updateSyncCountdownDisplay === 'function') {
+        try { updateSyncCountdownDisplay(); } catch(_) {}
+      }
     }
 
     window.loadLanguage = loadLanguage;
+    window.changeLanguage = function(lang) {
+      if (window.UnifiedI18N && typeof window.UnifiedI18N.setCurrentLang === 'function') {
+        window.UnifiedI18N.setCurrentLang(lang);
+      }
+      loadLanguage(lang);
+    };
+    window.applyTranslations = function(lang) {
+      loadLanguage(lang);
+    };
 
     // ═════════════════════════════════════════════════════════════════
 
@@ -95034,19 +94995,19 @@
 
     var NOTICE_TYPE_OPTIONS = [
 
-      { key: 'appel_offres', ar: 'طلب عروض (Appel d\'offres)', fr: 'Appel d\'offres', icon: 'fa-file-signature' },
+      { key: 'appel_offres', ar: 'طلب عروض (Appel d\'offres)', fr: 'Appel d\'offres', en: 'Call for Tenders', icon: 'fa-file-signature' },
 
-      { key: 'consultation', ar: 'استشارة بسيطة (Consultation)', fr: 'Consultation', icon: 'fa-comment-dots' },
+      { key: 'consultation', ar: 'استشارة بسيطة (Consultation)', fr: 'Consultation', en: 'Consultation', icon: 'fa-comment-dots' },
 
-      { key: 'attribution', ar: 'إعلان منح مؤقت (Attribution)', fr: 'Attribution provisoire', icon: 'fa-trophy' },
+      { key: 'attribution', ar: 'إعلان منح مؤقت (Attribution)', fr: 'Attribution provisoire', en: 'Provisional Award', icon: 'fa-trophy' },
 
-      { key: 'prorogation', ar: 'تمديد الآجال (Prorogation)', fr: 'Prorogation de délais', icon: 'fa-clock' },
+      { key: 'prorogation', ar: 'تمديد الآجال (Prorogation)', fr: 'Prorogation de délais', en: 'Deadline Extension', icon: 'fa-clock' },
 
-      { key: 'concours', ar: 'مسابقة هندسة معمارية (Concours)', fr: 'Concours d\'architecture', icon: 'fa-pencil-ruler' },
+      { key: 'concours', ar: 'مسابقة هندسة معمارية (Concours)', fr: 'Concours d\'architecture', en: 'Architectural Competition', icon: 'fa-pencil-ruler' },
 
-      { key: 'infructueux', ar: 'إعلان عدم جدوى (Infructuosité)', fr: 'Avis d\'infructuosité', icon: 'fa-ban' },
+      { key: 'infructueux', ar: 'إعلان عدم جدوى (Infructuosité)', fr: 'Avis d\'infructuosité', en: 'Unsuccessful Tender Notice', icon: 'fa-ban' },
 
-      { key: 'annulation', ar: 'إلغاء الصفقة (Annulation)', fr: 'Annulation de marché', icon: 'fa-times-circle' }
+      { key: 'annulation', ar: 'إلغاء الصفقة (Annulation)', fr: 'Annulation de marché', en: 'Tender Cancellation Notice', icon: 'fa-times-circle' }
 
     ];
 
@@ -96215,7 +96176,7 @@
 
         // Budget format
 
-        const budgetFormatted = tender.estimatedAmount ? formatMoney(tender.estimatedAmount) : (isAr ? 'غير مصرح' : 'Non précisé');
+        const budgetFormatted = tender.estimatedAmount ? formatMoney(tender.estimatedAmount) : escapeHtml(i18n('unspecified'));
 
         // Lots HTML
 
@@ -96227,7 +96188,7 @@
 
             <div class="card-lots-box">
 
-              <div class="card-lots-title"><i class="fas fa-layer-group"></i> <span>${isAr ? 'الحصص والمقاطع:' : 'Lots et tranches :'}</span></div>
+              <div class="card-lots-title"><i class="fas fa-layer-group"></i> <span>${escapeHtml(i18n('lotsAndTranches'))}</span></div>
 
               <ul class="card-lots-list">
 
@@ -96251,7 +96212,7 @@
 
             <div class="spec-qualification" style="margin-top:6px; font-size:11px; color:#475569; background:#fffbeb; border:1px solid #fef3c7; border-radius:6px; padding:6px 8px;">
 
-              <i class="fas fa-certificate text-warning"></i> <strong>${escapeHtml(i18n('qualification') || 'التأهيل')}:</strong> ${escapeHtml(tender.qualification)}
+              <i class="fas fa-certificate text-warning"></i> <strong>${escapeHtml(i18n('qualification'))}:</strong> ${escapeHtml(tender.qualification)}
 
             </div>
 
@@ -96271,7 +96232,7 @@
 
               <i class="fas fa-map-marked-alt"></i>
 
-              <span><strong>${isAr ? 'مكان إيداع العروض:' : 'Lieu de dépôt :'}</strong> ${escapeHtml(tender.depositPlace)}</span>
+              <span><strong>${escapeHtml(i18n('depositPlace'))}</strong> ${escapeHtml(tender.depositPlace)}</span>
 
             </div>
 
@@ -96345,7 +96306,7 @@
 
                 <i class="fas ${isCollapsed ? 'fa-chevron-down' : 'fa-chevron-up'}"></i>
 
-                <span>${isCollapsed ? (isAr ? 'عرض التفاصيل' : 'Détails') : (isAr ? 'طي' : 'Replier')}</span>
+                <span>${isCollapsed ? escapeHtml(i18n('showDetails')) : escapeHtml(i18n('collapse'))}</span>
 
               </button>
 
@@ -97899,7 +97860,17 @@
 
     document.addEventListener('layoutLanguageChanged', function(e) {
 
-      if(typeof loadLanguage === 'function') loadLanguage();
+      var l = (e && e.detail && e.detail.language) ? e.detail.language : getLang();
+
+      if(typeof loadLanguage === 'function') loadLanguage(l);
+
+    });
+
+    window.addEventListener('languageChanged', function(e) {
+
+      var l = (e && e.detail && e.detail.language) ? e.detail.language : getLang();
+
+      if(typeof loadLanguage === 'function') loadLanguage(l);
 
     });
 
@@ -97907,7 +97878,7 @@
 
       if(e.key === 'preferred-language' || e.key === 'language') {
 
-        if(typeof loadLanguage === 'function') loadLanguage();
+        if(typeof loadLanguage === 'function') loadLanguage(e.newValue || getLang());
 
       }
 
@@ -98217,7 +98188,7 @@
 
       if(!list.length){
 
-        container.innerHTML = '<div style="padding:10px; text-align:center; color:#94a3b8; font-size:12px;">لا توجد نتائج تطابق بحثك</div>';
+        container.innerHTML = '<div style="padding:10px; text-align:center; color:#94a3b8; font-size:12px;">' + (isAr ? 'لا توجد نتائج تطابق بحثك' : (lang === 'fr' ? 'Aucun résultat trouvé' : 'No matching results found')) + '</div>';
 
         return;
 
@@ -98231,11 +98202,15 @@
 
         item.className = 'ms-option-item';
 
+        const parts = w.name.split(' - ');
+
+        const localizedName = isAr ? parts[0] : (parts[1] || parts[0]);
+
         item.innerHTML = `
 
           <input type="checkbox" value="${w.code}" ${isChecked ? 'checked' : ''} onchange="toggleWilayaSelection('${w.code}', this.checked)">
 
-          <span>${escapeHtml(w.code + ' - ' + w.name)}</span>
+          <span>${escapeHtml(w.code + ' - ' + localizedName)}</span>
 
         `;
 
@@ -98533,13 +98508,17 @@
 
           const wObj = ALGERIAN_WILAYAS.find(w => w.code === code);
 
-          const name = wObj ? wObj.code + ' ' + wObj.name.split(' - ')[0] : code;
+          const parts = wObj ? wObj.name.split(' - ') : [];
+
+          const localizedWilayaName = isAr ? parts[0] : (parts[1] || parts[0]);
+
+          const name = wObj ? wObj.code + ' ' + localizedWilayaName : code;
 
           const pill = document.createElement('span');
 
           pill.className = 'filter-tag-pill';
 
-          pill.innerHTML = `<i class="fas fa-map-marker-alt"></i> ${escapeHtml(name)} <i class="fas fa-times pill-close" onclick="toggleWilayaSelection('${code}', false)" title="إزالة"></i>`;
+          pill.innerHTML = `<i class="fas fa-map-marker-alt"></i> ${escapeHtml(name)} <i class="fas fa-times pill-close" onclick="toggleWilayaSelection('${code}', false)" title="${isAr ? 'إزالة' : (isFr ? 'Supprimer' : 'Remove')}"></i>`;
 
           container.appendChild(pill);
 
@@ -98555,13 +98534,13 @@
 
           const opt = NOTICE_TYPE_OPTIONS.find(o => o.key === tKey);
 
-          const name = opt ? (isAr ? opt.ar.split(' (')[0] : opt.fr) : tKey;
+          const name = opt ? (isAr ? opt.ar.split(' (')[0] : (isFr ? opt.fr : (opt.en || opt.fr))) : tKey;
 
           const pill = document.createElement('span');
 
           pill.className = 'filter-tag-pill tag-type';
 
-          pill.innerHTML = `<i class="fas ${opt ? opt.icon : 'fa-tag'}"></i> ${escapeHtml(name)} <i class="fas fa-times pill-close" onclick="toggleNoticeTypeSelection('${tKey}', false)" title="إزالة"></i>`;
+          pill.innerHTML = `<i class="fas ${opt ? opt.icon : 'fa-tag'}"></i> ${escapeHtml(name)} <i class="fas fa-times pill-close" onclick="toggleNoticeTypeSelection('${tKey}', false)" title="${isAr ? 'إزالة' : (isFr ? 'Supprimer' : 'Remove')}"></i>`;
 
           container.appendChild(pill);
 

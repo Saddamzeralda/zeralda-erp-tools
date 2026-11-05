@@ -429,7 +429,7 @@
 
     // ── 8. استدعاء دوال إعادة الترجمة الخاصة بالصفحة الحالية إن وُجدت ──
     if (typeof window.loadLanguage === 'function') {
-      try { window.loadLanguage(); } catch (e) {}
+      try { window.loadLanguage(lang); } catch (e) {}
     } else if (typeof window.applyTranslations === 'function' && window.applyTranslations !== applyUnifiedTranslations) {
       try { window.applyTranslations(lang); } catch (e) {}
     } else if (typeof window.changeLanguage === 'function') {

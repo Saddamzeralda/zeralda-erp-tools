@@ -1670,7 +1670,7 @@
 
     // Call page-level handlers if present
     if (typeof window.loadLanguage === 'function') {
-      try { window.loadLanguage(); } catch(e) {}
+      try { window.loadLanguage(lang); } catch(e) {}
     } else if (typeof window.changeLanguage === 'function') {
       try { window.changeLanguage(lang); } catch(e) {}
     } else if (typeof window.applyTranslations === 'function' && window.applyTranslations !== window.applyUnifiedTranslations) {
