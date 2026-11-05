@@ -3310,7 +3310,7 @@ function getActiveCompanyFromSettings(targetCompanyId){
         return {
           ...found,
           bp: found.bp || found.companyBP || found.boitePostale || '',
-          ag: found.ag || found.agrement || found.companyAG || found.num_ag || found.numAg || found.agreementNumber || '16/0045/2024'
+          ag: found.ag || found.agrement || found.companyAG || found.num_ag || found.numAg || found.agreementNumber || ''
         };
       }
       return null;
@@ -3329,7 +3329,7 @@ function getActiveCompanyFromSettings(targetCompanyId){
         nif: old.nif || "",
         nis: old.nis || "",
         bp: old.bp || old.companyBP || old.boitePostale || "",
-        ag: old.ag || old.agrement || old.companyAG || old.num_ag || old.numAg || old.agreementNumber || "16/0045/2024",
+        ag: old.ag || old.agrement || old.companyAG || old.num_ag || old.numAg || old.agreementNumber || "",
         bankName: old.bankName || "",
         bankAccount: old.bankAccount || old.accountNumber || "",
         rib: old.rib || "",
@@ -3371,7 +3371,7 @@ function buildCompanyInfoHTML(){
   const nin = c && c.nin ? c.nin : "";
   const ai = c && c.ai ? c.ai : (c && c.artNumber ? c.artNumber : "");
   const bp = c && (c.bp || c.companyBP || c.boitePostale) ? String(c.bp || c.companyBP || c.boitePostale).trim() : "";
-  const ag = c && (c.ag || c.agrement || c.companyAG || c.num_ag || c.numAg) ? (c.ag || c.agrement || c.companyAG || c.num_ag || c.numAg) : "16/0045/2024";
+  const ag = c && (c.ag || c.agrement || c.companyAG || c.num_ag || c.numAg) ? String(c.ag || c.agrement || c.companyAG || c.num_ag || c.numAg).trim() : "";
   const artNumber = c && c.artNumber ? c.artNumber : "";
   const vat = c && c.vat ? c.vat : "";
   const bankName = c && c.bankName ? c.bankName : "";
@@ -6184,7 +6184,7 @@ function buildFactureHTML(opts){
   var compNif = company.nif || '';
   var compNis = company.nis || '';
   var compBp = String(company.bp || company.companyBP || company.boitePostale || '').trim();
-  var compAg = company.ag || company.agrement || company.companyAG || company.num_ag || company.numAg || company.agreementNumber || '16/0045/2024';
+  var compAg = String(company.ag || company.agrement || company.companyAG || company.num_ag || company.numAg || company.agreementNumber || '').trim();
   var compArt = company.artNumber || company.art || '';
   var compBank = company.bankName || '';
   var compRib = company.rib || company.bankAccount || '';

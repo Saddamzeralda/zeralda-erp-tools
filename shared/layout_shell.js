@@ -918,7 +918,7 @@
 
           if (!window.UnifiedDocumentPrinter) {
             var sp = document.createElement('script');
-            sp.src = 'shared/unified_document_printer.js?v=20261009a';
+            sp.src = '/shared/unified_document_printer.js?v=20261105_agfix';
             sp.defer = true;
             document.head.appendChild(sp);
           }
