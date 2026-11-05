@@ -130,6 +130,61 @@
         .language-check, .currency-check{ position:absolute; top:12px; right:12px; font-size:18px; color:var(--success-color); opacity:0; transition:all .3s; }
         .language-card.selected .language-check, .currency-card.selected .currency-check{ opacity:1; transform:scale(1.1); }
 
+        .currency-compact-bar {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 8px 14px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        [data-theme="dark"] .currency-compact-bar {
+            background: rgba(30, 41, 59, 0.7) !important;
+            border-color: #334155 !important;
+        }
+        .currency-card.currency-pill {
+            flex-direction: row !important;
+            padding: 5px 12px !important;
+            border-radius: 8px !important;
+            border: 1.5px solid #cbd5e1 !important;
+            gap: 6px !important;
+            font-size: 13px !important;
+            min-height: auto !important;
+            transform: none !important;
+            box-shadow: none !important;
+            background: #ffffff;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        [data-theme="dark"] .currency-card.currency-pill {
+            background: #1e293b !important;
+            border-color: #475569 !important;
+            color: #f1f5f9;
+        }
+        .currency-card.currency-pill:hover {
+            border-color: #0284c7 !important;
+            background: #f0f9ff !important;
+            transform: translateY(-1px) !important;
+        }
+        [data-theme="dark"] .currency-card.currency-pill:hover {
+            border-color: #38bdf8 !important;
+            background: #0f172a !important;
+        }
+        .currency-card.currency-pill.selected {
+            background: #0284c7 !important;
+            border-color: #0369a1 !important;
+            color: #ffffff !important;
+            box-shadow: 0 2px 6px rgba(2, 132, 199, 0.35) !important;
+        }
+        .currency-card.currency-pill.selected strong,
+        .currency-card.currency-pill.selected span {
+            color: #ffffff !important;
+        }
+
         .form-grid{ display:grid; grid-template-columns: repeat(auto-fit,minmax(260px,1fr)); gap:14px; margin-bottom:14px; }
         .form-group{ display:flex; flex-direction:column; gap:8px; }
         .form-label{ font-weight:600; font-size:13px; color:var(--dark-color); display:flex; align-items:center; gap:8px; }
@@ -597,49 +652,38 @@
                 </div>
             </div>
 
-            <!-- Currency Section (merged into Company) -->
-            <div style="margin-bottom:20px; padding:16px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px;">
-                <h4 style="margin:0 0 10px 0;font-size:15px;font-weight:700;color:#166534;">
-                    <i class="fas fa-dollar-sign" style="color:#10b981;"></i>
-                    <span data-en="System Currency" data-ar="عملة النظام" data-fr="Devise Système">System Currency</span>
-                </h4>
-                <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; margin-bottom:10px;">
-                    <div class="currency-card" id="currency-USD" role="button" tabindex="0" aria-pressed="false"
-                         onclick="selectCurrency('USD')" onkeydown="if(event.key==='Enter' || event.key===' ') selectCurrency('USD')">
-                        <div class="currency-flag"><i class="fas fa-dollar-sign" style="font-size:20px; color:#10b981;"></i></div>
-                        <div class="currency-info"><h4>USD</h4><p>US Dollar</p><strong style="color:#6b7280;">$</strong></div>
-                        <div class="currency-check"><i class="fas fa-check-circle"></i></div>
+            <!-- Compact Currency Selector Bar -->
+            <div class="currency-compact-bar">
+                <div style="display:flex; align-items:center; gap:8px; font-size:13px; font-weight:700;">
+                    <i class="fas fa-coins" style="color:#f59e0b; font-size:15px;"></i>
+                    <span data-en="System Currency:" data-ar="عملة النظام:" data-fr="Devise Système :">عملة النظام:</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                    <div class="currency-card currency-pill" id="currency-DZD" role="button" tabindex="0" aria-pressed="false"
+                         onclick="selectCurrency('DZD'); saveCurrencySettings();" onkeydown="if(event.key==='Enter' || event.key===' '){ selectCurrency('DZD'); saveCurrencySettings(); }"
+                         title="DZD - Algerian Dinar (DA)">
+                        <strong class="currency-symbol" style="color:#b45309; font-size:13px;">DA</strong>
+                        <span class="currency-code" style="font-size:12px; font-weight:600;">DZD</span>
                     </div>
-                    <div class="currency-card" id="currency-EUR" role="button" tabindex="0" aria-pressed="false"
-                         onclick="selectCurrency('EUR')" onkeydown="if(event.key==='Enter' || event.key===' ') selectCurrency('EUR')">
-                        <div class="currency-flag"><i class="fas fa-euro-sign" style="font-size:20px; color:#2563eb;"></i></div>
-                        <div class="currency-info"><h4>EUR</h4><p>Euro</p><strong style="color:#6b7280;">€</strong></div>
-                        <div class="currency-check"><i class="fas fa-check-circle"></i></div>
+                    <div class="currency-card currency-pill" id="currency-USD" role="button" tabindex="0" aria-pressed="false"
+                         onclick="selectCurrency('USD'); saveCurrencySettings();" onkeydown="if(event.key==='Enter' || event.key===' '){ selectCurrency('USD'); saveCurrencySettings(); }"
+                         title="USD - US Dollar ($)">
+                        <strong class="currency-symbol" style="color:#059669; font-size:13px;">$</strong>
+                        <span class="currency-code" style="font-size:12px; font-weight:600;">USD</span>
                     </div>
-                    <div class="currency-card" id="currency-GBP" role="button" tabindex="0" aria-pressed="false"
-                         onclick="selectCurrency('GBP')" onkeydown="if(event.key==='Enter' || event.key===' ') selectCurrency('GBP')">
-                        <div class="currency-flag"><i class="fas fa-pound-sign" style="font-size:20px; color:#8b5cf6;"></i></div>
-                        <div class="currency-info"><h4>GBP</h4><p>British Pound</p><strong style="color:#6b7280;">£</strong></div>
-                        <div class="currency-check"><i class="fas fa-check-circle"></i></div>
+                    <div class="currency-card currency-pill" id="currency-EUR" role="button" tabindex="0" aria-pressed="false"
+                         onclick="selectCurrency('EUR'); saveCurrencySettings();" onkeydown="if(event.key==='Enter' || event.key===' '){ selectCurrency('EUR'); saveCurrencySettings(); }"
+                         title="EUR - Euro (€)">
+                        <strong class="currency-symbol" style="color:#2563eb; font-size:13px;">€</strong>
+                        <span class="currency-code" style="font-size:12px; font-weight:600;">EUR</span>
                     </div>
-                    <div class="currency-card" id="currency-DZD" role="button" tabindex="0" aria-pressed="false"
-                         onclick="selectCurrency('DZD')" onkeydown="if(event.key==='Enter' || event.key===' ') selectCurrency('DZD')">
-                        <div class="currency-flag"><i class="fas fa-coins" style="font-size:20px; color:#f59e0b;"></i></div>
-                        <div class="currency-info"><h4>DZD</h4><p>Algerian Dinar</p><strong style="color:#6b7280;">DA</strong></div>
-                        <div class="currency-check"><i class="fas fa-check-circle"></i></div>
+                    <div class="currency-card currency-pill" id="currency-GBP" role="button" tabindex="0" aria-pressed="false"
+                         onclick="selectCurrency('GBP'); saveCurrencySettings();" onkeydown="if(event.key==='Enter' || event.key===' '){ selectCurrency('GBP'); saveCurrencySettings(); }"
+                         title="GBP - British Pound (£)">
+                        <strong class="currency-symbol" style="color:#7c3aed; font-size:13px;">£</strong>
+                        <span class="currency-code" style="font-size:12px; font-weight:600;">GBP</span>
                     </div>
                 </div>
-                <div class="alert-box alert-success" id="currency-success" style="display:none; margin-bottom:8px;">
-                    <i class="fas fa-check-circle" style="font-size:20px;"></i>
-                    <div>
-                        <strong data-en="Currency Changed!" data-ar="تم تغيير العملة!" data-fr="Devise Modifiée!">Currency Changed!</strong>
-                        <p id="currency-success-msg"></p>
-                    </div>
-                </div>
-                <button class="btn btn-primary" onclick="saveCurrencySettings()">
-                    <i class="fas fa-save"></i>
-                    <span data-en="Save Currency" data-ar="حفظ العملة" data-fr="Enregistrer">Save Currency</span>
-                </button>
             </div>
 
             <!-- Top: quick add / select -->
@@ -2354,7 +2398,9 @@
             var successMsg = document.getElementById('currency-success-msg');
             if(successBox) successBox.style.display = 'flex';
             if(successMsg) successMsg.textContent = selectedCurrency;
-            showToast('✅ ' + (selectedCurrency) + ' saved', 'success', 1800);
+            var curNames = { 'DZD': 'الدينار الجزائري (DA)', 'USD': 'الدولار الأمريكي ($)', 'EUR': 'اليورو (€)', 'GBP': 'الجنيه الإسترليني (£)' };
+            var msg = 'تم حفظ عملة النظام: ' + (curNames[selectedCurrency] || selectedCurrency);
+            showToast('✅ ' + msg, 'success', 2000);
             setTimeout(function(){ if(successBox) successBox.style.display = 'none'; }, 3000);
         }
 
