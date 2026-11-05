@@ -998,16 +998,16 @@
       .btn:active { transform: translateY(0); }
       .stat-icon { filter: saturate(0.9); }
     </style>
-  <script src="shared/zeralda_db.js?v=20261017_v10"></script>
-    <script src="shared/layout_shell.js?v=20261104_v5" defer></script>
-<script src="shared/ai_chat_widget.js?v=20261104_v5" defer></script>
-  <script src="shared/session_timeout.js" defer></script>
-    <script src="shared/company_storage.js?v=20261017_v10"></script>
-    <script src="shared/unified_i18n.js?v=20261020_hotfix5"></script>
-  <script src="shared/app_sync.js?v=20261017_v10" defer></script>
-  <script src="shared/google_sync.js?v=20261104_v5" defer></script>
-  <script src="shared/role_access_control.js" defer></script>
-<script src="shared/ocr.js?v=20261017_v10"></script>
+  <script src="/shared/zeralda_db.js?v=20261105_bis2"></script>
+    <script src="/shared/layout_shell.js?v=20261105_bis2" defer></script>
+<script src="/shared/ai_chat_widget.js?v=20261105_bis2" defer></script>
+  <script src="/shared/session_timeout.js?v=20261105_bis2" defer></script>
+    <script src="/shared/company_storage.js?v=20261105_bis2"></script>
+    <script src="/shared/unified_i18n.js?v=20261105_bis2"></script>
+  <script src="/shared/app_sync.js?v=20261105_bis2" defer></script>
+  <script src="/shared/google_sync.js?v=20261105_bis2" defer></script>
+  <script src="/shared/role_access_control.js?v=20261105_bis2" defer></script>
+<script src="/shared/ocr.js?v=20261105_bis2"></script>
 </head>
 <body>
     <div id="sharedLayoutMount" data-active-page="sales_management.html"></div>
@@ -2319,6 +2319,8 @@ function initSalesScopedData() {
   try { invoicesData = JSON.parse(ZS.getItem("invoices-data")) || []; } catch(e) { invoicesData = []; }
   window.invoicesData = invoicesData;
   try { proformasData = JSON.parse(ZS.getItem("proformas-data")) || []; } catch(e) { proformasData = []; }
+  window.proformasData = proformasData;
+  try { if (typeof ensureDocumentNumbersPattern === 'function') ensureDocumentNumbersPattern(); } catch(e) {}
   // إصلاح جذري: حمّل المنتجات هنا أيضاً
   try { loadProductsFromStorage(); } catch(e) {}
   // إصلاح: حدّث قوائم المنتجات بعد تحميل البيانات
@@ -2334,6 +2336,8 @@ function initSalesScopedData() {
         try { invoicesData = JSON.parse(ZS.getItem("invoices-data")) || []; } catch(e) {}
         window.invoicesData = invoicesData;
         try { proformasData = JSON.parse(ZS.getItem("proformas-data")) || []; } catch(e) {}
+        window.proformasData = proformasData;
+        try { if (typeof ensureDocumentNumbersPattern === 'function') ensureDocumentNumbersPattern(); } catch(e) {}
         try { loadProductsFromStorage(); } catch(e) {}
         try { refreshProductSelects(); } catch(e) {}
         // إعادة عرض الجداول
@@ -3626,7 +3630,7 @@ function isDateInRange(dateStr, from, to){
 }
 
 function parseBisSerialParts(rawVal){
-  const str = String(rawVal || "").trim();
+  const str = String(rawVal || "").trim().replace(/^(?:INV|PRO)-/i, "");
   const m = str.match(/^(\d+)\s*(Bis|Ter|Quater)?([/-]\d{4})(?:[\s\-_]*(Bis|Ter|Quater))?$/i);
   if(m){
     return {
@@ -3650,7 +3654,7 @@ function parseBisSerialParts(rawVal){
 window.parseBisSerialParts = parseBisSerialParts;
 
 function formatBisSerialNumber(rawVal, isBis, bisSuffix){
-  const str = String(rawVal || "").trim();
+  const str = String(rawVal || "").trim().replace(/^(?:INV|PRO)-/i, "");
   if(!str) return "";
   const parts = parseBisSerialParts(str);
   const detectedSuffix = (parts && parts.suffix) || (str.match(/(?:^|\d|[\s\-_/])(Bis|Ter|Quater)(?=[/\-_.\s]|$)/i) || [])[1] || "";
@@ -3679,6 +3683,7 @@ function formatProformaNumber(id){
   if( parseBisSerialParts(value) ) return formatBisSerialNumber(value);
   return value;
 }
+window.formatProformaNumber = formatProformaNumber;
 
 function formatInvoiceNumber(id){
   if(window.formatInvoiceNumber && window.formatInvoiceNumber !== formatInvoiceNumber) return window.formatInvoiceNumber(id);
@@ -3687,20 +3692,31 @@ function formatInvoiceNumber(id){
   if( parseBisSerialParts(value) ) return formatBisSerialNumber(value);
   return value;
 }
+window.formatInvoiceNumber = formatInvoiceNumber;
 
 function getInvoiceDisplayNumber(inv){
   if(!inv) return "";
+  if(typeof inv === "string"){
+    const rawStr = inv.trim().replace(/^INV-/, "");
+    return formatBisSerialNumber(rawStr);
+  }
   const raw = String(inv.invoiceNumber || inv.id || "").trim().replace(/^INV-/, "");
   const isBisDoc = Boolean(inv.isBis) || /(?:^|\d|[\s\-_/])(Bis|Ter|Quater)(?=[/\-_.\s]|$)/i.test(raw);
   return formatBisSerialNumber(raw, isBisDoc, inv.bisSuffix);
 }
+window.getInvoiceDisplayNumber = getInvoiceDisplayNumber;
 
 function getProformaDisplayNumber(prof){
   if(!prof) return "";
+  if(typeof prof === "string"){
+    const rawStr = prof.trim().replace(/^PRO-/, "");
+    return formatBisSerialNumber(rawStr);
+  }
   const raw = String(prof.proformaNumber || prof.id || "").trim().replace(/^PRO-/, "");
   const isBisDoc = Boolean(prof.isBis) || /(?:^|\d|[\s\-_/])(Bis|Ter|Quater)(?=[/\-_.\s]|$)/i.test(raw);
   return formatBisSerialNumber(raw, isBisDoc, prof.bisSuffix);
 }
+window.getProformaDisplayNumber = getProformaDisplayNumber;
 
 function getInvoiceYearFromDate(dateValue){
   const raw = String(dateValue || "").trim();
@@ -3741,10 +3757,26 @@ function generateProformaNumberForDate(dateValue){
 }
 
 function ensureDocumentNumbersPattern(){
+  var invList = (Array.isArray(window.invoicesData) && window.invoicesData.length > 0)
+    ? window.invoicesData
+    : (Array.isArray(invoicesData) && invoicesData.length > 0)
+      ? invoicesData
+      : (function(){
+          try { return JSON.parse(ZS.getItem("invoices-data") || "[]"); } catch(_){ return []; }
+        })();
+
+  var profList = (Array.isArray(window.proformasData) && window.proformasData.length > 0)
+    ? window.proformasData
+    : (Array.isArray(proformasData) && proformasData.length > 0)
+      ? proformasData
+      : (function(){
+          try { return JSON.parse(ZS.getItem("proformas-data") || "[]"); } catch(_){ return []; }
+        })();
+
   const invoiceYearSeq = {};
   const proformaYearSeq = {};
 
-  (invoicesData || []).forEach(inv => {
+  (invList || []).forEach(inv => {
     const shown = String((inv && (inv.invoiceNumber || inv.id)) || "");
     const parts = parseBisSerialParts(shown);
     if(!parts || !parts.year) return;
@@ -3752,7 +3784,7 @@ function ensureDocumentNumbersPattern(){
     invoiceYearSeq[parts.year] = Math.max(Number(invoiceYearSeq[parts.year] || 0), seq);
   });
 
-  (proformasData || []).forEach(prof => {
+  (profList || []).forEach(prof => {
     const shown = String((prof && (prof.proformaNumber || prof.id)) || "");
     const parts = parseBisSerialParts(shown);
     if(!parts || !parts.year) return;
@@ -3763,7 +3795,7 @@ function ensureDocumentNumbersPattern(){
   let invoiceChanged = false;
   let proformaChanged = false;
 
-  const invoiceOrdered = (invoicesData || []).slice().sort((a,b) => {
+  const invoiceOrdered = (invList || []).slice().sort((a,b) => {
     const da = String(a?.date || "9999-12-31");
     const db = String(b?.date || "9999-12-31");
     if(da !== db) return da.localeCompare(db);
@@ -3809,7 +3841,7 @@ function ensureDocumentNumbersPattern(){
     invoiceChanged = true;
   });
 
-  const proformaOrdered = (proformasData || []).slice().sort((a,b) => {
+  const proformaOrdered = (profList || []).slice().sort((a,b) => {
     const da = String(a?.date || "9999-12-31");
     const db = String(b?.date || "9999-12-31");
     if(da !== db) return da.localeCompare(db);
@@ -3855,9 +3887,18 @@ function ensureDocumentNumbersPattern(){
     proformaChanged = true;
   });
 
-  if(invoiceChanged) { ZS.setItem("invoices-data", JSON.stringify(invoicesData)); window.invoicesData = invoicesData; }
-  if(proformaChanged) { ZS.setItem("proformas-data", JSON.stringify(proformasData)); window.proformasData = proformasData; }
+  if(invoiceChanged) {
+    invoicesData = invList;
+    window.invoicesData = invList;
+    try { ZS.setItem("invoices-data", JSON.stringify(invList)); } catch(_){}
+  }
+  if(proformaChanged) {
+    proformasData = profList;
+    window.proformasData = profList;
+    try { ZS.setItem("proformas-data", JSON.stringify(profList)); } catch(_){}
+  }
 }
+window.ensureDocumentNumbersPattern = ensureDocumentNumbersPattern;
 
 function getLatestBaseInvoiceNumber(dateValue){
   const year = getInvoiceYearFromDate(dateValue);
@@ -8737,13 +8778,14 @@ window.openQuotationAnalyzerModal = openQuotationAnalyzerModal;
 
 });
     </script>
-    <script src="modules/sales/sales_bundle.js?v=20261105_bis1" defer></script>
+    <script src="/modules/sales/sales_bundle.js?v=20261105_bis2" defer></script>
 <script>
       console.log('[sales_management] Page loaded. CompanyStorage:', typeof window.CompanyStorage, 'AppSync:', typeof window.AppSync, 'ZS:', typeof window.ZS);
       console.log('[sales_management] onHeaderCompanySwitch:', typeof window.onHeaderCompanySwitch);
       // FIX: defer scripts (sales_invoices_module.js, etc.) execute AFTER this inline
       // script. Wait for DOMContentLoaded so window.loadInvoicesTable is available.
       function bootstrapSalesTables(){
+        try { if (typeof ensureDocumentNumbersPattern === 'function') ensureDocumentNumbersPattern(); } catch(err){}
         try { if (typeof loadInvoicesTable === 'function') loadInvoicesTable(); } catch(err){}
         try { if (typeof loadProformasTable === 'function') loadProformasTable(); } catch(err){}
         try { if (typeof loadCustomersTable === 'function') loadCustomersTable(); } catch(err){}
@@ -8752,6 +8794,7 @@ window.openQuotationAnalyzerModal = openQuotationAnalyzerModal;
       window.addEventListener('activeCompanyChanged', function (e) {
         try {
           if (typeof initSalesScopedData === 'function') initSalesScopedData();
+          if (typeof ensureDocumentNumbersPattern === 'function') ensureDocumentNumbersPattern();
           if (typeof loadInvoicesTable === 'function') loadInvoicesTable();
           if (typeof loadProformasTable === 'function') loadProformasTable();
           if (typeof loadCustomersTable === 'function') loadCustomersTable();
@@ -8887,11 +8930,11 @@ window.openQuotationAnalyzerModal = openQuotationAnalyzerModal;
       }
     })();
     </script>
-    <script src="shared/demo_seed_data.js?v=20261017_v10" defer></script>
-    <script src="shared/erp_export_utils.js?v=20261017_v10" defer></script>
-    <script src="shared/export_panel.js?v=20261017_v10" defer></script>
-    <script src="shared/data_guard.js?v=20261017_v10" defer></script>
-    <script src="shared/license_bundle.js?v=20261021_b1" defer></script>
+    <script src="/shared/demo_seed_data.js?v=20261105_bis2" defer></script>
+    <script src="/shared/erp_export_utils.js?v=20261105_bis2" defer></script>
+    <script src="/shared/export_panel.js?v=20261105_bis2" defer></script>
+    <script src="/shared/data_guard.js?v=20261105_bis2" defer></script>
+    <script src="/shared/license_bundle.js?v=20261105_bis2" defer></script>
     <script>
 // ============================================================
 // ADVANCED SALES EXTENSIONS: BL, STATEMENT & SCF ACCOUNTING

@@ -164,7 +164,7 @@ def create_app() -> FastAPI:
                     response = FileResponse(str(bundle_css), media_type="text/css")
             elif basename in _LEGACY_SALES_JS:
                 response = Response(
-                    content="if(!window.__zSalesBundleLoaded){window.__zSalesBundleLoaded=true;var s=document.createElement('script');s.src='/modules/sales/sales_bundle.js?v=20261027';document.head.appendChild(s);}",
+                    content="if(!window.__zSalesBundleLoaded){window.__zSalesBundleLoaded=true;var s=document.createElement('script');s.src='/modules/sales/sales_bundle.js?v=20261105_bis2';document.head.appendChild(s);}",
                     media_type="application/javascript",
                 )
             elif basename in _LEGACY_LICENSE_JS:

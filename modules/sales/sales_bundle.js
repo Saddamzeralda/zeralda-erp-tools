@@ -159,6 +159,29 @@
     }
     return value;
   }
+  window.formatInvoiceNumber = formatInvoiceNumber;
+
+  function getInvoiceDisplayNumber(inv) {
+    if (typeof window.getInvoiceDisplayNumber === "function" && window.getInvoiceDisplayNumber !== getInvoiceDisplayNumber) {
+      return window.getInvoiceDisplayNumber(inv);
+    }
+    if (!inv) return "";
+    if (typeof inv === "string") {
+      return formatInvoiceNumber(inv);
+    }
+    var raw = String(inv.invoiceNumber || inv.id || "").trim().replace(/^INV-/, "");
+    var isBisDoc = Boolean(inv.isBis) || /(?:^|\d|[\s\-_/])(Bis|Ter|Quater)(?=[/\-_.\s]|$)/i.test(raw);
+    if (typeof window.formatBisSerialNumber === "function") {
+      return window.formatBisSerialNumber(raw, isBisDoc, inv.bisSuffix);
+    }
+    var m = raw.match(/^(\d+)\s*(Bis|Ter|Quater)?([/-]\d{4})(?:[\s\-_]*(Bis|Ter|Quater))?$/i);
+    if (m) {
+      var sfx = (inv.bisSuffix || m[2] || m[4] || (isBisDoc ? "BIS" : "")).toUpperCase();
+      return m[1] + sfx + m[3];
+    }
+    return formatInvoiceNumber(raw);
+  }
+  window.getInvoiceDisplayNumber = getInvoiceDisplayNumber;
 
   function normalizePaymentMethodValue(value) {
     if (window.ErpFinanceUtils && typeof window.ErpFinanceUtils.normalizePaymentMethodValue === "function") {
@@ -885,6 +908,11 @@
 
   function loadInvoicesTable() {
     bindInvoiceActions();
+    try {
+      if (typeof window.ensureDocumentNumbersPattern === "function") {
+        window.ensureDocumentNumbersPattern();
+      }
+    } catch (_) {}
     // تحديث أيقونات الترتيب في عناوين الأعمدة
     updateSortIcons();
     // حفظ البيانات السابقة للحماية من فقدان البيانات
@@ -1314,6 +1342,29 @@
     }
     return value;
   }
+  window.formatProformaNumber = formatProformaNumber;
+
+  function getProformaDisplayNumber(prof) {
+    if (typeof window.getProformaDisplayNumber === "function" && window.getProformaDisplayNumber !== getProformaDisplayNumber) {
+      return window.getProformaDisplayNumber(prof);
+    }
+    if (!prof) return "";
+    if (typeof prof === "string") {
+      return formatProformaNumber(prof);
+    }
+    var raw = String(prof.proformaNumber || prof.id || "").trim().replace(/^PRO-/, "");
+    var isBisDoc = Boolean(prof.isBis) || /(?:^|\d|[\s\-_/])(Bis|Ter|Quater)(?=[/\-_.\s]|$)/i.test(raw);
+    if (typeof window.formatBisSerialNumber === "function") {
+      return window.formatBisSerialNumber(raw, isBisDoc, prof.bisSuffix);
+    }
+    var m = raw.match(/^(\d+)\s*(Bis|Ter|Quater)?([/-]\d{4})(?:[\s\-_]*(Bis|Ter|Quater))?$/i);
+    if (m) {
+      var sfx = (prof.bisSuffix || m[2] || m[4] || (isBisDoc ? "BIS" : "")).toUpperCase();
+      return m[1] + sfx + m[3];
+    }
+    return formatProformaNumber(raw);
+  }
+  window.getProformaDisplayNumber = getProformaDisplayNumber;
 
   function getFilteredProformas() {
     var g = getGlobalFilters();
@@ -1342,6 +1393,11 @@
   }
 
   function loadProformasTable() {
+    try {
+      if (typeof window.ensureDocumentNumbersPattern === "function") {
+        window.ensureDocumentNumbersPattern();
+      }
+    } catch (_) {}
     var tb = document.getElementById("proformasTableBody");
     if (!tb) return;
     tb.innerHTML = "";
