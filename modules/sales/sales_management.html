@@ -3625,38 +3625,81 @@ function isDateInRange(dateStr, from, to){
   return true;
 }
 
+function parseBisSerialParts(rawVal){
+  const str = String(rawVal || "").trim();
+  const m = str.match(/^(\d+)\s*(Bis|Ter|Quater)?([/-]\d{4})(?:[\s\-_]*(Bis|Ter|Quater))?$/i);
+  if(m){
+    return {
+      seq: m[1],
+      yearPart: m[3],
+      year: m[3].slice(1),
+      suffix: m[2] || m[4] || ""
+    };
+  }
+  const mSimple = str.match(/^(\d+)(?:[\s\-_]*(Bis|Ter|Quater))?$/i);
+  if(mSimple){
+    return {
+      seq: mSimple[1],
+      yearPart: "",
+      year: "",
+      suffix: mSimple[2] || ""
+    };
+  }
+  return null;
+}
+window.parseBisSerialParts = parseBisSerialParts;
+
+function formatBisSerialNumber(rawVal, isBis, bisSuffix){
+  const str = String(rawVal || "").trim();
+  if(!str) return "";
+  const parts = parseBisSerialParts(str);
+  const detectedSuffix = (parts && parts.suffix) || (str.match(/(?:^|\d|[\s\-_/])(Bis|Ter|Quater)(?=[/\-_.\s]|$)/i) || [])[1] || "";
+  const hasBis = (isBis !== undefined && isBis !== null) ? Boolean(isBis) : Boolean(detectedSuffix);
+  if(!hasBis){
+    if(parts) return parts.seq + parts.yearPart;
+    return str.replace(/(?:[\s\-_]*)(?:Bis|Ter|Quater)(?=[/\-_.\s]|$)/gi, "").trim();
+  }
+  const suffixUpper = String(bisSuffix || detectedSuffix || "BIS").trim().toUpperCase();
+  if(parts){
+    return parts.seq + suffixUpper + parts.yearPart;
+  }
+  const cleaned = str.replace(/(?:[\s\-_]*)(?:Bis|Ter|Quater)(?=[/\-_.\s]|$)/gi, "").trim();
+  const slashIdx = cleaned.indexOf("/");
+  if(slashIdx > 0){
+    return cleaned.slice(0, slashIdx).trim() + suffixUpper + cleaned.slice(slashIdx);
+  }
+  return cleaned + suffixUpper;
+}
+window.formatBisSerialNumber = formatBisSerialNumber;
+
 function formatProformaNumber(id){
   if(window.formatProformaNumber && window.formatProformaNumber !== formatProformaNumber) return window.formatProformaNumber(id);
   if(id === null || id === undefined) return "";
-  const value = String(id).trim();
-  if(/^\d+([/-]\d{4})?(?:[\s\-_/]+(?:Bis|Ter|Quater|[A-Za-z]+))?$/i.test(value)) return value;
-  return value.replace(/^PRO-/, "");
+  const value = String(id).trim().replace(/^PRO-/, "");
+  if( parseBisSerialParts(value) ) return formatBisSerialNumber(value);
+  return value;
 }
 
 function formatInvoiceNumber(id){
   if(window.formatInvoiceNumber && window.formatInvoiceNumber !== formatInvoiceNumber) return window.formatInvoiceNumber(id);
   if(id === null || id === undefined) return "";
-  const value = String(id).trim();
-  if(/^\d+([/-]\d{4})?(?:[\s\-_/]+(?:Bis|Ter|Quater|[A-Za-z]+))?$/i.test(value)) return value;
-  return value.replace(/^INV-/, "");
+  const value = String(id).trim().replace(/^INV-/, "");
+  if( parseBisSerialParts(value) ) return formatBisSerialNumber(value);
+  return value;
 }
 
 function getInvoiceDisplayNumber(inv){
   if(!inv) return "";
-  let val = formatInvoiceNumber(inv.invoiceNumber || inv.id || "");
-  if(inv.isBis && !/\b(bis|ter|quater)\b/i.test(val)){
-    val += " " + (inv.bisSuffix || "Bis");
-  }
-  return val;
+  const raw = String(inv.invoiceNumber || inv.id || "").trim().replace(/^INV-/, "");
+  const isBisDoc = Boolean(inv.isBis) || /(?:^|\d|[\s\-_/])(Bis|Ter|Quater)(?=[/\-_.\s]|$)/i.test(raw);
+  return formatBisSerialNumber(raw, isBisDoc, inv.bisSuffix);
 }
 
 function getProformaDisplayNumber(prof){
   if(!prof) return "";
-  let val = formatProformaNumber(prof.proformaNumber || prof.id || "");
-  if(prof.isBis && !/\b(bis|ter|quater)\b/i.test(val)){
-    val += " " + (prof.bisSuffix || "Bis");
-  }
-  return val;
+  const raw = String(prof.proformaNumber || prof.id || "").trim().replace(/^PRO-/, "");
+  const isBisDoc = Boolean(prof.isBis) || /(?:^|\d|[\s\-_/])(Bis|Ter|Quater)(?=[/\-_.\s]|$)/i.test(raw);
+  return formatBisSerialNumber(raw, isBisDoc, prof.bisSuffix);
 }
 
 function getInvoiceYearFromDate(dateValue){
@@ -3676,10 +3719,9 @@ function generateInvoiceNumberForDate(dateValue){
   let maxSeq = 0;
   (invoicesData || []).forEach(inv => {
     const shown = String((inv && (inv.invoiceNumber || inv.id)) || "");
-    const match = shown.match(/^(\d+)\/(\d{4})(?:\s+(?:Bis|Ter|Quater|[A-Za-z]+))?$/i);
-    if(!match) return;
-    if(match[2] !== year) return;
-    const seq = Number(match[1] || 0);
+    const parts = parseBisSerialParts(shown);
+    if(!parts || parts.year !== year) return;
+    const seq = Number(parts.seq || 0);
     if(seq > maxSeq) maxSeq = seq;
   });
   return String(maxSeq + 1).padStart(3, "0") + "/" + year;
@@ -3690,36 +3732,32 @@ function generateProformaNumberForDate(dateValue){
   let maxSeq = 0;
   (proformasData || []).forEach(prof => {
     const shown = String((prof && (prof.proformaNumber || prof.id)) || "");
-    const match = shown.match(/^(\d+)\/(\d{4})(?:\s+(?:Bis|Ter|Quater|[A-Za-z]+))?$/i);
-    if(!match) return;
-    if(match[2] !== year) return;
-    const seq = Number(match[1] || 0);
+    const parts = parseBisSerialParts(shown);
+    if(!parts || parts.year !== year) return;
+    const seq = Number(parts.seq || 0);
     if(seq > maxSeq) maxSeq = seq;
   });
   return String(maxSeq + 1).padStart(3, "0") + "/" + year;
 }
 
 function ensureDocumentNumbersPattern(){
-  const pat = /^(\d+)\/(\d{4})(?:\s+(?:Bis|Ter|Quater|[A-Za-z]+))?$/i;
   const invoiceYearSeq = {};
   const proformaYearSeq = {};
 
   (invoicesData || []).forEach(inv => {
     const shown = String((inv && (inv.invoiceNumber || inv.id)) || "");
-    const m = shown.match(pat);
-    if(!m) return;
-    const year = m[2];
-    const seq = Number(m[1] || 0);
-    invoiceYearSeq[year] = Math.max(Number(invoiceYearSeq[year] || 0), seq);
+    const parts = parseBisSerialParts(shown);
+    if(!parts || !parts.year) return;
+    const seq = Number(parts.seq || 0);
+    invoiceYearSeq[parts.year] = Math.max(Number(invoiceYearSeq[parts.year] || 0), seq);
   });
 
   (proformasData || []).forEach(prof => {
     const shown = String((prof && (prof.proformaNumber || prof.id)) || "");
-    const m = shown.match(pat);
-    if(!m) return;
-    const year = m[2];
-    const seq = Number(m[1] || 0);
-    proformaYearSeq[year] = Math.max(Number(proformaYearSeq[year] || 0), seq);
+    const parts = parseBisSerialParts(shown);
+    if(!parts || !parts.year) return;
+    const seq = Number(parts.seq || 0);
+    proformaYearSeq[parts.year] = Math.max(Number(proformaYearSeq[parts.year] || 0), seq);
   });
 
   let invoiceChanged = false;
@@ -3733,33 +3771,37 @@ function ensureDocumentNumbersPattern(){
   });
   invoiceOrdered.forEach(inv => {
     const current = String(inv?.invoiceNumber || "");
-    const isBisDoc = Boolean(inv?.isBis) || /\b(bis|ter|quater)\b/i.test(current);
-    const suffix = inv?.bisSuffix || (current.match(/(?:[\s\-_/]+)(Bis|Ter|Quater|[A-Za-z]+)$/i) || [])[1] || (current.match(/\b(bis|ter|quater)\b/i) || [])[0] || "Bis";
+    const parts = parseBisSerialParts(current);
+    const detectedSuffix = (parts && parts.suffix) || (current.match(/(?:^|\d|[\s\-_/])(Bis|Ter|Quater)(?=[/\-_.\s]|$)/i) || [])[1] || "";
+    const isBisDoc = Boolean(inv?.isBis) || Boolean(detectedSuffix);
+    const suffix = String(inv?.bisSuffix || detectedSuffix || "BIS").toUpperCase();
 
     if(isBisDoc){
-      if(pat.test(current)){
-        inv.isBis = true;
-        inv.bisSuffix = (current.match(/\s+([A-Za-z]+)$/i) || [])[1] || suffix;
-        return;
-      }
-      const year = getInvoiceYearFromDate(inv?.date);
-      const baseMatch = current.match(/^(\d+)(?:[/-](\d{4}))?/);
       let basePart = "";
-      if(baseMatch && baseMatch[1]){
-        basePart = String(baseMatch[1]).padStart(3, "0") + "/" + (baseMatch[2] || year);
+      if(parts && parts.year){
+        basePart = String(parts.seq).padStart(3, "0") + "/" + parts.year;
       } else {
-        const next = Number(invoiceYearSeq[year] || 0) + 1;
-        invoiceYearSeq[year] = next;
-        basePart = String(next).padStart(3, "0") + "/" + year;
+        const year = getInvoiceYearFromDate(inv?.date);
+        const baseMatch = current.match(/^(\d+)(?:[/-](\d{4}))?/);
+        if(baseMatch && baseMatch[1]){
+          basePart = String(baseMatch[1]).padStart(3, "0") + "/" + (baseMatch[2] || year);
+        } else {
+          const next = Number(invoiceYearSeq[year] || 0) + 1;
+          invoiceYearSeq[year] = next;
+          basePart = String(next).padStart(3, "0") + "/" + year;
+        }
       }
-      inv.invoiceNumber = basePart + " " + suffix;
-      inv.isBis = true;
-      inv.bisSuffix = suffix;
-      invoiceChanged = true;
+      const normalized = formatBisSerialNumber(basePart, true, suffix);
+      if(inv.invoiceNumber !== normalized || !inv.isBis || inv.bisSuffix !== suffix){
+        inv.invoiceNumber = normalized;
+        inv.isBis = true;
+        inv.bisSuffix = suffix;
+        invoiceChanged = true;
+      }
       return;
     }
 
-    if(pat.test(current)) return;
+    if(parts && parts.year) return;
     const year = getInvoiceYearFromDate(inv?.date);
     const next = Number(invoiceYearSeq[year] || 0) + 1;
     invoiceYearSeq[year] = next;
@@ -3775,33 +3817,37 @@ function ensureDocumentNumbersPattern(){
   });
   proformaOrdered.forEach(prof => {
     const current = String(prof?.proformaNumber || "");
-    const isBisDoc = Boolean(prof?.isBis) || /\b(bis|ter|quater)\b/i.test(current);
-    const suffix = prof?.bisSuffix || (current.match(/(?:[\s\-_/]+)(Bis|Ter|Quater|[A-Za-z]+)$/i) || [])[1] || (current.match(/\b(bis|ter|quater)\b/i) || [])[0] || "Bis";
+    const parts = parseBisSerialParts(current);
+    const detectedSuffix = (parts && parts.suffix) || (current.match(/(?:^|\d|[\s\-_/])(Bis|Ter|Quater)(?=[/\-_.\s]|$)/i) || [])[1] || "";
+    const isBisDoc = Boolean(prof?.isBis) || Boolean(detectedSuffix);
+    const suffix = String(prof?.bisSuffix || detectedSuffix || "BIS").toUpperCase();
 
     if(isBisDoc){
-      if(pat.test(current)){
-        prof.isBis = true;
-        prof.bisSuffix = (current.match(/\s+([A-Za-z]+)$/i) || [])[1] || suffix;
-        return;
-      }
-      const year = getProformaYearFromDate(prof?.date);
-      const baseMatch = current.match(/^(\d+)(?:[/-](\d{4}))?/);
       let basePart = "";
-      if(baseMatch && baseMatch[1]){
-        basePart = String(baseMatch[1]).padStart(3, "0") + "/" + (baseMatch[2] || year);
+      if(parts && parts.year){
+        basePart = String(parts.seq).padStart(3, "0") + "/" + parts.year;
       } else {
-        const next = Number(proformaYearSeq[year] || 0) + 1;
-        proformaYearSeq[year] = next;
-        basePart = String(next).padStart(3, "0") + "/" + year;
+        const year = getProformaYearFromDate(prof?.date);
+        const baseMatch = current.match(/^(\d+)(?:[/-](\d{4}))?/);
+        if(baseMatch && baseMatch[1]){
+          basePart = String(baseMatch[1]).padStart(3, "0") + "/" + (baseMatch[2] || year);
+        } else {
+          const next = Number(proformaYearSeq[year] || 0) + 1;
+          proformaYearSeq[year] = next;
+          basePart = String(next).padStart(3, "0") + "/" + year;
+        }
       }
-      prof.proformaNumber = basePart + " " + suffix;
-      prof.isBis = true;
-      prof.bisSuffix = suffix;
-      proformaChanged = true;
+      const normalized = formatBisSerialNumber(basePart, true, suffix);
+      if(prof.proformaNumber !== normalized || !prof.isBis || prof.bisSuffix !== suffix){
+        prof.proformaNumber = normalized;
+        prof.isBis = true;
+        prof.bisSuffix = suffix;
+        proformaChanged = true;
+      }
       return;
     }
 
-    if(pat.test(current)) return;
+    if(parts && parts.year) return;
     const year = getProformaYearFromDate(prof?.date);
     const next = Number(proformaYearSeq[year] || 0) + 1;
     proformaYearSeq[year] = next;
@@ -3818,10 +3864,9 @@ function getLatestBaseInvoiceNumber(dateValue){
   let maxSeq = 0;
   (invoicesData || []).forEach(inv => {
     const shown = String((inv && (inv.invoiceNumber || inv.id)) || "");
-    const match = shown.match(/^(\d+)\/(\d{4})(?:\s+(?:Bis|Ter|Quater|[A-Za-z]+))?$/i);
-    if(!match) return;
-    if(match[2] !== year) return;
-    const seq = Number(match[1] || 0);
+    const parts = parseBisSerialParts(shown);
+    if(!parts || parts.year !== year) return;
+    const seq = Number(parts.seq || 0);
     if(seq > maxSeq) maxSeq = seq;
   });
   if(maxSeq === 0) maxSeq = 1;
@@ -3833,10 +3878,9 @@ function getLatestBaseProformaNumber(dateValue){
   let maxSeq = 0;
   (proformasData || []).forEach(prof => {
     const shown = String((prof && (prof.proformaNumber || prof.id)) || "");
-    const match = shown.match(/^(\d+)\/(\d{4})(?:\s+(?:Bis|Ter|Quater|[A-Za-z]+))?$/i);
-    if(!match) return;
-    if(match[2] !== year) return;
-    const seq = Number(match[1] || 0);
+    const parts = parseBisSerialParts(shown);
+    if(!parts || parts.year !== year) return;
+    const seq = Number(parts.seq || 0);
     if(seq > maxSeq) maxSeq = seq;
   });
   if(maxSeq === 0) maxSeq = 1;
@@ -3847,7 +3891,7 @@ function toggleInvoiceBis(checked){
   const numInput = document.getElementById("invoiceNumberInput");
   const suffixSelect = document.getElementById("invoiceNumberSuffix");
   const badge = document.getElementById("invoiceBisBadge");
-  const suffix = (suffixSelect && suffixSelect.value) || "Bis";
+  const suffix = (suffixSelect && suffixSelect.value) || "BIS";
 
   if(suffixSelect) suffixSelect.style.display = checked ? "inline-block" : "none";
   if(badge) badge.style.display = checked ? "inline-block" : "none";
@@ -3860,10 +3904,9 @@ function toggleInvoiceBis(checked){
       const dateVal = document.getElementById("invoiceDate") ? document.getElementById("invoiceDate").value : "";
       val = getLatestBaseInvoiceNumber(dateVal);
     }
-    val = val.replace(/(?:[\s\-_/]+)(?:Bis|Ter|Quater|[A-Za-z]+)$/i, "").trim();
-    numInput.value = val + " " + suffix;
+    numInput.value = formatBisSerialNumber(val, true, suffix);
   } else {
-    numInput.value = val.replace(/(?:[\s\-_/]+)(?:Bis|Ter|Quater|[A-Za-z]+)$/i, "").trim();
+    numInput.value = formatBisSerialNumber(val, false);
   }
 }
 
@@ -3875,8 +3918,7 @@ function onInvoiceSuffixChange(suffix){
     const dateVal = document.getElementById("invoiceDate") ? document.getElementById("invoiceDate").value : "";
     val = getLatestBaseInvoiceNumber(dateVal);
   }
-  val = val.replace(/(?:[\s\-_/]+)(?:Bis|Ter|Quater|[A-Za-z]+)$/i, "").trim();
-  numInput.value = val + " " + (suffix || "Bis");
+  numInput.value = formatBisSerialNumber(val, true, suffix || "BIS");
 }
 
 function onInvoiceNumberManualInput(){
@@ -3886,7 +3928,7 @@ function onInvoiceNumberManualInput(){
   const badge = document.getElementById("invoiceBisBadge");
   if(!numInput || !bisCheck) return;
 
-  const m = numInput.value.trim().match(/(?:[\s\-_/]+)(Bis|Ter|Quater|[A-Za-z]+)$/i);
+  const m = numInput.value.trim().match(/(?:^|\d|[\s\-_/])(Bis|Ter|Quater)(?=[/\-_.\s]|$)/i);
   if(m){
     bisCheck.checked = true;
     if(suffixSelect){
@@ -3911,7 +3953,7 @@ function toggleProformaBis(checked){
   const numInput = document.getElementById("proformaNumberInput");
   const suffixSelect = document.getElementById("proformaNumberSuffix");
   const badge = document.getElementById("proformaBisBadge");
-  const suffix = (suffixSelect && suffixSelect.value) || "Bis";
+  const suffix = (suffixSelect && suffixSelect.value) || "BIS";
 
   if(suffixSelect) suffixSelect.style.display = checked ? "inline-block" : "none";
   if(badge) badge.style.display = checked ? "inline-block" : "none";
@@ -3924,10 +3966,9 @@ function toggleProformaBis(checked){
       const dateVal = document.getElementById("proformaDate") ? document.getElementById("proformaDate").value : "";
       val = getLatestBaseProformaNumber(dateVal);
     }
-    val = val.replace(/(?:[\s\-_/]+)(?:Bis|Ter|Quater|[A-Za-z]+)$/i, "").trim();
-    numInput.value = val + " " + suffix;
+    numInput.value = formatBisSerialNumber(val, true, suffix);
   } else {
-    numInput.value = val.replace(/(?:[\s\-_/]+)(?:Bis|Ter|Quater|[A-Za-z]+)$/i, "").trim();
+    numInput.value = formatBisSerialNumber(val, false);
   }
 }
 
@@ -3939,8 +3980,7 @@ function onProformaSuffixChange(suffix){
     const dateVal = document.getElementById("proformaDate") ? document.getElementById("proformaDate").value : "";
     val = getLatestBaseProformaNumber(dateVal);
   }
-  val = val.replace(/(?:[\s\-_/]+)(?:Bis|Ter|Quater|[A-Za-z]+)$/i, "").trim();
-  numInput.value = val + " " + (suffix || "Bis");
+  numInput.value = formatBisSerialNumber(val, true, suffix || "BIS");
 }
 
 function onProformaNumberManualInput(){
@@ -3950,7 +3990,7 @@ function onProformaNumberManualInput(){
   const badge = document.getElementById("proformaBisBadge");
   if(!numInput || !bisCheck) return;
 
-  const m = numInput.value.trim().match(/(?:[\s\-_/]+)(Bis|Ter|Quater|[A-Za-z]+)$/i);
+  const m = numInput.value.trim().match(/(?:^|\d|[\s\-_/])(Bis|Ter|Quater)(?=[/\-_.\s]|$)/i);
   if(m){
     bisCheck.checked = true;
     if(suffixSelect){
@@ -6992,10 +7032,10 @@ function populateInvoiceForm(inv){
   // ── Fill invoice number field when editing ──
   const invNumInput = document.getElementById("invoiceNumberInput");
   if(invNumInput) {
-    invNumInput.value = inv.invoiceNumber || getInvoiceDisplayNumber(inv) || "";
+    invNumInput.value = getInvoiceDisplayNumber(inv) || inv.invoiceNumber || "";
     if(typeof onInvoiceNumberManualInput === 'function') onInvoiceNumberManualInput();
-    const isBisDoc = Boolean(inv.isBis) || /(?:[\s\-_/]+|^)(?:Bis|Ter|Quater)\b/i.test(invNumInput.value);
-    const bisSuffix = inv.bisSuffix || (invNumInput.value.match(/(?:[\s\-_/]+)(Bis|Ter|Quater|[A-Za-z]+)$/i) || [])[1] || "Bis";
+    const isBisDoc = Boolean(inv.isBis) || /(?:^|\d|[\s\-_/])(Bis|Ter|Quater)(?=[/\-_.\s]|$)/i.test(invNumInput.value);
+    const bisSuffix = inv.bisSuffix || (invNumInput.value.match(/(?:^|\d|[\s\-_/])(Bis|Ter|Quater)(?=[/\-_.\s]|$)/i) || [])[1] || "BIS";
     const bisCheck = document.getElementById("invoiceBisCheckbox");
     const suffixSelect = document.getElementById("invoiceNumberSuffix");
     const badge = document.getElementById("invoiceBisBadge");
@@ -7005,8 +7045,8 @@ function populateInvoiceForm(inv){
       if(isBisDoc) suffixSelect.value = bisSuffix;
     }
     if(badge) badge.style.display = isBisDoc ? "inline-block" : "none";
-    if(isBisDoc && !/(?:[\s\-_/]+|^)(?:Bis|Ter|Quater)\b/i.test(invNumInput.value)){
-      invNumInput.value = invNumInput.value.trim() + " " + bisSuffix;
+    if(isBisDoc){
+      invNumInput.value = formatBisSerialNumber(invNumInput.value, true, bisSuffix);
     }
   }
   if(inv.date) document.getElementById("invoiceDate").value = inv.date; else document.getElementById("invoiceDate").valueAsDate = new Date();
@@ -7078,10 +7118,10 @@ function populateProformaForm(prof){
   // ── Fill proforma number field when editing ──
   const profNumInput = document.getElementById("proformaNumberInput");
   if(profNumInput) {
-    profNumInput.value = prof.proformaNumber || getProformaDisplayNumber(prof) || "";
+    profNumInput.value = getProformaDisplayNumber(prof) || prof.proformaNumber || "";
     if(typeof onProformaNumberManualInput === 'function') onProformaNumberManualInput();
-    const isBisDoc = Boolean(prof.isBis) || /(?:[\s\-_/]+|^)(?:Bis|Ter|Quater)\b/i.test(profNumInput.value);
-    const bisSuffix = prof.bisSuffix || (profNumInput.value.match(/(?:[\s\-_/]+)(Bis|Ter|Quater|[A-Za-z]+)$/i) || [])[1] || "Bis";
+    const isBisDoc = Boolean(prof.isBis) || /(?:^|\d|[\s\-_/])(Bis|Ter|Quater)(?=[/\-_.\s]|$)/i.test(profNumInput.value);
+    const bisSuffix = prof.bisSuffix || (profNumInput.value.match(/(?:^|\d|[\s\-_/])(Bis|Ter|Quater)(?=[/\-_.\s]|$)/i) || [])[1] || "BIS";
     const bisCheck = document.getElementById("proformaBisCheckbox");
     const suffixSelect = document.getElementById("proformaNumberSuffix");
     const badge = document.getElementById("proformaBisBadge");
@@ -7091,8 +7131,8 @@ function populateProformaForm(prof){
       if(isBisDoc) suffixSelect.value = bisSuffix;
     }
     if(badge) badge.style.display = isBisDoc ? "inline-block" : "none";
-    if(isBisDoc && !/(?:[\s\-_/]+|^)(?:Bis|Ter|Quater)\b/i.test(profNumInput.value)){
-      profNumInput.value = profNumInput.value.trim() + " " + bisSuffix;
+    if(isBisDoc){
+      profNumInput.value = formatBisSerialNumber(profNumInput.value, true, bisSuffix);
     }
   }
   if(prof.date) document.getElementById("proformaDate").value = prof.date; else document.getElementById("proformaDate").valueAsDate = new Date();
@@ -7594,18 +7634,10 @@ window.addEventListener("load", function(){
         const invBisCheck = document.getElementById("invoiceBisCheckbox");
         const invSuffixSelect = document.getElementById("invoiceNumberSuffix");
         const isBisChecked = Boolean(invBisCheck && invBisCheck.checked);
-        const bisMatch = invoiceNumVal.match(/(?:[\s\-_/]+)(Bis|Ter|Quater|[A-Za-z]+)$/i);
+        const bisMatch = invoiceNumVal.match(/(?:^|\d|[\s\-_/])(Bis|Ter|Quater)(?=[/\-_.\s]|$)/i);
         const isBisDoc = invBisCheck ? isBisChecked : Boolean(bisMatch);
-        const docSuffix = (invSuffixSelect && invSuffixSelect.value) || (bisMatch ? bisMatch[1] : "Bis");
-        if(isBisDoc){
-          if(bisMatch){
-            invoiceNumVal = invoiceNumVal.replace(/(?:[\s\-_/]+)(?:Bis|Ter|Quater|[A-Za-z]+)$/i, " " + docSuffix).trim();
-          } else {
-            invoiceNumVal = invoiceNumVal + " " + docSuffix;
-          }
-        } else {
-          invoiceNumVal = invoiceNumVal.replace(/(?:[\s\-_/]+)(?:Bis|Ter|Quater|[A-Za-z]+)$/i, "").trim();
-        }
+        const docSuffix = String((invSuffixSelect && invSuffixSelect.value) || (bisMatch ? bisMatch[1] : "BIS")).toUpperCase();
+        invoiceNumVal = formatBisSerialNumber(invoiceNumVal, isBisDoc, docSuffix);
         const updated = {
           id: editingInvoiceId,
           companyId: (invoicesData[idx] && invoicesData[idx].companyId) || (window.CompanyStorage && window.CompanyStorage.getActiveCompanyId()) || 'default-company',
@@ -7669,18 +7701,10 @@ window.addEventListener("load", function(){
         const invBisCheck = document.getElementById("invoiceBisCheckbox");
         const invSuffixSelect = document.getElementById("invoiceNumberSuffix");
         const isBisChecked = Boolean(invBisCheck && invBisCheck.checked);
-        const bisMatch = invoiceNumVal.match(/(?:[\s\-_/]+)(Bis|Ter|Quater|[A-Za-z]+)$/i);
+        const bisMatch = invoiceNumVal.match(/(?:^|\d|[\s\-_/])(Bis|Ter|Quater)(?=[/\-_.\s]|$)/i);
         const isBisDoc = invBisCheck ? isBisChecked : Boolean(bisMatch);
-        const docSuffix = (invSuffixSelect && invSuffixSelect.value) || (bisMatch ? bisMatch[1] : "Bis");
-        if(isBisDoc){
-          if(bisMatch){
-            invoiceNumVal = invoiceNumVal.replace(/(?:[\s\-_/]+)(?:Bis|Ter|Quater|[A-Za-z]+)$/i, " " + docSuffix).trim();
-          } else {
-            invoiceNumVal = invoiceNumVal + " " + docSuffix;
-          }
-        } else {
-          invoiceNumVal = invoiceNumVal.replace(/(?:[\s\-_/]+)(?:Bis|Ter|Quater|[A-Za-z]+)$/i, "").trim();
-        }
+        const docSuffix = String((invSuffixSelect && invSuffixSelect.value) || (bisMatch ? bisMatch[1] : "BIS")).toUpperCase();
+        invoiceNumVal = formatBisSerialNumber(invoiceNumVal, isBisDoc, docSuffix);
         const inv = { id:"INV-"+Date.now(), companyId: (window.CompanyStorage && window.CompanyStorage.getActiveCompanyId()) || 'default-company', invoiceNumber: invoiceNumVal, isBis: isBisDoc, bisSuffix: isBisDoc ? docSuffix : "", date:document.getElementById("invoiceDate").value, customer:cu, items:invoiceItemsArray.map(i=>({description:i.description,quantity:i.quantity,price:i.price,total:i.total,productId:i.productId,unit:i.unit||"unit",fp:i.fp||""})), subtotal:st, tax:tx, taxRate:taxRate, stamp:stamp, stampRate:stampRate, total:tt, status:initialStatus, paymentMethod:paymentMethod, paid:initialPaid, payments:[], lowStockNotice:hasStockShortageOnSave };
         invoicesData.push(inv);
         if (window.DataGuard && typeof window.DataGuard.protectBeforeSave === 'function') {
@@ -7790,18 +7814,10 @@ function showInvoiceNotification(inv){
         const profBisCheck = document.getElementById("proformaBisCheckbox");
         const profSuffixSelect = document.getElementById("proformaNumberSuffix");
         const isBisChecked = Boolean(profBisCheck && profBisCheck.checked);
-        const bisMatch = profNumberToSave.match(/(?:[\s\-_/]+)(Bis|Ter|Quater|[A-Za-z]+)$/i);
+        const bisMatch = profNumberToSave.match(/(?:^|\d|[\s\-_/])(Bis|Ter|Quater)(?=[/\-_.\s]|$)/i);
         const isBisDoc = profBisCheck ? isBisChecked : Boolean(bisMatch);
-        const docSuffix = (profSuffixSelect && profSuffixSelect.value) || (bisMatch ? bisMatch[1] : "Bis");
-        if(isBisDoc){
-          if(bisMatch){
-            profNumberToSave = profNumberToSave.replace(/(?:[\s\-_/]+)(?:Bis|Ter|Quater|[A-Za-z]+)$/i, " " + docSuffix).trim();
-          } else {
-            profNumberToSave = profNumberToSave + " " + docSuffix;
-          }
-        } else {
-          profNumberToSave = profNumberToSave.replace(/(?:[\s\-_/]+)(?:Bis|Ter|Quater|[A-Za-z]+)$/i, "").trim();
-        }
+        const docSuffix = String((profSuffixSelect && profSuffixSelect.value) || (bisMatch ? bisMatch[1] : "BIS")).toUpperCase();
+        profNumberToSave = formatBisSerialNumber(profNumberToSave, isBisDoc, docSuffix);
         const updated = {
           ...proformasData[idx],
           id: editingProformaId,
@@ -7831,18 +7847,10 @@ function showInvoiceNotification(inv){
         const profBisCheck = document.getElementById("proformaBisCheckbox");
         const profSuffixSelect = document.getElementById("proformaNumberSuffix");
         const isBisChecked = Boolean(profBisCheck && profBisCheck.checked);
-        const bisMatch = profNumberToSave.match(/(?:[\s\-_/]+)(Bis|Ter|Quater|[A-Za-z]+)$/i);
+        const bisMatch = profNumberToSave.match(/(?:^|\d|[\s\-_/])(Bis|Ter|Quater)(?=[/\-_.\s]|$)/i);
         const isBisDoc = profBisCheck ? isBisChecked : Boolean(bisMatch);
-        const docSuffix = (profSuffixSelect && profSuffixSelect.value) || (bisMatch ? bisMatch[1] : "Bis");
-        if(isBisDoc){
-          if(bisMatch){
-            profNumberToSave = profNumberToSave.replace(/(?:[\s\-_/]+)(?:Bis|Ter|Quater|[A-Za-z]+)$/i, " " + docSuffix).trim();
-          } else {
-            profNumberToSave = profNumberToSave + " " + docSuffix;
-          }
-        } else {
-          profNumberToSave = profNumberToSave.replace(/(?:[\s\-_/]+)(?:Bis|Ter|Quater|[A-Za-z]+)$/i, "").trim();
-        }
+        const docSuffix = String((profSuffixSelect && profSuffixSelect.value) || (bisMatch ? bisMatch[1] : "BIS")).toUpperCase();
+        profNumberToSave = formatBisSerialNumber(profNumberToSave, isBisDoc, docSuffix);
         const prof = { id:"PRO-"+Date.now(), companyId: (window.CompanyStorage && window.CompanyStorage.getActiveCompanyId()) || 'default-company', proformaNumber: profNumberToSave, isBis: isBisDoc, bisSuffix: isBisDoc ? docSuffix : "", date:document.getElementById("proformaDate").value, customer:cu, items:proformaItemsArray.map(i=>({description:i.description,quantity:i.quantity,price:i.price,total:i.total,productId:i.productId,unit:i.unit||"unit",fp:i.fp||""})), subtotal:st, tax:tx, taxRate:taxRate, total:tt, notes:document.getElementById("proformaNotes").value, status:"Draft" };
         proformasData.push(prof);
         ZS.setItem("proformas-data", JSON.stringify(proformasData));
@@ -8729,7 +8737,7 @@ window.openQuotationAnalyzerModal = openQuotationAnalyzerModal;
 
 });
     </script>
-    <script src="modules/sales/sales_bundle.js?v=20261030_v5" defer></script>
+    <script src="modules/sales/sales_bundle.js?v=20261105_bis1" defer></script>
 <script>
       console.log('[sales_management] Page loaded. CompanyStorage:', typeof window.CompanyStorage, 'AppSync:', typeof window.AppSync, 'ZS:', typeof window.ZS);
       console.log('[sales_management] onHeaderCompanySwitch:', typeof window.onHeaderCompanySwitch);
@@ -8901,7 +8909,7 @@ function renderDeliveryNoteHtml(showPrices) {
   const doc = _currentDeliveryInvoice;
   const targetCompanyId = (doc && (doc.companyId || (doc.company && doc.company.id))) || null;
   const company = (typeof getActiveCompanyProfile === 'function' ? getActiveCompanyProfile(targetCompanyId) : null) || (typeof getActiveCompanyFromSettings === 'function' ? getActiveCompanyFromSettings(targetCompanyId) : null) || {};
-  const blNumber = 'BL-' + (doc.invoiceNumber || doc.id || '').replace(/^INV-/, '');
+  const blNumber = 'BL-' + (typeof getInvoiceDisplayNumber === 'function' ? getInvoiceDisplayNumber(doc) : (doc.invoiceNumber || doc.id || '')).replace(/^INV-/, '');
 
   let itemsRows = '';
   if (doc.items && doc.items.length) {
@@ -8933,7 +8941,7 @@ function renderDeliveryNoteHtml(showPrices) {
     + '  </div>'
     + '  <div style="text-align:left;">'
     + '    <h3 style="margin:0; color:#d97706; font-size:18px;">' + _ckSafe(blNumber) + '</h3>'
-    + '    <div style="font-size:12px; color:#64748b; margin-top:3px;">مرجع الفاتورة: ' + _ckSafe(doc.invoiceNumber || doc.id) + '</div>'
+    + '    <div style="font-size:12px; color:#64748b; margin-top:3px;">مرجع الفاتورة: ' + _ckSafe(typeof getInvoiceDisplayNumber === 'function' ? getInvoiceDisplayNumber(doc) : (doc.invoiceNumber || doc.id)) + '</div>'
     + '    <div style="font-size:12px; color:#64748b;">تاريخ التسليم: ' + (doc.date || new Date().toISOString().slice(0, 10)) + '</div>'
     + '  </div>'
     + '</div>'
@@ -9023,7 +9031,7 @@ function openCustomerStatement(customerIdOrName) {
 
     rowsHtml += '<tr>'
       + '<td style="border:1px solid #cbd5e1; padding:8px;">' + (inv.date || '') + '</td>'
-      + '<td style="border:1px solid #cbd5e1; padding:8px;"><strong>' + _ckSafe(inv.invoiceNumber || inv.id) + '</strong></td>'
+      + '<td style="border:1px solid #cbd5e1; padding:8px;"><strong>' + _ckSafe(typeof getInvoiceDisplayNumber === 'function' ? getInvoiceDisplayNumber(inv) : (inv.invoiceNumber || inv.id)) + '</strong></td>'
       + '<td style="border:1px solid #cbd5e1; padding:8px; text-align:right;">' + invTotal.toFixed(2) + ' DZD</td>'
       + '<td style="border:1px solid #cbd5e1; padding:8px; text-align:right; color:#10b981; font-weight:600;">' + invPaid.toFixed(2) + ' DZD</td>'
       + '<td style="border:1px solid #cbd5e1; padding:8px; text-align:right; color:#ef4444; font-weight:700;">' + invRem.toFixed(2) + ' DZD</td>'

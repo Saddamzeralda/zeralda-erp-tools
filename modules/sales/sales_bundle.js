@@ -148,9 +148,15 @@
 
   function formatInvoiceNumber(id) {
     if (id === null || id === undefined) return "";
-    var value = String(id).trim();
-    if (/^\d+([/-]\d{4})?(?:[\s\-_/]+(?:Bis|Ter|Quater|[A-Za-z]+))?$/i.test(value)) return value;
-    if (value.indexOf("INV-") === 0) value = value.replace(/^INV-/, "");
+    var value = String(id).trim().replace(/^INV-/, "");
+    if (typeof window.formatBisSerialNumber === "function" && typeof window.parseBisSerialParts === "function" && window.parseBisSerialParts(value)) {
+      return window.formatBisSerialNumber(value);
+    }
+    var m = value.match(/^(\d+)\s*(Bis|Ter|Quater)?([/-]\d{4})(?:[\s\-_]*(Bis|Ter|Quater))?$/i);
+    if (m) {
+      var sfx = (m[2] || m[4] || "").toUpperCase();
+      return m[1] + sfx + m[3];
+    }
     return value;
   }
 
@@ -768,19 +774,27 @@
     }
 
     var baseNum = String(source.invoiceNumber || formatInvoiceNumber(source.id) || "").trim();
-    baseNum = baseNum.replace(/\s+(?:Bis|Ter|Quater|[A-Za-z]+)$/i, "");
+    if (typeof window.formatBisSerialNumber === "function") {
+      baseNum = window.formatBisSerialNumber(baseNum, false);
+    } else {
+      baseNum = baseNum.replace(/(?:[\s\-_]*)(?:Bis|Ter|Quater)(?=[/\-_.\s]|$)/gi, "").trim();
+    }
     if (!/^\d+[/-]\d{4}$/.test(baseNum)) {
       var d = source.date || new Date().toISOString().slice(0, 10);
       baseNum = typeof getLatestBaseInvoiceNumber === "function" ? getLatestBaseInvoiceNumber(d) : generateInvoiceNumberForDate(d);
     }
 
     var targetSuffix = "Bis";
+    var bisCandidate = typeof window.formatBisSerialNumber === "function" ? window.formatBisSerialNumber(baseNum, true, "BIS") : (baseNum + " bis");
     var existingWithBis = (invoicesData || []).some(function(inv) {
-      return String(inv.invoiceNumber || "").trim().toLowerCase() === (baseNum + " bis").toLowerCase();
+      var disp = typeof getInvoiceDisplayNumber === "function" ? getInvoiceDisplayNumber(inv) : String(inv.invoiceNumber || "");
+      return disp.trim().toLowerCase() === bisCandidate.toLowerCase() || String(inv.invoiceNumber || "").trim().toLowerCase() === (baseNum + " bis").toLowerCase();
     });
     if (existingWithBis) {
+      var terCandidate = typeof window.formatBisSerialNumber === "function" ? window.formatBisSerialNumber(baseNum, true, "TER") : (baseNum + " ter");
       var existingWithTer = (invoicesData || []).some(function(inv) {
-        return String(inv.invoiceNumber || "").trim().toLowerCase() === (baseNum + " ter").toLowerCase();
+        var disp = typeof getInvoiceDisplayNumber === "function" ? getInvoiceDisplayNumber(inv) : String(inv.invoiceNumber || "");
+        return disp.trim().toLowerCase() === terCandidate.toLowerCase() || String(inv.invoiceNumber || "").trim().toLowerCase() === (baseNum + " ter").toLowerCase();
       });
       targetSuffix = existingWithTer ? "Quater" : "Ter";
     }
@@ -797,7 +811,9 @@
     }
     if (bisBadge) bisBadge.style.display = "inline-block";
     if (invNumInput) {
-      invNumInput.value = baseNum + " " + targetSuffix;
+      invNumInput.value = typeof window.formatBisSerialNumber === "function"
+        ? window.formatBisSerialNumber(baseNum, true, targetSuffix)
+        : (baseNum.replace(/^(\d+)/, "$1" + targetSuffix.toUpperCase()));
     }
 
     if (source.customer && source.customer.id) {
@@ -948,9 +964,9 @@
 
       var tdId = document.createElement("td");
       var formattedInvNum = (typeof getInvoiceDisplayNumber === 'function') ? getInvoiceDisplayNumber(inv) : formatInvoiceNumber(inv.invoiceNumber || inv.id);
-      var isBisInvoice = Boolean(inv.isBis) || /\b(bis|ter|quater)\b/i.test(formattedInvNum);
+      var isBisInvoice = Boolean(inv.isBis) || /(?:^|\d|[\s\-_/])(bis|ter|quater)(?=[/\-_.\s]|$)/i.test(formattedInvNum);
       if (isBisInvoice) {
-        var bisBadgeText = escapeHTML(inv.bisSuffix || (formattedInvNum.match(/\b(bis|ter|quater)\b/i) || [])[0] || "BIS").toUpperCase();
+        var bisBadgeText = escapeHTML(inv.bisSuffix || (formattedInvNum.match(/(?:^|\d|[\s\-_/])(bis|ter|quater)(?=[/\-_.\s]|$)/i) || [])[1] || "BIS").toUpperCase();
         tdId.innerHTML = "<strong>" + escapeHTML(formattedInvNum) + "</strong> <span style=\"margin-inline-start:4px; background:#e0e7ff; color:#3730a3; font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; text-transform:uppercase;\">" + bisBadgeText + "</span>";
       } else {
         tdId.innerHTML = "<strong>" + escapeHTML(formattedInvNum) + "</strong>";
@@ -1155,19 +1171,27 @@
     }
 
     var baseNum = String(source.proformaNumber || (typeof formatProformaNumber === "function" ? formatProformaNumber(source.id) : source.id) || "").trim();
-    baseNum = baseNum.replace(/\s+(?:Bis|Ter|Quater|[A-Za-z]+)$/i, "");
+    if (typeof window.formatBisSerialNumber === "function") {
+      baseNum = window.formatBisSerialNumber(baseNum, false);
+    } else {
+      baseNum = baseNum.replace(/(?:[\s\-_]*)(?:Bis|Ter|Quater)(?=[/\-_.\s]|$)/gi, "").trim();
+    }
     if (!/^\d+[/-]\d{4}$/.test(baseNum)) {
       var d = source.date || new Date().toISOString().slice(0, 10);
       baseNum = typeof getLatestBaseProformaNumber === "function" ? getLatestBaseProformaNumber(d) : generateProformaNumberForDate(d);
     }
 
     var targetSuffix = "Bis";
+    var bisCandidate = typeof window.formatBisSerialNumber === "function" ? window.formatBisSerialNumber(baseNum, true, "BIS") : (baseNum + " bis");
     var existingWithBis = (storedProf || []).some(function(prof) {
-      return String(prof.proformaNumber || "").trim().toLowerCase() === (baseNum + " bis").toLowerCase();
+      var disp = typeof getProformaDisplayNumber === "function" ? getProformaDisplayNumber(prof) : String(prof.proformaNumber || "");
+      return disp.trim().toLowerCase() === bisCandidate.toLowerCase() || String(prof.proformaNumber || "").trim().toLowerCase() === (baseNum + " bis").toLowerCase();
     });
     if (existingWithBis) {
+      var terCandidate = typeof window.formatBisSerialNumber === "function" ? window.formatBisSerialNumber(baseNum, true, "TER") : (baseNum + " ter");
       var existingWithTer = (storedProf || []).some(function(prof) {
-        return String(prof.proformaNumber || "").trim().toLowerCase() === (baseNum + " ter").toLowerCase();
+        var disp = typeof getProformaDisplayNumber === "function" ? getProformaDisplayNumber(prof) : String(prof.proformaNumber || "");
+        return disp.trim().toLowerCase() === terCandidate.toLowerCase() || String(prof.proformaNumber || "").trim().toLowerCase() === (baseNum + " ter").toLowerCase();
       });
       targetSuffix = existingWithTer ? "Quater" : "Ter";
     }
@@ -1184,7 +1208,9 @@
     }
     if (bisBadge) bisBadge.style.display = "inline-block";
     if (profNumInput) {
-      profNumInput.value = baseNum + " " + targetSuffix;
+      profNumInput.value = typeof window.formatBisSerialNumber === "function"
+        ? window.formatBisSerialNumber(baseNum, true, targetSuffix)
+        : (baseNum.replace(/^(\d+)/, "$1" + targetSuffix.toUpperCase()));
     }
 
     if (source.customer && source.customer.id) {
@@ -1277,9 +1303,15 @@
 
   function formatProformaNumber(id) {
     if (id === null || id === undefined) return "";
-    var value = String(id).trim();
-    if (/^\d+([/-]\d{4})?(?:[\s\-_/]+(?:Bis|Ter|Quater|[A-Za-z]+))?$/i.test(value)) return value;
-    if (value.indexOf("PRO-") === 0) value = value.replace(/^PRO-/, "");
+    var value = String(id).trim().replace(/^PRO-/, "");
+    if (typeof window.formatBisSerialNumber === "function" && typeof window.parseBisSerialParts === "function" && window.parseBisSerialParts(value)) {
+      return window.formatBisSerialNumber(value);
+    }
+    var m = value.match(/^(\d+)\s*(Bis|Ter|Quater)?([/-]\d{4})(?:[\s\-_]*(Bis|Ter|Quater))?$/i);
+    if (m) {
+      var sfx = (m[2] || m[4] || "").toUpperCase();
+      return m[1] + sfx + m[3];
+    }
     return value;
   }
 
@@ -1340,9 +1372,9 @@
       tdId.style.padding = "12px";
       tdId.style.border = "1px solid #333";
       var formattedProfNum = (typeof getProformaDisplayNumber === 'function') ? getProformaDisplayNumber(prof) : formatProformaNumber(prof.proformaNumber || prof.id);
-      var isProfBis = Boolean(prof.isBis) || /\b(bis|ter|quater)\b/i.test(formattedProfNum);
+      var isProfBis = Boolean(prof.isBis) || /(?:^|\d|[\s\-_/])(bis|ter|quater)(?=[/\-_.\s]|$)/i.test(formattedProfNum);
       if (isProfBis) {
-        var profBadgeText = escapeHTML(prof.bisSuffix || (formattedProfNum.match(/\b(bis|ter|quater)\b/i) || [])[0] || "BIS").toUpperCase();
+        var profBadgeText = escapeHTML(prof.bisSuffix || (formattedProfNum.match(/(?:^|\d|[\s\-_/])(bis|ter|quater)(?=[/\-_.\s]|$)/i) || [])[1] || "BIS").toUpperCase();
         tdId.innerHTML = "<strong>" + escapeHTML(formattedProfNum) + "</strong> <span style=\"margin-inline-start:4px; background:#e0e7ff; color:#3730a3; font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; text-transform:uppercase;\">" + profBadgeText + "</span>";
       } else {
         tdId.innerHTML = "<strong>" + escapeHTML(formattedProfNum) + "</strong>";
