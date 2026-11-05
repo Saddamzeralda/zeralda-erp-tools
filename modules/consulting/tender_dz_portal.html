@@ -99603,138 +99603,74 @@
     window.switchPortalTab = switchPortalTab;
 
     function setQuickChip(chipId){
-
-      activeQuickChip = chipId;
-
-      document.querySelectorAll('.chip-item').forEach(c => {
-
-        c.classList.toggle('active', String(c.getAttribute('data-chip') || '').toLowerCase() === String(chipId || '').toLowerCase());
-
-      });
-
       const selSec = document.getElementById('dzFilterSector');
-
       const selSrc = document.getElementById('dzFilterSource');
 
       if(chipId === 'all'){
-
+        activeQuickChip = 'all';
         selectedWilayas = [];
-
         selectedNoticeTypes = [];
-
         if(typeof renderMultiSelectWilayasOptions === 'function') renderMultiSelectWilayasOptions();
-
         if(typeof renderMultiSelectTypesOptions === 'function') renderMultiSelectTypesOptions();
-
         if(typeof updateMultiSelectLabels === 'function') updateMultiSelectLabels();
-
         if(selSec) selSec.value = '';
-
         if(selSrc) selSrc.value = '';
-
-        const selWil = document.getElementById('dzFilterWilaya');
-
-        if(selWil) selWil.value = '';
-
         const txtSearch = document.getElementById('dzSearchText');
-
         if(txtSearch) txtSearch.value = '';
-
       } else if(chipId === 'communes'){
-
-        if(selSec) selSec.value = 'COMMUNES';
-
-        if(selSrc) selSrc.value = '';
-
+        activeQuickChip = (activeQuickChip === 'communes') ? 'all' : 'communes';
+        if(selSec) selSec.value = (activeQuickChip === 'communes') ? 'COMMUNES' : '';
       } else if(chipId === 'enterprises'){
-
-        if(selSec) selSec.value = 'ENTERPRISES';
-
-        if(selSrc) selSrc.value = '';
-
+        activeQuickChip = (activeQuickChip === 'enterprises') ? 'all' : 'enterprises';
+        if(selSec) selSec.value = (activeQuickChip === 'enterprises') ? 'ENTERPRISES' : '';
       } else if(chipId === 'urgent'){
-
-        if(selSec) selSec.value = '';
-
-        if(selSrc) selSrc.value = '';
-
+        activeQuickChip = (activeQuickChip === 'urgent') ? 'all' : 'urgent';
       } else if(chipId.startsWith('sector-')){
-
         const secVal = chipId.replace('sector-', '').toUpperCase();
-
-        if(selSrc) selSrc.value = '';
-
+        activeQuickChip = (activeQuickChip === chipId) ? 'all' : chipId;
         if(selSec) {
-
-          selSec.value = secVal;
-
-          for(let i = 0; i < selSec.options.length; i++){
-
-            if(selSec.options[i].value.toUpperCase() === secVal){
-
-              selSec.selectedIndex = i;
-
-              selSec.value = selSec.options[i].value;
-
-              break;
-
-            }
-
-          }
-
+          selSec.value = (activeQuickChip === chipId) ? secVal : '';
         }
-
       } else if(chipId.startsWith('wilaya-')){
-
         const wCode = chipId.replace('wilaya-', '');
-
-        if(selSec) selSec.value = '';
-
-        if(selSrc) selSrc.value = '';
-
-        selectedWilayas = [wCode];
-
+        if(!selectedWilayas.includes(wCode)) {
+          selectedWilayas.push(wCode);
+        } else {
+          selectedWilayas = selectedWilayas.filter(c => c !== wCode);
+        }
         if(typeof renderMultiSelectWilayasOptions === 'function') renderMultiSelectWilayasOptions();
-
         if(typeof updateMultiSelectLabels === 'function') updateMultiSelectLabels();
-
       } else if(chipId.startsWith('source-')){
-
-        if(selSec) selSec.value = '';
-
-        if(selSrc) selSrc.value = '';
-
+        const srcVal = chipId.replace('source-', '');
+        activeQuickChip = (activeQuickChip === chipId) ? 'all' : chipId;
       }
 
-      if(typeof updateActiveFilterPills === 'function') updateActiveFilterPills();
-
-      filterAndRenderTenders();
-
-    }
-
-    window.setQuickChip = setQuickChip;
-
-    function handleSectorFilterChange(secVal){
-
-      if(secVal === 'COMMUNES') activeQuickChip = 'communes';
-
-      else if(secVal === 'ENTERPRISES') activeQuickChip = 'enterprises';
-
-      else if(secVal) activeQuickChip = 'sector-' + secVal;
-
-      else activeQuickChip = 'all';
-
+      // Update chip active classes
       document.querySelectorAll('.chip-item').forEach(c => {
-
-        c.classList.toggle('active', String(c.getAttribute('data-chip') || '').toLowerCase() === String(activeQuickChip || '').toLowerCase());
-
+        const dChip = String(c.getAttribute('data-chip') || '').toLowerCase();
+        c.classList.toggle('active', dChip === String(activeQuickChip || 'all').toLowerCase());
       });
 
       if(typeof updateActiveFilterPills === 'function') updateActiveFilterPills();
-
-      filterAndRenderTenders();
-
+      filterAndRenderTenders(true);
     }
+    window.setQuickChip = setQuickChip;
+
+    function handleSectorFilterChange(secVal){
+      if(secVal === 'COMMUNES') activeQuickChip = 'communes';
+      else if(secVal === 'ENTERPRISES') activeQuickChip = 'enterprises';
+      else if(secVal) activeQuickChip = 'sector-' + secVal;
+      else activeQuickChip = 'all';
+
+      document.querySelectorAll('.chip-item').forEach(c => {
+        const dChip = String(c.getAttribute('data-chip') || '').toLowerCase();
+        c.classList.toggle('active', dChip === String(activeQuickChip || 'all').toLowerCase());
+      });
+
+      if(typeof updateActiveFilterPills === 'function') updateActiveFilterPills();
+      filterAndRenderTenders(true);
+    }
+    window.handleSectorFilterChange = handleSectorFilterChange;
 
     window.handleSectorFilterChange = handleSectorFilterChange;
 
@@ -99869,666 +99805,187 @@
     }
 
     function filterAndRenderTenders(resetPage = true){
-
       const searchTxt = String(document.getElementById('dzSearchText')?.value || '').toLowerCase().trim();
-
-      const wilaya = document.getElementById('dzFilterWilaya')?.value || '';
-
-      const sector = document.getElementById('dzFilterSector')?.value || '';
-
-      const noticeType = document.getElementById('dzFilterNoticeType')?.value || '';
-
-      const source = document.getElementById('dzFilterSource')?.value || '';
-
+      const wilayaDropdown = document.getElementById('dzFilterWilaya')?.value || '';
+      const sectorDropdown = document.getElementById('dzFilterSector')?.value || '';
+      const noticeTypeDropdown = document.getElementById('dzFilterNoticeType')?.value || '';
+      const sourceDropdown = document.getElementById('dzFilterSource')?.value || '';
       const now = new Date();
 
       let list = allDzTenders.slice();
 
       const hasExplicitAttributionFilter =
         (typeof selectedNoticeTypes !== 'undefined' && selectedNoticeTypes.includes('attribution')) ||
-        noticeType === 'attribution';
+        noticeTypeDropdown === 'attribution';
 
-      // Tab filtering
-
+      // 1. Tab filtering (all | favorites | prorogations | attributions)
       if(activePortalTab === 'favorites'){
-
         list = list.filter(t => favoriteIds.includes(t.id));
-
       } else if(activePortalTab === 'prorogations'){
-
         list = list.filter(t => t.type === 'prorogation' || t.type === 'infructueux' || t.type === 'annulation');
-
       } else if(!hasExplicitAttributionFilter) {
-
-        // 'all' excludes pure attributions in the main card feed unless explicitly filtered by notice type
-
         list = list.filter(t => t.type !== 'attribution');
-
       }
 
-      // 1. Sector or Quick Chip: Municipalities (Communes / APC)
+      // 2. Category Group filter: Municipalities (Communes / APC) vs Enterprises
+      const isCommunes = (sectorDropdown === 'COMMUNES') || (activeQuickChip === 'communes');
+      const isEnterprises = (sectorDropdown === 'ENTERPRISES') || (activeQuickChip === 'enterprises');
 
-      if(activeQuickChip === 'communes' || sector === 'COMMUNES'){
-
+      if(isCommunes){
         list = list.filter(t => {
-
           const srcK = String(t.sourceKey || '');
-
-          return t.categoryGroup === 'communes' || srcK.startsWith('APC_');
-
-        });
-
-      }
-
-      // 2. Sector or Quick Chip: Public Enterprises (Companies)
-
-      else if(activeQuickChip === 'enterprises' || sector === 'ENTERPRISES'){
-
-        list = list.filter(t => {
-
-          if(t.categoryGroup) return t.categoryGroup === 'enterprises';
-
           const auth = String(t.authority || '');
-
-          const srcK = String(t.sourceKey || '');
-
-          if(srcK.startsWith('APC_') || auth.includes('بلدية')) return false;
-
-          if(/^(Wilaya|DTP|DUC|DRE|DEP|DSP|DE|DSA|DEM|DCPE|MIN|UNIV|CHU|EPH|EHS)_/.test(srcK)) return false;
-
-          return true;
-
+          return t.categoryGroup === 'communes' || srcK.startsWith('APC_') || auth.includes('بلدية') || auth.toLowerCase().includes('commune');
         });
-
-      }
-
-      // 3. Specific Sector (BTPH, MEDICAL, IT, ENERGY, TRANSPORT, SERVICES, FURNITURE, STUDIES, AGRICULTURE)
-
-      else if(sector || (activeQuickChip && activeQuickChip.startsWith('sector-'))){
-
-        const secUpper = (sector || activeQuickChip.replace('sector-', '')).toUpperCase();
-
-        if(secUpper === 'STUDIES'){
-
-          list = list.filter(t => String(t.sector || '').toUpperCase() === 'STUDIES' || t.type === 'concours');
-
-        } else {
-
-          list = list.filter(t => String(t.sector || '').toUpperCase() === secUpper);
-
-        }
-
-      }
-
-      // 4. Quick Chip: Urgent Deadlines
-
-      if(activeQuickChip === 'urgent'){
-
+      } else if(isEnterprises){
         list = list.filter(t => {
-
-          if(!t.deadline) return false;
-
-          const diff = Math.ceil((new Date(t.deadline) - now) / (1000*60*60*24));
-
-          return diff >= 0 && diff <= 3;
-
+          if(t.categoryGroup) return t.categoryGroup === 'enterprises';
+          const auth = String(t.authority || '');
+          const srcK = String(t.sourceKey || '');
+          if(srcK.startsWith('APC_') || auth.includes('بلدية')) return false;
+          if(/^(Wilaya|DTP|DUC|DRE|DEP|DSP|DE|DSA|DEM|DCPE|MIN|UNIV|CHU|EPH|EHS)_/.test(srcK)) return false;
+          return true;
         });
-
       }
 
-      // 5. Source Quick Chips (all 11 source-* chips)
+      // 3. Sector of Activity filter (BTPH, IT, MEDICAL, ENERGY, TRANSPORT, SERVICES, FURNITURE, STUDIES, AGRICULTURE)
+      let targetSector = '';
+      if(sectorDropdown && sectorDropdown !== 'COMMUNES' && sectorDropdown !== 'ENTERPRISES'){
+        targetSector = sectorDropdown.toUpperCase();
+      } else if(activeQuickChip && activeQuickChip.startsWith('sector-')){
+        targetSector = activeQuickChip.replace('sector-', '').toUpperCase();
+      }
 
+      if(targetSector){
+        if(targetSector === 'STUDIES'){
+          list = list.filter(t => String(t.sector || '').toUpperCase() === 'STUDIES' || t.type === 'concours');
+        } else {
+          list = list.filter(t => String(t.sector || '').toUpperCase() === targetSector);
+        }
+      }
+
+      // 4. Urgency filter (<= 3 days)
+      if(activeQuickChip === 'urgent'){
+        list = list.filter(t => {
+          if(!t.deadline) return false;
+          const diff = Math.ceil((new Date(t.deadline) - now) / (1000*60*60*24));
+          return diff >= 0 && diff <= 3;
+        });
+      }
+
+      // 5. Source Quick Chips (e.g. source-BOMOP, source-BAOSEM, etc.)
       if(activeQuickChip && activeQuickChip.startsWith('source-')){
-
         const chipSourceKey = activeQuickChip.replace('source-', '');
-
         list = list.filter(t => matchesSourceFilter(t, chipSourceKey));
-
       }
 
-      // 6. Wilayas Multi-Select & Dropdown
-
+      // 6. Wilayas Multi-Select & Dropdown & quick chip
+      let targetWilayas = [];
       if(typeof selectedWilayas !== 'undefined' && selectedWilayas.length > 0 && selectedWilayas.length < ALGERIAN_WILAYAS.length){
+        targetWilayas = selectedWilayas;
+      } else if(activeQuickChip && activeQuickChip.startsWith('wilaya-')){
+        targetWilayas = [activeQuickChip.replace('wilaya-', '')];
+      } else if(wilayaDropdown){
+        targetWilayas = [wilayaDropdown];
+      }
 
-        list = list.filter(t => selectedWilayas.includes(t.wilaya));
-
-      } else if(wilaya){
-
-        list = list.filter(t => t.wilaya === wilaya);
-
+      if(targetWilayas.length > 0){
+        list = list.filter(t => targetWilayas.includes(String(t.wilaya)));
       }
 
       // 7. Notice Types Multi-Select & Dropdown
-
       const matchNoticeType = (tType, selectedKey) => {
-
         if(selectedKey === 'appel_offres'){
-
           return ['appel_offres', 'national', 'international', 'prequalification'].includes(tType);
-
         }
-
         return tType === selectedKey;
-
       };
 
       if(typeof selectedNoticeTypes !== 'undefined' && selectedNoticeTypes.length > 0 && selectedNoticeTypes.length < NOTICE_TYPE_OPTIONS.length){
-
         list = list.filter(t => selectedNoticeTypes.some(k => matchNoticeType(t.type, k)));
-
-      } else if(noticeType){
-
-        list = list.filter(t => matchNoticeType(t.type, noticeType));
-
+      } else if(noticeTypeDropdown){
+        list = list.filter(t => matchNoticeType(t.type, noticeTypeDropdown));
       }
 
-      // 8. Source Dropdown
-
-      if(source){
-
-        list = list.filter(t => matchesSourceFilter(t, source));
-
+      // 8. Source Dropdown filter
+      if(sourceDropdown){
+        list = list.filter(t => matchesSourceFilter(t, sourceDropdown));
       }
 
-      // 9. Search keyword
-
+      // 9. Search Keyword (Bilingual, multi-term, punctuation-safe)
       if(searchTxt){
+        const cleanTxt = searchTxt.replace(/[;:!\?]/g, ' ').trim();
+        if(cleanTxt.includes(',')){
+          const phrases = cleanTxt.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+          list = list.filter(t => {
+            const srcObj = (typeof ALGERIAN_PROCUREMENT_SOURCES_MAP !== 'undefined') ? ALGERIAN_PROCUREMENT_SOURCES_MAP[t.sourceKey] : null;
+            const authFr = (srcObj && srcObj.nameFr) ? srcObj.nameFr : '';
+            const secLabel = getSectorLabel(t.sector);
+            const wilLabel = getWilayaLabel(t.wilaya, t.wilayaName);
+            const searchable = [
+              t.title, t.titleFr, t.titleEn,
+              t.authority, authFr,
+              t.reference,
+              t.wilaya, t.wilayaName, wilLabel,
+              t.sector, secLabel,
+              t.sourceKey, t.source,
+              t.qualification, t.depositPlace,
+              ...(t.lots || [])
+            ].map(v => String(v || '').toLowerCase()).join(' ');
 
-        list = list.filter(t => {
+            return phrases.some(p => searchable.includes(p));
+          });
+        } else {
+          const terms = cleanTxt.split(/\s+/).filter(Boolean);
+          list = list.filter(t => {
+            const srcObj = (typeof ALGERIAN_PROCUREMENT_SOURCES_MAP !== 'undefined') ? ALGERIAN_PROCUREMENT_SOURCES_MAP[t.sourceKey] : null;
+            const authFr = (srcObj && srcObj.nameFr) ? srcObj.nameFr : '';
+            const secLabel = getSectorLabel(t.sector);
+            const wilLabel = getWilayaLabel(t.wilaya, t.wilayaName);
+            const searchable = [
+              t.title, t.titleFr, t.titleEn,
+              t.authority, authFr,
+              t.reference,
+              t.wilaya, t.wilayaName, wilLabel,
+              t.sector, secLabel,
+              t.sourceKey, t.source,
+              t.qualification, t.depositPlace,
+              ...(t.lots || [])
+            ].map(v => String(v || '').toLowerCase()).join(' ');
 
-          return [t.title, t.titleFr, t.titleEn, t.authority, t.reference, t.wilayaName, t.qualification, t.depositPlace, t.source, ...(t.lots || [])]
-
-            .some(val => String(val || '').toLowerCase().includes(searchTxt));
-
-        });
-
+            return terms.every(term => searchable.includes(term));
+          });
+        }
       }
 
       // 10. Sorting
-
       const sortVal = document.getElementById('dzSortSelect')?.value || 'date_desc';
-
       if(sortVal === 'date_desc'){
-
         list.sort((a,b) => String(b.publishDate || '').localeCompare(String(a.publishDate || '')));
-
       } else if(sortVal === 'deadline_asc'){
-
-        list.sort((a,b) => String(a.deadline || '').localeCompare(String(b.deadline || '')));
-
-      } else if(sortVal === 'amount_desc'){
-
+        list.sort((a,b) => String(a.deadline || '9999').localeCompare(String(b.deadline || '9999')));
+      } else if(sortVal === 'budget_desc'){
         list.sort((a,b) => (b.estimatedAmount || 0) - (a.estimatedAmount || 0));
-
-      } else if(sortVal === 'amount_asc'){
-
-        list.sort((a,b) => (a.estimatedAmount || 0) - (b.estimatedAmount || 0));
-
       } else if(sortVal === 'cahier_asc'){
-
         list.sort((a,b) => (a.priceCahier || 0) - (b.priceCahier || 0));
-
       }
 
-      lastFilteredList = list;
-
+      // 11. Pagination slicing
       if(resetPage) currentFeedPage = 1;
+      const totalFiltered = list.length;
+      const totalPages = Math.max(1, Math.ceil(totalFiltered / FEED_PAGE_SIZE));
+      if(currentFeedPage > totalPages) currentFeedPage = totalPages;
 
-      paginateAndRender();
+      const startIdx = (currentFeedPage - 1) * FEED_PAGE_SIZE;
+      const endIdx = Math.min(startIdx + FEED_PAGE_SIZE, totalFiltered);
+      const pageList = list.slice(startIdx, endIdx);
 
+      // Render cards & controls
+      renderTenderCards(pageList);
+      updateFeedToolbarStats(totalFiltered > 0 ? startIdx + 1 : 0, endIdx, totalFiltered);
+      renderPaginationControls(totalPages, totalFiltered);
     }
-
     window.filterAndRenderTenders = filterAndRenderTenders;
-
-    let _searchDebounceTimer = null;
-
-    function handleSearchInput() {
-
-      clearTimeout(_searchDebounceTimer);
-
-      _searchDebounceTimer = setTimeout(function() {
-
-        filterAndRenderTenders();
-
-      }, 120);
-
-    }
-
-    window.handleSearchInput = handleSearchInput;
-
-    // ═════════════════════════════════════════════════════════════════
-
-    // ── FEED PAGINATION & ACCORDION (FOLDING) ENGINE ──
-
-    // ═════════════════════════════════════════════════════════════════
-
-    let currentFeedPage = 1;
-
-    let feedPageSize = 12;
-
-    let lastFilteredList = [];
-
-    let expandedCardIds = new Set();
-
-    let defaultCardsCollapsed = true; // Folded by default as requested
-
-    function toggleCardFold(tenderId){
-
-      const card = document.getElementById('tender-card-' + tenderId);
-
-      if(!card) return;
-
-      const isCurrentlyCollapsed = card.classList.contains('is-collapsed');
-
-      if(isCurrentlyCollapsed){
-
-        card.classList.remove('is-collapsed');
-
-        expandedCardIds.add(tenderId);
-
-        updateCardFoldButton(tenderId, false);
-
-      } else {
-
-        card.classList.add('is-collapsed');
-
-        expandedCardIds.delete(tenderId);
-
-        updateCardFoldButton(tenderId, true);
-
-      }
-
-    }
-
-    window.toggleCardFold = toggleCardFold;
-
-    function updateCardFoldButton(tenderId, isCollapsed){
-
-      const btn = document.getElementById('btn-fold-' + tenderId);
-
-      if(!btn) return;
-
-      const isAr = getLang() === 'ar';
-
-      if(isCollapsed){
-
-        btn.innerHTML = `<i class="fas fa-chevron-down"></i> <span>${isAr ? 'عرض التفاصيل' : 'Détails'}</span>`;
-
-        btn.title = isAr ? 'عرض تفاصيل الصفقة' : 'Afficher les détails';
-
-      } else {
-
-        btn.innerHTML = `<i class="fas fa-chevron-up"></i> <span>${isAr ? 'طي' : 'Replier'}</span>`;
-
-        btn.title = isAr ? 'طي بطاقة الصفقة' : 'Replier la fiche';
-
-      }
-
-    }
-
-    function collapseAllCards(){
-
-      expandedCardIds.clear();
-
-      defaultCardsCollapsed = true;
-
-      document.querySelectorAll('.tender-card').forEach(card => {
-
-        card.classList.add('is-collapsed');
-
-        const tenderId = card.getAttribute('data-tender-id');
-
-        if(tenderId) updateCardFoldButton(tenderId, true);
-
-      });
-
-      showToast(getLang() === 'ar' ? 'تم طي كل بطاقات الصفقات' : 'Toutes les fiches sont repliées', 'info');
-
-    }
-
-    window.collapseAllCards = collapseAllCards;
-
-    function expandAllCards(){
-
-      defaultCardsCollapsed = false;
-
-      document.querySelectorAll('.tender-card').forEach(card => {
-
-        card.classList.remove('is-collapsed');
-
-        const tenderId = card.getAttribute('data-tender-id');
-
-        if(tenderId) {
-
-          expandedCardIds.add(tenderId);
-
-          updateCardFoldButton(tenderId, false);
-
-        }
-
-      });
-
-      showToast(getLang() === 'ar' ? 'تم فتح وتوسيع كل بطاقات الصفقات' : 'Toutes les fiches sont dépliées', 'info');
-
-    }
-
-    window.expandAllCards = expandAllCards;
-
-    function changeFeedPageSize(val){
-
-      feedPageSize = val === 'all' ? 'all' : parseInt(val, 10);
-
-      currentFeedPage = 1;
-
-      paginateAndRender();
-
-    }
-
-    window.changeFeedPageSize = changeFeedPageSize;
-
-    function goToFeedPage(pageNum){
-
-      const total = lastFilteredList.length;
-
-      const totalPages = feedPageSize === 'all' ? 1 : Math.ceil(total / feedPageSize);
-
-      if(pageNum < 1 || pageNum > totalPages) return;
-
-      currentFeedPage = pageNum;
-
-      paginateAndRender();
-
-      // Smooth scroll back to feed toolbar
-
-      const targetEl = document.getElementById('dzFeedToolbar') || document.getElementById('dzTendersGrid');
-
-      if(targetEl){
-
-        targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-      }
-
-    }
-
-    window.goToFeedPage = goToFeedPage;
-
-    function paginateAndRender(){
-
-      const total = lastFilteredList.length;
-
-      const totalPages = feedPageSize === 'all' ? 1 : Math.max(1, Math.ceil(total / feedPageSize));
-
-      if(currentFeedPage > totalPages && totalPages > 0) currentFeedPage = 1;
-
-      let pageItems = [];
-
-      let startIdx = 0;
-
-      let endIdx = total;
-
-      if(feedPageSize === 'all'){
-
-        pageItems = lastFilteredList;
-
-        startIdx = total > 0 ? 1 : 0;
-
-        endIdx = total;
-
-      } else {
-
-        const from = (currentFeedPage - 1) * feedPageSize;
-
-        const to = Math.min(from + feedPageSize, total);
-
-        pageItems = lastFilteredList.slice(from, to);
-
-        startIdx = total > 0 ? from + 1 : 0;
-
-        endIdx = to;
-
-      }
-
-      // Update toolbar stats
-
-      updateFeedToolbarStats(startIdx, endIdx, total);
-
-      // Render cards for current page
-
-      renderTenderCards(pageItems);
-
-      // Render pagination bar
-
-      renderPaginationControls(totalPages, total);
-
-    }
-
-    window.paginateAndRender = paginateAndRender;
-
-    function updateFeedToolbarStats(startIdx, endIdx, total){
-
-      const isAr = getLang() === 'ar';
-
-      const statsEl = document.getElementById('dzFeedStats');
-
-      if(!statsEl) return;
-
-      if(total === 0){
-
-        statsEl.innerHTML = `<i class="fas fa-search-minus text-muted"></i> <span>${isAr ? 'لم يتم العثور على أي صفقات تطابق معايير البحث' : 'Aucune annonce trouvée'}</span>`;
-
-        return;
-
-      }
-
-      statsEl.innerHTML = `
-
-        <i class="fas fa-th-list text-primary"></i>
-
-        <span>${isAr 
-
-          ? `عرض الصفقات من <strong style="color:var(--dz-primary);">${startIdx}</strong> إلى <strong style="color:var(--dz-primary);">${endIdx}</strong> من إجمالي <strong class="badge-count">${total}</strong> صفقة مطابقة` 
-
-          : `Affichage ${startIdx}-${endIdx} sur un total de <strong class="badge-count">${total}</strong> avis`}</span>
-
-      `;
-
-    }
-
-    function renderPaginationControls(totalPages, total){
-
-      const container = document.getElementById('dzPaginationContainer');
-
-      if(!container) return;
-
-      if(totalPages <= 1 || total === 0){
-
-        container.style.display = 'none';
-
-        return;
-
-      }
-
-      container.style.display = 'flex';
-
-      const isAr = getLang() === 'ar';
-
-      const prevLabel = isAr ? '<i class="fas fa-chevron-right"></i> السابق' : '<i class="fas fa-chevron-left"></i> Précédent';
-
-      const nextLabel = isAr ? 'التالي <i class="fas fa-chevron-left"></i>' : 'Suivant <i class="fas fa-chevron-right"></i>';
-
-      let pagesHtml = `
-
-        <div class="pagination-info">
-
-          <span>${isAr ? `الصفحة ${currentFeedPage} من ${totalPages}` : `Page ${currentFeedPage} sur ${totalPages}`}</span>
-
-        </div>
-
-        <div class="pagination-pages">
-
-          <button type="button" class="page-btn" onclick="goToFeedPage(${currentFeedPage - 1})" ${currentFeedPage <= 1 ? 'disabled' : ''}>
-
-            ${prevLabel}
-
-          </button>
-
-      `;
-
-      // Smart page window (max 7 numbers)
-
-      const maxButtons = 7;
-
-      let startP = 1;
-
-      let endP = totalPages;
-
-      if(totalPages > maxButtons){
-
-        if(currentFeedPage <= 4){
-
-          startP = 1;
-
-          endP = 5;
-
-        } else if(currentFeedPage >= totalPages - 3){
-
-          startP = totalPages - 4;
-
-          endP = totalPages;
-
-        } else {
-
-          startP = currentFeedPage - 2;
-
-          endP = currentFeedPage + 2;
-
-        }
-
-      }
-
-      if(startP > 1){
-
-        pagesHtml += `<button type="button" class="page-btn ${currentFeedPage === 1 ? 'active' : ''}" onclick="goToFeedPage(1)">1</button>`;
-
-        if(startP > 2) pagesHtml += `<span class="page-ellipsis">...</span>`;
-
-      }
-
-      for(let p = startP; p <= endP; p++){
-
-        pagesHtml += `<button type="button" class="page-btn ${p === currentFeedPage ? 'active' : ''}" onclick="goToFeedPage(${p})">${p}</button>`;
-
-      }
-
-      if(endP < totalPages){
-
-        if(endP < totalPages - 1) pagesHtml += `<span class="page-ellipsis">...</span>`;
-
-        pagesHtml += `<button type="button" class="page-btn ${currentFeedPage === totalPages ? 'active' : ''}" onclick="goToFeedPage(${totalPages})">${totalPages}</button>`;
-
-      }
-
-      pagesHtml += `
-
-          <button type="button" class="page-btn" onclick="goToFeedPage(${currentFeedPage + 1})" ${currentFeedPage >= totalPages ? 'disabled' : ''}>
-
-            ${nextLabel}
-
-          </button>
-
-        </div>
-
-      `;
-
-      container.innerHTML = pagesHtml;
-
-    }
-
-    
-    function getLocalizedTender(tender, lang) {
-      if (!tender) return {};
-      lang = lang || getLang();
-      const isAr = lang === 'ar';
-      const isFr = lang === 'fr';
-      const isEn = lang === 'en';
-
-      if (isAr) {
-        return {
-          title: tender.title || '',
-          authority: tender.authority || '',
-          typeName: getNoticeTypeLabel(tender.type) || tender.typeName || '',
-          wilaya: getWilayaLabel(tender.wilaya, tender.wilayaName),
-          sector: getSectorLabel(tender.sector),
-          caution: tender.caution || '',
-          qualification: tender.qualification || '',
-          depositPlace: tender.depositPlace || '',
-          lots: Array.isArray(tender.lots) ? tender.lots : []
-        };
-      }
-
-      // French or English localization
-      const src = (typeof ALGERIAN_PROCUREMENT_SOURCES_MAP !== 'undefined') ? ALGERIAN_PROCUREMENT_SOURCES_MAP[tender.sourceKey] : null;
-      let authority = (src && src.nameFr) ? src.nameFr : (tender.authority || '');
-      if (isEn && authority.startsWith("Commune d'")) {
-        authority = "Municipality of " + authority.replace(/^Commune d['\s]e?\s*/, '');
-      } else if (isEn && authority.startsWith("Commune de ")) {
-        authority = "Municipality of " + authority.replace(/^Commune de\s*/, '');
-      }
-
-      const title = isFr ? (tender.titleFr || tender.title || '') : (tender.titleEn || tender.titleFr || tender.title || '');
-      const typeName = getNoticeTypeLabel(tender.type) || (isFr ? "Avis d'appel d'offres" : "Tender Notice");
-      const wilaya = getWilayaLabel(tender.wilaya, tender.wilayaName);
-      const sector = getSectorLabel(tender.sector);
-
-      // Localized Caution
-      let caution = tender.caution || '';
-      if (caution.includes('%')) {
-        caution = isFr ? "Caution bancaire de soumission de 1% du montant de l'offre" : "Bank bid bond guarantee of 1% of total offer";
-      } else if (caution.includes('مليون')) {
-        caution = isFr ? "Caution bancaire de soumission de 3 000 000 DZD valide 120 jours" : "Bank bid bond guarantee of 3,000,000 DZD valid 120 days";
-      } else if (caution) {
-        caution = isFr ? "Garantie bancaire de soumission selon le cahier des charges" : "Bank bid bond guarantee according to tender specs";
-      }
-
-      // Localized Qualification
-      let qualification = tender.qualification || '';
-      if (qualification) {
-        qualification = isFr
-          ? 'Agrément officiel, registre du commerce conforme et expérience sectorielle certifiée.'
-          : 'Official accreditation, compliant commercial register and certified sector experience.';
-      }
-
-      // Localized Deposit Place
-      const depositPlace = isFr
-        ? ("Bureau des marchés et contrats — Siège de l'organisme contractant (" + authority + ")")
-        : ("Contracts and Tenders Office — Contracting Authority Headquarters (" + authority + ")");
-
-      // Localized Lots
-      let lots = [];
-      if (Array.isArray(tender.lots) && tender.lots.length > 0) {
-        lots = tender.lots.map(function(lot, i) {
-          const num = String(i + 1).padStart(2, '0');
-          if (isFr) {
-            return (i === 0) ? ("Lot " + num + " : Fourniture et équipement sur sites opérationnels") : ("Lot " + num + " : Installation, mise en service et garantie");
-          } else {
-            return (i === 0) ? ("Lot " + num + ": Supply and equipment at operational sites") : ("Lot " + num + ": Installation, commissioning and warranty");
-          }
-        });
-      }
-
-      return {
-        title: title,
-        authority: authority,
-        typeName: typeName,
-        wilaya: wilaya,
-        sector: sector,
-        caution: caution,
-        qualification: qualification,
-        depositPlace: depositPlace,
-        lots: lots
-      };
-    }
-
 function renderTenderCards(list){
 
       const container = document.getElementById('dzTendersGrid');
@@ -102961,133 +102418,103 @@ function renderTenderCards(list){
     }
 
         function updateActiveFilterPills(){
-
       const bar = document.getElementById('activeFilterPillsBar');
-
       const container = document.getElementById('activePillsContainer');
-
       if(!bar || !container) return;
 
       const lang = getLang();
-
       const isAr = lang === 'ar';
+      const isFr = lang === 'fr';
+      const isEn = lang === 'en';
 
-      const hasWilayaFilter = selectedWilayas.length > 0 && selectedWilayas.length < ALGERIAN_WILAYAS.length;
-
-      const hasTypeFilter = selectedNoticeTypes.length > 0 && selectedNoticeTypes.length < NOTICE_TYPE_OPTIONS.length;
-
+      const hasWilayaFilter = typeof selectedWilayas !== 'undefined' && selectedWilayas.length > 0 && selectedWilayas.length < ALGERIAN_WILAYAS.length;
+      const hasTypeFilter = typeof selectedNoticeTypes !== 'undefined' && selectedNoticeTypes.length > 0 && selectedNoticeTypes.length < NOTICE_TYPE_OPTIONS.length;
       const sectorVal = document.getElementById('dzFilterSector')?.value || '';
-
       const sourceVal = document.getElementById('dzFilterSource')?.value || '';
-
       const hasQuickChip = activeQuickChip && activeQuickChip !== 'all';
+      const searchVal = String(document.getElementById('dzSearchText')?.value || '').trim();
 
-      if(!hasWilayaFilter && !hasTypeFilter && !sectorVal && !sourceVal && !hasQuickChip){
-
+      if(!hasWilayaFilter && !hasTypeFilter && !sectorVal && !sourceVal && !hasQuickChip && !searchVal){
         bar.style.display = 'none';
-
         container.innerHTML = '';
-
         return;
-
       }
 
       bar.style.display = 'flex';
-
       container.innerHTML = '';
 
+      const closeTooltip = isAr ? 'إزالة' : (isFr ? 'Supprimer' : 'Remove');
+
+      // Search pill
+      if(searchVal){
+        const pill = document.createElement('span');
+        pill.className = 'filter-tag-pill';
+        pill.style.background = '#f1f5f9';
+        pill.style.color = '#334155';
+        pill.innerHTML = `<i class="fas fa-search"></i> "${escapeHtml(searchVal)}" <i class="fas fa-times pill-close" onclick="document.getElementById('dzSearchText').value=''; filterAndRenderTenders();" title="${closeTooltip}"></i>`;
+        container.appendChild(pill);
+      }
+
       // Wilayas pills
-
       if(hasWilayaFilter){
-
         selectedWilayas.forEach(code => {
-
           const wObj = ALGERIAN_WILAYAS.find(w => w.code === code);
-
           const parts = wObj ? wObj.name.split(' - ') : [];
-
           const localizedWilayaName = isAr ? parts[0] : (parts[1] || parts[0]);
-
           const name = wObj ? wObj.code + ' ' + localizedWilayaName : code;
-
           const pill = document.createElement('span');
-
           pill.className = 'filter-tag-pill';
-
-          pill.innerHTML = `<i class="fas fa-map-marker-alt"></i> ${escapeHtml(name)} <i class="fas fa-times pill-close" onclick="toggleWilayaSelection('${code}', false)" title="${isAr ? 'إزالة' : (isFr ? 'Supprimer' : 'Remove')}"></i>`;
-
+          pill.innerHTML = `<i class="fas fa-map-marker-alt"></i> ${escapeHtml(name)} <i class="fas fa-times pill-close" onclick="toggleWilayaSelection('${code}', false)" title="${closeTooltip}"></i>`;
           container.appendChild(pill);
-
         });
-
       }
 
       // Types pills
-
       if(hasTypeFilter){
-
         selectedNoticeTypes.forEach(tKey => {
-
           const opt = NOTICE_TYPE_OPTIONS.find(o => o.key === tKey);
-
           const name = opt ? (isAr ? opt.ar.split(' (')[0] : (isFr ? opt.fr : (opt.en || opt.fr))) : tKey;
-
           const pill = document.createElement('span');
-
           pill.className = 'filter-tag-pill tag-type';
-
-          pill.innerHTML = `<i class="fas ${opt ? opt.icon : 'fa-tag'}"></i> ${escapeHtml(name)} <i class="fas fa-times pill-close" onclick="toggleNoticeTypeSelection('${tKey}', false)" title="${isAr ? 'إزالة' : (isFr ? 'Supprimer' : 'Remove')}"></i>`;
-
+          pill.innerHTML = `<i class="fas ${opt ? opt.icon : 'fa-tag'}"></i> ${escapeHtml(name)} <i class="fas fa-times pill-close" onclick="toggleNoticeTypeSelection('${tKey}', false)" title="${closeTooltip}"></i>`;
           container.appendChild(pill);
-
         });
-
       }
 
-      // Sector pill
-
+      // Sector / Category pill
       if(sectorVal){
-
         const secSelect = document.getElementById('dzFilterSector');
-
         const secLabel = secSelect ? ((secSelect.options && secSelect.options[secSelect.selectedIndex]?.text) || sectorVal).split(' (')[0] : sectorVal;
-
         const pill = document.createElement('span');
-
         pill.className = 'filter-tag-pill';
-
         pill.style.background = '#e0f2fe';
-
         pill.style.color = '#0369a1';
-
-        pill.innerHTML = `<i class="fas fa-layer-group"></i> ${escapeHtml(secLabel)} <i class="fas fa-times pill-close" onclick="document.getElementById('dzFilterSector').value=''; handleSectorFilterChange('');" title="إزالة"></i>`;
-
+        pill.innerHTML = `<i class="fas fa-layer-group"></i> ${escapeHtml(secLabel)} <i class="fas fa-times pill-close" onclick="document.getElementById('dzFilterSector').value=''; handleSectorFilterChange('');" title="${closeTooltip}"></i>`;
         container.appendChild(pill);
+      }
 
+      // Quick chip pill (if not redundant with sector)
+      if(hasQuickChip && activeQuickChip === 'urgent'){
+        const pill = document.createElement('span');
+        pill.className = 'filter-tag-pill';
+        pill.style.background = '#fee2e2';
+        pill.style.color = '#b91c1c';
+        const label = isAr ? 'آجال عاجلة (≤ 3 أيام)' : (isFr ? 'Délais urgents (≤ 3j)' : 'Urgent (≤ 3d)');
+        pill.innerHTML = `<i class="fas fa-fire"></i> ${escapeHtml(label)} <i class="fas fa-times pill-close" onclick="setQuickChip('all')" title="${closeTooltip}"></i>`;
+        container.appendChild(pill);
       }
 
       // Source pill
-
       if(sourceVal){
-
         const srcSelect = document.getElementById('dzFilterSource');
-
         const srcLabel = srcSelect ? ((srcSelect.options && srcSelect.options[srcSelect.selectedIndex]?.text) || sourceVal).split(' - ')[0] : sourceVal;
-
         const pill = document.createElement('span');
-
         pill.className = 'filter-tag-pill';
-
         pill.style.background = '#fef3c7';
-
         pill.style.color = '#92400e';
-
-        pill.innerHTML = `<i class="fas fa-satellite-dish"></i> ${escapeHtml(srcLabel)} <i class="fas fa-times pill-close" onclick="document.getElementById('dzFilterSource').value=''; handleSourceFilterChange('');" title="إزالة"></i>`;
-
+        pill.innerHTML = `<i class="fas fa-satellite-dish"></i> ${escapeHtml(srcLabel)} <i class="fas fa-times pill-close" onclick="document.getElementById('dzFilterSource').value=''; handleSourceFilterChange('');" title="${closeTooltip}"></i>`;
         container.appendChild(pill);
-
       }
-
     }
 
     window.updateActiveFilterPills = updateActiveFilterPills;
