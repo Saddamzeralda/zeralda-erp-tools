@@ -2116,61 +2116,7 @@
             if(te) te.textContent = ts;
         }
 
-        function getCurrencySymbol(){
-            const legacy = ZS.getItem('system-currency');
-            if(legacy) {
-                const map = { 'USD':'$', 'EUR':'€', 'GBP':'£', 'DZD':'DA', 'SAR':'SAR', 'MAD':'MAD', 'TND':'TND', 'EGP':'EGP' };
-                return map[legacy] || '$';
-            }
-            try {
-                const raw = ZS.getItem('zeralda-settings');
-                if(raw){
-                    const settings = JSON.parse(raw);
-                    const code = settings && settings.systemCurrency ? settings.systemCurrency : 'USD';
-                    const map = { 'USD':'$', 'EUR':'€', 'GBP':'£', 'DZD':'DA', 'SAR':'SAR', 'MAD':'MAD', 'TND':'TND', 'EGP':'EGP' };
-                    return map[code] || '$';
-                }
-            } catch(e){}
-            return '$';
-        }
-
-        function applyCurrencyText(){
-            const symbol = getCurrencySymbol();
-            const root = document.querySelector('.main-content') || document.body;
-            root.querySelectorAll('*').forEach(el => {
-                if(el.children.length === 0){
-                    const txt = el.textContent;
-                    if(txt && txt.indexOf('$') !== -1){
-                        el.textContent = txt.replace(/\$/g, symbol);
-                    }
-                }
-            });
-        }
-
-        let __currencyCache = null;
-        function getCurrencyKey(){
-            const legacy = ZS.getItem('system-currency');
-            if(legacy) return legacy;
-            try {
-                const raw = ZS.getItem('zeralda-settings');
-                if(raw){
-                    const settings = JSON.parse(raw);
-                    return settings && settings.systemCurrency ? settings.systemCurrency : 'USD';
-                }
-            } catch(e){}
-            return 'USD';
-        }
-
-        function startCurrencyTicker(){
-            __currencyCache = getCurrencyKey();
-            setInterval(function(){
-                const current = getCurrencyKey();
-                if(current !== __currencyCache){
-                    __currencyCache = current;
-                    applyCurrencyText();
-                }
-            }, 1000);
-        }
+        // Currency helpers (getCurrencySymbol, getCurrencyKey, applyCurrencyText, startCurrencyTicker) provided globally by layout_shell.js
 
         window.addEventListener('load', function(){            applyCurrencyText();
             startCurrencyTicker();
@@ -2198,27 +2144,7 @@
             }
         });
 
-        function applyActiveUserFromSettings(){
-            try {
-                const raw = ZS.getItem('zeralda-settings');
-                if(!raw) return;
-                const settings = JSON.parse(raw);
-                const users = settings && Array.isArray(settings.users) ? settings.users : [];
-                const activeId = settings && settings.activeUserId ? settings.activeUserId : null;
-                const u = users.find(x => x.id === activeId) || null;
-                if(!u) return;
-                const nameEl = document.querySelector('.user-info div div');
-                const avatarEl = document.querySelector('.user-avatar');
-                if(nameEl) nameEl.textContent = u.fullName || 'User';
-                if(avatarEl){
-                    const parts = (u.fullName || 'U').trim().split(/\s+/);
-                    const initials = (parts[0]?.[0] || 'U') + (parts[1]?.[0] || '');
-                    avatarEl.textContent = initials.toUpperCase();
-                }
-            } catch(err){
-                console.warn('Failed to apply active user', err);
-            }
-        }
+        // applyActiveUserFromSettings provided globally by layout_shell.js
 
         window.addEventListener('load', function(){
             applyActiveUserFromSettings();

@@ -5928,146 +5928,17 @@ function numberToWordsEn(integerPart){
 }
 
 function numberToWordsAr(integerPart){
-  if(!Number.isFinite(integerPart) || integerPart < 0) return "";
-  if(integerPart === 0) return "صفر";
-
-  const ones = ["", "واحد", "اثنان", "ثلاثة", "أربعة", "خمسة", "ستة", "سبعة", "ثمانية", "تسعة"];
-  const teens = ["عشرة", "أحد عشر", "اثنا عشر", "ثلاثة عشر", "أربعة عشر", "خمسة عشر", "ستة عشر", "سبعة عشر", "ثمانية عشر", "تسعة عشر"];
-  const tens = ["", "", "عشرون", "ثلاثون", "أربعون", "خمسون", "ستون", "سبعون", "ثمانون", "تسعون"];
-  const hundreds = ["", "مائة", "مائتان", "ثلاثمائة", "أربعمائة", "خمسمائة", "ستمائة", "سبعمائة", "ثمانمائة", "تسعمائة"];
-
-  function under100(n){
-    if(n < 10) return ones[n] || "";
-    if(n < 20) return teens[n - 10] || "";
-    const t = Math.floor(n / 10);
-    const o = n % 10;
-    if(o === 0) return tens[t] || "";
-    return (ones[o] || "") + " و " + (tens[t] || "");
+  if (window.UnifiedDocumentPrinter && typeof window.UnifiedDocumentPrinter.numberToWords === 'function') {
+    return window.UnifiedDocumentPrinter.numberToWords(integerPart, 'ar').replace(/\s+دينار جزائري.*$/, '');
   }
-
-  function under1000(n){
-    const h = Math.floor(n / 100);
-    const rest = n % 100;
-    if(h === 0) return under100(rest);
-    if(rest === 0) return hundreds[h] || "";
-    return (hundreds[h] || "") + " و " + under100(rest);
-  }
-
-  const scales = [
-    { value: 1000000000, one: "مليار", two: "ملياران", many: "مليارات" },
-    { value: 1000000, one: "مليون", two: "مليونان", many: "ملايين" },
-    { value: 1000, one: "ألف", two: "ألفان", many: "آلاف" }
-  ];
-
-  let n = Math.floor(integerPart);
-  const parts = [];
-
-  scales.forEach(s => {
-    if(n >= s.value){
-      const chunk = Math.floor(n / s.value);
-      n = n % s.value;
-      if(chunk === 1){
-        parts.push(s.one);
-      } else if(chunk === 2){
-        parts.push(s.two);
-      } else if(chunk >= 3 && chunk <= 10){
-        parts.push(under1000(chunk) + " " + s.many);
-      } else {
-        parts.push(under1000(chunk) + " " + s.one);
-      }
-    }
-  });
-
-  if(n > 0){
-    parts.push(under1000(n));
-  }
-
-  return parts.join(" و ");
+  return String(integerPart);
 }
 
 function numberToWordsFr(integerPart){
-  if(!Number.isFinite(integerPart) || integerPart < 0) return "";
-  if(integerPart === 0) return "zéro";
-
-  var units = ["zéro","un","deux","trois","quatre","cinq","six","sept","huit","neuf","dix","onze","douze","treize","quatorze","quinze","seize","dix-sept","dix-huit","dix-neuf"];
-  var tens = ["","","vingt","trente","quarante","cinquante","soixante","soixante","quatre-vingt","quatre-vingt"];
-
-  function under100(n){
-    if(n < 20) return units[n] || "";
-    var t = Math.floor(n / 10);
-    var o = n % 10;
-    // French has special cases for 70-79 and 90-99
-    if(t === 7){
-      // 70 = soixante-dix, 71 = soixante et onze, 72-79 = soixante-douze...
-      if(o === 1) return "soixante et onze";
-      if(o === 0) return "soixante-dix";
-      return "soixante-" + (units[10 + o] || "");
-    }
-    if(t === 9){
-      // 90 = quatre-vingt-dix, 91 = quatre-vingt-onze...
-      if(o === 0) return "quatre-vingt-dix";
-      return "quatre-vingt-" + (units[10 + o] || "");
-    }
-    if(o === 0) return tens[t] || "";
-    if(t === 8){
-      // 81 = quatre-vingt-un (no "et")
-      return "quatre-vingt-" + (units[o] || "");
-    }
-    if(o === 1 && t !== 8){
-      // 21 = vingt et un, 31 = trente et un, etc.
-      return (tens[t] || "") + " et un";
-    }
-    return (tens[t] || "") + "-" + (units[o] || "");
+  if (window.UnifiedDocumentPrinter && typeof window.UnifiedDocumentPrinter.numberToWords === 'function') {
+    return window.UnifiedDocumentPrinter.numberToWords(integerPart, 'fr').replace(/\s+dinars algériens.*$/, '');
   }
-
-  function under1000(n){
-    var h = Math.floor(n / 100);
-    var rest = n % 100;
-    if(h === 0) return under100(rest);
-    var hText;
-    if(h === 1) hText = "cent";
-    else hText = (units[h] || "") + " cent";
-    // "cents" plural only when no rest and h > 1
-    if(rest === 0 && h > 1) hText += "s";
-    if(rest === 0) return hText;
-    return hText + " " + under100(rest);
-  }
-
-  var scales = [
-    { value: 1000000000, label: "milliard", plural: "milliards" },
-    { value: 1000000, label: "million", plural: "millions" },
-    { value: 1000, label: "mille", plural: "mille" }
-  ];
-
-  var n = Math.floor(integerPart);
-  var parts = [];
-
-  scales.forEach(function(s){
-    if(n >= s.value){
-      var chunk = Math.floor(n / s.value);
-      n = n % s.value;
-      if(s.value === 1000){
-        // "mille" — no "un mille", just "mille"
-        if(chunk === 1){
-          parts.push("mille");
-        } else {
-          parts.push(under1000(chunk) + " mille");
-        }
-      } else {
-        if(chunk === 1){
-          parts.push("un " + s.label);
-        } else {
-          parts.push(under1000(chunk) + " " + s.plural);
-        }
-      }
-    }
-  });
-
-  if(n > 0){
-    parts.push(under1000(n));
-  }
-
-  return parts.join(" ");
+  return String(integerPart);
 }
 
 function getAmountWordsSafe(amount, lang){

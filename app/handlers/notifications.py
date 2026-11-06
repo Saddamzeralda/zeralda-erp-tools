@@ -165,19 +165,11 @@ async def test_telegram_endpoint(request: Request):
     
     if custom_token and custom_chat:
         try:
-            import urllib.request, json
-            url = f"https://api.telegram.org/bot{custom_token}/sendMessage"
-            body = json.dumps({
-                "chat_id": custom_chat,
-                "text": "📱 <b>[Zeralda ERP — اختبار اتصال تيليغرام]</b>\n\n✅ تم الاتصال بنجاح مع هاتف المشرف! سيتم استلام تنبيهات النظام هنا.",
-                "parse_mode": "HTML"
-            }).encode("utf-8")
-            req = urllib.request.Request(
-                url, data=body, headers={"Content-Type": "application/json"}
-            )
-            with urllib.request.urlopen(req, timeout=8) as r:
-                ok = r.status == 200
-            return {"ok": ok, "message": "تم إرسال الرسالة بنجاح إلى تيليغرام!" if ok else "فشل الإرسال"}
+            from app.services.cloud_backup import test_telegram_connection
+            res = test_telegram_connection(str(custom_token).strip(), str(custom_chat).strip())
+            ok = bool(res and res.get("ok"))
+            msg = "تم إرسال الرسالة بنجاح إلى تيليغرام!" if ok else res.get("error", "فشل الاتصال بـ Telegram")
+            return {"ok": ok, "message": msg, "result": res}
         except Exception as e:
             raise HTTPException(status_code=400, detail={"ok": False, "error": f"فشل الاتصال بـ Telegram: {str(e)}"})
     else:

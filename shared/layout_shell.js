@@ -76,6 +76,177 @@
     }
   } catch (_) {}
 
+  // ── Universal UI Common Utilities (Deduplicated) ─────────────
+  window.escapeHtml = window.escapeHtml || function (s) {
+    if (s === null || s === undefined) return '';
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  };
+
+  window.getCurrencySymbol = window.getCurrencySymbol || function () {
+    try {
+      if (window.ZS && typeof window.ZS.getItem === 'function') {
+        var legacy = window.ZS.getItem('system-currency');
+        if (legacy) {
+          var map = { 'USD': '$', 'EUR': '€', 'GBP': '£', 'DZD': 'DA', 'SAR': 'SAR', 'MAD': 'MAD', 'TND': 'TND', 'EGP': 'EGP' };
+          return map[legacy] || '$';
+        }
+        var raw = window.ZS.getItem('zeralda-settings');
+        if (raw) {
+          var settings = JSON.parse(raw);
+          return (settings && settings.systemCurrency) ? settings.systemCurrency : '$';
+        }
+      }
+    } catch (_) {}
+    return '$';
+  };
+
+  window.getCurrencyKey = window.getCurrencyKey || function () {
+    try {
+      if (window.ZS && typeof window.ZS.getItem === 'function') {
+        var legacy = window.ZS.getItem('system-currency');
+        if (legacy) return legacy;
+        var raw = window.ZS.getItem('zeralda-settings');
+        if (raw) {
+          var settings = JSON.parse(raw);
+          return (settings && settings.systemCurrency) ? settings.systemCurrency : 'USD';
+        }
+      }
+    } catch (_) {}
+    return 'USD';
+  };
+
+  window.formatDZD = window.formatDZD || function (amount) {
+    var val = parseFloat(amount) || 0;
+    return val.toLocaleString('fr-DZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + window.getCurrencySymbol();
+  };
+
+  window.formatCurrency = window.formatCurrency || function (amount, cur) {
+    var val = parseFloat(amount) || 0;
+    var symbol = cur || window.getCurrencySymbol();
+    return val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + symbol;
+  };
+
+  window.applyCurrencyText = window.applyCurrencyText || function (rootSelector) {
+    try {
+      var symbol = window.getCurrencySymbol();
+      var root = (rootSelector ? document.querySelector(rootSelector) : null) || document.querySelector('.main-content') || document.body;
+      if (!root) return;
+      root.querySelectorAll('*').forEach(function (el) {
+        if (el.children.length === 0 && el.textContent) {
+          var txt = el.textContent;
+          if (txt.includes(' DA') || txt.includes(' $') || txt.includes(' €') || txt.includes(' £')) {
+            el.textContent = txt.replace(/\s+(DA|\$|€|£|USD|EUR|DZD|GBP)/g, ' ' + symbol);
+          }
+        }
+      });
+    } catch (_) {}
+  };
+
+  var _currencyCache = null;
+  window.startCurrencyTicker = window.startCurrencyTicker || function () {
+    _currencyCache = window.getCurrencyKey();
+    setInterval(function () {
+      var current = window.getCurrencyKey();
+      if (current !== _currencyCache) {
+        _currencyCache = current;
+        window.applyCurrencyText();
+      }
+    }, 1000);
+  };
+
+  window.setVal = window.setVal || function (id, value) {
+    var el = document.getElementById(id);
+    if (el) el.value = (value !== undefined && value !== null) ? value : '';
+  };
+
+  window.openModal = window.openModal || function (modalId) {
+    var el = document.getElementById(modalId);
+    if (el) {
+      el.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+  };
+
+  window.closeModal = window.closeModal || function (modalId) {
+    var el = document.getElementById(modalId);
+    if (el) {
+      el.classList.remove('active');
+      document.body.style.overflow = 'auto';
+    }
+  };
+
+  window.applyActiveUserFromSettings = window.applyActiveUserFromSettings || function () {
+    try {
+      if (!window.ZS || typeof window.ZS.getItem !== 'function') return;
+      var raw = window.ZS.getItem('zeralda-settings');
+      if (!raw) return;
+      var settings = JSON.parse(raw);
+      var users = settings && Array.isArray(settings.users) ? settings.users : [];
+      var activeId = settings && settings.activeUserId ? settings.activeUserId : null;
+      var u = users.find(function (x) { return x.id === activeId; }) || null;
+      if (!u) return;
+
+      var nameEl = document.querySelector('.user-info div div') || document.getElementById('headerUserName');
+      var avatarEl = document.querySelector('.user-avatar') || document.getElementById('headerUserAvatar');
+      if (nameEl) nameEl.textContent = u.fullName || 'User';
+      if (avatarEl) {
+        var parts = (u.fullName || 'U').trim().split(/\s+/);
+        var initials = (parts[0] ? parts[0][0] : 'U') + (parts[1] ? parts[1][0] : '');
+        avatarEl.textContent = initials.toUpperCase();
+      }
+    } catch (_) {}
+  };
+
+  window.applyLocalizedAriaLabels = window.applyLocalizedAriaLabels || function (lang) {
+    try {
+      var safeLang = (lang === 'ar' || lang === 'fr') ? lang : 'en';
+      document.querySelectorAll('[data-en-aria-label]').forEach(function (element) {
+        var value = element.getAttribute('data-' + safeLang + '-aria-label') || element.getAttribute('data-en-aria-label') || '';
+        if (value) element.setAttribute('aria-label', value);
+      });
+    } catch (_) {}
+  };
+
+  window.initTabsKeyboardNavigation = window.initTabsKeyboardNavigation || function (containerSelector) {
+    try {
+      var container = document.querySelector(containerSelector || '.tabs-header') || document.querySelector('.nav-tabs');
+      if (!container || container._hasTabsKeyboardNav) return;
+      container._hasTabsKeyboardNav = true;
+
+      var tabButtons = Array.from(container.querySelectorAll('[role="tab"], .tab-btn, button[data-tab]'));
+      if (!tabButtons.length) return;
+
+      container.addEventListener('keydown', function (e) {
+        var activeIndex = tabButtons.indexOf(document.activeElement);
+        if (activeIndex === -1) return;
+
+        var nextIndex = activeIndex;
+        var isRtl = document.documentElement.dir === 'rtl';
+
+        if (e.key === 'ArrowRight') {
+          nextIndex = isRtl ? activeIndex - 1 : activeIndex + 1;
+        } else if (e.key === 'ArrowLeft') {
+          nextIndex = isRtl ? activeIndex + 1 : activeIndex - 1;
+        } else if (e.key === 'Home') {
+          nextIndex = 0;
+        } else if (e.key === 'End') {
+          nextIndex = tabButtons.length - 1;
+        } else {
+          return;
+        }
+
+        e.preventDefault();
+        if (nextIndex < 0) nextIndex = tabButtons.length - 1;
+        if (nextIndex >= tabButtons.length) nextIndex = 0;
+
+        tabButtons[nextIndex].focus();
+        tabButtons[nextIndex].click();
+      });
+    } catch (_) {}
+  };
+
   var __clientLivenessTimer = null;
 
   function getClientSessionId() {

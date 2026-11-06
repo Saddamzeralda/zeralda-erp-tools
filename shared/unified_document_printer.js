@@ -623,6 +623,12 @@
     return true;
   }
 
+  // Expose global tafqeet helpers to avoid duplication across sales/purchasing
+  if (typeof window !== 'undefined') {
+    window.numberToWordsAr = window.numberToWordsAr || function (amount) { return Tafqeet.ar(amount); };
+    window.numberToWordsFr = window.numberToWordsFr || function (amount) { return Tafqeet.fr(amount); };
+  }
+
   return {
     Tafqeet: Tafqeet,
     getActiveCompanyInfo: getActiveCompanyInfo,
