@@ -200,8 +200,9 @@ def create_app() -> FastAPI:
             or os.getenv("USE_HTTPS", "false").lower() == "true"
             or request.url.scheme == "https"
         )
-        # COOP: same-origin-allow-popups is Google's recommended policy for Google Identity Services / OAuth popups
-        response.headers["Cross-Origin-Opener-Policy"] = "same-origin-allow-popups"
+        # COOP: 'unsafe-none' allows Google Identity Services (GSI) OAuth popups/iframes
+        # to check window.closed without triggering Chrome Cross-Origin-Opener-Policy console errors
+        response.headers["Cross-Origin-Opener-Policy"] = "unsafe-none"
         if is_https:
             response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         # CSP for HTML pages
