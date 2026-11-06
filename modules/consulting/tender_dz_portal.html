@@ -99970,22 +99970,462 @@
         list.sort((a,b) => (a.priceCahier || 0) - (b.priceCahier || 0));
       }
 
-      // 11. Pagination slicing
+      lastFilteredList = list;
       if(resetPage) currentFeedPage = 1;
-      const totalFiltered = list.length;
-      const totalPages = Math.max(1, Math.ceil(totalFiltered / FEED_PAGE_SIZE));
-      if(currentFeedPage > totalPages) currentFeedPage = totalPages;
-
-      const startIdx = (currentFeedPage - 1) * FEED_PAGE_SIZE;
-      const endIdx = Math.min(startIdx + FEED_PAGE_SIZE, totalFiltered);
-      const pageList = list.slice(startIdx, endIdx);
-
-      // Render cards & controls
-      renderTenderCards(pageList);
-      updateFeedToolbarStats(totalFiltered > 0 ? startIdx + 1 : 0, endIdx, totalFiltered);
-      renderPaginationControls(totalPages, totalFiltered);
+      paginateAndRender();
     }
     window.filterAndRenderTenders = filterAndRenderTenders;
+
+    let _searchDebounceTimer = null;
+
+    function handleSearchInput() {
+
+      clearTimeout(_searchDebounceTimer);
+
+      _searchDebounceTimer = setTimeout(function() {
+
+        filterAndRenderTenders();
+
+      }, 120);
+
+    }
+
+    window.handleSearchInput = handleSearchInput;
+
+    // ═════════════════════════════════════════════════════════════════
+
+    // ── FEED PAGINATION & ACCORDION (FOLDING) ENGINE ──
+
+    // ═════════════════════════════════════════════════════════════════
+
+    let currentFeedPage = 1;
+
+    let feedPageSize = 12;
+
+    let lastFilteredList = [];
+
+    let expandedCardIds = new Set();
+
+    let defaultCardsCollapsed = true; // Folded by default as requested
+
+    function toggleCardFold(tenderId){
+
+      const card = document.getElementById('tender-card-' + tenderId);
+
+      if(!card) return;
+
+      const isCurrentlyCollapsed = card.classList.contains('is-collapsed');
+
+      if(isCurrentlyCollapsed){
+
+        card.classList.remove('is-collapsed');
+
+        expandedCardIds.add(tenderId);
+
+        updateCardFoldButton(tenderId, false);
+
+      } else {
+
+        card.classList.add('is-collapsed');
+
+        expandedCardIds.delete(tenderId);
+
+        updateCardFoldButton(tenderId, true);
+
+      }
+
+    }
+
+    window.toggleCardFold = toggleCardFold;
+
+    function updateCardFoldButton(tenderId, isCollapsed){
+
+      const btn = document.getElementById('btn-fold-' + tenderId);
+
+      if(!btn) return;
+
+      const isAr = getLang() === 'ar';
+
+      if(isCollapsed){
+
+        btn.innerHTML = `<i class="fas fa-chevron-down"></i> <span>${isAr ? 'عرض التفاصيل' : 'Détails'}</span>`;
+
+        btn.title = isAr ? 'عرض تفاصيل الصفقة' : 'Afficher les détails';
+
+      } else {
+
+        btn.innerHTML = `<i class="fas fa-chevron-up"></i> <span>${isAr ? 'طي' : 'Replier'}</span>`;
+
+        btn.title = isAr ? 'طي بطاقة الصفقة' : 'Replier la fiche';
+
+      }
+
+    }
+
+    function collapseAllCards(){
+
+      expandedCardIds.clear();
+
+      defaultCardsCollapsed = true;
+
+      document.querySelectorAll('.tender-card').forEach(card => {
+
+        card.classList.add('is-collapsed');
+
+        const tenderId = card.getAttribute('data-tender-id');
+
+        if(tenderId) updateCardFoldButton(tenderId, true);
+
+      });
+
+      showToast(getLang() === 'ar' ? 'تم طي كل بطاقات الصفقات' : 'Toutes les fiches sont repliées', 'info');
+
+    }
+
+    window.collapseAllCards = collapseAllCards;
+
+    function expandAllCards(){
+
+      defaultCardsCollapsed = false;
+
+      document.querySelectorAll('.tender-card').forEach(card => {
+
+        card.classList.remove('is-collapsed');
+
+        const tenderId = card.getAttribute('data-tender-id');
+
+        if(tenderId) {
+
+          expandedCardIds.add(tenderId);
+
+          updateCardFoldButton(tenderId, false);
+
+        }
+
+      });
+
+      showToast(getLang() === 'ar' ? 'تم فتح وتوسيع كل بطاقات الصفقات' : 'Toutes les fiches sont dépliées', 'info');
+
+    }
+
+    window.expandAllCards = expandAllCards;
+
+    function changeFeedPageSize(val){
+
+      feedPageSize = val === 'all' ? 'all' : parseInt(val, 10);
+
+      currentFeedPage = 1;
+
+      paginateAndRender();
+
+    }
+
+    window.changeFeedPageSize = changeFeedPageSize;
+
+    function goToFeedPage(pageNum){
+
+      const total = lastFilteredList.length;
+
+      const totalPages = feedPageSize === 'all' ? 1 : Math.ceil(total / feedPageSize);
+
+      if(pageNum < 1 || pageNum > totalPages) return;
+
+      currentFeedPage = pageNum;
+
+      paginateAndRender();
+
+      // Smooth scroll back to feed toolbar
+
+      const targetEl = document.getElementById('dzFeedToolbar') || document.getElementById('dzTendersGrid');
+
+      if(targetEl){
+
+        targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+      }
+
+    }
+
+    window.goToFeedPage = goToFeedPage;
+
+    function paginateAndRender(){
+
+      const total = lastFilteredList.length;
+
+      const totalPages = feedPageSize === 'all' ? 1 : Math.max(1, Math.ceil(total / feedPageSize));
+
+      if(currentFeedPage > totalPages && totalPages > 0) currentFeedPage = 1;
+
+      let pageItems = [];
+
+      let startIdx = 0;
+
+      let endIdx = total;
+
+      if(feedPageSize === 'all'){
+
+        pageItems = lastFilteredList;
+
+        startIdx = total > 0 ? 1 : 0;
+
+        endIdx = total;
+
+      } else {
+
+        const from = (currentFeedPage - 1) * feedPageSize;
+
+        const to = Math.min(from + feedPageSize, total);
+
+        pageItems = lastFilteredList.slice(from, to);
+
+        startIdx = total > 0 ? from + 1 : 0;
+
+        endIdx = to;
+
+      }
+
+      // Update toolbar stats
+
+      updateFeedToolbarStats(startIdx, endIdx, total);
+
+      // Render cards for current page
+
+      renderTenderCards(pageItems);
+
+      // Render pagination bar
+
+      renderPaginationControls(totalPages, total);
+
+    }
+
+    window.paginateAndRender = paginateAndRender;
+
+    function updateFeedToolbarStats(startIdx, endIdx, total){
+
+      const isAr = getLang() === 'ar';
+
+      const statsEl = document.getElementById('dzFeedStats');
+
+      if(!statsEl) return;
+
+      if(total === 0){
+
+        statsEl.innerHTML = `<i class="fas fa-search-minus text-muted"></i> <span>${isAr ? 'لم يتم العثور على أي صفقات تطابق معايير البحث' : 'Aucune annonce trouvée'}</span>`;
+
+        return;
+
+      }
+
+      statsEl.innerHTML = `
+
+        <i class="fas fa-th-list text-primary"></i>
+
+        <span>${isAr 
+
+          ? `عرض الصفقات من <strong style="color:var(--dz-primary);">${startIdx}</strong> إلى <strong style="color:var(--dz-primary);">${endIdx}</strong> من إجمالي <strong class="badge-count">${total}</strong> صفقة مطابقة` 
+
+          : `Affichage ${startIdx}-${endIdx} sur un total de <strong class="badge-count">${total}</strong> avis`}</span>
+
+      `;
+
+    }
+
+    function renderPaginationControls(totalPages, total){
+
+      const container = document.getElementById('dzPaginationContainer');
+
+      if(!container) return;
+
+      if(totalPages <= 1 || total === 0){
+
+        container.style.display = 'none';
+
+        return;
+
+      }
+
+      container.style.display = 'flex';
+
+      const isAr = getLang() === 'ar';
+
+      const prevLabel = isAr ? '<i class="fas fa-chevron-right"></i> السابق' : '<i class="fas fa-chevron-left"></i> Précédent';
+
+      const nextLabel = isAr ? 'التالي <i class="fas fa-chevron-left"></i>' : 'Suivant <i class="fas fa-chevron-right"></i>';
+
+      let pagesHtml = `
+
+        <div class="pagination-info">
+
+          <span>${isAr ? `الصفحة ${currentFeedPage} من ${totalPages}` : `Page ${currentFeedPage} sur ${totalPages}`}</span>
+
+        </div>
+
+        <div class="pagination-pages">
+
+          <button type="button" class="page-btn" onclick="goToFeedPage(${currentFeedPage - 1})" ${currentFeedPage <= 1 ? 'disabled' : ''}>
+
+            ${prevLabel}
+
+          </button>
+
+      `;
+
+      // Smart page window (max 7 numbers)
+
+      const maxButtons = 7;
+
+      let startP = 1;
+
+      let endP = totalPages;
+
+      if(totalPages > maxButtons){
+
+        if(currentFeedPage <= 4){
+
+          startP = 1;
+
+          endP = 5;
+
+        } else if(currentFeedPage >= totalPages - 3){
+
+          startP = totalPages - 4;
+
+          endP = totalPages;
+
+        } else {
+
+          startP = currentFeedPage - 2;
+
+          endP = currentFeedPage + 2;
+
+        }
+
+      }
+
+      if(startP > 1){
+
+        pagesHtml += `<button type="button" class="page-btn ${currentFeedPage === 1 ? 'active' : ''}" onclick="goToFeedPage(1)">1</button>`;
+
+        if(startP > 2) pagesHtml += `<span class="page-ellipsis">...</span>`;
+
+      }
+
+      for(let p = startP; p <= endP; p++){
+
+        pagesHtml += `<button type="button" class="page-btn ${p === currentFeedPage ? 'active' : ''}" onclick="goToFeedPage(${p})">${p}</button>`;
+
+      }
+
+      if(endP < totalPages){
+
+        if(endP < totalPages - 1) pagesHtml += `<span class="page-ellipsis">...</span>`;
+
+        pagesHtml += `<button type="button" class="page-btn ${currentFeedPage === totalPages ? 'active' : ''}" onclick="goToFeedPage(${totalPages})">${totalPages}</button>`;
+
+      }
+
+      pagesHtml += `
+
+          <button type="button" class="page-btn" onclick="goToFeedPage(${currentFeedPage + 1})" ${currentFeedPage >= totalPages ? 'disabled' : ''}>
+
+            ${nextLabel}
+
+          </button>
+
+        </div>
+
+      `;
+
+      container.innerHTML = pagesHtml;
+
+    }
+
+    
+    function getLocalizedTender(tender, lang) {
+      if (!tender) return {};
+      lang = lang || getLang();
+      const isAr = lang === 'ar';
+      const isFr = lang === 'fr';
+      const isEn = lang === 'en';
+
+      if (isAr) {
+        return {
+          title: tender.title || '',
+          authority: tender.authority || '',
+          typeName: getNoticeTypeLabel(tender.type) || tender.typeName || '',
+          wilaya: getWilayaLabel(tender.wilaya, tender.wilayaName),
+          sector: getSectorLabel(tender.sector),
+          caution: tender.caution || '',
+          qualification: tender.qualification || '',
+          depositPlace: tender.depositPlace || '',
+          lots: Array.isArray(tender.lots) ? tender.lots : []
+        };
+      }
+
+      // French or English localization
+      const src = (typeof ALGERIAN_PROCUREMENT_SOURCES_MAP !== 'undefined') ? ALGERIAN_PROCUREMENT_SOURCES_MAP[tender.sourceKey] : null;
+      let authority = (src && src.nameFr) ? src.nameFr : (tender.authority || '');
+      if (isEn && authority.startsWith("Commune d'")) {
+        authority = "Municipality of " + authority.replace(/^Commune d['\s]e?\s*/, '');
+      } else if (isEn && authority.startsWith("Commune de ")) {
+        authority = "Municipality of " + authority.replace(/^Commune de\s*/, '');
+      }
+
+      const title = isFr ? (tender.titleFr || tender.title || '') : (tender.titleEn || tender.titleFr || tender.title || '');
+      const typeName = getNoticeTypeLabel(tender.type) || (isFr ? "Avis d'appel d'offres" : "Tender Notice");
+      const wilaya = getWilayaLabel(tender.wilaya, tender.wilayaName);
+      const sector = getSectorLabel(tender.sector);
+
+      // Localized Caution
+      let caution = tender.caution || '';
+      if (caution.includes('%')) {
+        caution = isFr ? "Caution bancaire de soumission de 1% du montant de l'offre" : "Bank bid bond guarantee of 1% of total offer";
+      } else if (caution.includes('مليون')) {
+        caution = isFr ? "Caution bancaire de soumission de 3 000 000 DZD valide 120 jours" : "Bank bid bond guarantee of 3,000,000 DZD valid 120 days";
+      } else if (caution) {
+        caution = isFr ? "Garantie bancaire de soumission selon le cahier des charges" : "Bank bid bond guarantee according to tender specs";
+      }
+
+      // Localized Qualification
+      let qualification = tender.qualification || '';
+      if (qualification) {
+        qualification = isFr
+          ? 'Agrément officiel, registre du commerce conforme et expérience sectorielle certifiée.'
+          : 'Official accreditation, compliant commercial register and certified sector experience.';
+      }
+
+      // Localized Deposit Place
+      const depositPlace = isFr
+        ? ("Bureau des marchés et contrats — Siège de l'organisme contractant (" + authority + ")")
+        : ("Contracts and Tenders Office — Contracting Authority Headquarters (" + authority + ")");
+
+      // Localized Lots
+      let lots = [];
+      if (Array.isArray(tender.lots) && tender.lots.length > 0) {
+        lots = tender.lots.map(function(lot, i) {
+          const num = String(i + 1).padStart(2, '0');
+          if (isFr) {
+            return (i === 0) ? ("Lot " + num + " : Fourniture et équipement sur sites opérationnels") : ("Lot " + num + " : Installation, mise en service et garantie");
+          } else {
+            return (i === 0) ? ("Lot " + num + ": Supply and equipment at operational sites") : ("Lot " + num + ": Installation, commissioning and warranty");
+          }
+        });
+      }
+
+      return {
+        title: title,
+        authority: authority,
+        typeName: typeName,
+        wilaya: wilaya,
+        sector: sector,
+        caution: caution,
+        qualification: qualification,
+        depositPlace: depositPlace,
+        lots: lots
+      };
+    }
+
+
 function renderTenderCards(list){
 
       const container = document.getElementById('dzTendersGrid');
