@@ -1055,31 +1055,31 @@
                         </div>
                         <div class="form-group">
                             <label data-en="Tax ID" data-ar="الرقم الضريبي" data-fr="N° Fiscal">Tax ID</label>
-                            <input type="text" id="supplierTaxId" placeholder="Tax identification number" data-en-placeholder="Tax identification number" data-ar-placeholder="رقم التعريف الضريبي" data-fr-placeholder="Numéro d'identification fiscale">
+                            <input type="text" id="supplierTaxId" dir="ltr" style="direction:ltr; text-align:left; unicode-bidi:isolate;" placeholder="Tax identification number" data-en-placeholder="Tax identification number" data-ar-placeholder="رقم التعريف الضريبي" data-fr-placeholder="Numéro d'identification fiscale">
                         </div>
                         <div class="form-group">
                             <label>NIF</label>
-                            <input type="text" id="supplierNif" placeholder="NIF" data-en-placeholder="NIF" data-ar-placeholder="NIF" data-fr-placeholder="NIF">
+                            <input type="text" id="supplierNif" dir="ltr" style="direction:ltr; text-align:left; unicode-bidi:isolate;" placeholder="NIF" data-en-placeholder="NIF" data-ar-placeholder="NIF" data-fr-placeholder="NIF">
                         </div>
                         <div class="form-group">
                             <label>RC</label>
-                            <input type="text" id="supplierRc" placeholder="RC" data-en-placeholder="RC" data-ar-placeholder="RC" data-fr-placeholder="RC">
+                            <input type="text" id="supplierRc" dir="ltr" style="direction:ltr; text-align:left; unicode-bidi:isolate;" placeholder="RC" data-en-placeholder="RC" data-ar-placeholder="RC" data-fr-placeholder="RC">
                         </div>
                         <div class="form-group">
                             <label>NIS</label>
-                            <input type="text" id="supplierNis" placeholder="NIS" data-en-placeholder="NIS" data-ar-placeholder="NIS" data-fr-placeholder="NIS">
+                            <input type="text" id="supplierNis" dir="ltr" style="direction:ltr; text-align:left; unicode-bidi:isolate;" placeholder="NIS" data-en-placeholder="NIS" data-ar-placeholder="NIS" data-fr-placeholder="NIS">
                         </div>
                         <div class="form-group">
                             <label>N° d'art</label>
-                            <input type="text" id="supplierArtNumber" placeholder="N° d'art" data-en-placeholder="N° d'art" data-ar-placeholder="رقم المقال" data-fr-placeholder="N° d'art">
+                            <input type="text" id="supplierArtNumber" dir="ltr" style="direction:ltr; text-align:left; unicode-bidi:isolate;" placeholder="N° d'art" data-en-placeholder="N° d'art" data-ar-placeholder="رقم المقال" data-fr-placeholder="N° d'art">
                         </div>
                         <div class="form-group">
                             <label>N° AG</label>
-                            <input type="text" id="supplierAg" placeholder="N° AG" data-en-placeholder="N° AG" data-ar-placeholder="رقم AG" data-fr-placeholder="N° AG">
+                            <input type="text" id="supplierAg" dir="ltr" style="direction:ltr; text-align:left; unicode-bidi:isolate;" placeholder="N° AG" data-en-placeholder="N° AG" data-ar-placeholder="رقم AG" data-fr-placeholder="N° AG">
                         </div>
                         <div class="form-group">
                             <label>NIN</label>
-                            <input type="text" id="supplierNin" placeholder="NIN" data-en-placeholder="NIN" data-ar-placeholder="NIN" data-fr-placeholder="NIN">
+                            <input type="text" id="supplierNin" dir="ltr" style="direction:ltr; text-align:left; unicode-bidi:isolate;" placeholder="NIN" data-en-placeholder="NIN" data-ar-placeholder="NIN" data-fr-placeholder="NIN">
                         </div>
                         <div class="form-group">
                             <label>VAT</label>
@@ -2075,11 +2075,11 @@
                 company.phone,
                 company.email,
                 company.taxId,
-                company.nif ? ('NIF: ' + company.nif) : '',
-                company.rc ? ('RC: ' + company.rc) : '',
-                company.nis ? ('NIS: ' + company.nis) : '',
-                company.bp ? ('BP: ' + company.bp) : '',
-                company.ai ? ('AI: ' + company.ai) : ''
+                company.nif ? ('NIF: <bdi dir="ltr">' + company.nif + '</bdi>') : '',
+                company.rc ? ('RC: <bdi dir="ltr">' + company.rc + '</bdi>') : '',
+                company.nis ? ('NIS: <bdi dir="ltr">' + company.nis + '</bdi>') : '',
+                company.bp ? ('BP: <bdi dir="ltr">' + company.bp + '</bdi>') : '',
+                company.ai ? ('AI: <bdi dir="ltr">' + company.ai + '</bdi>') : ''
             ]
                 .filter(function(value) { return String(value || '').trim(); });
             return '<div>' +
@@ -5460,7 +5460,7 @@
                 '<div class="supplier-detail-item"><label>' + escHtml(tRuntime('label_phone')) + '</label><span>'+(s.phone?'<a href="tel:'+escHtml(s.phone)+'">'+escHtml(s.phone)+'</a>':'—')+'</span></div>'+
                 '<div class="supplier-detail-item"><label>' + escHtml(tRuntime('label_tax_id')) + '</label><span>'+escHtml(s.taxId||'—')+'</span></div>'+
                 '<div class="supplier-detail-item"><label>NIF</label><span>'+escHtml(s.nif||'—')+'</span></div>'+
-                '<div class="supplier-detail-item"><label>RC</label><span>'+escHtml(s.rc||'—')+'</span></div>'+
+                '<div class="supplier-detail-item"><label>RC</label><span><bdi dir="ltr">'+escHtml(s.rc||'—')+'</bdi></span></div>'+
                 '<div class="supplier-detail-item"><label>NIS</label><span>'+escHtml(s.nis||'—')+'</span></div>'+
                 '<div class="supplier-detail-item"><label>N° d\'art</label><span>'+escHtml(s.artNumber||'—')+'</span></div>'+
                 '<div class="supplier-detail-item"><label>N° AG</label><span>'+escHtml(s.ag||'—')+'</span></div>'+

@@ -1043,15 +1043,15 @@
               </div>
               <div id="customerBusinessFields" style="display:none;">
                 <div class="form-row">
-                  <div class="form-group"><label class="form-label"><i class="fas fa-id-card"></i><span data-en="RC" data-ar="السجل التجاري" data-fr="RC">RC</span></label><input type="text" class="form-input" id="newCustomerRC"></div>
-                  <div class="form-group"><label class="form-label"><i class="fas fa-receipt"></i><span data-en="NIF" data-ar="الرقم الجبائي" data-fr="NIF">NIF</span></label><input type="text" class="form-input" id="newCustomerNIF"></div>
+                  <div class="form-group"><label class="form-label"><i class="fas fa-id-card"></i><span data-en="RC" data-ar="السجل التجاري" data-fr="RC">RC</span></label><input type="text" class="form-input" id="newCustomerRC" dir="ltr" style="direction:ltr; text-align:left; unicode-bidi:isolate;"></div>
+                  <div class="form-group"><label class="form-label"><i class="fas fa-receipt"></i><span data-en="NIF" data-ar="الرقم الجبائي" data-fr="NIF">NIF</span></label><input type="text" class="form-input" id="newCustomerNIF" dir="ltr" style="direction:ltr; text-align:left; unicode-bidi:isolate;"></div>
                 </div>
                 <div class="form-row">
-                  <div class="form-group"><label class="form-label"><i class="fas fa-hashtag"></i><span data-en="NIS" data-ar="رقم التعريف الإحصائي" data-fr="NIS">NIS</span></label><input type="text" class="form-input" id="newCustomerNIS"></div>
-                  <div class="form-group"><label class="form-label"><i class="fas fa-file-invoice"></i><span data-en="AI" data-ar="المادة الضريبية (AI)" data-fr="AI">AI</span></label><input type="text" class="form-input" id="newCustomerAI"></div>
+                  <div class="form-group"><label class="form-label"><i class="fas fa-hashtag"></i><span data-en="NIS" data-ar="رقم التعريف الإحصائي" data-fr="NIS">NIS</span></label><input type="text" class="form-input" id="newCustomerNIS" dir="ltr" style="direction:ltr; text-align:left; unicode-bidi:isolate;"></div>
+                  <div class="form-group"><label class="form-label"><i class="fas fa-file-invoice"></i><span data-en="AI" data-ar="المادة الضريبية (AI)" data-fr="AI">AI</span></label><input type="text" class="form-input" id="newCustomerAI" dir="ltr" style="direction:ltr; text-align:left; unicode-bidi:isolate;"></div>
                 </div>
                 <div class="form-row">
-                  <div class="form-group"><label class="form-label"><i class="fas fa-file-signature"></i><span data-en="ART" data-ar="رقم النشاط (ART)" data-fr="ART">ART</span></label><input type="text" class="form-input" id="newCustomerART"></div>
+                  <div class="form-group"><label class="form-label"><i class="fas fa-file-signature"></i><span data-en="ART" data-ar="رقم النشاط (ART)" data-fr="ART">ART</span></label><input type="text" class="form-input" id="newCustomerART" dir="ltr" style="direction:ltr; text-align:left; unicode-bidi:isolate;"></div>
                   <div class="form-group"></div>
                 </div>
               </div>
@@ -3388,19 +3388,19 @@ function buildCompanyInfoHTML(){
   if(phone) lines += '<div style="font-size:12px;color:#1f2937;">' + escapeHTML(tr('tel_label','Tel')) + ': ' + escapeHTML(phone) + "</div>";
   if(email) lines += '<div style="font-size:12px;color:#1f2937;">' + escapeHTML(tr('email','Email')) + ': ' + escapeHTML(email) + "</div>";
   if(website) lines += '<div style="font-size:12px;color:#1f2937;">Web: ' + escapeHTML(website) + "</div>";
-  if(rc) lines += '<div style="font-size:12px;color:#1f2937;">' + escapeHTML(tr('rc_label','RC')) + ': ' + escapeHTML(rc) + "</div>";
-  if(nif) lines += '<div style="font-size:12px;color:#1f2937;">' + escapeHTML(tr('nif_label','NIF')) + ': ' + escapeHTML(nif) + "</div>";
-  if(nis) lines += '<div style="font-size:12px;color:#1f2937;">' + escapeHTML(tr('nis_label','NIS')) + ': ' + escapeHTML(nis) + "</div>";
-  if(nin) lines += '<div style="font-size:12px;color:#1f2937;">NIN: ' + escapeHTML(nin) + "</div>";
-  if(ai) lines += '<div style="font-size:12px;color:#1f2937;">' + escapeHTML(tr('ai_label','AI')) + ': ' + escapeHTML(ai) + "</div>";
-  if(artNumber) lines += '<div style="font-size:12px;color:#1f2937;">' + escapeHTML(tr('art_label','ART')) + ': ' + escapeHTML(artNumber) + "</div>";
-  if(bp) lines += '<div style="font-size:12px;color:#1f2937;">BP: ' + escapeHTML(bp) + '</div>';
-  if(ag) lines += '<div style="font-size:12px;color:#1f2937;">N° AG (Agrément): ' + escapeHTML(ag) + '</div>';
-  if(vat) lines += '<div style="font-size:12px;color:#1f2937;">' + escapeHTML(tr('tax_short','VAT')) + ': ' + escapeHTML(vat) + "</div>";
-  if(capital) lines += '<div style="font-size:12px;color:#1f2937;">' + escapeHTML(tr('capital_label','Share Capital')) + ': ' + escapeHTML(capital) + "</div>";
+  if(rc) lines += '<div style="font-size:12px;color:#1f2937;">' + escapeHTML(tr('rc_label','RC')) + ': <bdi dir="ltr">' + escapeHTML(rc) + "</bdi></div>";
+  if(nif) lines += '<div style="font-size:12px;color:#1f2937;">' + escapeHTML(tr('nif_label','NIF')) + ': <bdi dir="ltr">' + escapeHTML(nif) + "</bdi></div>";
+  if(nis) lines += '<div style="font-size:12px;color:#1f2937;">' + escapeHTML(tr('nis_label','NIS')) + ': <bdi dir="ltr">' + escapeHTML(nis) + "</bdi></div>";
+  if(nin) lines += '<div style="font-size:12px;color:#1f2937;">NIN: <bdi dir="ltr">' + escapeHTML(nin) + "</bdi></div>";
+  if(ai) lines += '<div style="font-size:12px;color:#1f2937;">' + escapeHTML(tr('ai_label','AI')) + ': <bdi dir="ltr">' + escapeHTML(ai) + "</bdi></div>";
+  if(artNumber) lines += '<div style="font-size:12px;color:#1f2937;">' + escapeHTML(tr('art_label','ART')) + ': <bdi dir="ltr">' + escapeHTML(artNumber) + "</bdi></div>";
+  if(bp) lines += '<div style="font-size:12px;color:#1f2937;">BP: <bdi dir="ltr">' + escapeHTML(bp) + '</bdi></div>';
+  if(ag) lines += '<div style="font-size:12px;color:#1f2937;">N° AG (Agrément): <bdi dir="ltr">' + escapeHTML(ag) + '</bdi></div>';
+  if(vat) lines += '<div style="font-size:12px;color:#1f2937;">' + escapeHTML(tr('tax_short','VAT')) + ': <bdi dir="ltr">' + escapeHTML(vat) + "</bdi></div>";
+  if(capital) lines += '<div style="font-size:12px;color:#1f2937;">' + escapeHTML(tr('capital_label','Share Capital')) + ': <bdi dir="ltr">' + escapeHTML(capital) + "</bdi></div>";
   if(bankName) lines += '<div style="font-size:12px;color:#1f2937;">' + escapeHTML(tr('bank_label','Bank')) + ': ' + escapeHTML(bankName) + "</div>";
-  if(bankAccount) lines += '<div style="font-size:12px;color:#1f2937;">' + escapeHTML(tr('bank_account_label','Bank Account')) + ': ' + escapeHTML(bankAccount) + "</div>";
-  if(rib) lines += '<div style="font-size:12px;color:#1f2937;">' + escapeHTML(tr('rib_label','RIB')) + ': ' + escapeHTML(rib) + "</div>";
+  if(bankAccount) lines += '<div style="font-size:12px;color:#1f2937;">' + escapeHTML(tr('bank_account_label','Bank Account')) + ': <bdi dir="ltr">' + escapeHTML(bankAccount) + "</bdi></div>";
+  if(rib) lines += '<div style="font-size:12px;color:#1f2937;">' + escapeHTML(tr('rib_label','RIB')) + ': <bdi dir="ltr">' + escapeHTML(rib) + "</bdi></div>";
   const logoHtml = logo ? ('<div><img src="' + logo + '" alt="' + escapeHTML(tr('company_logo_alt','Company Logo')) + '" style="height:48px;width:auto;object-fit:contain;border-radius:6px;border:1px solid #e5e7eb;padding:4px;background:#fff;"></div>') : '';
   const details = lines || '<div style="font-size:12px;color:#374151;">' + escapeHTML(tr('set_company_info','Set company info in Settings')) + '</div>';
   return '<div style="display:flex;align-items:flex-start;gap:12px;">' +
@@ -6192,17 +6192,17 @@ function buildFactureHTML(opts){
   if(compPhone) h += '<div style="color:#334155;">' + escapeHTML(t.tel_label||tr('tel_label','Tél')) + ' : <strong>' + escapeHTML(compPhone) + '</strong></div>';
   if(compEmail) h += '<div style="color:#334155;">Email : ' + escapeHTML(compEmail) + '</div>';
   h += '<div style="margin-top:8px;padding-top:8px;border-top:1px dashed #cbd5e1;font-size:13px;line-height:1.6;color:#1e293b;">';
-  if(compNif) h += 'NIF: <strong>' + escapeHTML(compNif) + '</strong> ';
-  if(compRc) h += '| RC: <strong>' + escapeHTML(compRc) + '</strong> ';
-  if(compNis) h += '<br>NIS: <strong>' + escapeHTML(compNis) + '</strong> ';
-  if(compArt) h += '| Art: <strong>' + escapeHTML(compArt) + '</strong>';
+  if(compNif) h += 'NIF: <strong><bdi dir="ltr">' + escapeHTML(compNif) + '</bdi></strong> ';
+  if(compRc) h += '| RC: <strong><bdi dir="ltr">' + escapeHTML(compRc) + '</bdi></strong> ';
+  if(compNis) h += '<br>NIS: <strong><bdi dir="ltr">' + escapeHTML(compNis) + '</bdi></strong> ';
+  if(compArt) h += '| Art: <strong><bdi dir="ltr">' + escapeHTML(compArt) + '</bdi></strong>';
   var compExtraFiscal = [];
-  if (compBp) compExtraFiscal.push('BP: <strong>' + escapeHTML(compBp) + '</strong>');
-  if (compAg) compExtraFiscal.push('N° AG (Agrément): <strong>' + escapeHTML(compAg) + '</strong>');
+  if (compBp) compExtraFiscal.push('BP: <strong><bdi dir="ltr">' + escapeHTML(compBp) + '</bdi></strong>');
+  if (compAg) compExtraFiscal.push('N° AG (Agrément): <strong><bdi dir="ltr">' + escapeHTML(compAg) + '</bdi></strong>');
   if (compExtraFiscal.length > 0) {
     h += '<br>' + compExtraFiscal.join(' | ');
   }
-  if(compRib) h += '<br>RIB: <strong>' + escapeHTML(compRib) + '</strong>' + (compBank ? (' (' + escapeHTML(compBank) + ')') : '');
+  if(compRib) h += '<br>RIB: <strong><bdi dir="ltr">' + escapeHTML(compRib) + '</bdi></strong>' + (compBank ? (' (' + escapeHTML(compBank) + ')') : '');
   h += '</div>';
   h += '</div>';
   h += '</div>';
@@ -6217,10 +6217,10 @@ function buildFactureHTML(opts){
   if(customer.email) h += '<div style="color:#334155;">Email : ' + escapeHTML(customer.email) + '</div>';
   if(customer.rc || customer.nif || customer.nis || customer.art || customer.artNumber){
     h += '<div style="margin-top:8px;padding-top:8px;border-top:1px dashed #bae6fd;font-size:13px;line-height:1.6;color:#1e293b;">';
-    if(customer.nif) h += 'NIF: <strong>' + escapeHTML(customer.nif) + '</strong> ';
-    if(customer.rc) h += '| RC: <strong>' + escapeHTML(customer.rc) + '</strong> ';
-    if(customer.nis) h += '<br>NIS: <strong>' + escapeHTML(customer.nis) + '</strong> ';
-    if(customer.artNumber || customer.art) h += '| Art: <strong>' + escapeHTML(customer.artNumber || customer.art) + '</strong>';
+    if(customer.nif) h += 'NIF: <strong><bdi dir="ltr">' + escapeHTML(customer.nif) + '</bdi></strong> ';
+    if(customer.rc) h += '| RC: <strong><bdi dir="ltr">' + escapeHTML(customer.rc) + '</bdi></strong> ';
+    if(customer.nis) h += '<br>NIS: <strong><bdi dir="ltr">' + escapeHTML(customer.nis) + '</bdi></strong> ';
+    if(customer.artNumber || customer.art) h += '| Art: <strong><bdi dir="ltr">' + escapeHTML(customer.artNumber || customer.art) + '</bdi></strong>';
     h += '</div>';
   }
   h += '</div>';

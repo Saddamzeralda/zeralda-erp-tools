@@ -347,18 +347,18 @@
 
     // --- Algerian Legal & Fiscal Bar ---
     html += '  <div class="fiscal-id-bar">';
-    html += '    <div class="fiscal-chip"><span>NIF / الرقم الجبائي:</span> <strong>' + esc(company.nif) + '</strong></div>';
-    html += '    <div class="fiscal-chip"><span>NIS / الإحصائي:</span> <strong>' + esc(company.nis) + '</strong></div>';
-    html += '    <div class="fiscal-chip"><span>RC / السجل التجاري:</span> <strong>' + esc(company.rc) + '</strong></div>';
-    html += '    <div class="fiscal-chip"><span>Art. Imp. / المادة:</span> <strong>' + esc(company.article) + '</strong></div>';
+    html += '    <div class="fiscal-chip"><span>NIF / الرقم الجبائي:</span> <strong><bdi dir="ltr">' + esc(company.nif) + '</bdi></strong></div>';
+    html += '    <div class="fiscal-chip"><span>NIS / الإحصائي:</span> <strong><bdi dir="ltr">' + esc(company.nis) + '</bdi></strong></div>';
+    html += '    <div class="fiscal-chip"><span>RC / السجل التجاري:</span> <strong><bdi dir="ltr">' + esc(company.rc) + '</bdi></strong></div>';
+    html += '    <div class="fiscal-chip"><span>Art. Imp. / المادة:</span> <strong><bdi dir="ltr">' + esc(company.article) + '</bdi></strong></div>';
     if (company.bp) {
-      html += '    <div class="fiscal-chip"><span>BP / ص.ب:</span> <strong>' + esc(company.bp) + '</strong></div>';
+      html += '    <div class="fiscal-chip"><span>BP / ص.ب:</span> <strong><bdi dir="ltr">' + esc(company.bp) + '</bdi></strong></div>';
     }
     if (company.ag) {
-      html += '    <div class="fiscal-chip"><span>N° AG (Agrément) / رقم الاعتماد:</span> <strong>' + esc(company.ag) + '</strong></div>';
+      html += '    <div class="fiscal-chip"><span>N° AG (Agrément) / رقم الاعتماد:</span> <strong><bdi dir="ltr">' + esc(company.ag) + '</bdi></strong></div>';
     }
     if (company.capital) {
-      html += '    <div class="fiscal-chip"><span>Capital / رأس المال:</span> <strong>' + esc(company.capital) + '</strong></div>';
+      html += '    <div class="fiscal-chip"><span>Capital / رأس المال:</span> <strong><bdi dir="ltr">' + esc(company.capital) + '</bdi></strong></div>';
     }
     html += '  </div>';
 
@@ -370,9 +370,9 @@
     if (client.address) html += '      <div class="partner-detail">' + esc(client.address) + '</div>';
     if (client.nif || client.rc) {
       html += '      <div class="partner-fiscal">';
-      if (client.nif) html += '<span>NIF: <strong>' + esc(client.nif) + '</strong></span> ';
-      if (client.rc) html += '<span>RC: <strong>' + esc(client.rc) + '</strong></span> ';
-      if (client.article) html += '<span>Article: <strong>' + esc(client.article) + '</strong></span>';
+      if (client.nif) html += '<span>NIF: <strong><bdi dir="ltr">' + esc(client.nif) + '</bdi></strong></span> ';
+      if (client.rc) html += '<span>RC: <strong><bdi dir="ltr">' + esc(client.rc) + '</bdi></strong></span> ';
+      if (client.article) html += '<span>Article: <strong><bdi dir="ltr">' + esc(client.article) + '</bdi></strong></span>';
       html += '      </div>';
     }
     html += '    </div>';
@@ -514,8 +514,8 @@
       html += '  <div class="doc-footer-legal">';
       html += '    <span>Zeralda ERP Standard DZ</span> | ';
       html += '    <span>' + esc(company.name) + '</span> | ';
-      html += '    <span>NIF: ' + esc(company.nif) + '</span> | ';
-      html += '    <span>RC: ' + esc(company.rc) + '</span>';
+      html += '    <span>NIF: <bdi dir="ltr">' + esc(company.nif) + '</bdi></span> | ';
+      html += '    <span>RC: <bdi dir="ltr">' + esc(company.rc) + '</bdi></span>';
       html += '  </div>';
     } else if (qrFiscalBoxHtml) {
       html += '  <div style="margin:12px auto; display:flex; justify-content:center;">' + qrFiscalBoxHtml + '</div>';
