@@ -1,3 +1,13 @@
+---
+title: Zeralda ERP
+emoji: 🏢
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+app_port: 8080
+pinned: false
+---
+
 <div align="center">
 
 <img src="logo.png" alt="Zeralda ERP" width="180" height="180" />

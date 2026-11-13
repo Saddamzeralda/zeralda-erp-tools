@@ -36,7 +36,9 @@ RUN pip install --no-cache-dir --upgrade pip && \
 COPY . /app/
 
 # Ensure data directory exists with write permissions and keep seed copy in data_defaults
-RUN mkdir -p /app/data /app/logs && cp -r /app/data /app/data_defaults
+RUN mkdir -p /app/data /app/data/uploads /app/logs && \
+    cp -r /app/data /app/data_defaults && \
+    chmod -R 777 /app/data /app/logs /app/data_defaults
 
 # Default port
 EXPOSE 8080
