@@ -1731,20 +1731,20 @@
     var basePrefix = baseFileName.replace(/\.json$/i, '') + '-';
     var q = "'" + folderId + "' in parents and trashed=false and name contains '" + basePrefix + "'";
     return gFetch('https://www.googleapis.com/drive/v3/files?q=' + encodeURIComponent(q) +
-      '&fields=files(id,name,modifiedTime)&orderBy=modifiedTime desc')
-      .then(function (r) { return r.json(); })
+      '&fields=files(id,name,modifiedTime,trashed)&orderBy=modifiedTime desc&supportsAllDrives=true')
+      .then(function (r) { return r.ok ? r.json() : { files: [] }; })
       .then(function (res) {
-        if (!res.files || res.files.length <= MAX_DRIVE_BACKUP_VERSIONS) return;
+        if (!res || !res.files || res.files.length <= MAX_DRIVE_BACKUP_VERSIONS) return;
         // res.files is sorted by modifiedTime desc (newest first).
         // Delete everything after the first MAX_DRIVE_BACKUP_VERSIONS.
         var toDelete = res.files.slice(MAX_DRIVE_BACKUP_VERSIONS);
         var deletePromises = [];
         for (var i = 0; i < toDelete.length; i++) {
           // Only delete files that match the versioned pattern (baseName-TIMESTAMP.json)
-          if (toDelete[i].name && toDelete[i].name.indexOf(basePrefix) === 0) {
-            deletePromises.push(gFetch('https://www.googleapis.com/drive/v3/files/' + toDelete[i].id, {
+          if (toDelete[i].name && toDelete[i].name.indexOf(basePrefix) === 0 && !toDelete[i].trashed) {
+            deletePromises.push(gFetch('https://www.googleapis.com/drive/v3/files/' + toDelete[i].id + '?supportsAllDrives=true', {
               method: 'DELETE'
-            }).catch(function () {})); // best-effort
+            }).catch(function () {})); // best-effort — ignore if already deleted (404)
           }
         }
         return Promise.all(deletePromises);
