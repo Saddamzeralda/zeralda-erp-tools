@@ -751,7 +751,7 @@ def require_auth(request: Request, required_role: Optional[str] = None) -> Dict[
 
             )
 
-    if required_role and user.get("role") != required_role and user.get("role") != "admin":
+    if required_role and user.get("role") != required_role and user.get("role") not in ("admin", "developer"):
 
         raise HTTPException(
 
@@ -795,11 +795,11 @@ def require_store_permission(user: Dict[str, Any], action: str) -> None:
 
 
 
-    read_roles = {"admin", "manager", "user", "viewer"}
+    read_roles = {"admin", "developer", "manager", "user", "viewer"}
 
-    write_roles = {"admin", "manager", "user"}
+    write_roles = {"admin", "developer", "manager", "user"}
 
-    admin_roles = {"admin"}
+    admin_roles = {"admin", "developer"}
 
 
 

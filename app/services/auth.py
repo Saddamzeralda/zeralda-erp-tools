@@ -1111,7 +1111,7 @@ def update_user(target_email: str, updates: Dict, requester_role: str = 'admin')
     allowed_fields_user = {'username'}
     allowed_fields_admin = {'username', 'role', 'active'}
 
-    allowed = allowed_fields_admin if requester_role == 'admin' else allowed_fields_user
+    allowed = allowed_fields_admin if requester_role in ('admin', 'developer') else allowed_fields_user
 
     changed = False
     for field, value in updates.items():

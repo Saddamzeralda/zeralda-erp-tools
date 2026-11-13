@@ -450,7 +450,7 @@ async def update_user_endpoint(request: Request, email: str):
     if not target_email:
         raise HTTPException(400, detail={"ok": False, "error": "Target email required"})
 
-    is_admin = requester.get("role") == "admin"
+    is_admin = requester.get("role") in ("admin", "developer")
     is_own = requester["email"] == target_email
     if not is_admin and not is_own:
         raise HTTPException(403, detail={"ok": False, "error": "Forbidden", "code": "FORBIDDEN"})
@@ -790,7 +790,7 @@ async def revoke_sessions_endpoint(request: Request):
     target_email = str(data.get("email") or current_user.get("email", "")).strip().lower()
 
     # Non-admins can only revoke their own sessions
-    if target_email != str(current_user.get("email", "")).lower() and current_user.get("role") != "admin":
+    if target_email != str(current_user.get("email", "")).lower() and current_user.get("role") not in ("admin", "developer"):
         raise HTTPException(403, detail={"ok": False, "error": "Only admins can revoke other users sessions"})
 
     from app.services import auth

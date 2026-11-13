@@ -184,7 +184,7 @@ def is_key_permitted_for_user(
         return False
 
     role = (user or {}).get("role", "viewer")
-    if role == "admin":
+    if role in ("admin", "developer"):
         return True
 
     clean_key = key.strip().lower()
@@ -205,12 +205,12 @@ def is_key_permitted_for_user(
 
     # 2. HR & Employee sensitive records: admin and manager only
     if clean_key.startswith("employees-data") or clean_key.startswith("hr-"):
-        if role not in ("admin", "manager"):
+        if role not in ("admin", "developer", "manager"):
             return False
 
     # 3. Settings write protection: only admin can modify canonical settings
     if clean_key == "zeralda-settings" and action == "write":
-        if role != "admin":
+        if role not in ("admin", "developer"):
             return False
 
     # 4. User-Private Drafts: only owner or admin can read/write
@@ -238,7 +238,7 @@ def is_key_permitted_for_user(
 def sanitize_settings_for_user(settings_val: Any, user: Dict[str, Any]) -> Any:
     """Filter sensitive administrative settings blocks before returning to non-admin users."""
     role = (user or {}).get("role", "viewer")
-    if role == "admin":
+    if role in ("admin", "developer"):
         return settings_val
     try:
         is_str = isinstance(settings_val, str)
@@ -287,7 +287,7 @@ async def get_store(request: Request, key: Optional[str] = None, fast: Optional[
     # Scoped dump: filter keys according to user role and active company
     filtered_store = {}
     versions = {}
-    is_admin = user.get("role") == "admin"
+    is_admin = user.get("role") in ("admin", "developer")
     for k, v in store.items():
         if k in LOCAL_SESSION_KEYS or any(k.startswith(p + "::") for p in LOCAL_SESSION_KEYS):
             continue
@@ -328,7 +328,7 @@ async def mget_store(request: Request):
         hist = storage.read_history()
 
     active_cid = _extract_active_company(request, user, store)
-    is_admin = user.get("role") == "admin"
+    is_admin = user.get("role") in ("admin", "developer")
 
     result: Dict[str, Any] = {}
     versions: Dict[str, int] = {}

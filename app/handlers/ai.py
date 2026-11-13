@@ -194,7 +194,7 @@ async def get_settings(request: Request):
     # Security: mask API keys for non-admin viewers so the GET endpoint never
     # leaks secrets to lower-privileged roles. Admins still see the full
     # (DPAPI-encrypted) value so they can verify configuration.
-    if REQUIRE_AUTH and (get_user or {}).get("role") != "admin":
+    if REQUIRE_AUTH and (get_user or {}).get("role") not in ("admin", "developer"):
         for pname, pcfg in PROVIDER_CONFIGS.items():
             kf = pcfg.get("api_key_field")
             if kf and isinstance(defaults.get(kf), str) and defaults[kf]:
@@ -648,7 +648,7 @@ async def action(request: Request):
             if role not in ("admin", "manager", "user", "viewer"):
                 raise HTTPException(400, detail={"ok": False, "error": "Invalid role"})
             user_role = (user or {}).get("role", "viewer")
-            if role in ("admin", "manager") and user_role != "admin":
+            if role in ("admin", "manager") and user_role not in ("admin", "developer"):
                 raise HTTPException(403, detail={"ok": False, "error": "Only admins can create admin or manager accounts", "code": "FORBIDDEN"})
             result = create_user(name, email, password, role)
             return JSONResponse(status_code=200 if result.get("ok") else 400, content=result)
@@ -671,7 +671,7 @@ async def action(request: Request):
         elif req.action == "user_delete":
             if not ai_perms.get("manage_users"):
                 raise HTTPException(403, detail={"ok": False, "error": "Permission denied: manage_users required"})
-            if user.get("role") != "admin":
+            if user.get("role") not in ("admin", "developer"):
                 raise HTTPException(403, detail={"ok": False, "error": "Only admins can delete users"})
             from app.services.auth import delete_user
             email = str(args.get("email") or "").strip().lower()
@@ -711,7 +711,7 @@ async def action(request: Request):
                 raise HTTPException(400, detail={"ok": False, "error": "data must be a JSON object"})
             user_role = (user or {}).get("role", "viewer")
             if section == "ai":
-                if "role_permissions" in update and user_role != "admin":
+                if "role_permissions" in update and user_role not in ("admin", "developer"):
                     raise HTTPException(403, detail={"ok": False, "error": "Only admins can modify role_permissions", "code": "ADMIN_REQUIRED"})
                 if "huggingface_api_key" in update and user_role not in ("admin", "superadmin"):
                     raise HTTPException(403, detail={"ok": False, "error": "Only admins can modify API keys", "code": "ADMIN_REQUIRED"})
