@@ -17,3 +17,7 @@ services:
         generateValue: true
       - key: JWT_SECRET
         generateValue: true
+      - key: GOOGLE_CLIENT_ID
+        value: 180070533961-1douevfros9h0smkg249b0fgmmhfesjb.apps.googleusercontent.com
+      - key: ALLOWED_ORIGINS
+        value: https://zeralda-erp.onrender.com

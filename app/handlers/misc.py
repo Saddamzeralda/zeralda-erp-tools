@@ -257,10 +257,10 @@ async def get_network_info(request: Request):
     port = int(os.getenv("PORT", "8080"))
 
     # Production URL reference
-    official_production_url = "https://zeralda-erp-employees-main-production.up.railway.app"
+    official_production_url = "https://zeralda-erp.onrender.com"
 
     # 1. Detect if running inside cloud environment (Railway, etc.)
-    cloud_env_domain = os.getenv("RAILWAY_PUBLIC_DOMAIN") or os.getenv("RAILWAY_STATIC_URL") or os.getenv("PUBLIC_URL")
+    cloud_env_domain = os.getenv("RENDER_EXTERNAL_HOSTNAME") or os.getenv("RAILWAY_PUBLIC_DOMAIN") or os.getenv("RAILWAY_STATIC_URL") or os.getenv("PUBLIC_URL")
     cloud_url = None
     if cloud_env_domain:
         if not cloud_env_domain.startswith("http"):

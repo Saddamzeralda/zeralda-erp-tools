@@ -1258,7 +1258,7 @@
         var isCloudHost = window.location.hostname && !['localhost', '127.0.0.1'].includes(window.location.hostname) && !/^(192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[0-1]))/.test(window.location.hostname);
         var directLan = data.directLanUrl || ('http://' + (data.primaryIp || '127.0.0.1') + '/');
         var lanUrl = isCloudHost ? (data.directLanUrl || directLan) : directLan;
-        var remoteUrl = data.remoteUrl || (isCloudHost ? window.location.origin : (data.productionUrl || 'https://zeralda-erp-employees-main-production.up.railway.app'));
+        var remoteUrl = data.remoteUrl || (isCloudHost ? window.location.origin : (data.productionUrl || 'https://zeralda-erp.onrender.com'));
 
         content.innerHTML = `
           <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e2e8f0;padding-bottom:12px;margin-bottom:16px;">

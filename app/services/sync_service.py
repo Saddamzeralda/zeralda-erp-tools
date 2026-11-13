@@ -20,7 +20,7 @@ from app.services.security import log_structured
 
 DEFAULT_CLOUD_URL = os.getenv(
     "CLOUD_SYNC_URL",
-    "https://zeralda-erp-employees-main-production.up.railway.app"
+    "https://zeralda-erp.onrender.com"
 ).rstrip("/")
 SYNC_STATE_KEY = "_cloud_sync_metadata"
 
