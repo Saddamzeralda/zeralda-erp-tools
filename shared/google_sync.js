@@ -1727,24 +1727,72 @@
   // Prune old versioned Drive backups (files matching baseName-TIMESTAMP.json),
   // keeping only the most recent MAX_DRIVE_BACKUP_VERSIONS copies.
   var MAX_DRIVE_BACKUP_VERSIONS = 5;
+  var UNPRUNABLE_DRIVE_FILES_KEY = 'zeralda-unprunable-drive-files';
+
+  // Seed with previously known orphaned or read-only backup file IDs from older sessions
+  var _initialUnprunableFiles = {
+    '1mWnapAxoOH3x2qSd3IM9lEAxYPGV7EFa': 1,
+    '1igSVv_LO6e7DWvSWD8zkHOcLZSppk14U': 1,
+    '1tYVB-XO2bO7VeP5efYr4uNNmy0Cod1F4': 1,
+    '1_FIoHpgrtASzvc5GfJ8q4z8wG37P4Opn': 1
+  };
+
+  function _getUnprunableDriveFiles() {
+    try {
+      var raw = ZS.getItem(UNPRUNABLE_DRIVE_FILES_KEY);
+      var parsed = raw ? JSON.parse(raw) : {};
+      return Object.assign({}, _initialUnprunableFiles, parsed || {});
+    } catch (_) {
+      return Object.assign({}, _initialUnprunableFiles);
+    }
+  }
+
+  function _markUnprunableDriveFile(fileId) {
+    if (!fileId) return;
+    try {
+      var map = _getUnprunableDriveFiles();
+      map[String(fileId)] = Date.now();
+      ZS.setItem(UNPRUNABLE_DRIVE_FILES_KEY, JSON.stringify(map));
+    } catch (_) {}
+  }
+
   function _pruneOldDriveBackups(folderId, baseFileName) {
     var basePrefix = baseFileName.replace(/\.json$/i, '') + '-';
     var q = "'" + folderId + "' in parents and trashed=false and name contains '" + basePrefix + "'";
     return gFetch('https://www.googleapis.com/drive/v3/files?q=' + encodeURIComponent(q) +
-      '&fields=files(id,name,modifiedTime,trashed)&orderBy=modifiedTime desc&supportsAllDrives=true')
+      '&fields=files(id,name,modifiedTime,trashed,capabilities(canDelete))&orderBy=modifiedTime desc&supportsAllDrives=true')
       .then(function (r) { return r.ok ? r.json() : { files: [] }; })
       .then(function (res) {
         if (!res || !res.files || res.files.length <= MAX_DRIVE_BACKUP_VERSIONS) return;
+        var unprunable = _getUnprunableDriveFiles();
         // res.files is sorted by modifiedTime desc (newest first).
         // Delete everything after the first MAX_DRIVE_BACKUP_VERSIONS.
         var toDelete = res.files.slice(MAX_DRIVE_BACKUP_VERSIONS);
         var deletePromises = [];
         for (var i = 0; i < toDelete.length; i++) {
+          var f = toDelete[i];
+          if (!f || !f.id) continue;
+          // Skip if file is marked as unprunable, trashed, or cannot be deleted by permissions
+          if (unprunable[f.id] || f.trashed) continue;
+          if (f.capabilities && f.capabilities.canDelete === false) {
+            _markUnprunableDriveFile(f.id);
+            continue;
+          }
           // Only delete files that match the versioned pattern (baseName-TIMESTAMP.json)
-          if (toDelete[i].name && toDelete[i].name.indexOf(basePrefix) === 0 && !toDelete[i].trashed) {
-            deletePromises.push(gFetch('https://www.googleapis.com/drive/v3/files/' + toDelete[i].id + '?supportsAllDrives=true', {
-              method: 'DELETE'
-            }).catch(function () {})); // best-effort — ignore if already deleted (404)
+          if (f.name && f.name.indexOf(basePrefix) === 0) {
+            (function (fileId) {
+              deletePromises.push(
+                gFetch('https://www.googleapis.com/drive/v3/files/' + fileId + '?supportsAllDrives=true', {
+                  method: 'DELETE'
+                }).then(function (delRes) {
+                  if (delRes && (delRes.status === 404 || delRes.status === 403 || delRes.status === 400)) {
+                    _markUnprunableDriveFile(fileId);
+                  }
+                }).catch(function () {
+                  _markUnprunableDriveFile(fileId);
+                })
+              );
+            })(f.id);
           }
         }
         return Promise.all(deletePromises);

@@ -1192,7 +1192,7 @@
         document.head.appendChild(gsi);
       }
       var s = document.createElement('script');
-      s.src = 'shared/google_sync.js?v=20261104_v5';
+      s.src = 'shared/google_sync.js?v=20261125_v1';
       s.defer = true;
       s.onload = function () {
         runSync();
