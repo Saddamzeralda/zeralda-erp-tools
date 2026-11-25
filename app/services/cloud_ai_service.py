@@ -484,7 +484,7 @@ _BLOCKED_HOSTS = frozenset({
 })
 
 
-def _is_safe_ai_url(url: str) -> bool:
+def _is_safe_ai_url(url: str, allow_local: bool = False) -> bool:
     """Validate that a custom AI base URL is safe (not an SSRF target).
 
     Blocks:
@@ -502,13 +502,13 @@ def _is_safe_ai_url(url: str) -> bool:
     if not hostname:
         return False
     if hostname in _BLOCKED_HOSTS:
-        return False
+        return allow_local
     # Check for private IP ranges
     try:
         import ipaddress
         ip = ipaddress.ip_address(hostname)
         if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved:
-            return False
+            return allow_local
     except ValueError:
         pass  # Not an IP address — hostname is fine
     # Block common internal hostnames
@@ -553,6 +553,16 @@ def _network_error_message(exc: Exception) -> str:
 
 
 PROVIDER_CONFIGS: Dict[str, Dict[str, Any]] = {
+    'freellm': {
+        'name': 'FreeLLM',
+        'api_key_field': 'freellm_api_key',
+        'model_field': 'freellm_model',
+        'default_model': 'auto',
+        'base_url': 'http://localhost:7070/v1',
+        'requires_api_key': False,
+        'openai_compatible': True,
+        'icon': '🆓'
+    },
     'gemini': {
         'name': 'Google Gemini',
         'api_key_field': 'gemini_api_key',
@@ -597,7 +607,18 @@ def _read_ai_settings(project_root: str) -> Dict[str, Any]:
 
 def _resolve_provider(ai_cfg: Dict[str, Any]) -> str:
     provider = str(ai_cfg.get('provider', '')).strip().lower()
-    if not provider or provider == 'disabled':
+    if not provider:
+        env_prov = os.getenv('AI_PROVIDER', '').strip().lower()
+        if env_prov in PROVIDER_CONFIGS:
+            return env_prov
+        if os.getenv('GEMINI_API_KEY'):
+            return 'gemini'
+        if os.getenv('OPENAI_API_KEY'):
+            return 'openai'
+        if os.getenv('GROQ_API_KEY'):
+            return 'groq'
+        return 'freellm'
+    if provider == 'disabled':
         env_prov = os.getenv('AI_PROVIDER', '').strip().lower()
         if env_prov in PROVIDER_CONFIGS:
             return env_prov
@@ -637,7 +658,7 @@ def _get_provider_config(ai_cfg: Dict[str, Any]) -> Dict[str, Any]:
         # An attacker who can modify ai_settings.json or env vars could
         # point the server at an internal URL (e.g., 169.254.169.254
         # metadata endpoint, localhost services) and exfiltrate data.
-        if not _is_safe_ai_url(custom_base_url):
+        if not _is_safe_ai_url(custom_base_url, allow_local=(provider == 'freellm')):
             print(f"[AI] [WARN] Custom base URL for {provider} rejected (SSRF protection): {custom_base_url}")
         else:
             base_url = custom_base_url
@@ -648,6 +669,16 @@ def _get_provider_config(ai_cfg: Dict[str, Any]) -> Dict[str, Any]:
         'base_url': base_url,
         'config': cfg
     }
+
+
+def _openai_headers(api_key: str) -> Dict[str, str]:
+    headers = {
+        'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) ZeraldaERP/1.0'
+    }
+    if api_key:
+        headers['Authorization'] = f'Bearer {api_key}'
+    return headers
 
 
 def _openai_compatible_chat(base_url: str, api_key: str, model: str, messages: List[Dict], system_prompt: Optional[str], max_tokens: Optional[int] = None, temperature: Optional[float] = None, json_mode: bool = False) -> Dict[str, Any]:
@@ -719,11 +750,7 @@ def _openai_compatible_chat(base_url: str, api_key: str, model: str, messages: L
     req = urllib.request.Request(
         base_url.rstrip('/') + '/chat/completions',
         data=payload,
-        headers={
-            'Authorization': f'Bearer {api_key}',
-            'Content-Type': 'application/json',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) ZeraldaERP/1.0'
-        },
+        headers=_openai_headers(api_key),
         method='POST'
     )
 
@@ -792,11 +819,7 @@ def _openai_compatible_chat(base_url: str, api_key: str, model: str, messages: L
                 req = urllib.request.Request(
                     base_url.rstrip('/') + '/chat/completions',
                     data=payload,
-                    headers={
-                        'Authorization': f'Bearer {api_key}',
-                        'Content-Type': 'application/json',
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) ZeraldaERP/1.0'
-                    },
+                    headers=_openai_headers(api_key),
                     method='POST'
                 )
                 continue
@@ -1026,7 +1049,7 @@ def chat_with_assistant_ai(messages: List[Dict], system_prompt: Optional[str] = 
             'provider': 'disabled'
         }
 
-    if not api_key:
+    if not api_key and provider != 'freellm':
         return {
             'ok': True,
             'reply': f'عذراً، مفتاح {cfg["name"]} غير معرف في إعدادات الذكاء الاصطناعي.',
@@ -1089,7 +1112,7 @@ def chat_with_vision(image_base64: str, mime_type: str, prompt: str, system_prom
         api_key = provider_info['api_key']
         cfg = provider_info['config']
 
-    if provider == 'disabled' or not api_key:
+    if provider == 'disabled' or (not api_key and provider != 'freellm'):
         return {'ok': False, 'error': f'Provider {provider} not configured or missing API key'}
 
     vision_model = VISION_MODELS.get(provider, '')
@@ -1142,11 +1165,7 @@ def _openai_vision(base_url: str, api_key: str, model: str, image_b64: str, mime
     req = urllib.request.Request(
         base_url.rstrip('/') + '/chat/completions',
         data=payload,
-        headers={
-            'Authorization': f'Bearer {api_key}',
-            'Content-Type': 'application/json',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) ZeraldaERP/1.0'
-        },
+        headers=_openai_headers(api_key),
         method='POST'
     )
     print(f'[VISION] Sending to {model}: mime={mime_type}, json_mode={json_mode}, payload={len(payload)//1024}KB')
@@ -1172,11 +1191,7 @@ def _openai_vision(base_url: str, api_key: str, model: str, image_b64: str, mime
             req2 = urllib.request.Request(
                 base_url.rstrip('/') + '/chat/completions',
                 data=payload,
-                headers={
-                    'Authorization': f'Bearer {api_key}',
-                    'Content-Type': 'application/json',
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) ZeraldaERP/1.0'
-                },
+                headers=_openai_headers(api_key),
                 method='POST'
             )
             try:
@@ -1273,12 +1288,28 @@ def get_cloud_status() -> Dict[str, Any]:
     if provider == 'disabled':
         return {'ok': False, 'provider': 'disabled', 'configured': False, 'error': 'AI is disabled'}
 
+    configured = bool(api_key)
+    if provider == 'freellm' and not configured:
+        hostname = (urllib.parse.urlparse(provider_info.get('base_url', '')).hostname or '').lower()
+        is_local = hostname in ('localhost', '127.0.0.1', '::1')
+        if not is_local:
+            try:
+                import ipaddress
+                ip = ipaddress.ip_address(hostname)
+                is_local = ip.is_private or ip.is_loopback or ip.is_link_local
+            except ValueError:
+                pass
+        configured = is_local and _is_safe_ai_url(provider_info.get('base_url', ''), allow_local=True)
+
     return {
-        'ok': bool(api_key),
+        'ok': configured,
         'provider': provider,
         'model': model,
-        'configured': bool(api_key),
-        'error': None if api_key else f'{cfg["name"]} API key missing in settings.'
+        'configured': configured,
+        'error': None if configured else (
+            'FreeLLM API key is required for a remote endpoint.'
+            if provider == 'freellm' else f'{cfg["name"]} API key missing in settings.'
+        )
     }
 
 
@@ -1395,7 +1426,7 @@ def chat_with_assistant_ai_stream(messages: List[Dict], system_prompt: Optional[
     model = provider_info['model']
     cfg = provider_info['config']
 
-    if provider == 'disabled' or not api_key:
+    if provider == 'disabled' or (not api_key and provider != 'freellm'):
         yield {'type': 'error', 'error': 'AI is disabled or API key missing'}
         return
 
@@ -1461,11 +1492,7 @@ def chat_with_assistant_ai_stream(messages: List[Dict], system_prompt: Optional[
         req = urllib.request.Request(
             base_url.rstrip('/') + '/chat/completions',
             data=payload,
-            headers={
-                'Authorization': f'Bearer {api_key}',
-                'Content-Type': 'application/json',
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) ZeraldaERP/1.0'
-            },
+            headers=_openai_headers(api_key),
             method='POST'
         )
         with _ai_urlopen(req, timeout=60, stream=True) as resp:

@@ -180,9 +180,10 @@ async def get_settings(request: Request):
     if provider not in PROVIDER_CONFIGS:
         provider = "gemini"
         ai_cfg["provider"] = "gemini"
-    defaults = {"provider": "gemini",
+    defaults = {"provider": "freellm",
                 "features": {"web_search": True, "exec_actions": True, "file_analysis": True},
-                "ocr_engine": "ai"}
+                "ocr_engine": "ai",
+                "freellm_base_url": "http://localhost:7070/v1"}
     for pname, pcfg in PROVIDER_CONFIGS.items():
         if pcfg.get("api_key_field"):
             defaults[pcfg["api_key_field"]] = ai_cfg.get(pcfg["api_key_field"], "")
@@ -209,7 +210,7 @@ async def save_settings(request: Request):
     user = require_auth(request, required_role="admin")
     data = await read_json_body(request)
 
-    allowed_keys = ["provider", "features", "role_permissions", "ocr_engine"]
+    allowed_keys = ["provider", "features", "role_permissions", "ocr_engine", "freellm_base_url"]
     for pcfg in PROVIDER_CONFIGS.values():
         if pcfg.get("api_key_field"):
             allowed_keys.append(pcfg["api_key_field"])

@@ -1635,6 +1635,7 @@
                         <select id="aiProvider" onchange="onAiProviderChange()" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;">
                             <option value="gemini" selected>✨ Google Gemini (مجاني وسريع / يدعم الصور والرؤية)</option>
                             <option value="groq">⚡ Groq (فائق السرعة / Llama 3.3)</option>
+                            <option value="freellm">🆓 FreeLLM API (متوافق مع OpenAI)</option>
                             <option value="disabled">🚫 Disabled (معطل)</option>
                         </select>
                         <small style="color:#6b7280;display:block;margin-top:6px;" data-en="Supported AI Providers: Google Gemini (recommended for Vision & OCR) and Groq (ultra-fast LPU inference)." data-ar="المزودات المعتمدة: Google Gemini (موصى به للرؤية وقراءة الفواتير) و Groq (فائق السرعة)." data-fr="Fournisseurs pris en charge : Google Gemini et Groq.">المزودات المعتمدة: Google Gemini (موصى به للرؤية وقراءة الفواتير) و Groq (فائق السرعة).</small>
@@ -1649,6 +1650,16 @@
             <div style="margin-bottom:16px;padding:16px;background:white;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,0.06);display:block;" id="cloudAiSettings">
                 <h4 style="margin:0 0 12px 0;font-size:14px;font-weight:600;color:#374151;"><i class="fas fa-cloud" style="color:var(--purple-color);"></i> <span data-en="Cloud AI Configuration" data-ar="إعدادات AI سحابي" data-fr="Configuration cloud IA">Cloud AI Configuration</span></h4>
                 <div style="display:flex;flex-direction:column;gap:12px;">
+                    <div id="freellmSettings" style="display:none;">
+                        <label style="display:block;font-weight:600;margin-bottom:6px;color:#374151;">Preset</label>
+                        <select id="freellmPreset" onchange="onFreellmPresetChange()" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;background:white;">
+                            <option value="localhost">FreeLLM Localhost</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                        <label style="display:block;font-weight:600;margin:10px 0 6px;color:#374151;" for="freellmBaseUrl">Endpoint base URL</label>
+                        <input type="url" id="freellmBaseUrl" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;" placeholder="http://localhost:7070/v1" value="http://localhost:7070/v1">
+                        <small style="color:#6b7280;display:block;margin-top:4px;">Use the OpenAI-compatible base URL, including /v1.</small>
+                    </div>
                     <div>
                         <label style="display:block;font-weight:600;margin-bottom:6px;color:#374151;" id="cloudApiKeyLabel" data-en="API Key" data-ar="مفتاح API" data-fr="Clé API">API Key</label>
                         <input type="text" id="cloudApiKey" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;" placeholder="sk-..." data-en-placeholder="sk-..." data-ar-placeholder="sk-..." data-fr-placeholder="sk-...">
@@ -1659,7 +1670,8 @@
                     </div>
                     <div>
                         <label style="display:block;font-weight:600;margin-bottom:6px;color:#374151;" id="cloudModelLabel" data-en="Model" data-ar="النموذج" data-fr="Modèle">Model</label>
-                        <select id="cloudModel" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;background:white;"></select>
+                        <input type="text" id="cloudModel" list="cloudModelList" autocomplete="off" style="width:100%;padding:10px;border:1px solid #d1d5db;border-radius:8px;font-size:13px;background:white;" placeholder="auto">
+                        <datalist id="cloudModelList"></datalist>
                         <small style="color:#6b7280;display:block;margin-top:4px;" id="cloudModelHelp" data-en="Leave blank for the default model. For Groq use: llama-3.1-8b-instant. For Gemini use: gemini-2.5-flash." data-ar="اترك فارغاً للنموذج الافتراضي. لـ Groq استخدم: llama-3.1-8b-instant. لـ Gemini استخدم: gemini-2.0-flash." data-fr="Laissez vide pour le modèle par défaut. Pour Groq : llama-3.1-8b-instant. Pour Gemini : gemini-2.0-flash.">Leave blank for the default model. For Groq use: llama-3.1-8b-instant. For Gemini use: gemini-2.5-flash.</small>
                     </div>
                     <div>
@@ -2459,6 +2471,19 @@
             var modelEl = document.getElementById('cloudModel');
             var apiKey = apiKeyEl ? apiKeyEl.value.trim() : '';
             var model = modelEl ? modelEl.value.trim() : '';
+            var freellmEndpointEl = document.getElementById('freellmBaseUrl');
+            var freellmEndpoint = freellmEndpointEl ? freellmEndpointEl.value.trim() : '';
+            var freellmLocal = false;
+            if (provider === 'freellm') {
+                try {
+                    var endpointUrl = new URL(freellmEndpoint);
+                    var endpointHost = endpointUrl.hostname.toLowerCase().replace(/^\[|\]$/g, '');
+                    freellmLocal = endpointHost === 'localhost' || endpointHost === '::1' ||
+                        /^127\./.test(endpointHost) || /^10\./.test(endpointHost) ||
+                        /^192\.168\./.test(endpointHost) ||
+                        /^172\.(1[6-9]|2\d|3[01])\./.test(endpointHost);
+                } catch (e) {}
+            }
 
             // Clear previous results
             var resultDiv = document.getElementById('testResult');
@@ -2481,7 +2506,9 @@
             }
 
             // 2. Check API key with comprehensive validation
-            if (!apiKey) {
+            if (!apiKey && provider === 'freellm' && freellmLocal) {
+                validationResults.push('✅ API key optional for local endpoint');
+            } else if (!apiKey) {
                 validationResults.push('❌ No API key entered');
                 allValid = false;
             } else {
@@ -2489,6 +2516,10 @@
                 var formatHint = '';
 
                 switch(provider) {
+                    case 'freellm':
+                        isValidFormat = true;
+                        formatHint = '(OpenAI-compatible key)';
+                        break;
                     case 'groq':
                         isValidFormat = apiKey.startsWith('gsk_') && apiKey.length >= 50;
                         formatHint = '(gsk_ + 46+ chars, total 50+)';
@@ -2513,7 +2544,8 @@
             // 3. Check model with provider-specific defaults
             var defaultModels = {
                 'gemini': 'gemini-2.5-flash',
-                'groq': 'llama-3.3-70b-versatile'
+                'groq': 'llama-3.3-70b-versatile',
+                'freellm': 'auto'
             };
 
             if (!model) {
@@ -2649,24 +2681,14 @@
 
         var CLOUD_MODELS = {
             gemini: ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-2.5-flash-lite', 'gemini-2.0-flash-lite', 'gemini-2.5-pro', 'gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-1.5-flash-8b', 'gemini-flash-latest', 'gemini-pro-latest'],
-            groq: ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'llama-3.2-11b-vision-preview']
+            groq: ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'llama-3.2-11b-vision-preview'],
+            freellm: ['auto']
         };
 
         function setCloudModelValue(val) {
             var modelEl = document.getElementById('cloudModel');
             if (!modelEl) return;
-            if (!val || val === 'default') return; // keep current selection (first option)
-            var exists = false;
-            for (var i = 0; i < modelEl.options.length; i++) {
-                if (modelEl.options[i].value === val) { exists = true; break; }
-            }
-            if (!exists) {
-                var opt = document.createElement('option');
-                opt.value = val;
-                opt.textContent = val;
-                modelEl.appendChild(opt);
-            }
-            modelEl.value = val;
+            if (val && val !== 'default') modelEl.value = val;
         }
 
         var _aiKeysCache = {};
@@ -2677,10 +2699,19 @@
             groq: {url: 'https://console.groq.com/keys', label_en: 'Get Groq API Key (Free)', label_ar: 'احصل على مفتاح Groq (مجاني)', label_fr: 'Obtenir clé Groq (gratuit)'}
         };
 
+        window.onFreellmPresetChange = function() {
+            var preset = document.getElementById('freellmPreset');
+            var endpoint = document.getElementById('freellmBaseUrl');
+            if (!preset || !endpoint) return;
+            if (preset.value === 'localhost') endpoint.value = 'http://localhost:7070/v1';
+        };
+
         window.onAiProviderChange = function() {
             var provider = document.getElementById('aiProvider').value;
             var cloudSettings = document.getElementById('cloudAiSettings');
             if (cloudSettings) cloudSettings.style.display = (provider === 'disabled') ? 'none' : 'block';
+            var freellmSettings = document.getElementById('freellmSettings');
+            if (freellmSettings) freellmSettings.style.display = (provider === 'freellm') ? 'block' : 'none';
 
             // Update API key link
             var linkEl = document.getElementById('cloudApiKeyLink');
@@ -2706,27 +2737,13 @@
             var modelEl = document.getElementById('cloudModel');
             if (!modelEl) return;
             var list = CLOUD_MODELS[provider] || [];
-            modelEl.innerHTML = '';
+            var datalist = document.getElementById('cloudModelList');
+            if (datalist) datalist.innerHTML = '';
             list.forEach(function(m) {
                 var opt = document.createElement('option');
                 opt.value = m;
-                var label = m;
-                if (m === 'gemini-2.5-flash') label = m + ' ✨ (موصى به / الأسرع والأذكى للرؤية والنصوص)';
-                else if (m === 'gemini-2.0-flash') label = m + ' 🚀 (الجيل الثاني القياسي / فائق السرعة)';
-                else if (m === 'gemini-2.5-flash-lite') label = m + ' ⚡ (خفيف وسريع جداً)';
-                else if (m === 'gemini-2.0-flash-lite') label = m + ' ⚡ (خفيف واقتصادي)';
-                else if (m === 'gemini-2.5-pro') label = m + ' 🧠 (الأقوى للمهام المعقدة والبرمجة)';
-                else if (m === 'gemini-1.5-flash') label = m + ' 📄 (مستقر - سياق 1M)';
-                else if (m === 'gemini-1.5-pro') label = m + ' 📚 (مستقر - سياق 2M)';
-                else if (m === 'gemini-1.5-flash-8b') label = m + ' 🔹 (خفيف مخصص للتردد العالي)';
-                else if (m === 'gemini-flash-latest') label = m + ' 🔄 (الأحدث دائماً Flash)';
-                else if (m === 'gemini-pro-latest') label = m + ' 🔄 (الأحدث دائماً Pro)';
-                else if (/vl|vision|vlm|multimodal/i.test(m)) {
-                    label = m + '  ⚠️ (Vision — بطيء للدردشة)';
-                    opt.style.color = '#92400e';
-                }
-                opt.textContent = label;
-                modelEl.appendChild(opt);
+                opt.textContent = m;
+                if (datalist) datalist.appendChild(opt);
             });
             // Restore saved model for this provider from cache, or use first option
             var savedModel = _aiModelsCache[provider];
@@ -2767,11 +2784,12 @@
                 if (providerEl) providerEl.value = provider;
                 var fieldMap = {
                     gemini: {key: 'gemini_api_key', model: 'gemini_model'},
-                    groq: {key: 'groq_api_key', model: 'groq_model'}
+                    groq: {key: 'groq_api_key', model: 'groq_model'},
+                    freellm: {key: 'freellm_api_key', model: 'freellm_model'}
                 };
                 var mapping = fieldMap[provider];
                 // Cache all provider API keys and models
-                var allProviders = ['gemini', 'groq'];
+                var allProviders = ['gemini', 'groq', 'freellm'];
                 allProviders.forEach(function(p) {
                     var fm = fieldMap[p];
                     if (fm) {
@@ -2786,6 +2804,12 @@
                 if (typeof onAiProviderChange === 'function') onAiProviderChange();
                 if (mapping && modelEl) {
                     setCloudModelValue(_aiModelsCache[provider] || '');
+                }
+                if (provider === 'freellm') {
+                    var baseEl = document.getElementById('freellmBaseUrl');
+                    var presetEl = document.getElementById('freellmPreset');
+                    if (baseEl) baseEl.value = settings.freellm_base_url || 'http://localhost:7070/v1';
+                    if (presetEl) presetEl.value = 'custom';
                 }
                 var ocrEngineEl = document.getElementById('ocrEngine');
                 if (ocrEngineEl) {
@@ -2808,10 +2832,15 @@
             };
             var fieldMap = {
                 gemini: {key: 'gemini_api_key', model: 'gemini_model'},
-                groq: {key: 'groq_api_key', model: 'groq_model'}
+                groq: {key: 'groq_api_key', model: 'groq_model'},
+                freellm: {key: 'freellm_api_key', model: 'freellm_model'}
             };
             var mapping = fieldMap[provider] || null;
             var payload = {provider: provider, features: features};
+            if (provider === 'freellm') {
+                var baseUrlEl = document.getElementById('freellmBaseUrl');
+                payload.freellm_base_url = baseUrlEl ? baseUrlEl.value.trim() : '';
+            }
             var ocrEngineEl = document.getElementById('ocrEngine');
             if (ocrEngineEl) payload.ocr_engine = ocrEngineEl.value;
             if (mapping) {
@@ -3632,6 +3661,10 @@
                     if (provider !== 'disabled') {
                         if (provider === 'gemini') payload.gemini_api_key = apiKey;
                         else if (provider === 'groq') payload.groq_api_key = apiKey;
+                        else if (provider === 'freellm') {
+                            payload.freellm_api_key = apiKey;
+                            payload.freellm_base_url = document.getElementById('freellmBaseUrl') ? document.getElementById('freellmBaseUrl').value.trim() : '';
+                        }
                         if (apiKey) payload[provider + '_model'] = model;
                     }
                     var sessionToken2 = '';
@@ -3711,7 +3744,8 @@
                         if (providerEl) providerEl.value = provider;
                         var fieldMap = {
                             gemini: {key: 'gemini_api_key', model: 'gemini_model'},
-                            groq: {key: 'groq_api_key', model: 'groq_model'}
+                            groq: {key: 'groq_api_key', model: 'groq_model'},
+                            freellm: {key: 'freellm_api_key', model: 'freellm_model'}
                         };
                         var mapping = fieldMap[provider];
                         if (mapping && apiKeyEl) {
