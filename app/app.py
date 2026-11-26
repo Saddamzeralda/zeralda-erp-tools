@@ -424,7 +424,7 @@ def create_app() -> FastAPI:
     # ── Static files (serves HTML/JS/CSS/images from project root) ───────
     base_dir = Path(__file__).resolve().parent.parent
     # Mount individual static directories
-    for sub in ("shared", "styles", "modules"):
+    for sub in ("shared", "styles", "modules", "icons", ".well-known"):
         sub_path = base_dir / sub
         if sub_path.is_dir():
             app.mount(f"/{sub}", StaticFiles(directory=str(sub_path)), name=f"static-{sub}")

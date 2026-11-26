@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.zeralda.erp",
+      "sha256_cert_fingerprints": [
+        "14:6D:E9:7D:0F:52:AB:E0:EC:4C:E6:9E:0E:64:18:2D:2B:6F:4E:99:98:97:54:67:77:8E:B3:36:2B:7A:B3:32"
+      ]
+    }
+  }
+]
